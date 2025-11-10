@@ -1,7 +1,11 @@
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { api } from "@/utils/instance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IAssign, IUserResponse } from "../types/IUserResponse";
+import {
+  IAssign,
+  IUserResponse,
+  IUserResponseForAll,
+} from "../types/IUserResponse";
 const queryKey = "userdepartments";
 const filterQuery = "filterUser";
 const loginEndPoint = {
@@ -36,7 +40,9 @@ export const useGetAllUsers = (params?: string) => {
         ? `${loginEndPoint.allUser}${params}`
         : `${loginEndPoint.allUser}`;
 
-      const response = await api.get<IPaginationResponse<IUserResponse>>(url);
+      const response = await api.get<IPaginationResponse<IUserResponseForAll>>(
+        url
+      );
       return response.data;
     },
   });
@@ -128,25 +134,45 @@ export const useAssignRole = () => {
   });
 };
 
-export const useGetFilterUserByDate = (
-  SchoolId: string,
-  email: string,
-  userName: string
-) => {
+// export const useGetFilterUserByDate = (
+//   SchoolId: string,
+//   email: string,
+//   userName: string
+// ) => {
+//   return useQuery({
+//     queryKey: [filterQuery, userName, SchoolId, email],
+//     queryFn: async () => {
+//       const queryParams = new URLSearchParams({
+//         SchoolId,
+//         email,
+//         userName,
+//       });
+
+//       const response = await api.get<IUserResponseForAll[]>(
+//         `${loginEndPoint.filterUserByDate}?${queryParams.toString()}`
+//       );
+
+//       return response.data;
+//     },
+//     staleTime: 0,
+//     retry: false,
+//   });
+// };
+
+export const useGetFilterUserByDate = (params?: string) => {
   return useQuery({
-    queryKey: [filterQuery, userName, SchoolId, email],
+    queryKey: [queryKey, params, filterQuery],
+
     queryFn: async () => {
-      const queryParams = new URLSearchParams({
-        SchoolId,
-        email,
-        userName,
-      });
-
-      const response = await api.get<IUserResponse[]>(
-        `${loginEndPoint.filterUserByDate}?${queryParams.toString()}`
-      );
-
-      return response.data;
+      try {
+        const url = params
+          ? `${loginEndPoint.filterUserByDate}${params}`
+          : loginEndPoint.filterUserByDate;
+        const response = await api.get<IUserResponseForAll[]>(url);
+        return response.data;
+      } catch {
+        throw new Error("Failed to fetch ledgers ");
+      }
     },
     staleTime: 0,
     retry: false,

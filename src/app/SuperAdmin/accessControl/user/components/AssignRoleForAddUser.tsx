@@ -69,13 +69,15 @@ const AssignRoleForAddUser = ({
               })
             : !isLoading && <p className="text-sm ml-8">No Roles found</p>
           : otherRoles && otherRoles.length > 0
-          ? otherRoles.map((role) => {
+          ? otherRoles.map((role, index) => {
               return (
-                <AssignedRoleForOther
-                  roleId={role.roleId}
-                  selectedRole={selectedRole}
-                  handleCheckboxChange={handleCheckboxChange}
-                />
+                <div key={index}>
+                  <AssignedRoleForOther
+                    roleId={role.roleId}
+                    selectedRole={selectedRole}
+                    handleCheckboxChange={handleCheckboxChange}
+                  />
+                </div>
               );
             })
           : !isLoading && (

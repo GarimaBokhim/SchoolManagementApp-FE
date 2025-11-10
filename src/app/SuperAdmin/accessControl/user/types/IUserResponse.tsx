@@ -8,6 +8,16 @@ export interface IUserResponse {
   schoolId?: string;
   schoolIds: string[];
 }
+export interface IUserResponseForAll {
+  Id: string;
+  UserName: string;
+  Email: string;
+  Password: string;
+  rolesId: string[];
+  institutionId: string;
+  SchoolId?: string;
+  SchoolIds: string[];
+}
 export interface IAssign {
   userId: string;
   rolesId: string[];

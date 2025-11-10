@@ -11,6 +11,8 @@ import AssignRoleForAddUser from "./AssignRoleForAddUser";
 import { X } from "lucide-react";
 import InstitutionFormForAddUser from "./InstitutionFormForAddUser";
 import CompanyFormForAddUser from "./SchoolFormForAddUser";
+import toast from "react-hot-toast";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
 
 type Props = {
   form: UseFormReturn<IUserResponse>;
@@ -58,18 +60,19 @@ const AddUserForm = ({ form, onClose }: Props) => {
       form.setValue("schoolIds", [selectedCompany], { shouldValidate: true });
   }, [selectedCompany, selectedInstitution, selectedRole, form]);
 
+  const { handleError, clearError } = useErrorHandler();
   const onSubmit: SubmitHandler<IUserResponse> = async (data) => {
+    clearError();
     try {
-      await addUser.mutateAsync(data);
-      Toast.success("Successfully added user");
+      await toast.promise(addUser.mutateAsync(data), {
+        loading: "Adding ledger...",
+        success: "Successfully added ledger",
+      });
       onClose();
       refetch();
     } catch (error) {
-      const errorMessage =
-        error instanceof AxiosError
-          ? error.response?.data
-          : `Failed to add user: ${error}`;
-      Toast.error(errorMessage);
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 

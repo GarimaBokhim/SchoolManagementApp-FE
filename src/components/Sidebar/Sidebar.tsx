@@ -35,6 +35,7 @@ import { useRouter, usePathname } from "next/navigation";
 import DialogButton from "../Buttons/DialogButton";
 import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
+import { useGetMenuStatus } from "@/app/SuperAdmin/navigation/menu/hooks";
 
 type Props = {
   sideBarItems: ISidebar;
@@ -45,13 +46,15 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
   const { isOpen } = useSidebar();
   let role = "";
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [activeSubModule, setActiveSubModule] = useState<string | null>(null);
   const pathname = usePathname();
   const parts = pathname.split("/").filter(Boolean);
   const pathAfterFirst = `/${parts.slice(1).join("/")}`;
   const navigate = useRouter();
   const storedUser = localStorage.getItem("userDetails");
-
+  const [activeRole, setActiveRole] = useState<string | undefined>("role");
+  const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
+    "subModule"
+  );
   if (storedUser) {
     try {
       const parsedUser = JSON.parse(storedUser);
@@ -71,7 +74,10 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     else prefix = "endUser";
     return `/${prefix?.toLowerCase()}${cleanPath}`;
   };
-
+  const { data: menuStatus, refetch } = useGetMenuStatus(
+    activeSubModule,
+    activeRole
+  );
   useEffect(() => {
     if (role === "superadmin" || role === "developeruser") {
       setMenuStatus([
@@ -115,6 +121,23 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     }
   }, [role, setMenuStatus]);
 
+  useEffect(() => {
+    const storedMenuStatus = localStorage.getItem("menuStatus");
+    if (storedMenuStatus) {
+      setMenuStatus(JSON.parse(storedMenuStatus));
+    }
+  }, [setMenuStatus]);
+
+  useEffect(() => {
+    if (activeRole !== "role" && menuStatus) {
+      setMenuStatus(menuStatus);
+      localStorage.setItem("menuStatus", JSON.stringify(menuStatus));
+    }
+  }, [activeRole, menuStatus, setMenuStatus]);
+  useEffect(() => {
+    if (activeSubModule && activeRole) refetch();
+  }, [refetch, activeRole, activeSubModule]);
+
   const staticIcons: {
     [key: string]:
       | React.ForwardRefExoticComponent<
@@ -127,7 +150,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     "Access Control": LockKeyholeOpen,
     "Institution SetUp": School,
     "Student Management": Users,
-    "Parents / Guardian Information": (
+    "Parents Information": (
       <Icon icon="mynaui:users-group" width="24" height="24" />
     ),
     "Academic Information": BookOpen,
@@ -170,12 +193,16 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
 
   const toggleSection = (section: string) => {
     setActiveSection((prev) => (prev === section ? null : section));
-    if (activeSection !== section) setActiveSubModule(null);
+    if (activeSection !== section) setActiveSubModule("");
   };
 
-  const handleSelectSubModule = (subModuleId: string) =>
-    setActiveSubModule(subModuleId);
-
+  const handleSelectSubModule = (
+    id: string | undefined,
+    role: string | undefined
+  ) => {
+    setActiveSubModule(id);
+    setActiveRole(role);
+  };
   return (
     <div
       className={`h-screen flex flex-col dark:bg-[#353535] bg-white border-r border-gray-200 shadow-sm 
@@ -304,7 +331,10 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                               : withRolePrefix(subItem.targetUrl)
                           }
                           onClick={() =>
-                            handleSelectSubModule(subItem.subModulesId!)
+                            handleSelectSubModule(
+                              subItem.subModulesId!,
+                              subItem.role
+                            )
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors
                           ${
