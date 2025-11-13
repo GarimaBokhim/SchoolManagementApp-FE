@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { forwardRef } from "react";
 import { RegisterOptions } from "react-hook-form";
+import DatePicker from "../DatePicker/DatePicker";
+import { useDate } from "@/context/auth/PrimaryDateContext";
 interface IInput {
   label?: string;
   layout?: "column" | "row";
   preview?: boolean;
   form?: any;
   style?: any;
+  onChangeSelectedDate?: (date: string) => void;
   isExpiryDate?: boolean;
   name: string;
   inputType?: "text" | "date" | "file" | "password" | "number";
@@ -15,6 +18,7 @@ interface IInput {
   value?: number | string | null | undefined | string[];
   defaultValue?: number | string | null | undefined | string[];
   disabled?: boolean;
+  dateType?: "date" | "string";
   minDate?: string;
   inputTypeCheckBox?: "checkbox";
   customStyle?: string;
@@ -41,9 +45,11 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
       isReport = false,
       value,
       defaultValue,
+      onChangeSelectedDate,
       onChange,
       placeholder,
       required = false,
+      dateType,
       isExpiryDate = false,
       customStyle = "",
       inputTypeCheckBox,
@@ -53,6 +59,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+    const isPrimaryBs = useDate();
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (inputType === "number") {
         const raw = e.target.value;
@@ -73,7 +80,17 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
         ) : (
           <div className="flex flex-col">
             {inputType === "date" ? (
-              <input name={name} required={required} type="date" />
+              <DatePicker
+                label={label}
+                name={name}
+                form={form}
+                dateType={dateType}
+                isReport={isReport}
+                onChangeSelectedDate={onChangeSelectedDate}
+                required={required}
+                isExpiryDate={isExpiryDate}
+                isDatePrimary={isPrimaryBs.isPrimaryBS}
+              />
             ) : inputTypeCheckBox === "checkbox" ? (
               <div className="flex items-center gap-1">
                 <input

@@ -3,11 +3,25 @@ import { BriefcaseBusiness, Bus, DollarSign, School, User } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import PieChartSection from "./PieChart";
+import SchoolInfoCard from "./SchoolCard";
 
 const Dashboard: React.FC = () => {
+  const storedUser = localStorage.getItem("userDetails");
+  let schoolId = "";
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      schoolId = parsedUser.schoolId;
+    } catch (error) {
+      console.error("Failed to parse user details:", error);
+    }
+  }
   return (
     <div className=" bg-[#FBFBFB] dark:bg-[#0A0A0A] ">
       <div className="px-6 flex flex-col gap-4">
+        <div>
+          <SchoolInfoCard schoolId={schoolId} />
+        </div>
         <div className="lg:w-full flex-none">
           <StatCard
             cards={[

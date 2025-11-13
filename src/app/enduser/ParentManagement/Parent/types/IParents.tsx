@@ -10,6 +10,7 @@ export interface IParent {
 }
 
 export interface IFilterParentByDate {
+  firstName: string;
   startDate: string;
   endDate: string;
 }

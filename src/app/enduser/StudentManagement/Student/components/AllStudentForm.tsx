@@ -15,20 +15,18 @@ import EditStudent from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterStudentByDate, useRemoveStudent } from "../hooks";
+import {
+  useFilterStudentByDate,
+  useGetAllStudents,
+  useRemoveStudent,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import Certificate from "./IndividualStudentPrintForm";
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-type Props = {
-  form: UseFormReturn<IFilterStudentByDate>;
-  onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
-};
-const AllStudentForm = ({ form, onDataFromChild }: Props) => {
-  const { t } = useTranslation();
+const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -44,8 +42,6 @@ const AllStudentForm = ({ form, onDataFromChild }: Props) => {
     setPaginationParams(params);
   };
   const [showStudents, setShowStudents] = useState(false);
-  const [showStudentPrint, setShowStudentPrint] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<IStudent>();
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -64,22 +60,14 @@ const AllStudentForm = ({ form, onDataFromChild }: Props) => {
       />
     );
   };
-  const printButtonElement = (student: IStudent) => {
-    return (
-      <ButtonElement
-        icon={<Printer size={14} />}
-        type="button"
-        text=""
-        onClick={() => {
-          setShowStudentPrint(true);
-          setSelectedStudent(student);
-        }}
-        className="!text-xs font-bold "
-      />
-    );
-  };
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
+  const { data: allStudent } = useGetAllStudents();
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
+    ""
+  );
+  const fullQuery = query + (params || "");
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -87,21 +75,27 @@ const AllStudentForm = ({ form, onDataFromChild }: Props) => {
     data: filteredStudent,
     refetch,
     isLoading,
-  } = useFilterStudentByDate(query + (params || ""));
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  useEffect(() => {
-    if (onDataFromChild) onDataFromChild(start, end);
-  }, [start, end, onDataFromChild]);
+  } = useFilterStudentByDate(fullQuery);
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  const form = useForm<IFilterStudentByDate>({
+    defaultValues: {
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    },
+  });
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError();
     try {
       const queryParams = [
+        formData.firstName
+          ? `firstName=${encodeURIComponent(formData.firstName)}`
+          : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -111,8 +105,6 @@ const AllStudentForm = ({ form, onDataFromChild }: Props) => {
       ]
         .filter(Boolean)
         .join("&");
-      setStart(formData.startDate);
-      setEnd(formData.endDate);
       const fullQuery = queryParams ? `&${queryParams}` : "";
       await toast.promise(
         (async () => {
@@ -149,188 +141,218 @@ const AllStudentForm = ({ form, onDataFromChild }: Props) => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
-    setStart("");
     form.reset();
-    if (onDataFromChild) onDataFromChild(null, null);
-    setEnd("");
   };
   return (
     <>
       <Toaster position="top-right" />
-      <div className="">
-        <div className="md:px-4  px-4 ">
-          <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
-            <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-              <h1 className=" text-xl font-semibold ">All students</h1>
-              <div className="flex items-center space-x-3">
-                <ButtonElement
-                  type="button"
-                  text="Filter"
-                  icon={<Filter size={14} />}
-                  onClick={() => setOpenFilter(!openFilter)}
-                  className="!bg-emerald-600 hover:!bg-emerald-700"
-                />
-                {canAdd && (
-                  <ButtonElement
-                    icon={<Plus size={24} />}
-                    type="button"
-                    text="Add New student"
-                    onClick={() => setAddModal(true)}
-                    className="!text-md !font-bold"
-                  />
-                )}
-              </div>
-            </div>
-            {openFilter && (
-              <div className="mb-6 bg-white p-4 rounded-lg shadow-md border border-gray-100 overflow-x-auto">
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex items-end gap-4"
-                >
-                  <DateRangeFilter
-                    ref={formRef}
-                    form={form}
-                    onSubmit={onSubmit}
-                    setParams={setParams}
-                  />
-                  <div className="flex gap-2 ml-auto">
-                    <ButtonElement
-                      type="submit"
-                      text=""
-                      icon={<Filter size={14} />}
-                      className="!bg-emerald-600 hover:!bg-emerald-700"
-                    />
-                    <ButtonElement
-                      type="button"
-                      text=""
-                      icon={<RotateCcw size={14} />}
-                      onClick={onClearClick}
-                      className="!bg-gray-500 hover:!bg-gray-600"
-                    />
-                  </div>
-                </form>
-              </div>
-            )}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                    <th className="px-4 py-3 text-left">Student Name</th>
-                    <th className="px-4 py-3 text-left">Registration Number</th>
-                    <th className="px-4 py-3 text-left">Gender</th>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Address</th>
-                    <th className="px-4 py-3 text-left">Phone Number</th>
-                    <th className="px-4 py-3 text-left">DOB</th>
-                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={7} className="p-4 text-center text-gray-500">
-                        Loading students...
-                      </td>
-                    </tr>
-                  ) : filteredStudent?.Items &&
-                    filteredStudent?.Items.length > 0 ? (
-                    filteredStudent?.Items.map(
-                      (student: IStudent, index: number) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                        >
-                          <td className="py-3 px-4">{index + 1}</td>
-                          <td className="py-3 px-4">{student.firstName}</td>
-                          <td className="py-3 px-4">
-                            {student.registrationNumber}
-                          </td>
-                          <td className="py-3 px-4">
-                            {student.genderStatus === 0 ? "M" : "F"}
-                          </td>
-                          <td className="py-3 px-4">{student.email}</td>
-                          <td className="py-3 px-4">{student.address}</td>
-                          <td className="py-3 px-4">{student.phoneNumber}</td>
-                          <td className="py-3 px-4">{`${student.dateOfBirth}`}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex justify-center gap-2">
-                              {canDelete && (
-                                <DeleteButton
-                                  onConfirm={() =>
-                                    handleDelete(student.id ? student.id : "")
-                                  }
-                                  headerText={<Trash />}
-                                  content="Are you sure you want to delete this student?"
-                                />
-                              )}
-                              {canEdit && (
-                                <EditButton
-                                  button={buttonElement(student.id ?? "")}
-                                />
-                              )}
-                              <EditButton
-                                button={printButtonElement(student)}
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="p-4 text-center text-gray-500 italic"
-                      >
-                        No students found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {showStudentPrint && selectedStudent && (
-              <Certificate
-                student={selectedStudent}
-                onClose={() => setShowStudentPrint(false)}
+      <div className="p-3 md:p-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+          <h1 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-200">
+            All Students
+          </h1>
+          <div className="flex flex-wrap gap-2 justify-end">
+            <ButtonElement
+              type="button"
+              text="Filter"
+              icon={<Filter size={14} />}
+              onClick={() => setOpenFilter(!openFilter)}
+              className="!bg-emerald-600 hover:!bg-emerald-700"
+            />
+            {canAdd && (
+              <ButtonElement
+                icon={<Plus size={18} />}
+                type="button"
+                text="Add New"
+                onClick={() => setAddModal(true)}
+                className="!font-semibold"
               />
             )}
-            {showStudents && selectedId && (
-              <EditStudent
-                StudentId={selectedId}
-                visible={showStudents}
-                onClose={() => setShowStudents(false)}
-              />
-            )}
-            <AddStudent visible={addModal} onClose={() => setAddModal(false)} />
           </div>
         </div>
-        {filteredStudent?.Items && filteredStudent?.Items.length > 0 && (
+        {openFilter && (
+          <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex flex-col lg:flex-row lg:flex-wrap gap-4"
+            >
+              <DateRangeFilter
+                ref={formRef}
+                form={form}
+                onSubmit={onSubmit}
+                setParams={setParams}
+              />
+              <div className="flex-1 min-w-[240px]">
+                <AppCombobox
+                  value={selectedStudentName}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Parent Name"
+                  name="firstName"
+                  form={form}
+                  options={allStudent?.Items}
+                  selected={
+                    allStudent?.Items?.find(
+                      (g) => g.firstName === selectedStudentName
+                    ) || null
+                  }
+                  onSelect={(group) => {
+                    setSelectedStudentName(group ? group.firstName : null);
+                  }}
+                  getLabel={(g) => g?.firstName ?? ""}
+                  getValue={(g) => g?.firstName ?? ""}
+                />
+              </div>
+
+              <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                <ButtonElement
+                  type="submit"
+                  text="Filter"
+                  icon={<Filter size={14} />}
+                  className="!bg-emerald-600 hover:!bg-emerald-700"
+                />
+                <ButtonElement
+                  type="button"
+                  text="Clear"
+                  icon={<RotateCcw size={14} />}
+                  onClick={onClearClick}
+                  className="!bg-gray-500 hover:!bg-gray-600"
+                />
+              </div>
+            </form>
+          </div>
+        )}
+        <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
+          <table className="min-w-full text-xs sm:text-sm">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
+                <th className="px-4 py-3 text-left">S.N</th>
+                <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">Reg. No</th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">
+                  Gender
+                </th>
+                <th className="px-4 py-3 text-left hidden lg:table-cell">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left hidden xl:table-cell">
+                  Address
+                </th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">
+                  Phone
+                </th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">
+                  DOB
+                </th>
+                <th className="px-4 py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="p-4 text-center text-gray-500 dark:text-gray-300"
+                  >
+                    Loading students...
+                  </td>
+                </tr>
+              ) : filteredStudent?.Items?.length ? (
+                filteredStudent.Items.map(
+                  (student: IStudent, index: number) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                    >
+                      <td className="py-3 px-4">{index + 1}</td>
+                      <td className="py-3 px-4">{student.firstName}</td>
+                      <td className="py-3 px-4">
+                        {student.registrationNumber}
+                      </td>
+                      <td className="py-3 px-4 hidden md:table-cell">
+                        {student.genderStatus === 0 ? "M" : "F"}
+                      </td>
+                      <td className="py-3 px-4 hidden lg:table-cell">
+                        {student.email}
+                      </td>
+                      <td className="py-3 px-4 hidden xl:table-cell">
+                        {student.address}
+                      </td>
+                      <td className="py-3 px-4 hidden md:table-cell">
+                        {student.phoneNumber}
+                      </td>
+                      <td className="py-3 px-4 hidden md:table-cell">
+                        {`${student.dateOfBirth}`}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          {canDelete && (
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(student.id ? student.id : "")
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this student?"
+                            />
+                          )}
+                          {canEdit && (
+                            <EditButton
+                              button={
+                                <ButtonElement
+                                  icon={<Edit size={14} />}
+                                  type="button"
+                                  text=""
+                                  onClick={() => {
+                                    setShowStudents(true);
+                                    setSelectedId(student.id ?? "");
+                                  }}
+                                  className="!text-xs !bg-teal-500"
+                                />
+                              }
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="p-4 text-center text-gray-500 italic"
+                  >
+                    No students found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
-              form={handleSubmit}
+              form={form}
               pagination={{
-                currentPage: Array.isArray(filteredStudent)
-                  ? 1
-                  : filteredStudent?.PageIndex ?? 1,
-                firstPage: Array.isArray(filteredStudent)
-                  ? 1
-                  : filteredStudent?.FirstPage ?? 1,
-                lastPage: Array.isArray(filteredStudent)
-                  ? 1
-                  : filteredStudent?.LastPage ?? 1,
-                nextPage: Array.isArray(filteredStudent)
-                  ? 1
-                  : filteredStudent?.NextPage ?? 1,
-                previousPage: Array.isArray(filteredStudent)
-                  ? 1
-                  : filteredStudent?.PreviousPage ?? 1,
+                currentPage: filteredStudent?.PageIndex ?? 1,
+                firstPage: filteredStudent?.FirstPage ?? 1,
+                lastPage: filteredStudent?.LastPage ?? 1,
+                nextPage: filteredStudent?.NextPage ?? 1,
+                previousPage: filteredStudent?.PreviousPage ?? 1,
               }}
               handleSearch={handleSearch}
             />
           </div>
         )}
+        {showStudents && selectedId && (
+          <EditStudent
+            StudentId={selectedId}
+            visible={showStudents}
+            onClose={() => setShowStudents(false)}
+          />
+        )}
+        <AddStudent visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );
