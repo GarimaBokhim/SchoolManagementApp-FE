@@ -7,7 +7,7 @@ const SubjectEndPoints = {
   createSubjects: "/api/Academics/AddSubject",
   removeSubjects: "/api/Academics/DeleteSubject",
   updateSubjects: "/api/Academics/UpdateSubjects",
-  getSubjectsById: "/api/Academics/",
+  getSubjectsById: "/api/Academics",
   filterSubjectByDate: "/api/Academics/FilterSubject",
 };
 

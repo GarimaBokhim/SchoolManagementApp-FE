@@ -50,7 +50,7 @@ export default function LayoutWrapper({
         <div className="flex items-center bg-background text-text  justify-between p-1.5 py-[1.2rem] border-b px-5">
           {isOpen && (
             <span className="font-bold text-lg flex items-center gap-2">
-              Shikshya
+              Elite Space
             </span>
           )}
           <SidebarToggle />

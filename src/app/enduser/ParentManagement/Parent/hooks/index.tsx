@@ -7,7 +7,7 @@ const ParentEndPoints = {
   createParents: "/api/Student/AddParent",
   removeParents: "/api/Student/DeleteParents",
   updateParents: "/api/Student/UpdateParents",
-  getParentsById: "/api/Student/ParentsBy",
+  getParentsById: "/api/Student/GetParentsBy",
   filterParentByDate: "/api/Student/FilterParents",
 };
 

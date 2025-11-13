@@ -166,13 +166,6 @@ const EditIssuedCertificateForm = ({
                 placeholder="Enter Issued Date"
               />
               <InputElement
-                label="Issued By"
-                form={form}
-                name="issuedBy"
-                placeholder="Enter Issued By Name"
-                required
-              />
-              <InputElement
                 label="Pdf Path"
                 form={form}
                 name="pdfPath"

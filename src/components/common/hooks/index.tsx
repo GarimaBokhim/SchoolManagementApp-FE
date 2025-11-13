@@ -4,12 +4,14 @@ import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IDistrict, IMunicipality, IProvince, IVdc } from "../types/ICommon";
 const CommonEndPoints = {
   getAllProvince: "/api/SetupControllers/all-province",
+  getAllDistrict: "/api/SetupControllers/all-district",
   getDistrictByProvince: "/api/SetupControllers/District",
   getMunicipalityByDistrict: "/api/SetupControllers/GetMunicipality",
   getVDCByDistrict: "/api/SetupControllers/GetVDC",
 };
 
 const queryKey = "Province";
+const queryKeyForDistrict = "District";
 export const useGetAllProvince = (params?: string) => {
   return useQuery({
     queryKey: [queryKey],
@@ -18,6 +20,25 @@ export const useGetAllProvince = (params?: string) => {
         ? `${CommonEndPoints.getAllProvince}${params}`
         : `${CommonEndPoints.getAllProvince}`;
       const response = await api.get<IPaginationResponse<IProvince>>(url);
+      return (
+        response.data ?? {
+          data: [],
+          PageIndex: 0,
+          isPagination: 1,
+          pageSize: 10,
+        }
+      );
+    },
+  });
+};
+export const useGetAllDistrict = (params?: string) => {
+  return useQuery({
+    queryKey: [queryKeyForDistrict],
+    queryFn: async () => {
+      const url = params
+        ? `${CommonEndPoints.getAllDistrict}${params}`
+        : `${CommonEndPoints.getAllDistrict}`;
+      const response = await api.get<IPaginationResponse<IDistrict>>(url);
       return (
         response.data ?? {
           data: [],
