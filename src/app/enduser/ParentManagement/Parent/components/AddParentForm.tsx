@@ -79,12 +79,6 @@ const AddParentForm = ({ form, onClose }: Props) => {
                 placeholder="Enter Address"
               />
               <InputElement
-                label="Image URL"
-                form={form}
-                name="imageUrl"
-                placeholder="Enter Image URL"
-              />
-              <InputElement
                 label="Occupation"
                 form={form}
                 name="occupation"

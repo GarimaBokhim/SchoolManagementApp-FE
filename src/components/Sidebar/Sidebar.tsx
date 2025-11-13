@@ -27,6 +27,7 @@ import {
   School,
   LockKeyholeOpen,
   Settings,
+  NotepadText,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -157,7 +158,8 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     "Fee and Accounting": Banknote,
     "Attendance Management": Hand,
     "Exam and Grading": BookCheck,
-    "Class and Section Management": NotebookPen,
+    "Class Management": NotebookPen,
+    Certificate: NotepadText,
     "Staff Management": BriefcaseBusiness,
     User: User,
     Role: UserCog,

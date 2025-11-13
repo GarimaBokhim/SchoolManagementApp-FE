@@ -2,7 +2,10 @@
 import React from "react";
 import { X } from "lucide-react";
 import { useGetAllParents } from "@/app/enduser/ParentManagement/Parent/hooks";
-import { useGetAllProvince } from "@/components/common/hooks";
+import {
+  useGetAllDistrict,
+  useGetAllProvince,
+} from "@/components/common/hooks";
 import { useGenerateCertificateByStudent } from "../hooks";
 
 interface Props {
@@ -11,8 +14,8 @@ interface Props {
 }
 
 const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
-  const { data: allParents } = useGetAllParents();
   const { data: allProvince } = useGetAllProvince();
+  const { data: allDistrict } = useGetAllDistrict();
   const { data: certificateData } = useGenerateCertificateByStudent(studentId);
   const handlePrint = () => {
     const content = document.getElementById("certificate")?.outerHTML;
@@ -187,9 +190,16 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
                   }
                 </strong>{" "}
                 Province,
-                <strong>{certificateData?.districtId}</strong> district,{" "}
-                <strong>{certificateData?.wardNumber}</strong>, was a bonafide
-                student of this college. She passed{" "}
+                <strong>
+                  {" "}
+                  {
+                    allDistrict?.Items.find(
+                      (i) => i.Id === Number(certificateData?.districtId)
+                    )?.districtNameInEnglish
+                  }
+                </strong>{" "}
+                district, <strong>{certificateData?.wardNumber}</strong>, was a
+                bonafide student of this college. She passed{" "}
                 <strong>{certificateData?.certificateProgram || "SEE"}</strong>{" "}
                 Examinations in the year{" "}
                 <strong>{`${certificateData?.yearOfCompletion}`}</strong> and

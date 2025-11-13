@@ -30,9 +30,10 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
         parentType: ParentData?.parentType ?? 0,
         email: ParentData?.email ?? "",
         phoneNumber: ParentData?.phoneNumber ?? "",
-        imageUrl: ParentData?.imageUrl ?? "",
+        occupation: ParentData?.occupation ?? "",
         address: ParentData?.address ?? "",
       });
+      setParentStatus(ParentData.parentType);
     }
   }, [ParentData]);
   const onSubmit: SubmitHandler<IParent> = async (data) => {
@@ -107,12 +108,6 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
                 form={form}
                 name="address"
                 placeholder="Enter Address"
-              />
-              <InputElement
-                label="Image URL"
-                form={form}
-                name="imageUrl"
-                placeholder="Enter Image URL"
               />
               <InputElement
                 label="Occupation"
