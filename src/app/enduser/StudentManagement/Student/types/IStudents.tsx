@@ -22,4 +22,5 @@ export interface IStudent {
 export interface IFilterStudentByDate {
   startDate: string;
   endDate: string;
+  firstName: string;
 }

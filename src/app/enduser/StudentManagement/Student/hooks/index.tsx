@@ -8,10 +8,11 @@ const StudentEndPoints = {
   removeStudents: "/api/Student/DeleteStudents",
   updateStudents: "/api/Student/UpdateStudents",
   getStudentsById: "/api/Student/StudentsBy",
-  filterStudentByDate: "/api/Student/FilterStudentByDate",
+  filterStudentByDate: "/api/Student/FilterStudents",
 };
 
 const queryKey = "Students";
+const filterQueryKey = "filteredStudent";
 type StudentRequest = {
   id?: string;
   firstName: string;
@@ -44,7 +45,7 @@ export const useAddStudent = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredStudent"] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
     onError: (error) => {
       console.error("Error adding Student:", error);
@@ -66,7 +67,7 @@ export const useRemoveStudent = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredStudent"] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
   });
 };
@@ -89,7 +90,7 @@ export const useEditStudent = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["filteredStudent"] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });
@@ -135,11 +136,11 @@ export const useGetAllStudents = (params?: string) => {
 
 export const useFilterStudentByDate = (params?: string) => {
   return useQuery({
-    queryKey: ["filteredStudent", params],
+    queryKey: [filterQueryKey, params, queryKey],
     queryFn: async () => {
       const url = params
-        ? `${StudentEndPoints.getAllStudents}${params}`
-        : StudentEndPoints.getAllStudents;
+        ? `${StudentEndPoints.filterStudentByDate}${params}`
+        : StudentEndPoints.filterStudentByDate;
       const response = await api.get<IPaginationResponse<IStudent>>(url);
       return response.data;
     },

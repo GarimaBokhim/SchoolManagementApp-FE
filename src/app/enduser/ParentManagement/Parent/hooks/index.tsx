@@ -8,10 +8,11 @@ const ParentEndPoints = {
   removeParents: "/api/Student/DeleteParents",
   updateParents: "/api/Student/UpdateParents",
   getParentsById: "/api/Student/ParentsBy",
-  filterParentByDate: "/api/Student/FilterParentByDate",
+  filterParentByDate: "/api/Student/FilterParents",
 };
 
 const queryKey = "Parents";
+const filterParentQueryKey = "filteredParent";
 type ParentRequest = {
   id?: string;
   fullName: string;
@@ -34,7 +35,7 @@ export const useAddParent = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredParent"] });
+      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
     },
     onError: (error) => {
       console.error("Error adding Parent:", error);
@@ -56,7 +57,7 @@ export const useRemoveParent = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredParent"] });
+      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
     },
   });
 };
@@ -79,7 +80,7 @@ export const useEditParent = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["filteredParent"] });
+      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });
@@ -125,11 +126,11 @@ export const useGetAllParents = (params?: string) => {
 
 export const useFilterParentByDate = (params?: string) => {
   return useQuery({
-    queryKey: ["filteredParent", params],
+    queryKey: [filterParentQueryKey, params, queryKey],
     queryFn: async () => {
       const url = params
-        ? `${ParentEndPoints.getAllParents}${params}`
-        : ParentEndPoints.getAllParents;
+        ? `${ParentEndPoints.filterParentByDate}${params}`
+        : ParentEndPoints.filterParentByDate;
       const response = await api.get<IPaginationResponse<IParent>>(url);
       return response.data;
     },

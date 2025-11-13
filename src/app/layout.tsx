@@ -4,6 +4,7 @@ import ReactQueryProvider from "@/context/Providers/ReactQueryProvider";
 import { PermissionProvider } from "@/context/auth/PermissionContext";
 import { ThemeProvider } from "@/context/Theme/ThemeContext";
 import { SidebarProvider } from "@/context/SidebarContext";
+import { DateProvider } from "@/context/auth/PrimaryDateContext";
 
 export const metadata: Metadata = {
   title: "Next.js Sidebar Example",
@@ -21,9 +22,11 @@ export default function RootLayout({
         <ReactQueryProvider>
           <PermissionProvider>
             <ThemeProvider>
-              <main>
-                <SidebarProvider>{children}</SidebarProvider>
-              </main>
+              <DateProvider>
+                <main>
+                  <SidebarProvider>{children}</SidebarProvider>
+                </main>
+              </DateProvider>
             </ThemeProvider>
           </PermissionProvider>
         </ReactQueryProvider>

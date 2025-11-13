@@ -6,7 +6,6 @@ import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
-import { PrintButton } from "@/components/Buttons/PrintButton";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { EditButton } from "@/components/Buttons/EditButton";
@@ -15,19 +14,17 @@ import EditParent from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterParentByDate, useRemoveParent } from "../hooks";
+import {
+  useFilterParentByDate,
+  useGetAllParents,
+  useRemoveParent,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import AddParent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-type Props = {
-  form: UseFormReturn<IFilterParentByDate>;
-  onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
-};
-const AllParentForm = ({ form, onDataFromChild }: Props) => {
-  const { t } = useTranslation();
+const AllParentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -42,7 +39,11 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  const { data: allParents } = useGetAllParents();
   const [showParents, setShowParents] = useState(false);
+  const [selectedParentName, setSelectedParentName] = useState<string | null>(
+    ""
+  );
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -61,8 +62,17 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
       />
     );
   };
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+  const form = useForm<IFilterParentByDate>({
+    defaultValues: {
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    },
+  });
+  const fullQuery = query + (params || "");
+
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -70,12 +80,7 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
     data: filteredParent,
     refetch,
     isLoading,
-  } = useFilterParentByDate(query + (params || ""));
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  useEffect(() => {
-    if (onDataFromChild) onDataFromChild(start, end);
-  }, [start, end, onDataFromChild]);
+  } = useFilterParentByDate(fullQuery);
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -85,6 +90,9 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
     clearError();
     try {
       const queryParams = [
+        formData.firstName
+          ? `firstName=${encodeURIComponent(formData.firstName)}`
+          : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -94,8 +102,6 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
       ]
         .filter(Boolean)
         .join("&");
-      setStart(formData.startDate);
-      setEnd(formData.endDate);
       const fullQuery = queryParams ? `&${queryParams}` : "";
       await toast.promise(
         (async () => {
@@ -113,6 +119,7 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
       console.error("Error during form submission:", error);
     }
   };
+
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
@@ -132,146 +139,170 @@ const AllParentForm = ({ form, onDataFromChild }: Props) => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
-    setStart("");
+    setSelectedParentName("");
     form.reset();
-    if (onDataFromChild) onDataFromChild(null, null);
-    setEnd("");
   };
   return (
     <>
       <Toaster position="top-right" />
-      <div className="">
-        <div className="md:px-4  px-4 ">
-          <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
-            <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-              <h1 className=" text-xl font-semibold ">All Parents</h1>
-              <div className="flex items-center space-x-3">
-                <ButtonElement
-                  type="button"
-                  text="Filter"
-                  icon={<Filter size={14} />}
-                  onClick={() => setOpenFilter(!openFilter)}
-                  className="!bg-emerald-600 hover:!bg-emerald-700"
-                />
-                {canAdd && (
-                  <ButtonElement
-                    icon={<Plus size={24} />}
-                    type="button"
-                    text="Add New Parent"
-                    onClick={() => setAddModal(true)}
-                    className="!text-md !font-bold"
-                  />
-                )}
-              </div>
-            </div>
-            {openFilter && (
-              <div className="mb-6 bg-white p-4 rounded-lg shadow-md border border-gray-100 overflow-x-auto">
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex items-end gap-4"
-                >
-                  <DateRangeFilter
-                    ref={formRef}
-                    form={form}
-                    onSubmit={onSubmit}
-                    setParams={setParams}
-                  />
-                  <div className="flex gap-2 ml-auto">
-                    <ButtonElement
-                      type="submit"
-                      text=""
-                      icon={<Filter size={14} />}
-                      className="!bg-emerald-600 hover:!bg-emerald-700"
-                    />
-                    <ButtonElement
-                      type="button"
-                      text=""
-                      icon={<RotateCcw size={14} />}
-                      onClick={onClearClick}
-                      className="!bg-gray-500 hover:!bg-gray-600"
-                    />
-                  </div>
-                </form>
-              </div>
-            )}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-xs sm:text-sm">
-                <thead>
-                  <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                    <th className="px-4 py-3 text-left">Parent Name</th>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Phone Number</th>
-                    <th className="px-4 py-3 text-left">Occupation</th>
-                    <th className="px-4 py-3 text-left">Address</th>
-                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={7} className="p-4 text-center text-gray-500">
-                        Loading Parents...
-                      </td>
-                    </tr>
-                  ) : filteredParent?.Items &&
-                    filteredParent?.Items.length > 0 ? (
-                    filteredParent?.Items.map(
-                      (Parent: IParent, index: number) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                        >
-                          <td className="py-3 px-4">{index + 1}</td>
-                          <td className="py-3 px-4">{Parent.fullName}</td>
-                          <td className="py-3 px-4">{Parent.email}</td>
-                          <td className="py-3 px-4">{Parent.phoneNumber}</td>
-                          <td className="py-3 px-4">{Parent.occupation}</td>
-                          <td className="py-3 px-4">{Parent.address}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex justify-center gap-2">
-                              {canDelete && (
-                                <DeleteButton
-                                  onConfirm={() =>
-                                    handleDelete(Parent.id ? Parent.id : "")
-                                  }
-                                  headerText={<Trash />}
-                                  content="Are you sure you want to delete this Parent?"
-                                />
-                              )}
-                              {canEdit && (
-                                <EditButton
-                                  button={buttonElement(Parent.id ?? "")}
-                                />
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="p-4 text-center text-gray-500 italic"
-                      >
-                        No Parents found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {showParents && selectedId && (
-              <EditParent
-                ParentId={selectedId}
-                visible={showParents}
-                onClose={() => setShowParents(false)}
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
+            <h1 className=" text-xl font-semibold ">All Parents</h1>
+            <div className="flex items-center space-x-3">
+              <ButtonElement
+                type="button"
+                text="Filter"
+                icon={<Filter size={14} />}
+                onClick={() => setOpenFilter(!openFilter)}
+                className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-            )}
-            <AddParent visible={addModal} onClose={() => setAddModal(false)} />
+
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={24} />}
+                  type="button"
+                  text="Add New Parent"
+                  onClick={() => setAddModal(true)}
+                  className="!text-md !font-bold"
+                />
+              )}
+            </div>
           </div>
+          {openFilter && (
+            <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onSubmit}
+                  setParams={setParams}
+                />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedParentName}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Parent Name"
+                    name="firstName"
+                    form={form}
+                    options={allParents?.Items}
+                    selected={
+                      allParents?.Items?.find(
+                        (g) => g.fullName === selectedParentName
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      if (group) {
+                        setSelectedParentName(group.fullName || null);
+                      } else {
+                        setSelectedParentName(null);
+                      }
+                    }}
+                    getLabel={(g) => g?.fullName ?? ""}
+                    getValue={(g) => g?.fullName ?? ""}
+                  />
+                </div>
+
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={onClearClick}
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
+                </div>
+              </form>
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Parent Name</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Phone Number</th>
+                  <th className="px-4 py-3 text-left">Occupation</th>
+                  <th className="px-4 py-3 text-left">Address</th>
+                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                      Loading Parents...
+                    </td>
+                  </tr>
+                ) : filteredParent?.Items &&
+                  filteredParent?.Items.length > 0 ? (
+                  filteredParent?.Items.map(
+                    (Parent: IParent, index: number) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      >
+                        <td className="py-3 px-4">{index + 1}</td>
+                        <td className="py-3 px-4">{Parent.fullName}</td>
+                        <td className="py-3 px-4">{Parent.email}</td>
+                        <td className="py-3 px-4">{Parent.phoneNumber}</td>
+                        <td className="py-3 px-4">{Parent.occupation}</td>
+                        <td className="py-3 px-4">{Parent.address}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex justify-center gap-2">
+                            {canDelete && (
+                              <DeleteButton
+                                onConfirm={() =>
+                                  handleDelete(Parent.id ? Parent.id : "")
+                                }
+                                headerText={<Trash />}
+                                content="Are you sure you want to delete this Parent?"
+                              />
+                            )}
+                            {canEdit && (
+                              <EditButton
+                                button={buttonElement(Parent.id ?? "")}
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
+                      No Parents found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {showParents && selectedId && (
+            <EditParent
+              ParentId={selectedId}
+              visible={showParents}
+              onClose={() => setShowParents(false)}
+            />
+          )}
+          <AddParent visible={addModal} onClose={() => setAddModal(false)} />
         </div>
+
         {filteredParent?.Items && filteredParent?.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
