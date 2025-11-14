@@ -1,5 +1,5 @@
 export interface ISubject {
-  id?: string;
+  Id?: string;
   name: string;
   code: string;
   creditHours: number;

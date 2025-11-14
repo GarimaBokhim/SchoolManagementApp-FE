@@ -27,6 +27,7 @@ import AddExamResult from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllExams } from "../../Exam/hooks";
+import { useGetAllSubjects } from "../../Subject/hooks";
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -65,6 +66,7 @@ const AllExamResultForm = () => {
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const { data: allExam } = useGetAllExams();
+  const { data: allSubject } = useGetAllSubjects();
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -296,7 +298,13 @@ const AllExamResultForm = () => {
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">{ExamResult.subjectId}</td>
+                        <td className="py-3 px-4">
+                          {
+                            allSubject?.Items.find(
+                              (i) => i.Id === ExamResult.subjectId
+                            )?.name
+                          }
+                        </td>
                         <td className="py-3 px-4">{ExamResult.grade}</td>
                         <td className="py-3 px-4">
                           {ExamResult.marksObtained}

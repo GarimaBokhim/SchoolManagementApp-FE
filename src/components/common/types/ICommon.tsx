@@ -12,8 +12,8 @@ export interface IDistrict {
 }
 export interface IMunicipality {
   Id: number;
-  MunicipalityNameInNepali: string;
-  MunicipalityNameInEnglish: string;
+  municipalityNameInNepali: string;
+  municipalityNameInEnglish: string;
   DistrictId: number;
 }
 export interface IVdc {

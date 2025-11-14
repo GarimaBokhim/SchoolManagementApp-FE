@@ -16,6 +16,8 @@ export interface IStudent {
   classSectionId?: string | null;
   provinceId: number;
   districtId: number;
+  municipalityId: number;
+  vdcid: number;
   wardNumber?: number | null;
 }
 
