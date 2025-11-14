@@ -20,8 +20,6 @@ const EditExamResult = ({ visible, onClose, ExamResultId }: Props) => {
       marksObtained: ExamResultData?.marksObtained ?? 0,
       grade: ExamResultData?.grade ?? "",
       remarks: ExamResultData?.remarks ?? "",
-      isActive: ExamResultData?.isActive ?? true,
-      schoolId: ExamResultData?.examId ?? "",
     },
   });
 

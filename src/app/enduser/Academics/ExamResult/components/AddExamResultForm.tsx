@@ -11,7 +11,6 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
 type Props = {
@@ -28,19 +27,12 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null
   );
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
     null
   );
   const { data: allExam } = useGetAllExams();
-  const { data: allSchool } = useGetAllSchool();
   const { data: allSubject } = useGetAllSubjects();
   const { data: allStudents } = useGetAllStudents();
-  const { watch, setValue } = form;
-  const isChecked = watch("isActive", false);
-  const handleCheckBoxChange = () => {
-    setValue("isActive", !isChecked);
-  };
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError();
     try {
@@ -118,29 +110,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 getValue={(g) => g?.id ?? ""}
               />
               <AppCombobox
-                value={selectedSchoolId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="School"
-                name="schoolId"
-                form={form}
-                required
-                options={allSchool?.Items}
-                selected={
-                  allSchool?.Items?.find((g) => g.id === selectedSchoolId) ||
-                  null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedSchoolId(group.id || null);
-                  } else {
-                    setSelectedSchoolId(null);
-                  }
-                }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
-              />
-              <AppCombobox
                 value={selectedSubjectId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
@@ -184,20 +153,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 type="string"
                 placeholder="Enter Remark"
               />
-              <div className="mb-6 relative flex items-center">
-                <label className="pl-2 test-slate-500 pr-2">
-                  {"Is Active"}
-                </label>
-                <InputElement
-                  layout="row"
-                  form={form}
-                  checked={isChecked}
-                  onChange={handleCheckBoxChange}
-                  name="isActive"
-                  inputTypeCheckBox="checkbox"
-                  customStyle="!border-0 after:!content-none"
-                />
-              </div>
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />

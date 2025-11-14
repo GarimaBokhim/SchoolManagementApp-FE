@@ -19,8 +19,6 @@ const AddExamResult = ({ visible, onClose }: Props) => {
       marksObtained: 0,
       grade: "",
       remarks: "",
-      isActive: true,
-      schoolId: "",
     },
 
     // resolver: yupResolver(ExamResultValidator),

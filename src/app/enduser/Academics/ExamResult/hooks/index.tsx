@@ -21,8 +21,6 @@ type ExamResultRequest = {
   marksObtained: number;
   grade: string;
   remarks: string;
-  isActive: boolean;
-  schoolId: string;
 };
 
 export const useAddExamResult = () => {

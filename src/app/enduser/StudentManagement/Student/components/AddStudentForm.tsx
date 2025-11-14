@@ -125,12 +125,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                 placeholder="Enter Address"
               />
               <InputElement
-                label="Image URL"
-                form={form}
-                name="imageUrl"
-                placeholder="Enter Image URL"
-              />
-              <InputElement
                 label="Date of Birth"
                 form={form}
                 name="dateOfBirth"

@@ -11,7 +11,6 @@ import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
 type Props = {
@@ -26,11 +25,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const handleClose = () => {
     form.reset();
   };
-  const { watch, setValue } = form;
-  const isChecked = watch("isActive", false);
-  const handleCheckBoxChange = () => {
-    setValue("isActive", !isChecked);
-  };
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null
@@ -38,10 +32,8 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
     null
   );
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
   const { data: allSubject } = useGetAllSubjects();
   const { data: allExam } = useGetAllExams();
-  const { data: allSchool } = useGetAllSchool();
   const { data: allStudents } = useGetAllStudents();
   useEffect(() => {
     if (ExamResultData) {
@@ -52,11 +44,8 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
         marksObtained: ExamResultData?.marksObtained ?? 0,
         grade: ExamResultData?.grade ?? "",
         remarks: ExamResultData?.remarks ?? "",
-        isActive: ExamResultData?.isActive ?? true,
-        schoolId: ExamResultData?.examId ?? "",
       });
       setSelectedExamId(ExamResultData?.examId);
-      setSelectedSchoolId(ExamResultData?.schoolId);
       setSelectedStudentId(ExamResultData?.studentId);
       setSelectedSubjectId(ExamResultData?.subjectId);
     }
@@ -154,29 +143,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 getValue={(g) => g?.id ?? ""}
               />
               <AppCombobox
-                value={selectedSchoolId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="School"
-                name="schoolId"
-                form={form}
-                required
-                options={allSchool?.Items}
-                selected={
-                  allSchool?.Items?.find((g) => g.id === selectedSchoolId) ||
-                  null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedSchoolId(group.id || null);
-                  } else {
-                    setSelectedSchoolId(null);
-                  }
-                }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
-              />
-              <AppCombobox
                 value={selectedSubjectId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
@@ -220,20 +186,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 type="string"
                 placeholder="Enter Remark"
               />
-              <div className="mb-6 relative flex items-center">
-                <label className="pl-2 test-slate-500 pr-2">
-                  {"Is Active"}
-                </label>
-                <InputElement
-                  layout="row"
-                  form={form}
-                  checked={isChecked}
-                  onChange={handleCheckBoxChange}
-                  name="isActive"
-                  inputTypeCheckBox="checkbox"
-                  customStyle="!border-0 after:!content-none"
-                />
-              </div>
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />
