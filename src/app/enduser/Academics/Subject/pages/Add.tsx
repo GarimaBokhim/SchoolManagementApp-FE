@@ -12,7 +12,7 @@ interface Props {
 const AddSubject = ({ visible, onClose }: Props) => {
   const form = useForm<ISubject>({
     defaultValues: {
-      id: "",
+      Id: "",
       name: "",
       code: "",
       creditHours: 0,

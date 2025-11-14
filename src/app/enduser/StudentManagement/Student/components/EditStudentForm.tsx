@@ -13,8 +13,10 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
+  useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
+import { useGetAllParents } from "../../Parent/hooks";
 type Props = {
   form: UseFormReturn<IStudent>;
   onClose: () => void;
@@ -33,10 +35,17 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
     null
   );
+  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
+  const { data: allParents } = useGetAllParents();
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
+  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
+    number | null
+  >(null);
   const { data: filteredDistrict } =
     useGetDistrictByProvince(selectedProvinceId);
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
+  const { data: filteredMunicipality } =
+    useGetMunicipalityByDistrict(selectedDistrictId);
 
   const handleClose = () => {
     form.reset();
@@ -62,6 +71,11 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         districtId: StudentData?.districtId ?? 0,
         wardNumber: StudentData?.wardNumber ?? 0,
       });
+      setSelectedDistrictId(StudentData.districtId);
+      setSelectedProvinceId(StudentData.provinceId);
+      setSelectedParenId(StudentData.parentId);
+      setSelectedVdcId(StudentData.vdcid);
+      setSelectedMunicipalityId(StudentData.municipalityId);
     }
   }, [StudentData]);
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
@@ -173,11 +187,28 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 name="enrollmentDate"
                 inputType="date"
               />
-              <InputElement
-                label="Parent ID"
-                form={form}
+              <AppCombobox
+                value={selectedParenId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Parent Name"
                 name="parentId"
-                placeholder="Enter Parent ID"
+                form={form}
+                required
+                options={allParents?.Items}
+                selected={
+                  allParents?.Items?.find((g) => g.id === selectedParenId) ||
+                  null
+                }
+                onSelect={(group) => {
+                  if (group) {
+                    setSelectedParenId(group.id || null);
+                  } else {
+                    setSelectedParenId(null);
+                  }
+                }}
+                getLabel={(g) => g?.fullName ?? ""}
+                getValue={(g) => g?.id ?? ""}
               />
               {/* <InputElement
                 label="Class Section ID"
@@ -236,8 +267,8 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 value={selectedVdcId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
-                label="Ward"
-                name="Ward Number"
+                label="VDC"
+                name="vdcid"
                 form={form}
                 options={filteredVdc}
                 selected={
@@ -250,8 +281,38 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                     setSelectedVdcId(null);
                   }
                 }}
-                getLabel={(g) => g?.VdcNameInEnglish ?? ""}
+                getLabel={(g) => g?.VdcNameInNepali ?? ""}
                 getValue={(g) => g?.Id ?? ""}
+              />
+              <AppCombobox
+                value={selectedMunicipalityId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Municipality"
+                name="municipalityId"
+                form={form}
+                options={filteredMunicipality}
+                selected={
+                  filteredMunicipality?.find(
+                    (g) => g.Id === selectedMunicipalityId
+                  ) || null
+                }
+                onSelect={(group) => {
+                  if (group) {
+                    setSelectedMunicipalityId(group.Id || null);
+                  } else {
+                    setSelectedMunicipalityId(null);
+                  }
+                }}
+                getLabel={(g) => g?.municipalityNameInEnglish ?? ""}
+                getValue={(g) => g?.Id ?? ""}
+              />
+              <InputElement
+                label="Ward Number"
+                form={form}
+                name="wardNumber"
+                inputType="number"
+                placeholder="Enter Ward Number"
               />
               <AppCombobox
                 label="Gender"

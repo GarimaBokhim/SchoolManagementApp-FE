@@ -9,7 +9,7 @@ import { useAddSubject } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllClass } from "@/app/enduser/ClassManagement/Class/hooks";
+import { useGetAllClass } from "../../Class/hooks";
 import { useState } from "react";
 type Props = {
   form: UseFormReturn<ISubject>;

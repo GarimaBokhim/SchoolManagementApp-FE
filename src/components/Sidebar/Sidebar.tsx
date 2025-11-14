@@ -150,11 +150,11 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Navigation: Navigation,
     "Access Control": LockKeyholeOpen,
     "Institution SetUp": School,
-    "Student Management": Users,
+    Students: Users,
     "Parents Information": (
       <Icon icon="mynaui:users-group" width="24" height="24" />
     ),
-    "Academic Information": BookOpen,
+    Academics: BookOpen,
     "Fee and Accounting": Banknote,
     "Attendance Management": Hand,
     "Exam and Grading": BookCheck,

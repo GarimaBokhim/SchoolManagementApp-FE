@@ -22,10 +22,9 @@ import {
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import AddSubject from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { useGetAllClass } from "@/app/enduser/ClassManagement/Class/hooks";
+import { useGetAllClass } from "../../Class/hooks";
 const AllSubjectForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -274,7 +273,7 @@ const AllSubjectForm = () => {
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(Subject.id ? Subject.id : "")
+                                  handleDelete(Subject.Id ? Subject.Id : "")
                                 }
                                 headerText={<Trash />}
                                 content="Are you sure you want to delete this Subject?"
@@ -282,7 +281,7 @@ const AllSubjectForm = () => {
                             )}
                             {canEdit && (
                               <EditButton
-                                button={buttonElement(Subject.id ?? "")}
+                                button={buttonElement(Subject.Id ?? "")}
                               />
                             )}
                           </div>

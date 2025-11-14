@@ -4,7 +4,7 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 import { IStudent } from "../types/IStudents";
 import { useAddStudent } from "../hooks";
@@ -13,9 +13,10 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
+  useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
-import { useGetAllParents } from "@/app/enduser/ParentManagement/Parent/hooks";
+import { useGetAllParents } from "../../Parent/hooks";
 type Props = {
   form: UseFormReturn<IStudent>;
   onClose: () => void;
@@ -34,9 +35,14 @@ const AddStudentForm = ({ form, onClose }: Props) => {
     null
   );
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
+  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
+    number | null
+  >(null);
   const { data: filteredDistrict } =
     useGetDistrictByProvince(selectedProvinceId);
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
+  const { data: filteredMunicipality } =
+    useGetMunicipalityByDistrict(selectedDistrictId);
 
   const handleClose = () => {
     form.reset();
@@ -216,8 +222,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                 value={selectedVdcId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
-                label="Ward"
-                name="wardNumber"
+                label="VDC"
+                name="vdcid"
                 form={form}
                 options={filteredVdc}
                 selected={
@@ -230,8 +236,38 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     setSelectedVdcId(null);
                   }
                 }}
-                getLabel={(g) => g?.VdcNameInEnglish ?? ""}
+                getLabel={(g) => g?.VdcNameInNepali ?? ""}
                 getValue={(g) => g?.Id ?? ""}
+              />
+              <AppCombobox
+                value={selectedMunicipalityId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Municipality"
+                name="municipalityId"
+                form={form}
+                options={filteredMunicipality}
+                selected={
+                  filteredMunicipality?.find(
+                    (g) => g.Id === selectedMunicipalityId
+                  ) || null
+                }
+                onSelect={(group) => {
+                  if (group) {
+                    setSelectedMunicipalityId(group.Id || null);
+                  } else {
+                    setSelectedMunicipalityId(null);
+                  }
+                }}
+                getLabel={(g) => g?.municipalityNameInEnglish ?? ""}
+                getValue={(g) => g?.Id ?? ""}
+              />
+              <InputElement
+                label="Ward Number"
+                form={form}
+                name="wardNumber"
+                inputType="number"
+                placeholder="Enter Ward Number"
               />
               <AppCombobox
                 label="Gender"

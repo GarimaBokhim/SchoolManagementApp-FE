@@ -6,7 +6,7 @@ const ExamEndPoints = {
   getAllExams: "/api/Academics/all-exam",
   createExams: "/api/Academics/AddExam",
   removeExams: "/api/Academics/Delete",
-  updateExams: "/api/Academics/UpdateExams",
+  updateExams: "/api/Academics/UpdateExam",
   getExamsById: "/api/Academics/Exam",
   filterExamByDate: "/api/Academics/FilterExam",
 };
