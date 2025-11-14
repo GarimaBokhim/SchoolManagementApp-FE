@@ -6,8 +6,6 @@ export interface IExamResult {
   marksObtained: number;
   grade: string;
   remarks: string;
-  isActive: boolean;
-  schoolId: string;
 }
 
 export interface IFilterExamResultByDate {
