@@ -260,9 +260,7 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(
-                                    Class.classId ? Class.classId : ""
-                                  )
+                                  handleDelete(Class.id ? Class.id : "")
                                 }
                                 headerText={<Trash />}
                                 content="Are you sure you want to delete this Class?"
@@ -270,7 +268,7 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                             )}
                             {canEdit && (
                               <EditButton
-                                button={buttonElement(Class.classId ?? "")}
+                                button={buttonElement(Class.id ?? "")}
                               />
                             )}
                           </div>
