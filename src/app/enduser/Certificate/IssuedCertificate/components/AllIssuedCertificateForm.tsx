@@ -29,7 +29,8 @@ import AddIssuedCertificate from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
-import Certificate from "./IndividualStudentPrintForm";
+import CollegeCertificate from "./CollegeCertificate";
+import SchoolCertificate from "./SchoolCertificate";
 type Props = {
   onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
 };
@@ -95,6 +96,7 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     null
   );
+  const [templateId, setTemplateId] = useState<string | null>(null);
   useEffect(() => {
     if (onDataFromChild) onDataFromChild(start, end);
   }, [start, end, onDataFromChild]);
@@ -212,7 +214,6 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
                       label="Template"
                       name="templateId"
                       form={form}
-                      required
                       options={allTemplate?.Items}
                       selected={
                         allTemplate?.Items?.find(
@@ -332,6 +333,9 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
                                     type="button"
                                     onClick={() => {
                                       setShowStudentPrint(true);
+                                      setTemplateId(
+                                        IssuedCertificate.templateId
+                                      );
                                       setSelectedStudent(
                                         IssuedCertificate.studentId
                                       );
@@ -358,12 +362,20 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
                 </tbody>
               </table>
             </div>
-            {showStudentPrint && selectedStudent && (
-              <Certificate
-                studentId={selectedStudent}
-                onClose={() => setShowStudentPrint(false)}
-              />
-            )}
+            {showStudentPrint &&
+              selectedStudent &&
+              templateId &&
+              (templateId === "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59" ? (
+                <SchoolCertificate
+                  studentId={selectedStudent}
+                  onClose={() => setShowStudentPrint(false)}
+                />
+              ) : (
+                <CollegeCertificate
+                  studentId={selectedStudent}
+                  onClose={() => setShowStudentPrint(false)}
+                />
+              ))}
             {showIssuedCertificate && selectedId && (
               <EditIssuedCertificate
                 IssuedCertificateId={selectedId}

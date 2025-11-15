@@ -1,5 +1,5 @@
 export interface IClass {
-  classId?: string;
+  id?: string;
   name: string;
 }
 

@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { X } from "lucide-react";
-import { useGetAllParents } from "@/app/enduser/ParentManagement/Parent/hooks";
 import {
   useGetAllDistrict,
   useGetAllProvince,
@@ -13,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
+const SchoolCertificate: React.FC<Props> = ({ studentId, onClose }) => {
   const { data: allProvince } = useGetAllProvince();
   const { data: allDistrict } = useGetAllDistrict();
   const { data: certificateData } = useGenerateCertificateByStudent(studentId);
@@ -63,6 +62,8 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
     position: absolute;
     top: 0;
     left: 0;
+    padding-right: 4rem;
+    padding-left: 4rem;
     width: 297mm;
     height: 210mm;
     overflow: hidden;
@@ -119,8 +120,8 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
             backgroundSize: "100% 100%",
           }}
         >
-          <header className="border-b-4 border-blue-800 pb-4 mb-6">
-            <div className="flex items-start gap-2">
+          <header className=" pb-4 mb-2">
+            <div className="flex items-start ">
               <div className="w-28 mt-6">
                 <img
                   src="/assets/logo.png"
@@ -129,42 +130,37 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
                 />
               </div>
 
-              <div className="flex-1">
-                <div className="grid grid-cols-3 text-sm text-blue-900 font-medium">
-                  <div className="text-left">
-                    <p>TU Regd. No.: 735</p>
+              <div className="flex ml-[-13%] w-full">
+                <div className="w-full">
+                  <div className=" text-sm text-blue-900 font-medium  ">
+                    <div className="text-right text-xs text-gray-700">
+                      <p>WhatsApp: 98XXXXXXXX</p>
+                      <p>email@example.com</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p>Tribhuvan University</p>
-                    <p>ISO 9001:2015 Certified</p>
-                  </div>
-                  <div className="text-right text-xs text-gray-700">
-                    <p>WhatsApp: 98XXXXXXXX</p>
-                    <p>email@example.com</p>
-                  </div>
-                </div>
 
-                <div className="text-center mt-3 text-blue-800">
-                  <h2 className="text-3xl font-bold leading-tight">
-                    AASTHA COLLEGE OF MANAGEMENT
-                  </h2>
-                  <p className="text-sm mt-1">
-                    Damak-04, Jhapa, Koshi Province, Nepal
-                  </p>
-                  <p className="text-xs mt-1">
-                    ☎ 023-573549, 023-577127 &nbsp;&nbsp; ✉
-                    aasthacollege23@gmail.com
-                  </p>
+                  <div className="text-center text-blue-800">
+                    <h2 className="text-7xl font-bold ">Ekta Academy</h2>
+                    <p className="text-md mt-1 font-semibold">
+                      Damak-04, Jhapa, Koshi Province, Nepal
+                    </p>
+                    <p className="text-md mt-1 font-semibold">
+                      (Estd: 2053 BS)
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </header>
 
-          <div className="flex justify-center items-center mb-6 ml-[20%]">
-            <h1 className="bg-red-700 w-full md:w-[50%] text-white text-center text-2xl font-bold py-2 rounded-3xl">
+          <div className="flex items-start mb-6 justify-between">
+            <p className="mt-[1.7rem] font-semibold">
+              <strong>S. No.:</strong> 1567
+            </p>
+            <h1 className="bg-red-800 px-5 py-4 text-white text-center text-4xl font-bold rounded-3xl">
               CHARACTER CERTIFICATE
             </h1>
-            <div className="w-[120px] h-[150px] border-2 ml-[20%] border-black flex items-center justify-center">
+            <div className="w-[120px] h-[130px] border-2 mt-[-1.7rem] border-black flex items-center justify-center">
               <img
                 src={certificateData?.StudentImage}
                 className="w-full h-full object-cover"
@@ -174,10 +170,6 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
 
           <div className="flex gap-8 mb-6 items-start">
             <div className="flex-1 text-[16px] leading-relaxed">
-              <p>
-                <strong>S. No.:</strong> 1567
-              </p>
-
               <p className="text-justify my-3">
                 This is to certify that Ms.{" "}
                 <strong>{certificateData?.fullName}</strong>, daughter of Mr.{" "}
@@ -208,24 +200,24 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
                 conduct while at college was commendable. As per our record, her
                 date of birth is{" "}
                 <strong>{`${certificateData?.dateOfBirth}`}</strong> B.S. (
-                <strong>{`${certificateData?.dateOfBirth}`}</strong> A.D.).
+                <strong>{`${certificateData?.dateOfBirth}`}</strong> A.D.).We
+                hold no information against her character.
               </p>
 
-              <p className="italic mt-3 text-center">
+              <p className="italic mt-3 text-start">
                 We extend our best wishes for her future endeavors and success
                 in life.
               </p>
             </div>
           </div>
 
-          <footer className="border-t border-gray-400 pt-4">
-            <div className="text-sm mb-10">
+          <footer className=" border-gray-400 pt-2">
+            <div className="text-sm mb-20">
               <div>
-                <strong>Final Symbol No.:</strong>{" "}
-                {certificateData?.symbolNumber}
+                <strong>SLC Symbol No.:</strong> {certificateData?.symbolNumber}
               </div>
               <div>
-                <strong>Registration No.:</strong>{" "}
+                <strong>SLC Registration No.:</strong>{" "}
                 {certificateData?.registrationNumber}
               </div>
               <div>
@@ -234,16 +226,10 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
               </div>
             </div>
 
-            <div className="flex justify-between text-center">
-              <div className="w-1/3 border-t border-black pt-1 font-semibold">
-                Issuing Staff
-              </div>
-              <div className="w-1/3 border-t border-black pt-1 font-semibold">
-                College Seal
-              </div>
-              <div className="w-1/3 border-t border-black pt-1 font-semibold">
-                Campus Chief
-              </div>
+            <div className="flex justify-between text-center ">
+              <div className="w-1/3 pt-1 font-semibold">Issuing Staff</div>
+              <div className="w-1/3  pt-1 font-semibold">College Seal</div>
+              <div className="w-1/3 pt-1 font-semibold">Campus Chief</div>
             </div>
           </footer>
         </div>
@@ -260,4 +246,4 @@ const Certificate: React.FC<Props> = ({ studentId, onClose }) => {
   );
 };
 
-export default Certificate;
+export default SchoolCertificate;
