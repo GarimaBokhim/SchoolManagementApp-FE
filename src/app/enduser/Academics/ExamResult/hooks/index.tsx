@@ -17,10 +17,11 @@ type ExamResultRequest = {
   id?: string;
   examId: string;
   studentId: string;
-  subjectId: string;
-  marksObtained: number;
-  grade: string;
-  remarks: string;
+  remarks?: string;
+  marksObtained: {
+    subjectId: string;
+    marksObtained: number;
+  }[];
 };
 
 export const useAddExamResult = () => {

@@ -298,7 +298,7 @@ const AllExamResultForm = () => {
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">
+                        {/* <td className="py-3 px-4">
                           {
                             allSubject?.Items.find(
                               (i) => i.Id === ExamResult.subjectId
@@ -308,7 +308,7 @@ const AllExamResultForm = () => {
                         <td className="py-3 px-4">{ExamResult.grade}</td>
                         <td className="py-3 px-4">
                           {ExamResult.marksObtained}
-                        </td>
+                        </td> */}
 
                         <td className="py-3 px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">
