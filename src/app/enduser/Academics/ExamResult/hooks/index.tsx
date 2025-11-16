@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IExamResult } from "../types/IExamResults";
+import { IExamResult, IMarkSheet } from "../types/IExamResults";
 const ExamResultEndPoints = {
   getAllExamResults: "/api/Academics/all-examResult",
   createExamResults: "/api/Academics/AddExamResult",
   removeExamResults: "/api/Academics/Delete",
   updateExamResults: "/api/Academics/UpdateExamResult",
   getExamResultsById: "/api/Academics/ExamResult",
+  generateMarkSheet: "/api/Academics/MarkSheet",
   filterExamResultByDate: "/api/Academics/FilterExamResult",
 };
 
@@ -137,6 +138,24 @@ export const useFilterExamResultByDate = (params?: string) => {
       const response = await api.get<IPaginationResponse<IExamResult>>(url);
       return response.data;
     },
+    staleTime: 0,
+    retry: false,
+  });
+};
+
+export const useGenerateMarkSheet = (studentId: string, examId: string) => {
+  return useQuery({
+    queryKey: [queryKey, studentId],
+    queryFn: async (): Promise<IMarkSheet> => {
+      if (!studentId) {
+        throw new Error("Id is required to get a IssuedCertificate");
+      }
+      const response = await api.get<IMarkSheet>(
+        `${ExamResultEndPoints.generateMarkSheet}?studentId=${studentId}&examId=${examId}`
+      );
+      return response.data;
+    },
+    enabled: !!studentId,
     staleTime: 0,
     retry: false,
   });
