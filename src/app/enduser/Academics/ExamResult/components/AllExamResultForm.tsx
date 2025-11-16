@@ -9,7 +9,7 @@ import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Edit, Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
 import EditExamResult from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
@@ -28,6 +28,7 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
+import SchoolMarkSheet from "./IndividualStudentPrintForm";
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -66,7 +67,9 @@ const AllExamResultForm = () => {
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const { data: allExam } = useGetAllExams();
-  const { data: allSubject } = useGetAllSubjects();
+  const [showStudentPrint, setShowStudentPrint] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -260,9 +263,6 @@ const AllExamResultForm = () => {
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Exam Name</th>
                   <th className="px-4 py-3 text-left">Student Name</th>
-                  <th className="px-4 py-3 text-left">Subject</th>
-                  <th className="px-4 py-3 text-left">Grade</th>
-                  <th className="px-4 py-3 text-left">Marks Obtained</th>
                   <th className="px-4 py-3 text-left">Remarks</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
@@ -298,18 +298,6 @@ const AllExamResultForm = () => {
                             )?.firstName
                           }
                         </td>
-                        {/* <td className="py-3 px-4">
-                          {
-                            allSubject?.Items.find(
-                              (i) => i.Id === ExamResult.subjectId
-                            )?.name
-                          }
-                        </td>
-                        <td className="py-3 px-4">{ExamResult.grade}</td>
-                        <td className="py-3 px-4">
-                          {ExamResult.marksObtained}
-                        </td> */}
-
                         <td className="py-3 px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
@@ -329,6 +317,21 @@ const AllExamResultForm = () => {
                                 button={buttonElement(ExamResult.id ?? "")}
                               />
                             )}
+                            <EditButton
+                              button={
+                                <ButtonElement
+                                  icon={<Printer size={14} />}
+                                  text=""
+                                  type="button"
+                                  onClick={() => {
+                                    setShowStudentPrint(true);
+                                    setSelectedExamId(ExamResult.examId);
+                                    setSelectedStudent(ExamResult.studentId);
+                                  }}
+                                  className="!text-xs"
+                                />
+                              }
+                            />
                           </div>
                         </td>
                       </tr>
@@ -347,6 +350,13 @@ const AllExamResultForm = () => {
               </tbody>
             </table>
           </div>
+          {showStudentPrint && selectedStudent && selectedExamId && (
+            <SchoolMarkSheet
+              studentId={selectedStudent}
+              examId={selectedExamId}
+              onClose={() => setShowStudentPrint(false)}
+            />
+          )}
           {showExamResults && selectedId && (
             <EditExamResult
               ExamResultId={selectedId}

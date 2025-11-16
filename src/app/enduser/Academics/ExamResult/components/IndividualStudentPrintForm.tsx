@@ -1,138 +1,260 @@
-// "use client";
+"use client";
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { useGenerateMarkSheet } from "../hooks";
+import { useGetAllSubjects } from "../../Subject/hooks";
 
-// import React, { useRef } from "react";
+interface Props {
+  studentId: string;
+  examId: string;
+  onClose: () => void;
+}
 
-// export interface StudentData {
-//   studentName: string;
-//   fatherName: string;
-//   province: string;
-//   district: string;
-//   municipality: string;
-//   ward: string;
-//   program: string;
-//   year: string;
-//   percentage: string;
-//   division: string;
-//   dobBS: string;
-//   dobAD: string;
-//   symbolNo: string;
-//   regNo: string;
-//   issueDate: string;
-//   photo: string;
-// }
+const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
+  const { data } = useGenerateMarkSheet(studentId, examId);
+  const { data: allSubject } = useGetAllSubjects();
+  const handlePrint = () => {
+    const content = document.getElementById("marksheet")?.outerHTML;
+    if (!content) return;
 
-// interface Props {
-//   student: StudentData;
-// }
+    const printWindow = window.open("", "", "width=900,height=1000");
+    printWindow?.document.write(`
+      <html>
+        <head>
+          <title>Marksheet</title>
+          <script src="https://cdn.tailwindcss.com"></script>
 
-// const Certificate: React.FC<Props> = ({ student }) => {
-//   const certificateRef = useRef<HTMLDivElement>(null);
+          <style>
+            @media print {
+              @page {
+                size: A4 portrait;
+                margin: 0 !important;
+              }
 
-//   return (
-//     <div className="bg-gray-100 p-10 min-h-screen font-[Times_New_Roman]">
-//       <div
-//         ref={certificateRef}
-//         className="relative bg-white mx-auto w-[210mm] h-[297mm] shadow-xl print:shadow-none overflow-hidden"
-//       >
-//         <img
-//           src="/border.png"
-//           alt="border"
-//           className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none p-8"
-//         />
+              body {
+                margin: 0;
+                padding: 0;
+              }
 
-//         <div className="relative z-10 px-20 pt-16 pb-12">
-//           <header className="flex items-start justify-between border-b-4 border-blue-800 pb-4 mb-6">
-//             <div className="w-28">
-//               <img
-//                 src="/default-logo.png"
-//                 alt="College Logo"
-//                 className="w-full h-auto"
-//               />
-//             </div>
-//             <div className="flex-1 text-center text-blue-900">
-//               <p className="text-sm">TU Regd. No.: 735</p>
-//               <p className="text-xs">An ISO 9001:2015 Certified</p>
-//               <h2 className="text-3xl font-bold mt-1 mb-1">
-//                 AASTHA COLLEGE OF MANAGEMENT
-//               </h2>
-//               <p className="text-sm">Damak-04, Jhapa, Koshi Province, Nepal</p>
-//               <p className="text-xs mt-1">
-//                 ☎ 023-573549, 023-577127 ✉ aasthacollege23@gmail.com
-//               </p>
-//             </div>
-//             <div className="w-28" /> {/* for balance */}
-//           </header>
+              body * {
+                visibility: hidden;
+              }
 
-//           {/* Certificate Title + Photo */}
-//           <div className="flex justify-center items-center mb-6 gap-10">
-//             <h1 className="bg-red-700 px-10 text-white text-center text-2xl font-bold py-2 rounded-3xl">
-//               CHARACTER CERTIFICATE
-//             </h1>
-//             <div className="w-[110px] h-[140px] border-2 border-black flex items-center justify-center">
-//               <img
-//                 src={student.photo}
-//                 alt="Student Photo"
-//                 className="w-full h-full object-cover"
-//               />
-//             </div>
-//           </div>
+              #marksheet, #marksheet * {
+                visibility: visible;
+              }
 
-//           {/* Main Content */}
-//           <div className="text-[16px] leading-relaxed text-justify text-black">
-//             <p>
-//               <strong>S. No.:</strong> 1567
-//             </p>
-//             <p className="mt-4">
-//               This is to certify that Ms. <strong>{student.studentName}</strong>
-//               , daughter of Mr. <strong>{student.fatherName}</strong>,
-//               inhabitant of <strong>{student.province}</strong> Province,{" "}
-//               <strong>{student.district}</strong> district,{" "}
-//               <strong>{student.municipality}</strong> Rural Municipality, ward
-//               no <strong>{student.ward}</strong>, was a bonafide student of this
-//               college. She passed <strong>{student.program}</strong>{" "}
-//               Examinations in the year <strong>{student.year}</strong> and
-//               secured <strong>{student.percentage}%</strong> with{" "}
-//               <strong>{student.division}</strong> division. Her conduct while at
-//               college was commendable. As per our record, her date of birth is{" "}
-//               <strong>{student.dobBS}</strong> B.S. (
-//               <strong>{student.dobAD}</strong> A.D.).
-//             </p>
-//             <p className="italic text-center mt-6">
-//               We extend our best wishes for her future endeavors and success in
-//               life.
-//             </p>
-//           </div>
+              #marksheet {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 210mm;
+                height: 297mm;
+                padding: 20mm;
+              }
 
-//           {/* Footer */}
-//           <footer className="mt-12 text-[14px]">
-//             <div className="mb-10">
-//               <p>
-//                 <strong>Final Symbol No.:</strong> {student.symbolNo}
-//               </p>
-//               <p>
-//                 <strong>Registration No.:</strong> {student.regNo}
-//               </p>
-//               <p>
-//                 <strong>Date of Issue:</strong> {student.issueDate}
-//               </p>
-//             </div>
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
 
-//             <div className="flex justify-between text-center mt-20">
-//               <div className="w-1/3 border-t border-black pt-1 font-semibold">
-//                 Issuing Staff
-//               </div>
-//               <div className="w-1/3 border-t border-black pt-1 font-semibold">
-//                 College Seal
-//               </div>
-//               <div className="w-1/3 border-t border-black pt-1 font-semibold">
-//                 Campus Chief
-//               </div>
-//             </div>
-//           </footer>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
+    printWindow?.document.close();
+    printWindow?.focus();
+    printWindow?.print();
+  };
 
-// export default Certificate;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center ">
+      <div className="bg-white w-[90%] max-w-[900px] rounded-md p-4 shadow-xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Print Marksheet</h2>
+          <button onClick={onClose} className="text-red-500 text-xl">
+            <X />
+          </button>
+        </div>
+        <div
+          id="marksheet"
+          className="bg-white shadow-2xl mx-auto border-3 text-sky-600 "
+          style={{
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "100% 100%",
+          }}
+        >
+          <div className="border-4 border-sky-500 p-5">
+            <header className=" pb-4 mb-2">
+              <div className="flex items-start ">
+                <div className="w-28 ">
+                  <img
+                    src="/assets/logo.png"
+                    alt="Logo"
+                    className="w-full h-auto"
+                  />
+                </div>
+
+                <div className="flex ml-[-13%] w-full">
+                  <div className="w-full">
+                    <div className="text-center mb-4">
+                      <h1 className="text-2xl font-bold">
+                        BHALUWA PUBLIC ACADEMY
+                      </h1>
+                      <p>Kerabari-9, Bhaluwa, Morang</p>
+                      <p className="font-semibold mt-2 underline">
+                        SECOND TERMINAL EXAMINATION 2082
+                      </p>
+                      <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-2 text-sm mb-2 border border-sky-500 p-2">
+              <p>
+                <strong>Name:</strong> Garima Rai
+              </p>
+              <p>
+                <strong>Section:</strong> A
+              </p>
+              <p>
+                <strong>Class:</strong> 4
+              </p>
+              <p>
+                <strong>Roll No:</strong> 2
+              </p>
+            </div>
+            <table className="w-full border text-sm">
+              <thead>
+                <tr className="text-center font-semibold">
+                  <th className="border border-sky-500 p-1 w-10">S.N</th>
+                  <th className="border border-sky-500 p-1">Subjects</th>
+                  {/* <th className="border p-1 w-20">Grade</th>
+                <th className="border p-1 w-24">Grade Point</th> */}
+                  <th className="border border-sky-500 p-1 w-24">
+                    Marks Obtained
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data &&
+                  data.marksObtained?.map((m, index: number) => (
+                    <tr key={index} className="text-center">
+                      <td className="border border-sky-500 p-1">{index + 1}</td>
+                      <td className="border border-sky-500 p-1 text-left px-2">
+                        {
+                          allSubject?.Items.find((i) => i.Id === m.subjectId)
+                            ?.name
+                        }
+                      </td>
+                      {/* <td className="border p-1">{m.grade || "-"}</td> */}
+                      {/* <td className="border p-1">{m.gradePoint || "-"}</td> */}
+                      <td className="border border-sky-500 p-1">
+                        {m.marksObtained}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {/* Grade Table */}
+            <div className="mt-2 text-sm w-full flex border border-sky-500">
+              <table className="w-[70%] ">
+                <thead>
+                  <tr className="text-center font-semibold">
+                    <th className="border-b border-r p-1 border-sky-500">
+                      GRADE
+                    </th>
+                    <th className="border-b border-x p-1 border-sky-500">A+</th>
+                    <th className="border-b border-x p-1 border-sky-500">A</th>
+                    <th className="border-b border-x p-1 border-sky-500">B+</th>
+                    <th className="border-b border-x p-1 border-sky-500">B</th>
+                    <th className="border-b border-x p-1 border-sky-500">C+</th>
+                    <th className="border-b border-x p-1 border-sky-500">C</th>
+                    <th className="border-b border-x p-1 border-sky-500">D</th>
+                    <th className="border-b border-x p-1 border-sky-500">NG</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr className="text-center">
+                    <td className=" font-semibold">GRADE POINT</td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      4.0
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      3.6
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      3.2
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      2.8
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      2.4
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      2.0
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">
+                      1.6
+                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">-</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="text-start w-[30%] p-2 text-sky-600">
+                <strong className="border border-sky-500  inline-block px-2">
+                  {" "}
+                  OBT.MARKS
+                </strong>
+                <div className="">{data?.totalObtainedMarks}</div>
+
+                <div className="">
+                  <p className="border  border-sky-500 inline-block px-2 mr-2">
+                    {" "}
+                    GPA
+                  </p>
+                  {data?.grade}
+                </div>
+              </div>
+            </div>
+
+            {/* GPA, Remarks */}
+            <div className="mt-5 text-sm">
+              <p>
+                <strong>Remarks:</strong> {data?.remarks}
+              </p>
+              <p>
+                <strong>DATE OF ISSUE:</strong>
+              </p>
+            </div>
+
+            <div className="flex justify-between mt-20 text-center font-semibold">
+              <p>Exam Controller</p>
+              <p>Class Teacher</p>
+              <p>Principal</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handlePrint}
+            className="px-4 py-2 bg-blue-700 text-white rounded"
+          >
+            Print Marksheet
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SchoolMarkSheet;
