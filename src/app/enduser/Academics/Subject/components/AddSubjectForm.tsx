@@ -95,18 +95,17 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 required
                 options={allClass?.Items}
                 selected={
-                  allClass?.Items?.find((g) => g.classId === selectedClassId) ||
-                  null
+                  allClass?.Items?.find((g) => g.id === selectedClassId) || null
                 }
                 onSelect={(group) => {
                   if (group) {
-                    setSelectedClassId(group.classId || null);
+                    setSelectedClassId(group.id || null);
                   } else {
                     setSelectedClassId(null);
                   }
                 }}
                 getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.classId ?? ""}
+                getValue={(g) => g?.id ?? ""}
               />
             </div>
             <div className="flex justify-center mt-6">

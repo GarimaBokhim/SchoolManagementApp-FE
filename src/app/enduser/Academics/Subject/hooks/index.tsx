@@ -33,7 +33,7 @@ export const useAddSubject = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredSubject"] });
+      queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
     },
     onError: (error) => {
       console.error("Error adding Subject:", error);
@@ -55,7 +55,7 @@ export const useRemoveSubject = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredSubject"] });
+      queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
     },
   });
 };
@@ -78,7 +78,7 @@ export const useEditSubject = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["filteredSubject"] });
+      queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });

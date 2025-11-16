@@ -1,5 +1,6 @@
 "use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
+
+import { SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
@@ -13,26 +14,42 @@ import { useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
+
 type Props = {
   form: UseFormReturn<IExamResult>;
   onClose: () => void;
 };
+
 const AddExamResultForm = ({ form, onClose }: Props) => {
   const addExamResult = useAddExamResult();
   const { handleError, clearError } = useErrorHandler();
-  const handleClose = () => {
-    form.reset();
-  };
+
+  const { control } = form;
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "marksObtained",
+  });
+
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null
   );
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
-    null
-  );
+
+  // per-row selected subject id
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
+    [key: number]: string | null;
+  }>({});
+
   const { data: allExam } = useGetAllExams();
-  const { data: allSubject } = useGetAllSubjects();
   const { data: allStudents } = useGetAllStudents();
+  const { data: allSubject } = useGetAllSubjects();
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError();
     try {
@@ -40,122 +57,171 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
         loading: "Adding ExamResult...",
         success: "Successfully added ExamResult",
       });
+
       handleClose();
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
     }
   };
+
   return (
-    <div className=" inset-0 flex items-center justify-center  w-full h-full">
-      <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
-        <fieldset className="">
+    <div className="inset-0 flex items-center justify-center w-full h-full">
+      <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
+        <fieldset>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add ExamResult
             </h1>
+
             <button
               type="button"
-              onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              onClick={handleClose}
+              className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
             </button>
           </div>
+
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Exam */}
               <AppCombobox
-                value={selectedExamId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
+                dropDownWidth="w-[25rem]"
                 label="Exam"
                 name="examId"
                 form={form}
-                required
-                options={allExam?.Items}
+                dropdownPositionClass="fixed"
+                value={selectedExamId}
+                options={allExam?.Items ?? []}
                 selected={
-                  allExam?.Items?.find((g) => g.id === selectedExamId) || null
+                  allExam?.Items?.find((e) => e.id === selectedExamId) || null
                 }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedExamId(group.id || null);
-                  } else {
-                    setSelectedExamId(null);
-                  }
+                onSelect={(exam) => {
+                  const id = exam?.id ?? "";
+                  setSelectedExamId(id);
+                  form.setValue("examId", id);
                 }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
+                getLabel={(e) => e?.name ?? ""}
+                getValue={(e) => e?.id ?? ""}
               />
+
+              {/* Student */}
               <AppCombobox
-                value={selectedStudentId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Student"
+                dropDownWidth="w-[25rem]"
+                label="Student Name"
                 name="studentId"
                 form={form}
-                required
-                options={allStudents?.Items}
+                dropdownPositionClass="fixed"
+                value={selectedStudentId}
+                options={allStudents?.Items ?? []}
                 selected={
-                  allStudents?.Items?.find((g) => g.id === selectedStudentId) ||
+                  allStudents?.Items?.find((s) => s.id === selectedStudentId) ||
                   null
                 }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedStudentId(group.id || null);
-                  } else {
-                    setSelectedStudentId(null);
-                  }
+                onSelect={(student) => {
+                  const id = student?.id ?? "";
+                  setSelectedStudentId(id);
+                  form.setValue("studentId", id);
                 }}
-                getLabel={(g) => g?.firstName ?? ""}
-                getValue={(g) => g?.id ?? ""}
+                getLabel={(s) => s?.firstName ?? ""}
+                getValue={(s) => s?.id ?? ""}
               />
-              <AppCombobox
-                value={selectedSubjectId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Subject"
-                name="subjectId"
-                form={form}
-                required
-                options={allSubject?.Items}
-                selected={
-                  allSubject?.Items?.find((g) => g.Id === selectedSubjectId) ||
-                  null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedSubjectId(group.Id || null);
-                  } else {
-                    setSelectedSubjectId(null);
-                  }
-                }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.Id ?? ""}
-              />
-              <InputElement
-                label="Mark Obtained"
-                form={form}
-                name="marksObtained"
-                type="number"
-                placeholder="Enter Mark Obtained"
-              />
-              <InputElement
-                label="Grade"
-                form={form}
-                name="grade"
-                type="string"
-                placeholder="Enter Grade"
-              />
+
+              {/* Remarks */}
               <InputElement
                 label="Remark"
                 form={form}
-                name="remark"
+                name="remarks"
                 type="string"
-                placeholder="Enter Remark"
+                placeholder="Enter remark"
               />
             </div>
+
+            {/* SUBJECT MARKS */}
+            <div className="mt-10">
+              <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
+
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md mb-4 relative"
+                >
+                  {/* SUBJECT COMBOBOX */}
+                  <AppCombobox
+                    dropDownWidth="w-[25rem]"
+                    label="Subject"
+                    name={`marksObtained.${index}.subjectId`}
+                    form={form}
+                    dropdownPositionClass="fixed"
+                    value={selectedSubjectIds[index] ?? ""}
+                    options={allSubject?.Items ?? []}
+                    selected={
+                      allSubject?.Items?.find(
+                        (subj) => subj.Id === selectedSubjectIds[index]
+                      ) || null
+                    }
+                    onSelect={(subject) => {
+                      const id = subject?.Id ?? "";
+
+                      // update react-hook-form
+                      form.setValue(`marksObtained.${index}.subjectId`, id, {
+                        shouldValidate: true,
+                      });
+
+                      // update local state
+                      setSelectedSubjectIds((prev) => ({
+                        ...prev,
+                        [index]: id,
+                      }));
+                    }}
+                    getLabel={(s) => s?.name ?? ""}
+                    getValue={(s) => s?.Id ?? ""}
+                  />
+
+                  {/* MARKS */}
+                  <InputElement
+                    label="Marks Obtained"
+                    form={form}
+                    name={`marksObtained.${index}.marksObtained`}
+                    type="number"
+                    placeholder="Enter marks"
+                  />
+
+                  {/* REMOVE ROW */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      remove(index);
+                      setSelectedSubjectIds((prev) => {
+                        const updated = { ...prev };
+                        delete updated[index];
+                        return updated;
+                      });
+                    }}
+                    className="absolute right-2 top-2 text-red-400 hover:text-red-600"
+                  >
+                    <X />
+                  </button>
+                </div>
+              ))}
+
+              {/* ADD SUBJECT BUTTON */}
+              <ButtonElement
+                type="button"
+                text="Add Subject"
+                onClick={() =>
+                  append({
+                    subjectId: "",
+                    marksObtained: 0,
+                  })
+                }
+              />
+            </div>
+
+            {/* SUBMIT */}
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text="Submit" />
             </div>
           </form>
         </fieldset>
