@@ -30,4 +30,5 @@ export interface IMarkSheet {
 export interface ISubjectMark {
   subjectId: string;
   marksObtained: number;
+  grade: string;
 }
