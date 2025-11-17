@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useGenerateMarkSheet } from "../hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
+import { useGetStudentById } from "@/app/enduser/StudentManagement/Student/hooks";
 
 interface Props {
   studentId: string;
@@ -13,6 +14,7 @@ interface Props {
 const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId);
   const { data: allSubject } = useGetAllSubjects();
+  const { data: StudentData } = useGetStudentById(studentId);
   const handlePrint = () => {
     const content = document.getElementById("marksheet")?.outerHTML;
     if (!content) return;
@@ -116,13 +118,14 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
             <div className="grid grid-cols-2 text-sm mb-2 border border-sky-500 p-2">
               <p>
-                <strong>Name:</strong> Garima Rai
+                <strong>Name:</strong> {StudentData?.firstName}{" "}
+                {StudentData?.lastName}
               </p>
               <p>
                 <strong>Section:</strong> A
               </p>
               <p>
-                <strong>Class:</strong> 4
+                <strong>Class:</strong> {StudentData?.classSectionId || 6}
               </p>
               <p>
                 <strong>Roll No:</strong> 2
@@ -133,8 +136,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <tr className="text-center font-semibold">
                   <th className="border border-sky-500 p-1 w-10">S.N</th>
                   <th className="border border-sky-500 p-1">Subjects</th>
-                  {/* <th className="border p-1 w-20">Grade</th>
-                <th className="border p-1 w-24">Grade Point</th> */}
+                  <th className="border border-sky-500 p-1 w-20">Grade</th>
+                  {/* <th className="border p-1 w-24">Grade Point</th> */}
                   <th className="border border-sky-500 p-1 w-24">
                     Marks Obtained
                   </th>
@@ -152,7 +155,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                             ?.name
                         }
                       </td>
-                      {/* <td className="border p-1">{m.grade || "-"}</td> */}
+                      <td className="border p-1">{m.grade || "-"}</td>
                       {/* <td className="border p-1">{m.gradePoint || "-"}</td> */}
                       <td className="border border-sky-500 p-1">
                         {m.marksObtained}

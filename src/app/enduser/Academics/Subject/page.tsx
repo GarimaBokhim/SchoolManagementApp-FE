@@ -3,7 +3,7 @@ import AllStudent from "./pages/All";
 
 export default function DashboardPageEndUser() {
   return (
-    <LayoutWrapper title="Exam">
+    <LayoutWrapper title="Subject">
       <AllStudent />
     </LayoutWrapper>
   );
