@@ -10,7 +10,7 @@ interface Props {
 const AddClass = ({ visible, onClose }: Props) => {
   const form = useForm<IClass>({
     defaultValues: {
-      classId: "",
+      id: "",
       name: "",
     },
 

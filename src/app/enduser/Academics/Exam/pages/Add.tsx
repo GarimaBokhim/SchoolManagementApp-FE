@@ -1,7 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { IExam } from "../types/IExams";
-import { yupResolver } from "@hookform/resolvers/yup";
 // import { ExamValidator } from "../validators/index";
 import AddExamForm from "../components/AddExamForm";
 

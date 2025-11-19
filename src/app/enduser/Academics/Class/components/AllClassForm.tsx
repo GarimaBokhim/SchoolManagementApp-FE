@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IClass, IFilterClassByDate } from "../types/IClass";
-import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -18,14 +18,13 @@ import { useFilterClassByDate, useGetAllClass, useRemoveClass } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import AddClass from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 type Props = {
   onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
 };
 const AllClassForm = ({ onDataFromChild }: Props) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,

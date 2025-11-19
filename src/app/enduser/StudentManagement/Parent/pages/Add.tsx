@@ -1,8 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { IParent } from "../types/IParents";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { ParentValidator } from "../validators/index";
 import AddParentForm from "../components/AddParentForm";
 
 interface Props {

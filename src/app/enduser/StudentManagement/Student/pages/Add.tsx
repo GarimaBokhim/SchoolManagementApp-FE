@@ -1,8 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { IStudent } from "../types/IStudents";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { StudentFormValues, StudentValidator } from "../validators/index";
 import AddStudentForm from "../components/AddStudentForm";
 
 interface Props {
