@@ -1,7 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { IExamResult } from "../types/IExamResults";
-import { yupResolver } from "@hookform/resolvers/yup";
 // import { ExamResultValidator } from "../validators/index";
 import AddExamResultForm from "../components/AddExamResultForm";
 
@@ -15,10 +14,8 @@ const AddExamResult = ({ visible, onClose }: Props) => {
       id: "",
       examId: "",
       studentId: "",
-      subjectId: "",
-      marksObtained: 0,
-      grade: "",
       remarks: "",
+      marksObtained: [],
     },
 
     // resolver: yupResolver(ExamResultValidator),

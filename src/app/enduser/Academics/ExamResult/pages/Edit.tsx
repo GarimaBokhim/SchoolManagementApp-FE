@@ -16,9 +16,6 @@ const EditExamResult = ({ visible, onClose, ExamResultId }: Props) => {
     defaultValues: {
       examId: ExamResultData?.examId ?? "",
       studentId: ExamResultData?.studentId ?? "",
-      subjectId: ExamResultData?.subjectId ?? "",
-      marksObtained: ExamResultData?.marksObtained ?? 0,
-      grade: ExamResultData?.grade ?? "",
       remarks: ExamResultData?.remarks ?? "",
     },
   });

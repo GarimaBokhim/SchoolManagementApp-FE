@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IExam, IFilterExamByDate } from "../types/IExams";
-import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -18,7 +18,6 @@ import { useFilterExamByDate, useGetAllExams, useRemoveExam } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import AddExam from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 const AllExamForm = () => {

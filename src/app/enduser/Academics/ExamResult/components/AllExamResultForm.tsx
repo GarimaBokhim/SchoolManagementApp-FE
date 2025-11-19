@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IExamResult, IFilterExamResultByDate } from "../types/IExamResults";
-import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -14,21 +14,15 @@ import EditExamResult from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import {
-  useFilterExamResultByDate,
-  useGetAllExamResults,
-  useRemoveExamResult,
-} from "../hooks";
+import { useFilterExamResultByDate, useRemoveExamResult } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { useTranslation } from "react-i18next";
 import AddExamResult from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllSubjects } from "../../Subject/hooks";
-import SchoolMarkSheet from "./IndividualStudentPrintForm";
+import SchoolMarkSheet from "./SchoolMarkSheet";
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,

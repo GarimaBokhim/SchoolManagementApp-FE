@@ -24,7 +24,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const editExamResult = useEditExamResult();
   const { handleError, clearError } = useErrorHandler();
 
-  const { control, handleSubmit, reset, setValue } = form;
+  const { control, reset } = form;
 
   const { data: ExamResultData } = useGetExamResultById(ExamResultId);
 
