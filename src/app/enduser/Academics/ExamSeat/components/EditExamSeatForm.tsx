@@ -23,9 +23,7 @@ type Props = {
 const EditExamSeatForm = ({ form, onClose, ExamSeatId }: Props) => {
   const editExamSeat = useEditExamSeat();
   const { handleError, clearError } = useErrorHandler();
-
-  const { control, handleSubmit, reset, setValue } = form;
-
+  const { control, reset } = form;
   const { data: ExamSeatData } = useGetExamSeatById(ExamSeatId);
 
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);

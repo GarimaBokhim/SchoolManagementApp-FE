@@ -29,12 +29,6 @@ const AllInstitutionForm = () => {
       />
     );
   };
-
-  const [state, setState] = useState({
-    loading: true,
-    institutions: [] as IInstitution[],
-    errorMessage: "",
-  });
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 5,
     pageIndex: 1,
@@ -47,12 +41,9 @@ const AllInstitutionForm = () => {
       navigate.push("/");
     }
   }, [navigate]);
-  const updateState = (updates: Partial<typeof state>) => {
-    setState((prev) => ({ ...prev, ...updates }));
-  };
 
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const { data: allInstitution, error, refetch } = useGetAllInstitution(query);
+  const { data: allInstitution, refetch } = useGetAllInstitution(query);
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
@@ -81,7 +72,6 @@ const AllInstitutionForm = () => {
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
-    updateState({ loading: true, institutions: [] });
   };
   const [addModal, setAddModal] = useState(false);
   return (

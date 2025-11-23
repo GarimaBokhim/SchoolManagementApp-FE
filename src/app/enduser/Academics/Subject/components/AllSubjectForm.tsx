@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ISubject, IFilterSubjectByDate } from "../types/ISubjects";
-import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -264,7 +264,7 @@ const AllSubjectForm = () => {
                         <td className="py-3 px-2 md:px-4">
                           {
                             allClass?.Items?.find(
-                              (i) => i.classId === Subject.classId
+                              (i) => i.id === Subject.classId
                             )?.name
                           }
                         </td>

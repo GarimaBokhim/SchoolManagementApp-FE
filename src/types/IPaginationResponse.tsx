@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IPaginationResponse<T> {
   items: any;
   id(id: any): unknown;

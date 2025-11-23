@@ -1,4 +1,4 @@
-import { ModuleGetDTO } from "@/app/Admin/rolesmodules/types/ModuleGetDTOs";
+import { ModuleGetDTO } from "@/app/SuperAdmin/navigation/types/ModuleGetDTOs";
 export interface ISidebar {
   module: ModuleGetDTO[];
 }

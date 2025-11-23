@@ -4,7 +4,6 @@ import { IRoles } from "../types/IRoles";
 import { useEditRole, useGetRolesByRoleId } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { useGetAllRoles } from "../hooks";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { X } from "lucide-react";

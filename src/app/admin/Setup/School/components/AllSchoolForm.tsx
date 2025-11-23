@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ISchool } from "../types/ISchool";
-import { useGetAllSchool, useGetFilterSchoolByDate } from "../hooks";
+import { useGetAllSchool } from "../hooks";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import { EditButton } from "@/components/Buttons/EditButton";
@@ -10,14 +10,12 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useRemoveSchool } from "../hooks";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Edit, Plus, Trash } from "lucide-react";
-import { IFilterSchoolByDate } from "../types/ISchool";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
+
 import { UserName } from "./UserName";
 import { useRouter } from "next/navigation";
 import Add from "../pages/Add";
 const AllSchoolForm = () => {
   const [modal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string>("");
   const [addModal, setAddModal] = useState(false);
   const buttonElement = (id: string) => {
@@ -34,12 +32,6 @@ const AllSchoolForm = () => {
       />
     );
   };
-
-  const [state, setState] = useState({
-    loading: true,
-    School: [] as ISchool[],
-    errorMessage: "",
-  });
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 5,
     pageIndex: 1,
@@ -52,12 +44,9 @@ const AllSchoolForm = () => {
       navigate.push("/");
     }
   }, [navigate]);
-  const updateState = (updates: Partial<typeof state>) => {
-    setState((prev) => ({ ...prev, ...updates }));
-  };
 
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const { data: allSchool, error, refetch } = useGetAllSchool(query);
+  const { data: allSchool, refetch } = useGetAllSchool(query);
 
   type SearchParam = {
     pageSize: number;
@@ -68,14 +57,11 @@ const AllSchoolForm = () => {
   const deleteCompany = useRemoveSchool();
 
   const handleDelete = async (id: string | undefined) => {
-    setIsLoading(true);
     try {
       await deleteCompany.mutateAsync(id);
       refetch();
     } catch (error) {
       console.error("Error deleting:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -90,7 +76,6 @@ const AllSchoolForm = () => {
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
-    updateState({ loading: true, School: [] });
   };
 
   return (

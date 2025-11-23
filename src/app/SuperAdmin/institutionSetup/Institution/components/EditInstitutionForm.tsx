@@ -6,9 +6,6 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
-import { useGetAllOrganization } from "@/app/developerUser/hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
 import { X } from "lucide-react";
 
 type Props = {
@@ -23,14 +20,11 @@ const EditInstitutionForm = ({
   onClose,
   institutionId,
   currentPageIndex,
-  organizationId,
 }: Props) => {
   const editInstitution = useEditInstitution();
-  const { data: organizations } = useGetAllOrganization();
   const pageSize = 5;
   const query = `?pagesize=${pageSize}&pageIndex=${currentPageIndex}&IsPagination=true`;
   const { refetch } = useGetAllInstitution(query);
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
   const onSubmit: SubmitHandler<IInstitution> = async (form) => {
     try {
       await editInstitution.mutateAsync({
@@ -155,7 +149,7 @@ const EditInstitutionForm = ({
                   />
                 </div>
 
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <AppCombobox
                     value={organizationId}
                     dropDownWidth="w-full"
@@ -178,7 +172,7 @@ const EditInstitutionForm = ({
                     getLabel={(g) => g?.name || ""}
                     getValue={(g) => g?.id ?? ""}
                   />
-                </div>
+                </div> */}
 
                 <div className="flex items-center mb-2">
                   <InputElement

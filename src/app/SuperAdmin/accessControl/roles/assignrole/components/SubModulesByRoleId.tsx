@@ -11,11 +11,7 @@ interface Props {
   activateAll?: boolean;
 }
 
-const SubModulesByRoleId = ({
-  roleId,
-  moduleId,
-  activateAll = false,
-}: Props) => {
+const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
   const editSubModule = useUpdateAssignSubModules();
   const { data, isLoading, refetch } = useGetSubModuleByRoleId(roleId);
   const { data: subModule } = useGetSubModulesByModuleId(moduleId);

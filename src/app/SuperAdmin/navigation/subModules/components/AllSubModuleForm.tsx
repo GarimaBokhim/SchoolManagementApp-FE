@@ -30,11 +30,6 @@ const AllSubModuleForm = () => {
       />
     );
   };
-  const [state, setState] = useState({
-    loading: true,
-    subModules: [] as ISubModules[],
-    errorMessage: "",
-  });
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -47,9 +42,6 @@ const AllSubModuleForm = () => {
       navigate.push("/");
     }
   }, [navigate]);
-  const updateState = (updates: Partial<typeof state>) => {
-    setState((prev) => ({ ...prev, ...updates }));
-  };
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const { data: allSubModules, refetch } = useGetAllSubModules(query);
   type SearchParam = {
@@ -78,7 +70,6 @@ const AllSubModuleForm = () => {
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
-    updateState({ loading: true, subModules: [] });
   };
   const [addModal, setAddModal] = useState(false);
   return (

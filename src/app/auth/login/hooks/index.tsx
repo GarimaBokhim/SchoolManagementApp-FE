@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { ILoginType } from "../types/loginResponse";
 const loginEndPoint = {
