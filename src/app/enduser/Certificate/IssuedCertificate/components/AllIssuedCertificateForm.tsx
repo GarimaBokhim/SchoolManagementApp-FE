@@ -93,6 +93,7 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
   const [end, setEnd] = useState("");
   const [showStudentPrint, setShowStudentPrint] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>("");
+  const [selectedExamId, setSelectedExamId] = useState<string | undefined>("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     null
   );
@@ -336,6 +337,9 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
                                       setTemplateId(
                                         IssuedCertificate.templateId
                                       );
+                                      setSelectedExamId(
+                                        IssuedCertificate?.examId
+                                      );
                                       setSelectedStudent(
                                         IssuedCertificate.studentId
                                       );
@@ -364,15 +368,18 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
             </div>
             {showStudentPrint &&
               selectedStudent &&
+              selectedExamId &&
               templateId &&
               (templateId === "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59" ? (
                 <SchoolCertificate
                   studentId={selectedStudent}
+                  examId={selectedExamId}
                   onClose={() => setShowStudentPrint(false)}
                 />
               ) : (
                 <CollegeCertificate
                   studentId={selectedStudent}
+                  examId={selectedExamId}
                   onClose={() => setShowStudentPrint(false)}
                 />
               ))}

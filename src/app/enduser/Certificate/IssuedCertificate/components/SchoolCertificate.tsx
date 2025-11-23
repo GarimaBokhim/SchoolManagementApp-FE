@@ -6,16 +6,22 @@ import {
   useGetAllProvince,
 } from "@/components/common/hooks";
 import { useGenerateCertificateByStudent } from "../hooks";
+import { useGetStudentById } from "@/app/enduser/StudentManagement/Student/hooks";
 
 interface Props {
   studentId: string;
   onClose: () => void;
+  examId: string;
 }
 
-const SchoolCertificate: React.FC<Props> = ({ studentId, onClose }) => {
+const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data: allProvince } = useGetAllProvince();
   const { data: allDistrict } = useGetAllDistrict();
-  const { data: certificateData } = useGenerateCertificateByStudent(studentId);
+  const { data: StudentData } = useGetStudentById(studentId);
+  const { data: certificateData } = useGenerateCertificateByStudent(
+    studentId,
+    examId
+  );
   const handlePrint = () => {
     const content = document.getElementById("certificate")?.outerHTML;
     if (!content) return;
@@ -162,7 +168,7 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, onClose }) => {
             </h1>
             <div className="w-[120px] h-[130px] border-2 mt-[-1.7rem] border-black flex items-center justify-center">
               <img
-                src={certificateData?.StudentImage}
+                src={StudentData?.imageUrl}
                 className="w-full h-full object-cover"
               />
             </div>

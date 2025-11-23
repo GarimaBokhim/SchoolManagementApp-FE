@@ -12,3 +12,8 @@ export interface IFilterSubjectByDate {
   startDate: string;
   endDate: string;
 }
+
+export interface ISubjectByClass {
+  id: string;
+  subjectName: string;
+}

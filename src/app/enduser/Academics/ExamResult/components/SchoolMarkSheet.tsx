@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useGenerateMarkSheet } from "../hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
 import { useGetStudentById } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 
 interface Props {
   studentId: string;
@@ -14,6 +15,17 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId);
   const { data: allSubject } = useGetAllSubjects();
   const { data: StudentData } = useGetStudentById(studentId);
+  const storedUser = localStorage.getItem("userDetails");
+  let schoolId = "";
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      schoolId = parsedUser.schoolId;
+    } catch (error) {
+      console.error("Failed to parse user details:", error);
+    }
+  }
+  const { data: SchoolData } = useGetSchoolById(schoolId);
   const handlePrint = () => {
     const content = document.getElementById("marksheet")?.outerHTML;
     if (!content) return;
@@ -92,7 +104,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               <div className="flex items-start ">
                 <div className="w-28 ">
                   <img
-                    src="/assets/logo.png"
+                    src={StudentData?.imageUrl}
                     alt="Logo"
                     className="w-full h-auto"
                   />
@@ -101,10 +113,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <div className="flex ml-[-13%] w-full">
                   <div className="w-full">
                     <div className="text-center mb-4">
-                      <h1 className="text-2xl font-bold">
-                        BHALUWA PUBLIC ACADEMY
-                      </h1>
-                      <p>Kerabari-9, Bhaluwa, Morang</p>
+                      <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
+                      <p>{SchoolData?.address}</p>
                       <p className="font-semibold mt-2 underline">
                         SECOND TERMINAL EXAMINATION 2082
                       </p>
@@ -135,8 +145,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <tr className="text-center font-semibold">
                   <th className="border border-sky-500 p-1 w-10">S.N</th>
                   <th className="border border-sky-500 p-1">Subjects</th>
-                  <th className="border border-sky-500 p-1 w-20">Grade</th>
-                  {/* <th className="border p-1 w-24">Grade Point</th> */}
+                  <th className="border border-sky-500 p-1 ">Grade</th>
+                  <th className="border p-1 border-sky-500 ">GPA</th>
                   <th className="border border-sky-500 p-1 w-24">
                     Marks Obtained
                   </th>
@@ -145,7 +155,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
               <tbody>
                 {data &&
-                  data.marksObtained?.map((m, index: number) => (
+                  data.MarksWithGrades?.map((m, index: number) => (
                     <tr key={index} className="text-center">
                       <td className="border border-sky-500 p-1">{index + 1}</td>
                       <td className="border border-sky-500 p-1 text-left px-2">
@@ -154,7 +164,12 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                             ?.name
                         }
                       </td>
-                      <td className="border p-1">{m.grade || "-"}</td>
+                      <td className="border border-sky-500 p-1">
+                        {m.grade || "-"}
+                      </td>
+                      <td className="border border-sky-500 p-1">
+                        {m.GPA || "-"}
+                      </td>
                       {/* <td className="border p-1">{m.gradePoint || "-"}</td> */}
                       <td className="border border-sky-500 p-1">
                         {m.marksObtained}
@@ -221,7 +236,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <div className="">
                   <p className="border  border-sky-500 inline-block px-2 mr-2">
                     {" "}
-                    GPA
+                    {data?.GPA}
                   </p>
                   {data?.grade}
                 </div>
