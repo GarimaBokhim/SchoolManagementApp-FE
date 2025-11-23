@@ -5,7 +5,6 @@ import { useAddUser, useGetAllUsers } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { AxiosError } from "axios";
 import { useState, useRef, useEffect } from "react";
 import AssignRoleForAddUser from "./AssignRoleForAddUser";
 import { X } from "lucide-react";

@@ -156,15 +156,18 @@ export const useFilterIssuedCertificateByDate = (params?: string) => {
     retry: false,
   });
 };
-export const useGenerateCertificateByStudent = (studentId: string) => {
+export const useGenerateCertificateByStudent = (
+  studentId: string,
+  examId: string
+) => {
   return useQuery({
-    queryKey: [queryKey, studentId],
+    queryKey: [queryKey, studentId, examId],
     queryFn: async (): Promise<ICertificate> => {
       if (!studentId) {
         throw new Error("Id is required to get a IssuedCertificate");
       }
       const response = await api.get<ICertificate>(
-        `${IssuedCertificateEndPoints.generateCertificate}/${studentId}`
+        `${IssuedCertificateEndPoints.generateCertificate}?studentId=${studentId}&examId=${examId}`
       );
       return response.data;
     },

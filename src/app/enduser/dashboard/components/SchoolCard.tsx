@@ -1,7 +1,4 @@
-import {
-  useGetAllSchool,
-  useGetSchoolById,
-} from "@/app/admin/Setup/School/hooks";
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { ISchool } from "@/app/admin/Setup/School/types/ISchool";
 import { LocateIcon, Mail, Phone } from "lucide-react";
 import { useEffect, useState } from "react";

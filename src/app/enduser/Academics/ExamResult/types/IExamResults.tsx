@@ -24,11 +24,13 @@ export interface IMarkSheet {
   percentage: string;
   totalObtainedMarks: number;
   grade: string;
+  GPA: string;
   division: string;
-  marksObtained: ISubjectMark[];
+  MarksWithGrades: ISubjectMark[];
 }
 export interface ISubjectMark {
   subjectId: string;
   marksObtained: number;
   grade: string;
+  GPA: string;
 }

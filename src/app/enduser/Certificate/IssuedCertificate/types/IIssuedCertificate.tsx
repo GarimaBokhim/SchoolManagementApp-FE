@@ -10,6 +10,7 @@ export interface IIssuedCertificate {
   status: number;
   yearOfCompletion: Date;
   program: string;
+  examId?: string;
   symbolNumber: string;
 }
 

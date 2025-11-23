@@ -1,17 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { ISubject } from "../types/ISubjects";
+import { ISubject, ISubjectByClass } from "../types/ISubjects";
 const SubjectEndPoints = {
   getAllSubjects: "/api/Academics/all-subject",
   createSubjects: "/api/Academics/AddSubject",
   removeSubjects: "/api/Academics/DeleteSubject",
   updateSubjects: "/api/Academics/UpdateSubjects",
   getSubjectsById: "/api/Academics",
+  getSubjectByClass: "/api/Academics/SubjectByClass",
   filterSubjectByDate: "/api/Academics/FilterSubject",
 };
 
 const queryKey = "Subjects";
+const queryKeyForClassID = "SubjectsByClass";
 const filteredSubjectQuery = "FilteredSubjects";
 type SubjectRequest = {
   id?: string;
@@ -132,6 +134,24 @@ export const useFilterSubjectByDate = (params?: string) => {
       const response = await api.get<IPaginationResponse<ISubject>>(url);
       return response.data;
     },
+    staleTime: 0,
+    retry: false,
+  });
+};
+
+export const useGetSubjectByClassId = (classId: string) => {
+  return useQuery({
+    queryKey: [queryKeyForClassID, classId],
+    queryFn: async (): Promise<ISubjectByClass[]> => {
+      if (!classId) {
+        throw new Error("Id is required to get a IssuedCertificate");
+      }
+      const response = await api.get<ISubjectByClass[]>(
+        `${SubjectEndPoints.getSubjectByClass}/${classId}`
+      );
+      return response.data;
+    },
+    enabled: !!classId,
     staleTime: 0,
     retry: false,
   });

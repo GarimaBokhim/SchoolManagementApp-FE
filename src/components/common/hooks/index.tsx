@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IDistrict, IMunicipality, IProvince, IVdc } from "../types/ICommon";
@@ -12,6 +12,8 @@ const CommonEndPoints = {
 
 const queryKey = "Province";
 const queryKeyForDistrict = "District";
+const queryKeyForMunicipality = "Municipality";
+const queryKeyForVdc = "VDC";
 export const useGetAllProvince = (params?: string) => {
   return useQuery({
     queryKey: [queryKey],
@@ -70,7 +72,7 @@ export const useGetDistrictByProvince = (ProvinceId: number | null) => {
 };
 export const useGetMunicipalityByDistrict = (DistrictId: number | null) => {
   return useQuery({
-    queryKey: [queryKey, DistrictId],
+    queryKey: [queryKeyForMunicipality, DistrictId],
     queryFn: async (): Promise<IMunicipality[]> => {
       if (!DistrictId) {
         throw new Error("DistrictId is required to get a Municipality");
@@ -88,7 +90,7 @@ export const useGetMunicipalityByDistrict = (DistrictId: number | null) => {
 
 export const useGetVDCByDistrict = (DistrictId: number | null) => {
   return useQuery({
-    queryKey: [queryKey, DistrictId],
+    queryKey: [queryKeyForVdc, DistrictId],
     queryFn: async (): Promise<IVdc[]> => {
       if (!DistrictId) {
         throw new Error("DistrictId is required to get a Municipality");

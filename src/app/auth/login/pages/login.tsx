@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useContext } from "react";
@@ -26,7 +27,7 @@ const LoginForm = () => {
     defaultValues: { email: "", password: "" },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
   const [toggleImg, setToggleImg] = useState(dashboardPic);
   const router = useRouter();
   const login = useLogin();
@@ -137,7 +138,7 @@ const LoginForm = () => {
                 form={form}
                 label="Password"
                 name="password"
-                inputType={showPassword ? "text" : "password"}
+                inputType={"password"}
                 placeholder="••••••••"
               />
               {/* <button
