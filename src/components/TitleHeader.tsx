@@ -1,5 +1,5 @@
 "use client";
-import { JSX, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { BellDot } from "lucide-react";

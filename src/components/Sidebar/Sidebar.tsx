@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { Icon } from "@iconify/react";
 import React, { useState, useEffect } from "react";
 import adi from "@/assets/adi.jpg";
@@ -335,7 +334,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                           onClick={() =>
                             handleSelectSubModule(
                               subItem.subModulesId!,
-                              subItem.role
+                              subItem.role[1]
                             )
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors

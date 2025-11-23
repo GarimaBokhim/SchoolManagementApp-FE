@@ -7,7 +7,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllRoles, useGetRolesByRoleId } from "../../roles/hooks";
+import { useGetAllRoles } from "../../roles/hooks";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 

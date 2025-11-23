@@ -28,18 +28,10 @@ const EditSchoolForm = ({
   const pageSize = 5;
   const query = `?pagesize=${pageSize}&pageIndex=${currentPageIndex}&IsPagination=true`;
   const { refetch } = useGetAllSchool(query);
-  const [fiscalYearId, setFiscalYearId] = useState("");
   const [institutionId, setInstitutionId] = useState("");
-  const handleSelectFiscalYear = (id: string) => {
-    form.setValue("fiscalYearId", id);
-  };
   const handleSelectInstitution = (id: string) => {
     form.setValue("institutionId", id);
   };
-  const data = [
-    { name: "Automatic", value: 1 },
-    { name: "Manual", value: 0 },
-  ];
   const onSubmit: SubmitHandler<ISchool> = async (form) => {
     try {
       await editCompany.mutateAsync({
@@ -174,8 +166,6 @@ const EditSchoolForm = ({
                       if (group) {
                         setInstitutionId(group.id || "");
                         handleSelectInstitution(group.id || "");
-                      } else {
-                        setFiscalYearId("");
                       }
                     }}
                     getLabel={(g) => g?.name || ""}

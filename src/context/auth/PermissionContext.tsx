@@ -1,5 +1,5 @@
 "use client";
-import { MenuGetDTOs } from "@/app/Admin/rolesmodules/types/MenuGetDTOs";
+import { MenuGetDTOs } from "@/app/SuperAdmin/navigation/types/MenuGetDTOs";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface PermissionContextType {

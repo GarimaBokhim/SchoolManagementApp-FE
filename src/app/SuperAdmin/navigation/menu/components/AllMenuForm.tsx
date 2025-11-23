@@ -51,7 +51,7 @@ const AllMenuForm = () => {
     setState((prev) => ({ ...prev, ...updates }));
   };
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const { data: allMenus, error, refetch } = useGetAllMenus(query);
+  const { data: allMenus, refetch } = useGetAllMenus(query);
   type SearchParam = {
     pageSize: number;
     pageIndex: number;

@@ -9,7 +9,7 @@ import { AxiosError } from "axios";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllRoles } from "../../roles/hooks";
 import { useState } from "react";
-import { Cross, X } from "lucide-react";
+import { X } from "lucide-react";
 
 type Props = {
   form: UseFormReturn<IRolePermission>;

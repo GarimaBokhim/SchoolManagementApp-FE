@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IExamSeat, IFilterExamSeatByDate } from "../types/IExamSeat";
-import { SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -14,11 +14,7 @@ import EditExamSeat from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import {
-  useFilterExamSeatByDate,
-  useGetAllExamSeats,
-  useRemoveExamSeat,
-} from "../hooks";
+import { useFilterExamSeatByDate, useRemoveExamSeat } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -64,9 +60,6 @@ const AllExamSeatForm = () => {
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const { data: allExam } = useGetAllExams();
-  const [showStudentPrint, setShowStudentPrint] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
-  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -317,11 +310,7 @@ const AllExamSeatForm = () => {
                                   icon={<Printer size={14} />}
                                   text=""
                                   type="button"
-                                  onClick={() => {
-                                    setShowStudentPrint(true);
-                                    setSelectedExamId(ExamSeat.examId);
-                                    setSelectedStudent(ExamSeat.studentId);
-                                  }}
+                                  onClick={() => {}}
                                   className="!text-xs"
                                 />
                               }

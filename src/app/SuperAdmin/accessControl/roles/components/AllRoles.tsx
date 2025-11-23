@@ -27,11 +27,6 @@ import { useRouter } from "next/navigation";
 import Add from "../pages/Add";
 
 const AllRoleForm = () => {
-  const [state, setState] = useState({
-    loading: true,
-    roles: [] as IRoles[],
-    errorMessage: "",
-  });
   const [modal, setShowModal] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
   const [selectedIdEdit, setSelectedIdEdit] = useState("");
@@ -59,10 +54,6 @@ const AllRoleForm = () => {
     }
   }, [navigate]);
 
-  const updateState = (updates: Partial<typeof state>) => {
-    setState((prev) => ({ ...prev, ...updates }));
-  };
-
   const { data: allRole, refetch } = useGetAllRoles(query);
 
   type SearchParams = {
@@ -74,6 +65,11 @@ const AllRoleForm = () => {
   const handleSubmit = useForm<SearchParams>({
     defaultValues: {},
   });
+  const handleSearch = (params: SearchParams) => {
+    params.pageSize = paginationParams.pageSize;
+    setPaginationParams(params);
+  };
+
   const deleteRole = useRemoveRole();
   const handleDelete = async (Id: string) => {
     try {
@@ -102,13 +98,6 @@ const AllRoleForm = () => {
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
-
-  const handleSearch = (params: SearchParams) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-    updateState({ loading: true, roles: [] });
-  };
-
   const handleAssignModule = (roleId: string) => {
     setSelectedIdForAssignModule(
       selectedIdForAssignModule === roleId ? "" : roleId

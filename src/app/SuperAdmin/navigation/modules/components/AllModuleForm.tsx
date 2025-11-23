@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { IModules } from "../types/IModules";
-import { useGetAllModules, useGetFilterModulesByDate } from "../hooks";
+import { useGetAllModules } from "../hooks";
 import { useForm } from "react-hook-form";
 import { EditButton } from "@/components/Buttons/EditButton";
 import EditModule from "../pages/Edit";
@@ -29,20 +29,12 @@ const AllModuleForm = () => {
       />
     );
   };
-
-  const [state, setState] = useState({
-    loading: true,
-    modules: [] as IModules[],
-    errorMessage: "",
-  });
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
-  const updateState = (updates: Partial<typeof state>) => {
-    setState((prev) => ({ ...prev, ...updates }));
-  };
+
   const [addModal, setAddModal] = useState(false);
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const { data: allModules, refetch } = useGetAllModules(query);
@@ -74,7 +66,6 @@ const AllModuleForm = () => {
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
-    updateState({ loading: true, modules: [] });
   };
 
   return (

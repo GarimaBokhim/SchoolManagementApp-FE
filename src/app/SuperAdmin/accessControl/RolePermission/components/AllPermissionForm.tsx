@@ -8,12 +8,10 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { EditButton } from "@/components/Buttons/EditButton";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useRemoveRolePermission } from "../hooks";
-import { Edit, FileLock, Plus, Trash, X } from "lucide-react";
+import { Edit, FileLock, Plus, Trash } from "lucide-react";
 import EditRolePermission from "../Pages/Edit";
 import AddPermissionToRole from "./AddPermissionToRoleForm";
 import AssignedRole from "./AssignedRole";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { useRouter } from "next/navigation";
 import Add from "../Pages/Add";
 
@@ -23,8 +21,6 @@ const AllRolePermissionForm = () => {
     roles: [] as IRolePermission[],
     errorMessage: "",
   });
-  const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAssign } = useMenuPermissionData(menuStatus);
   const [modalEdit, setModalEdit] = useState(false);
   const [selectedIdEdit, setSelectedIdEdit] = useState("");
   const [modalForRole, setModalForRole] = useState(false);
@@ -49,7 +45,7 @@ const AllRolePermissionForm = () => {
     setState((prev) => ({ ...prev, ...updates }));
   };
 
-  const { data, isLoading, error, refetch } = useGetAllPermission(query);
+  const { data, error, refetch } = useGetAllPermission(query);
   useEffect(() => {
     if (data?.Items) {
       updateState({

@@ -1,7 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { ISubject } from "../types/ISubjects";
-import { yupResolver } from "@hookform/resolvers/yup";
 // import { SubjectValidator } from "../validators/index";
 import AddSubjectForm from "../components/AddSubjectForm";
 

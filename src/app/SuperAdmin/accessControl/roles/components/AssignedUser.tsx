@@ -17,8 +17,8 @@ const AssignedUser = ({ roleId }: Props) => {
     <div className="flex flex-wrap">
       {users && users.length > 0 ? (
         users.map((user) => (
-          <div key={user.Id} className="pl-1 ">
-            <div className="text-md font-medium ">{user.UserName},</div>
+          <div key={user.id} className="pl-1 ">
+            <div className="text-md font-medium ">{user.userName},</div>
           </div>
         ))
       ) : (

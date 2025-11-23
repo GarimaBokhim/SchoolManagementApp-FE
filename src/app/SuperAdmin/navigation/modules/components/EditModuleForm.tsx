@@ -1,7 +1,7 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { IModules } from "../types/IModules";
-import { useEditModule, useGetAllModules, useGetModulesById } from "../hooks";
+import { useEditModule, useGetModulesById } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";

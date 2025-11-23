@@ -1,7 +1,7 @@
 "use client";
 import { X } from "lucide-react";
 import { useGenerateMarkSheet } from "../hooks";
-import { useGetAllSubjects } from "../../Subject/hooks";
+import { useGetAllSubjects } from "@/app/enduser/Academics/Subject/hooks";
 import { useGetStudentById } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 

@@ -16,13 +16,13 @@ const EditUser = ({ visible, onClose, userId, currentPageIndex }: Props) => {
 
   const form = useForm<IUserResponse>({
     values: {
-      Id: userData?.Id ?? "",
-      UserName: userData?.UserName ?? "",
-      Email: userData?.Email ?? "",
-      Password: userData?.Password ?? "",
+      id: userData?.id ?? "",
+      userName: userData?.userName ?? "",
+      email: userData?.email ?? "",
+      password: userData?.password ?? "",
       rolesId: userData?.rolesId ?? [""],
-      InstitutionId: userData?.InstitutionId ?? "",
-      SchoolIds: userData?.SchoolIds ?? [""],
+      institutionId: userData?.institutionId ?? "",
+      schoolIds: userData?.schoolIds ?? [""],
     },
   });
 

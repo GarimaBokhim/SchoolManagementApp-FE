@@ -5,9 +5,6 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
-import { useGetAllOrganization } from "@/app/developerUser/hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
 import { X } from "lucide-react";
 type Props = {
   form: UseFormReturn<IInstitution>;
@@ -16,7 +13,6 @@ type Props = {
 const AddInstitutionForm = ({ form, onClose }: Props) => {
   const addInstitution = useAddInstitution();
   const { refetch } = useGetAllInstitution();
-  const [organizationId, setOrganizationId] = useState("");
   const onSubmit: SubmitHandler<IInstitution> = async (data) => {
     try {
       await addInstitution.mutateAsync(data);
@@ -32,7 +28,6 @@ const AddInstitutionForm = ({ form, onClose }: Props) => {
       onClose();
     }
   };
-  const { data: organization } = useGetAllOrganization();
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black/30 backdrop-blur-sm z-50">
       <div className="w-full max-w-lg mx-4">
@@ -136,7 +131,7 @@ const AddInstitutionForm = ({ form, onClose }: Props) => {
                     customStyle="text-base px-4 py-2 h-12"
                   />
                 </div>
-
+                {/* 
                 <div className="mb-4">
                   <AppCombobox
                     value={organizationId}
@@ -160,7 +155,7 @@ const AddInstitutionForm = ({ form, onClose }: Props) => {
                     getLabel={(g) => g?.name || ""}
                     getValue={(g) => g?.id ?? ""}
                   />
-                </div>
+                </div> */}
 
                 <div className="flex items-center mb-2">
                   <InputElement

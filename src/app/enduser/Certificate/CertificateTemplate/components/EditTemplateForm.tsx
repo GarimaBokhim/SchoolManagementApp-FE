@@ -3,7 +3,7 @@ import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
 import { ITemplate } from "../types/ITemplate";
 import { useEditTemplate, useGetTemplateById } from "../hooks";

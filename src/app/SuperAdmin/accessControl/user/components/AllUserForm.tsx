@@ -5,17 +5,10 @@ import {
   useGetAllUsers,
   useGetFilterUserByDate,
 } from "../hooks";
-import {
-  IUserResponse,
-  IFilterUserByDate,
-  IUserResponseForAll,
-} from "../types/IUserResponse";
+import { IFilterUserByDate, IUserResponseForAll } from "../types/IUserResponse";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { EditButton } from "@/components/Buttons/EditButton";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Edit, Trash, Filter, RotateCcw, Plus } from "lucide-react";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import { Trash, Filter, RotateCcw, Plus } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useRouter } from "next/navigation";
@@ -27,11 +20,6 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 
 const AllUserForm = () => {
   const navigate = useRouter();
-  const { menuStatus } = usePermissions();
-  const { canDelete, canEdit, canAssign } = useMenuPermissionData(menuStatus);
-  const [modal, setShowModal] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedIdForAssignRole, setSelectedIdForAssignRole] = useState("");
   const [selectedUserName, setSelectedUserName] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
@@ -114,18 +102,6 @@ const AllUserForm = () => {
     toast.success("Filters cleared", { icon: "🧹" });
   };
   const [openFilter, setOpenFilter] = useState(false);
-  const buttonElement = (userId: string) => (
-    <ButtonElement
-      icon={<Edit size={14} />}
-      type="button"
-      text=""
-      onClick={() => {
-        setShowModal(true);
-        setSelectedUserId(userId);
-      }}
-      className="!text-xs font-semibold !bg-blue-500 hover:!bg-blue-600"
-    />
-  );
   const [addModal, setAddModal] = useState(false);
   return (
     <>
@@ -283,7 +259,6 @@ const AllUserForm = () => {
                               headerText={<Trash />}
                               content="Are you sure you want to delete this user?"
                             />
-                            <EditButton button={buttonElement(user.Id ?? "")} />
                             {/* <ButtonElement
                         icon={<UserRoundPen size={14} />}
                         type="button"

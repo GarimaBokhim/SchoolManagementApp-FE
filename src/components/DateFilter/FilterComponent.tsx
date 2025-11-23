@@ -29,7 +29,7 @@ function DateRangeFilterInner<T extends FieldValues>(
   }: DateRangeFilterProps<T>,
   ref: React.Ref<DateRangeFilterRef>
 ) {
-  const [isRunning, setIsRunning] = useState(true);
+  const [isRunning] = useState(true);
   const [activeRange, setActiveRange] = useState<number | null>(null);
   const handleClear = useCallback(() => {
     form.reset();
