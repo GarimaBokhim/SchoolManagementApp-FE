@@ -183,11 +183,14 @@ const CollegeCertificate: React.FC<Props> = ({
             <h1 className="bg-red-800 px-5 py-4 text-white text-center text-4xl font-bold rounded-3xl">
               CHARACTER CERTIFICATE
             </h1>
-            <div className="w-[120px] h-[130px] border-2 mt-[-2.5rem] border-black flex items-center justify-center">
-              <img
-                src={StudentData?.imageUrl}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-[120px] h-[130px] border-2 mt-[-2.5rem] border-black flex items-center justify-center relative overflow-hidden">
+              {StudentData?.imageUrl && (
+                <img
+                  src={`https://schoolapp.netraverselabs.com/${StudentData.imageUrl}`}
+                  alt="Student Image"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              )}
             </div>
           </div>
 
