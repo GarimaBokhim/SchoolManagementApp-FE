@@ -103,11 +103,19 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
             <header className=" pb-4 mb-2">
               <div className="flex items-start ">
                 <div className="w-28 ">
-                  <img
-                    src={StudentData?.imageUrl}
-                    alt="Logo"
-                    className="w-full h-auto"
-                  />
+                  <div className="w-[120px] h-[130px] border-2  border-black flex items-center justify-center relative overflow-hidden">
+                    {StudentData?.imageUrl && (
+                      <img
+                        src={`https://schoolapp.netraverselabs.com/${StudentData.imageUrl}`}
+                        alt="Student Image"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex ml-[-13%] w-full">
