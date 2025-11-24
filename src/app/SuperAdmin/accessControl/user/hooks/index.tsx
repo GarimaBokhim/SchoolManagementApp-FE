@@ -3,6 +3,7 @@ import { api } from "@/utils/instance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IAssign,
+  IAssignedUser,
   IUserResponse,
   IUserResponseForAll,
 } from "../types/IUserResponse";
@@ -80,7 +81,7 @@ export const useGetUserByRoleId = (Id: string) => {
   return useQuery({
     queryKey: [queryKey, Id],
     queryFn: async () => {
-      const response = await api.get<IUserResponse[]>(
+      const response = await api.get<IAssignedUser[]>(
         `${loginEndPoint.userByRoleId}/${Id}`
       );
       return response.data;

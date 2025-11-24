@@ -96,7 +96,6 @@ const AllInstitutionForm = () => {
                 <th className="py-3 px-4 text-left">Address</th>
                 <th className="py-3 px-4 text-left">Email</th>
                 <th className="py-3 px-4 text-left">Short Name</th>
-                <th className="py-3 px-4 text-left">company</th>
                 <th className="py-3 px-4 text-left">Contact Number</th>
                 <th className="py-3 px-4 text-left">Contact Person</th>
                 <th className="py-3 px-4 text-left">Pan</th>
@@ -116,9 +115,6 @@ const AllInstitutionForm = () => {
                       <td className="py-3 px-4">{institution.address}</td>
                       <td className="py-3 px-4">{institution.email}</td>
                       <td className="py-3 px-4">{institution.shortName}</td>
-                      <td className="py-3 px-4">
-                        {/* <CompanyName id={institution.id} /> */}
-                      </td>
                       <td className="py-3 px-4">{institution.contactNumber}</td>
                       <td className="py-3 px-4">{institution.contactPerson}</td>
                       <td className="py-3 px-4">{institution.pan}</td>

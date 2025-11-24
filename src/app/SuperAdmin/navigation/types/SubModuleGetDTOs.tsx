@@ -4,7 +4,7 @@ export type SubModuleGetDTOs = {
   targetUrl: string;
   icon: string;
   routeName: string;
-  role: string[];
+  role: string;
   rank?: string;
   isActive?: boolean;
 };

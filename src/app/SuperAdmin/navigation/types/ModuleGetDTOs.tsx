@@ -3,7 +3,7 @@ import { SubModuleGetDTOs } from "./SubModuleGetDTOs";
 export type ModuleGetDTO = {
   id?: string;
   name: string;
-  role: string[];
+  role: string;
   targetUrl: string;
   iconUrl?: string;
   routeName: string;

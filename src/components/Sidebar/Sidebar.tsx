@@ -51,9 +51,9 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
   const pathAfterFirst = `/${parts.slice(1).join("/")}`;
   const navigate = useRouter();
   const storedUser = localStorage.getItem("userDetails");
-  const [activeRole, setActiveRole] = useState<string | undefined>("role");
+  const [activeRole, setActiveRole] = useState<string | undefined>("");
   const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
-    "subModule"
+    ""
   );
   if (storedUser) {
     try {
@@ -334,7 +334,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                           onClick={() =>
                             handleSelectSubModule(
                               subItem.subModulesId!,
-                              subItem.role[1]
+                              subItem.role
                             )
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors

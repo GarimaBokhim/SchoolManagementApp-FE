@@ -27,3 +27,9 @@ export interface IFilterUserByDate {
   SchoolId: string;
   userName: string;
 }
+
+export interface IAssignedUser {
+  Id: string;
+  UserName: string;
+  Email: string;
+}
