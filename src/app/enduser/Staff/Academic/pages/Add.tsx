@@ -1,26 +1,25 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { IExam } from "../types/IExams";
-// import { ExamValidator } from "../validators/index";
-import AddExamForm from "../components/AddExamForm";
+import { IAcademicTeam } from "../types/IAcademicTeam";
+import AddAcademicTeamForm from "../components/AddAcademicTeam]";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
-const AddExam = ({ visible, onClose }: Props) => {
-  const form = useForm<IExam>({
+const AddAcademicTeam = ({ visible, onClose }: Props) => {
+  const form = useForm<IAcademicTeam>({
     defaultValues: {
       id: "",
-      name: "",
-      examDate: new Date(),
-      totalMarks: 0,
-      passingMarks: 0,
-      classId: "",
-      isfinalExam: false,
+      username: "",
+      firstName: "",
+      email: "",
+      lastName: "",
+      rolesId: [""],
+      address: "",
     },
 
-    // resolver: yupResolver(ExamValidator),
+    // resolver: yupResolver(AcademicTeamValidator),
   });
   const handleOnClose = () => {
     if (onClose) onClose();
@@ -39,9 +38,9 @@ const AddExam = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddExamForm form={form} onClose={handleOnClose} />
+        <AddAcademicTeamForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
 };
-export default AddExam;
+export default AddAcademicTeam;

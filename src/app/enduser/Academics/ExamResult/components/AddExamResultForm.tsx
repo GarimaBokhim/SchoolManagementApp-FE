@@ -10,11 +10,10 @@ import { useAddExamResult } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetStudentByClass } from "@/app/enduser/StudentManagement/Student/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
-import { IStudent } from "@/app/enduser/StudentManagement/Student/types/IStudents";
 
 type Props = {
   form: UseFormReturn<IExamResult>;
@@ -39,18 +38,15 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
     [key: number]: string | null;
   }>({});
-  const [selectedStudent, setSelectedStudent] = useState<IStudent | null>();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(
+    ""
+  );
   const { data: allExam } = useGetAllExams();
-  const { data: allStudents } = useGetAllStudents();
+  const { data: allStudents } = useGetStudentByClass(selectedClassId || "");
   const { data: allSubject } = useGetSubjectByClassId(selectedClassId || "");
-  useEffect(() => {
-    if (selectedStudent) {
-      setSelectedClassId(selectedStudent.classId || "");
-    }
-  }, [selectedStudent]);
   const handleClose = () => {
     form.reset();
+    setSelectedClassId("");
     onClose();
   };
 
@@ -103,6 +99,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 onSelect={(exam) => {
                   const id = exam?.id ?? "";
                   setSelectedExamId(id);
+                  setSelectedClassId(exam?.classId);
                   form.setValue("examId", id);
                 }}
                 getLabel={(e) => e?.name ?? ""}
@@ -117,13 +114,12 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
                 selected={
-                  allStudents?.Items?.find((s) => s.id === selectedStudentId) ||
+                  allStudents?.Items.find((s) => s.id === selectedStudentId) ||
                   null
                 }
                 onSelect={(student) => {
                   const id = student?.id ?? "";
                   setSelectedStudentId(id);
-                  setSelectedStudent(student);
                   form.setValue("studentId", id);
                 }}
                 getLabel={(s) => s?.firstName ?? ""}

@@ -5,6 +5,7 @@ export interface IExam {
   totalMarks: number;
   passingMarks: number;
   isfinalExam: boolean;
+  classId: string;
 }
 
 export interface IFilterExamByDate {

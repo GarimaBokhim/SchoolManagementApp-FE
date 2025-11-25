@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import AllExamResultForm from "../../ExamResult/components/AllExamResultForm";
 import AllExamForm from "../../Exam/components/AllExamForm";
+import AllExamResultForm from "../../ExamResult/components/AllExamResultForm";
 const AllExam = () => {
   const exam = [
     { id: "exam", label: "Exam", color: "gray" },
