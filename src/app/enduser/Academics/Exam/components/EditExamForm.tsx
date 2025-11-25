@@ -3,12 +3,14 @@ import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { IExam } from "../types/IExams";
 import { useEditExam, useGetExamById } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useGetAllClass } from "../../Class/hooks";
 type Props = {
   form: UseFormReturn<IExam>;
   onClose: () => void;
@@ -21,6 +23,8 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   const handleClose = () => {
     form.reset();
   };
+  const { data: allClass } = useGetAllClass();
+  const [selectedClass, setSelectedClass] = useState<string | undefined>("");
   const { watch, setValue } = form;
   const isChecked = watch("isfinalExam", false);
   const handleCheckBoxChange = () => {
@@ -34,7 +38,9 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
         totalMarks: ExamData?.totalMarks ?? 0,
         passingMarks: ExamData?.passingMarks ?? 0,
         isfinalExam: ExamData?.isfinalExam ?? true,
+        classId: ExamData?.classId ?? "",
       });
+      setSelectedClass(ExamData?.classId);
     }
   }, [ExamData]);
   const onSubmit: SubmitHandler<IExam> = async (data) => {
@@ -105,6 +111,25 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 name="passingMarks"
                 type="number"
                 placeholder="Enter passingMark"
+              />
+              <AppCombobox
+                dropDownWidth="w-[25rem]"
+                label="Class"
+                name="classId"
+                form={form}
+                dropdownPositionClass="fixed"
+                value={selectedClass}
+                options={allClass?.Items ?? []}
+                selected={
+                  allClass?.Items?.find((e) => e.id === selectedClass) || null
+                }
+                onSelect={(exam) => {
+                  const id = exam?.id ?? "";
+                  setSelectedClass(id);
+                  form.setValue("classId", id);
+                }}
+                getLabel={(e) => e?.name ?? ""}
+                getValue={(e) => e?.id ?? ""}
               />
               <div className="mb-6 relative flex items-center">
                 <label className="pl-2 test-slate-500 pr-2">

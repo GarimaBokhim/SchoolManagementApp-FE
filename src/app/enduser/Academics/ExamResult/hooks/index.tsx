@@ -39,7 +39,7 @@ export const useAddExamResult = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredExamResult"] });
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
     },
     onError: (error) => {
       console.error("Error adding ExamResult:", error);
@@ -61,7 +61,7 @@ export const useRemoveExamResult = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: ["filteredExamResult"] });
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
     },
   });
 };
@@ -84,7 +84,7 @@ export const useEditExamResult = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["filteredExamResult"] });
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });

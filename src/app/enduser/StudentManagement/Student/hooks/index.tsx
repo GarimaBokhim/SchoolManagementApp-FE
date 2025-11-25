@@ -9,6 +9,7 @@ const StudentEndPoints = {
   updateStudents: "/api/Student/UpdateStudents",
   getStudentsById: "/api/Student/StudentsBy",
   filterStudentByDate: "/api/Student/FilterStudents",
+  getStudentsByClass: "/api/Student/GetStudentByClass",
 };
 
 const queryKey = "Students";
@@ -144,6 +145,24 @@ export const useFilterStudentByDate = (params?: string) => {
       const response = await api.get<IPaginationResponse<IStudent>>(url);
       return response.data;
     },
+    staleTime: 0,
+    retry: false,
+  });
+};
+
+export const useGetStudentByClass = (ClassId: string) => {
+  return useQuery({
+    queryKey: [queryKey, ClassId],
+    queryFn: async (): Promise<IPaginationResponse<IStudent>> => {
+      if (!ClassId) {
+        throw new Error("Id is required to get a Student");
+      }
+      const response = await api.get<IPaginationResponse<IStudent>>(
+        `${StudentEndPoints.getStudentsByClass}/${ClassId}?classId=${ClassId}`
+      );
+      return response.data;
+    },
+    enabled: !!ClassId,
     staleTime: 0,
     retry: false,
   });

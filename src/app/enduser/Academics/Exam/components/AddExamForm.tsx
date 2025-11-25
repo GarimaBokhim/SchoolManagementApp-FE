@@ -8,6 +8,9 @@ import { IExam } from "../types/IExams";
 import { useAddExam } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useState } from "react";
+import { useGetAllClass } from "../../Class/hooks";
 type Props = {
   form: UseFormReturn<IExam>;
   onClose: () => void;
@@ -15,6 +18,8 @@ type Props = {
 const AddExamForm = ({ form, onClose }: Props) => {
   const addExam = useAddExam();
   const { handleError, clearError } = useErrorHandler();
+  const { data: allClass } = useGetAllClass();
+  const [selectedClass, setSelectedClass] = useState<string | undefined>("");
   const handleClose = () => {
     form.reset();
   };
@@ -75,6 +80,25 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 name="passingMarks"
                 type="number"
                 placeholder="Enter passingMark"
+              />
+              <AppCombobox
+                dropDownWidth="w-[25rem]"
+                label="Class"
+                name="classId"
+                form={form}
+                dropdownPositionClass="fixed"
+                value={selectedClass}
+                options={allClass?.Items ?? []}
+                selected={
+                  allClass?.Items?.find((e) => e.id === selectedClass) || null
+                }
+                onSelect={(exam) => {
+                  const id = exam?.id ?? "";
+                  setSelectedClass(id);
+                  form.setValue("classId", id);
+                }}
+                getLabel={(e) => e?.name ?? ""}
+                getValue={(e) => e?.id ?? ""}
               />
               <div className="mb-6 relative flex items-center">
                 <label className="pl-2 test-slate-500 pr-2">
