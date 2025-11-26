@@ -6,8 +6,8 @@ import { Toast } from "@/components/Toast/toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
-import { IStudent } from "../types/IStudents";
-import { useAddStudent } from "../hooks";
+import { IAcademicTeam } from "../types/IAcademicTeam";
+import { useAddAcademicTeam } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import {
@@ -16,19 +16,14 @@ import {
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
-import { useGetAllParents } from "../../Parent/hooks";
-import { useGetAllClass } from "@/app/enduser/Academics/Class/hooks";
 type Props = {
-  form: UseFormReturn<IStudent>;
+  form: UseFormReturn<IAcademicTeam>;
   onClose: () => void;
 };
-const AddStudentForm = ({ form, onClose }: Props) => {
-  const addStudent = useAddStudent();
+const AddAcademicTeamForm = ({ form, onClose }: Props) => {
+  const addAcademicTeam = useAddAcademicTeam();
   const { handleError, clearError } = useErrorHandler();
   const { data: allProvince } = useGetAllProvince();
-  const { data: allClass } = useGetAllClass();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
     null
@@ -49,12 +44,12 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const handleClose = () => {
     form.reset();
   };
-  const onSubmit: SubmitHandler<IStudent> = async (data) => {
+  const onSubmit: SubmitHandler<IAcademicTeam> = async (data) => {
     clearError();
     try {
-      await toast.promise(addStudent.mutateAsync(data), {
-        loading: "Adding Student...",
-        success: "Successfully added Student",
+      await toast.promise(addAcademicTeam.mutateAsync(data), {
+        loading: "Adding AcademicTeam...",
+        success: "Successfully added AcademicTeam",
       });
       handleClose();
     } catch (error) {
@@ -63,25 +58,24 @@ const AddStudentForm = ({ form, onClose }: Props) => {
     }
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [studentImgPath, setStudentImgPath] = useState<string>("");
+  const [AcademicTeamImgPath, setAcademicTeamImgPath] = useState<string>("");
+
   const handleImageClick = () => fileInputRef.current?.click();
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setStudentImgPath(URL.createObjectURL(file));
-      form.setValue("imageUrl", file);
+      setAcademicTeamImgPath(URL.createObjectURL(file));
+      form.setValue("teacherImg", file);
     }
   };
 
-  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
-  const { data: allParents } = useGetAllParents();
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
         <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
-              Add Student
+              Add AcademicTeam
             </h1>
             <button
               type="button"
@@ -103,9 +97,9 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     onClick={handleImageClick}
                     className="w-28 h-28 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-4 hover:ring-teal-500 transition-all"
                   >
-                    {studentImgPath ? (
+                    {AcademicTeamImgPath ? (
                       <img
-                        src={studentImgPath}
+                        src={AcademicTeamImgPath}
                         alt="Profile"
                         className="object-cover w-full h-full"
                       />
@@ -125,29 +119,24 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-[80%]">
                   <InputElement
-                    label="First Name"
+                    label="Full Name"
                     form={form}
-                    name="firstName"
-                    placeholder="Enter First Name"
+                    name="fullName"
+                    placeholder="Enter Full Name"
                     required
                   />
                   <InputElement
-                    label="Middle Name"
+                    label="User Name"
                     form={form}
-                    name="middleName"
-                    placeholder="Enter Middle Name"
+                    name="username"
+                    placeholder="Enter User Name"
                   />
                   <InputElement
-                    label="Last Name"
+                    label="Email"
                     form={form}
-                    name="lastName"
-                    placeholder="Enter Last Name"
-                  />
-                  <InputElement
-                    label="Date of Birth"
-                    form={form}
-                    name="dateOfBirth"
-                    inputType="date"
+                    name="email"
+                    type="email"
+                    placeholder="Enter Email"
                   />
                   <AppCombobox
                     label="Gender"
@@ -170,24 +159,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     onSelect={(option) => setGenderStatus(option?.id ?? null)}
                     getLabel={(o) => o?.name || ""}
                     getValue={(o) => o?.id ?? ""}
-                  />
-                  <AppCombobox
-                    value={selectedParenId}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="Parent Name"
-                    name="parentId"
-                    form={form}
-                    required
-                    options={allParents?.Items}
-                    selected={
-                      allParents?.Items?.find(
-                        (g) => g.id === selectedParenId
-                      ) || null
-                    }
-                    onSelect={(group) => setSelectedParenId(group?.id ?? null)}
-                    getLabel={(g) => g?.fullName ?? ""}
-                    getValue={(g) => g?.id ?? ""}
                   />
                 </div>
               </div>
@@ -287,79 +258,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                 />
               </div>
             </section>
-
-            {/* Educational Details */}
-            <section className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 border-b pb-2">
-                Educational Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <InputElement
-                  label="Registration Number"
-                  form={form}
-                  name="registrationNumber"
-                  placeholder="Enter Registration Number"
-                />
-                <InputElement
-                  label="Email"
-                  form={form}
-                  name="email"
-                  type="email"
-                  placeholder="Enter Email"
-                />
-                <InputElement
-                  label="Phone Number"
-                  form={form}
-                  name="phoneNumber"
-                  placeholder="Enter Phone Number"
-                />
-                <InputElement
-                  label="Enrollment Date"
-                  form={form}
-                  name="enrollmentDate"
-                  inputType="date"
-                />
-                <AppCombobox
-                  value={selectedClassId}
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute"
-                  label="Class"
-                  name="classId"
-                  form={form}
-                  required
-                  options={allClass?.Items}
-                  selected={
-                    allClass?.Items?.find((g) => g.id === selectedClassId) ||
-                    null
-                  }
-                  onSelect={(group) => setSelectedClassId(group?.id ?? null)}
-                  getLabel={(g) => g?.name ?? ""}
-                  getValue={(g) => g?.id ?? ""}
-                />
-                <AppCombobox
-                  label="Student Status"
-                  name="studentStatus"
-                  dropdownPositionClass="absolute"
-                  value={studentStatus}
-                  dropDownWidth="w-full"
-                  options={[
-                    { id: 1, name: "Active" },
-                    { id: 2, name: "Inactive" },
-                  ]}
-                  selected={
-                    [
-                      { id: 1, name: "Active" },
-                      { id: 2, name: "Inactive" },
-                    ].find((s) => s.id === studentStatus) || null
-                  }
-                  onSelect={(option) => setStudentStatus(option?.id ?? null)}
-                  getLabel={(o) => o?.name || ""}
-                  getValue={(o) => o?.id ?? ""}
-                />
-              </div>
-            </section>
-
-            {/* Submit Button */}
             <div className="flex justify-center mt-8">
               <ButtonElement
                 type="submit"
@@ -374,4 +272,4 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   );
 };
 
-export default AddStudentForm;
+export default AddAcademicTeamForm;

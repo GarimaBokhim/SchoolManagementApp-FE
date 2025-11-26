@@ -117,7 +117,7 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 label="Class"
                 name="classId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedClass}
                 options={allClass?.Items ?? []}
                 selected={

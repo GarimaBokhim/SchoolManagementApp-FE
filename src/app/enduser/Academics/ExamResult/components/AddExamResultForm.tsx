@@ -90,7 +90,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 label="Exam"
                 name="examId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedExamId}
                 options={allExam?.Items ?? []}
                 selected={
@@ -110,7 +110,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 label="Student Name"
                 name="studentId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
                 selected={
@@ -146,7 +146,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     label="Subject"
                     name={`marksObtained.${index}.subjectId`}
                     form={form}
-                    dropdownPositionClass="fixed"
+                    dropdownPositionClass="absolute"
                     value={selectedSubjectIds[index] ?? ""}
                     options={allSubject ?? []}
                     selected={
@@ -168,7 +168,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     getValue={(s) => s?.id ?? ""}
                   />
 
-                  {/* MARKS */}
                   <InputElement
                     label="Marks Obtained"
                     form={form}
@@ -176,8 +175,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     type="number"
                     placeholder="Enter marks"
                   />
-
-                  {/* REMOVE ROW */}
                   <button
                     type="button"
                     onClick={() => {
@@ -194,8 +191,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                   </button>
                 </div>
               ))}
-
-              {/* ADD SUBJECT BUTTON */}
               <ButtonElement
                 type="button"
                 text="Add Subject"
@@ -207,8 +202,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 }
               />
             </div>
-
-            {/* SUBMIT */}
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
             </div>
