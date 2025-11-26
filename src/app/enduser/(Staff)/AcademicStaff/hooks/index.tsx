@@ -1,26 +1,39 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IAcademicTeam } from "../types/IAcademicTeam";
+import { IAcademicTeam, IAssignClass } from "../types/IAcademicTeam";
 const AcademicTeamEndPoints = {
-  getAllAcademicTeams: "/api/Student/all-AcademicTeams",
-  createAcademicTeams: "/api/Student/AddAcademicTeam",
-  removeAcademicTeams: "/api/Student/DeleteAcademicTeams",
-  updateAcademicTeams: "/api/Student/UpdateAcademicTeams",
-  getAcademicTeamsById: "/api/Student/GetAcademicTeamsBy",
-  filterAcademicTeamByDate: "/api/Student/FilterAcademicTeams",
+  getAllAcademicTeams: "/api/StaffControllers/all-AcademicTeams",
+  createAcademicTeams: "/api/StaffControllers/AddAcademicTeam",
+  removeAcademicTeams: "/api/StaffControllers/DeleteAcademicTeams",
+  updateAcademicTeams: "/api/StaffControllers/UpdateAcademicTeams",
+  getAcademicTeamsById: "/api/StaffControllers/GetAcademicTeamsBy",
+  filterAcademicTeamByDate: "/api/StaffControllers/FilterAcademicTeam",
+  assignClass: "/api/StaffControllers/AssignClass",
+  unAssignClass: "/api/StaffControllers/UnAssignClass",
 };
 
 const queryKey = "AcademicTeams";
 const filterAcademicTeamQueryKey = "filteredAcademicTeam";
+const AssignQueryKey = "assignedClass";
+type AssignRequestClass = {
+  academicTeamId: string;
+  classesId: string;
+};
 type AcademicTeamRequest = {
   id?: string;
   email: string;
   username: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  teacherImg: File;
   address: string;
+  provinceId: number;
+  districtId: number;
+  vdcid: number;
+  municipalityId: number;
+  wardNumber: number;
+  gender: number;
   rolesId: [string];
 };
 
@@ -139,5 +152,21 @@ export const useFilterAcademicTeamByDate = (params?: string) => {
     },
     staleTime: 0,
     retry: false,
+  });
+};
+
+export const useAssignClass = () => {
+  const queryClient = useQueryClient();
+  return useMutation<IAssignClass, Error, AssignRequestClass>({
+    mutationFn: async (data: AssignRequestClass): Promise<IAssignClass> => {
+      const response = await api.post(AcademicTeamEndPoints.assignClass, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [AssignQueryKey] });
+    },
+    onError: (error: Error) => {
+      console.log("Error assigning Sub module", error);
+    },
   });
 };

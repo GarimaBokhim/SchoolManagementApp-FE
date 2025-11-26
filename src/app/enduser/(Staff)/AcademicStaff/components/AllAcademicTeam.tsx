@@ -11,86 +11,76 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
-import EditAcademicTeam from "../pages/Edit";
+import { Box, Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterAcademicTeamByDate, useRemoveAcademicTeam } from "../hooks";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import { useFilterAcademicTeamByDate } from "../hooks";
 import AddAcademicTeam from "../pages/Add";
-import DeleteButton from "@/components/Buttons/DeleteButton";
+import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import AssignClass from "./AssignClass";
+
 const AllAcademicTeamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  const [showAcademicTeams, setShowAcademicTeams] = useState(false);
-  // const [selectedAcademicTeamName, setSelectedAcademicTeamName] = useState<
-  //   string | null
-  // >("");
+
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const buttonElement = (id: string) => {
-    return (
-      <ButtonElement
-        icon={<Edit size={14} />}
-        type="button"
-        text=""
-        onClick={() => {
-          setShowAcademicTeams(true);
-          setSelectedId(id);
-        }}
-        className="!text-xs font-bold !bg-teal-500"
-      />
-    );
-  };
+  const { canAdd } = useMenuPermissionData(menuStatus);
+
   const [params, setParams] = useState("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+
   const form = useForm<IFilterAcademicTeamByDate>({
     defaultValues: {
-      firstName: "",
+      fullName: "",
       startDate: "",
       endDate: "",
     },
   });
+
   const fullQuery = query + (params || "");
 
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+
   const {
     data: filteredAcademicTeam,
     refetch,
     isLoading,
   } = useFilterAcademicTeamByDate(fullQuery);
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+
   const onSubmit: SubmitHandler<IFilterAcademicTeamByDate> = async (
     formData
   ) => {
     clearError();
     try {
       const queryParams = [
-        formData.firstName
-          ? `firstName=${encodeURIComponent(formData.firstName)}`
+        formData.fullName
+          ? `fullName=${encodeURIComponent(formData.fullName)}`
           : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
@@ -101,7 +91,9 @@ const AllAcademicTeamForm = () => {
       ]
         .filter(Boolean)
         .join("&");
+
       const fullQuery = queryParams ? `&${queryParams}` : "";
+
       await toast.promise(
         (async () => {
           setParams(fullQuery);
@@ -123,23 +115,26 @@ const AllAcademicTeamForm = () => {
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+
   const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteAcademicTeam = useRemoveAcademicTeam();
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteAcademicTeam.mutateAsync(id);
-      toast.success("User deleted successfully!");
-      refetch();
-    } catch {
-      toast.error("Error deleting user.");
-    }
+
+  const [selectedTeacherId, setSelectedTeacherId] = useState<
+    string | undefined
+  >("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAssignClass = (academicTeamId?: string) => {
+    setSelectedTeacherId(academicTeamId);
+    setIsModalOpen(true);
   };
+
   const onClearClick = () => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
     form.reset();
   };
+
   return (
     <>
       <Toaster position="top-right" />
@@ -147,6 +142,7 @@ const AllAcademicTeamForm = () => {
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
             <h1 className=" text-xl font-semibold ">All AcademicTeams</h1>
+
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
@@ -167,6 +163,7 @@ const AllAcademicTeamForm = () => {
               )}
             </div>
           </div>
+
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -179,61 +176,38 @@ const AllAcademicTeamForm = () => {
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
-                {/* <div className="flex-1 min-w-[240px]">
-                  <AppCombobox
-                    value={selectedAcademicTeamName}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="AcademicTeam Name"
-                    name="firstName"
-                    form={form}
-                    options={allAcademicTeams?.Items}
-                    selected={
-                      allAcademicTeams?.Items?.find(
-                        (g) => g.fullName === selectedAcademicTeamName
-                      ) || null
-                    }
-                    onSelect={(group) => {
-                      if (group) {
-                        setSelectedAcademicTeamName(group.fullName || null);
-                      } else {
-                        setSelectedAcademicTeamName(null);
-                      }
-                    }}
-                    getLabel={(g) => g?.fullName ?? ""}
-                    getValue={(g) => g?.fullName ?? ""}
-                  />
-                </div> */}
 
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                    className="!bg-emerald-600 hover:!bg-emerald-700"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                    className="!bg-gray-500 hover:!bg-gray-600"
                   />
                 </div>
               </form>
             </div>
           )}
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">UserName</th>
+                  <th className="px-4 py-3 text-left">Full Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
                   <th className="px-4 py-3 text-left">Address</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {isLoading ? (
                   <tr>
@@ -247,30 +221,24 @@ const AllAcademicTeamForm = () => {
                     (AcademicTeam: IAcademicTeam, index: number) => (
                       <tr
                         key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
                         <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{AcademicTeam.username}</td>
+                        <td className="py-3 px-4">{AcademicTeam.fullName}</td>
                         <td className="py-3 px-4">{AcademicTeam.email}</td>
                         <td className="py-3 px-4">{AcademicTeam.address}</td>
+
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    AcademicTeam.id ? AcademicTeam.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this AcademicTeam?"
-                              />
-                            )}
-                            {canEdit && (
-                              <EditButton
-                                button={buttonElement(AcademicTeam.id ?? "")}
-                              />
-                            )}
+                            <ButtonElement
+                              icon={<Box size={14} />}
+                              type="button"
+                              text=""
+                              handleClick={() =>
+                                handleAssignClass(AcademicTeam.id)
+                              }
+                              customStyle="!text-xs font-bold !bg-teal-500"
+                            />
                           </div>
                         </td>
                       </tr>
@@ -289,46 +257,40 @@ const AllAcademicTeamForm = () => {
               </tbody>
             </table>
           </div>
-          {showAcademicTeams && selectedId && (
-            <EditAcademicTeam
-              AcademicTeamId={selectedId}
-              visible={showAcademicTeams}
-              onClose={() => setShowAcademicTeams(false)}
-            />
-          )}
+
           <AddAcademicTeam
             visible={addModal}
             onClose={() => setAddModal(false)}
           />
-        </div>
 
-        {filteredAcademicTeam?.Items &&
-          filteredAcademicTeam?.Items.length > 0 && (
-            <div className="mt-4">
-              <Pagination
-                form={handleSubmit}
-                pagination={{
-                  currentPage: Array.isArray(filteredAcademicTeam)
-                    ? 1
-                    : filteredAcademicTeam?.PageIndex ?? 1,
-                  firstPage: Array.isArray(filteredAcademicTeam)
-                    ? 1
-                    : filteredAcademicTeam?.FirstPage ?? 1,
-                  lastPage: Array.isArray(filteredAcademicTeam)
-                    ? 1
-                    : filteredAcademicTeam?.LastPage ?? 1,
-                  nextPage: Array.isArray(filteredAcademicTeam)
-                    ? 1
-                    : filteredAcademicTeam?.NextPage ?? 1,
-                  previousPage: Array.isArray(filteredAcademicTeam)
-                    ? 1
-                    : filteredAcademicTeam?.PreviousPage ?? 1,
-                }}
-                handleSearch={handleSearch}
-              />
-            </div>
-          )}
+          {filteredAcademicTeam?.Items &&
+            filteredAcademicTeam?.Items.length > 0 && (
+              <div className="mt-4">
+                <Pagination
+                  form={handleSubmit}
+                  pagination={{
+                    currentPage: filteredAcademicTeam?.PageIndex ?? 1,
+                    firstPage: filteredAcademicTeam?.FirstPage ?? 1,
+                    lastPage: filteredAcademicTeam?.LastPage ?? 1,
+                    nextPage: filteredAcademicTeam?.NextPage ?? 1,
+                    previousPage: filteredAcademicTeam?.PreviousPage ?? 1,
+                  }}
+                  handleSearch={handleSearch}
+                />
+              </div>
+            )}
+        </div>
       </div>
+
+      {/* ✅ FIXED: MODAL MOVED OUTSIDE THE OVERFLOW AREA */}
+      {selectedTeacherId && isModalOpen && (
+        <AssignClass
+          key={selectedTeacherId}
+          teacherId={selectedTeacherId}
+          visible={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </>
   );
 };
