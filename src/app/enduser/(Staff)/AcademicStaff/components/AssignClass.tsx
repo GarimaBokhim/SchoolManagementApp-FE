@@ -42,7 +42,7 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
   return (
     <div
       className="
-        absolute bg-white p-4 rounded-xl shadow-md border border-gray-200
+        absolute bg-white dark:bg-[#3a3a3a] p-4 rounded-xl shadow-md border border-gray-200
         w-[20rem] md:w-[12rem] sm:w-[16rem] max-h-[30vh] overflow-y-auto z-40
       "
     >

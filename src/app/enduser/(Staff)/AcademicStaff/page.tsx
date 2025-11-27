@@ -1,10 +1,10 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import AllStudent from "./pages/All";
+import AllAcademicTeam from "./pages/All";
 
 export default function DashboardPageEndUser() {
   return (
-    <LayoutWrapper title="Parent">
-      <AllStudent />
+    <LayoutWrapper title="Academic Team">
+      <AllAcademicTeam />
     </LayoutWrapper>
   );
 }
