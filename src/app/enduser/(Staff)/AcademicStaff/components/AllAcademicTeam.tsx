@@ -234,12 +234,22 @@ const AllAcademicTeamForm = () => {
                               icon={<Box size={14} />}
                               type="button"
                               text=""
-                              handleClick={() =>
-                                handleAssignClass(AcademicTeam.id)
-                              }
+                              handleClick={() => {
+                                handleAssignClass(AcademicTeam.id);
+                                setIsModalOpen(!isModalOpen);
+                              }}
                               customStyle="!text-xs font-bold !bg-teal-500"
                             />
                           </div>
+                          {selectedTeacherId === AcademicTeam.id &&
+                            isModalOpen && (
+                              <AssignClass
+                                key={selectedTeacherId}
+                                teacherId={selectedTeacherId || ""}
+                                visible={isModalOpen}
+                                onClose={() => setIsModalOpen(false)}
+                              />
+                            )}
                         </td>
                       </tr>
                     )
@@ -281,16 +291,6 @@ const AllAcademicTeamForm = () => {
             )}
         </div>
       </div>
-
-      {/* ✅ FIXED: MODAL MOVED OUTSIDE THE OVERFLOW AREA */}
-      {selectedTeacherId && isModalOpen && (
-        <AssignClass
-          key={selectedTeacherId}
-          teacherId={selectedTeacherId}
-          visible={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
     </>
   );
 };
