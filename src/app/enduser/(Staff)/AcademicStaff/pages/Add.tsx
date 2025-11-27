@@ -11,12 +11,18 @@ const AddAcademicTeam = ({ visible, onClose }: Props) => {
   const form = useForm<IAcademicTeam>({
     defaultValues: {
       id: "",
-      username: "",
-      firstName: "",
       email: "",
-      lastName: "",
-      rolesId: [""],
+      username: "",
+      password: "",
+      fullName: "",
       address: "",
+      provinceId: 0,
+      districtId: 0,
+      vdcid: 0,
+      municipalityId: 0,
+      wardNumber: 0,
+      gender: 0,
+      rolesId: [""],
     },
 
     // resolver: yupResolver(AcademicTeamValidator),

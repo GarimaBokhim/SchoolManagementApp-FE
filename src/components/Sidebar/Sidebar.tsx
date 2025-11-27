@@ -44,25 +44,33 @@ type Props = {
 const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
   const { setMenuStatus } = usePermissions();
   const { isOpen } = useSidebar();
-  let role = "";
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const pathname = usePathname();
   const parts = pathname.split("/").filter(Boolean);
   const pathAfterFirst = `/${parts.slice(1).join("/")}`;
   const navigate = useRouter();
-  const storedUser = localStorage.getItem("userDetails");
   const [activeRole, setActiveRole] = useState<string | undefined>("");
   const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
     ""
   );
-  if (storedUser) {
-    try {
-      const parsedUser = JSON.parse(storedUser);
-      role = parsedUser.role;
-    } catch (error) {
-      console.error("Failed to parse user details:", error);
+  let role = "";
+  const [storedUser, setStoredUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("userDetails");
+      if (user) {
+        try {
+          const parsed = JSON.parse(user);
+          setStoredUser(parsed);
+        } catch (err) {
+          console.error("Failed to parse user details:", err);
+        }
+      }
     }
-  }
+  }, []);
+
+  role = storedUser?.role || "";
 
   const withRolePrefix = (path: string) => {
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
