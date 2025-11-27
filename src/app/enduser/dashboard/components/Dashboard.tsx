@@ -4,18 +4,28 @@ import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import PieChartSection from "./PieChart";
 import SchoolInfoCard from "./SchoolCard";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const Dashboard: React.FC = () => {
-  const storedUser = localStorage.getItem("userDetails");
-  let schoolId = "";
-  if (storedUser) {
-    try {
-      const parsedUser = JSON.parse(storedUser);
-      schoolId = parsedUser.schoolId;
-    } catch (error) {
-      console.error("Failed to parse user details:", error);
+  const [schoolId, setSchoolId] = useState("");
+  const navigate = useRouter();
+  useEffect(() => {
+    const userDetailsString = localStorage.getItem("userDetails");
+
+    if (userDetailsString) {
+      try {
+        const parsed = JSON.parse(userDetailsString);
+        setSchoolId(parsed.schoolId || "");
+      } catch (e) {
+        console.error("Failed to parse userDetails", e);
+      }
     }
-  }
+
+    const token = localStorage.getItem("token");
+    if (!token) navigate.push("/");
+  }, [navigate]);
+
   return (
     <div className=" bg-[#FBFBFB] dark:bg-[#0A0A0A] ">
       <div className="px-6 flex flex-col gap-4">

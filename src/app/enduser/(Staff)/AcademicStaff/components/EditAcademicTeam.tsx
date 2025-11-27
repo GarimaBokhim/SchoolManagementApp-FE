@@ -28,8 +28,13 @@ const EditAcademicTeamForm = ({ form, onClose, AcademicTeamId }: Props) => {
   useEffect(() => {
     if (AcademicTeamData) {
       form.reset({
-        firstName: AcademicTeamData?.firstName ?? "",
-        lastName: AcademicTeamData?.lastName ?? "",
+        fullName: AcademicTeamData?.fullName ?? "",
+        provinceId: AcademicTeamData?.provinceId ?? 0,
+        districtId: AcademicTeamData?.districtId ?? 0,
+        municipalityId: AcademicTeamData?.municipalityId ?? 0,
+        vdcid: AcademicTeamData?.vdcid ?? 0,
+        wardNumber: AcademicTeamData?.wardNumber ?? 0,
+        gender: AcademicTeamData?.gender ?? 0,
         email: AcademicTeamData?.email ?? "",
         username: AcademicTeamData?.username ?? "",
         address: AcademicTeamData?.address ?? "",

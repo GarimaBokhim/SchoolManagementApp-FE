@@ -19,7 +19,6 @@ const AddStudent = ({ visible, onClose }: Props) => {
       dateOfBirth: new Date(),
       email: "",
       phoneNumber: "",
-      imageUrl: "",
       address: "",
       enrollmentDate: new Date(),
       parentId: "",

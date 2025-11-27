@@ -2,7 +2,7 @@
   "module": [
     {
       "name": "Dashboard",
-      "iconUrl": "Home",
+      "icon": "Home",
       "targetUrl": "/SuperAdmin/dashboard",
       "routeName": "users",
       "role": "superadmin",
@@ -11,28 +11,28 @@
 
     {
       "name": "Navigation",
-      "iconUrl": "User",
+      "icon": "User",
       "targetUrl": "/SuperAdmin/navigation",
       "routeName": "users",
       "role": "superadmin",
       "subModulesResponse": [
         {
           "name": "Modules",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/navigation/modules",
           "routeName": "users",
           "role": "superadmin"
         },
         {
           "name": "SubModules",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/navigation/subModules",
           "routeName": "users",
-          "role": ["superadmin"]
+          "role": "superadmin"
         },
         {
           "name": "Menus",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/navigation/menu",
           "routeName": "users",
           "role": "superadmin"
@@ -41,28 +41,28 @@
     },
     {
       "name": "Access Control",
-      "iconUrl": "ShieldCheck",
+      "icon": "ShieldCheck",
       "targetUrl": "/admin/accessControl",
       "routeName": "user",
-      "role": "superadmin",
+      "role":"superadmin",
       "subModulesResponse": [
         {
           "name": "Users",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/accessControl/user",
           "routeName": "users",
-          "role": "superadmin"
+          "role":"superadmin"
         },
         {
           "name": "Roles",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/accessControl/roles",
           "routeName": "users",
           "role": "superadmin"
         },
         {
           "name": "RolePermission",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/accessControl/RolePermission",
           "routeName": "users",
           "role": "superadmin"
@@ -71,14 +71,14 @@
     },
     {
       "name": "Institution SetUp",
-      "iconUrl": "ShieldCheck",
+      "icon": "ShieldCheck",
       "targetUrl": "/SuperAdmin/institutionSetup",
       "routeName": "institution",
       "role": "superadmin",
       "subModulesResponse": [
         {
           "name": "Institution",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/SuperAdmin/institutionSetup/Institution",
           "routeName": "users",
           "role": "superadmin"
@@ -87,17 +87,17 @@
     },
     {
       "name": "Company SetUp",
-      "iconUrl": "Shool",
+      "icon": "Shool",
       "targetUrl": "/SuperAdmin/company",
       "routeName": "company",
       "role": "superadmins",
       "subModulesResponse": [
         {
           "name": "Company",
-          "iconUrl": "User",
+          "icon": "User",
           "targetUrl": "/Admin/company/all-company",
           "routeName": "users",
-          "role": "superadmins"
+          "role":"superadmins"
         }
       ]
     }
