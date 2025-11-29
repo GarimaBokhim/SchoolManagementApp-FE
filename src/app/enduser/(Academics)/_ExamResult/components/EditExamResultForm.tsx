@@ -12,7 +12,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetSubjectByClassId } from "@/app/enduser/(Academics)/Subject/hooks";
+import { useGetSubjectByClassId } from "../../Subject/hooks";
 import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 
 type Props = {
@@ -126,7 +126,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 label="Exam"
                 name="examId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedExamId}
                 options={allExam?.Items ?? []}
                 selected={
@@ -145,7 +145,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 label="Student Name"
                 name="studentId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
                 selected={
@@ -182,7 +182,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     label="Subject"
                     name={`marksObtained.${index}.subjectId`}
                     form={form}
-                    dropdownPositionClass="fixed"
+                    dropdownPositionClass="absolute"
                     value={selectedSubjectIds[index] ?? ""}
                     options={allSubject ?? []}
                     selected={
@@ -203,8 +203,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     getLabel={(s) => s?.subjectName ?? ""}
                     getValue={(s) => s?.id ?? ""}
                   />
-
-                  {/* MARKS */}
                   <InputElement
                     label="Marks Obtained"
                     form={form}
@@ -212,8 +210,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     type="number"
                     placeholder="Enter marks"
                   />
-
-                  {/* REMOVE ROW */}
                   <button
                     type="button"
                     onClick={() => {
@@ -241,8 +237,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 }
               />
             </div>
-
-            {/* SUBMIT */}
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
             </div>

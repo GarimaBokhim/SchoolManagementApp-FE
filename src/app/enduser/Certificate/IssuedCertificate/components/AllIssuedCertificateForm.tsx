@@ -28,7 +28,7 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddIssuedCertificate from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
-import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import CollegeCertificate from "./CollegeCertificate";
 import SchoolCertificate from "./SchoolCertificate";
 type Props = {

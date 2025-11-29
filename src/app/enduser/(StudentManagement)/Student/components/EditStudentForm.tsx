@@ -16,7 +16,7 @@ import {
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
-import { useGetAllParents } from "../../Parent/hooks";
+import { useGetAllParents } from "../../_Parent/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 type Props = {
   form: UseFormReturn<IStudent>;

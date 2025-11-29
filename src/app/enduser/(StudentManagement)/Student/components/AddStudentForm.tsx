@@ -4,10 +4,10 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { IStudent } from "../types/IStudents";
-import { useEditStudent, useGetStudentById } from "../hooks";
+import { useAddStudent } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import {
@@ -16,19 +16,18 @@ import {
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
-import { useGetAllParents } from "../../Parent/hooks";
+import { useGetAllParents } from "../../_Parent/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 type Props = {
   form: UseFormReturn<IStudent>;
   onClose: () => void;
-  studentId: string;
 };
-const EditStudentForm = ({ form, onClose, studentId }: Props) => {
-  const editStudent = useEditStudent();
+const AddStudentForm = ({ form, onClose }: Props) => {
+  const addStudent = useAddStudent();
   const { handleError, clearError } = useErrorHandler();
   const { data: allProvince } = useGetAllProvince();
-  const { data: StudentData } = useGetStudentById(studentId);
   const { data: allClass } = useGetAllClass();
+  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
@@ -37,9 +36,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
     null
   );
-  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const { data: allParents } = useGetAllParents();
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | null
@@ -53,160 +49,190 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const handleClose = () => {
     form.reset();
   };
-  useEffect(() => {
-    if (StudentData) {
-      form.reset({
-        firstName: StudentData?.firstName ?? "",
-        middleName: StudentData?.middleName ?? "",
-        lastName: StudentData?.lastName ?? "",
-        registrationNumber: StudentData?.registrationNumber ?? "",
-        genderStatus: StudentData?.genderStatus ?? 0,
-        studentStatus: StudentData?.studentStatus ?? 0,
-        dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
-        email: StudentData?.email ?? "",
-        phoneNumber: StudentData?.phoneNumber ?? "",
-        imageUrl: StudentData?.imageUrl ?? "",
-        address: StudentData?.address ?? "",
-        enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
-        parentId: StudentData?.parentId ?? "",
-        classSectionId: null,
-        classId: StudentData?.classId ?? "",
-        provinceId: StudentData?.provinceId ?? 0,
-        districtId: StudentData?.districtId ?? 0,
-        wardNumber: StudentData?.wardNumber ?? 0,
-      });
-      setSelectedDistrictId(StudentData.districtId);
-      setSelectedProvinceId(StudentData.provinceId);
-      setSelectedParenId(StudentData.parentId);
-      setSelectedVdcId(StudentData.vdcid);
-      setSelectedClassId(StudentData.classId);
-      setSelectedMunicipalityId(StudentData.municipalityId);
-    }
-  }, [StudentData]);
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError();
 
     try {
-      clearError();
-      await toast.promise(
-        editStudent.mutateAsync({
-          id: studentId,
-          data: data,
-        }),
-        {
-          loading: "Submitting Data",
-          success: "Successfully Edited Income",
-        }
-      );
+      const updatedData: IStudent = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        middleName: data.middleName,
+        registrationNumber: data.registrationNumber,
+        genderStatus: data.genderStatus,
+        studentStatus: data.studentStatus,
+        dateOfBirth: data.dateOfBirth,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        imageUrl: data.imageUrl,
+        enrollmentDate: data.enrollmentDate,
+        parentId: data.parentId,
+        classId: data.classId,
+        classSectionId: data.classSectionId,
+        provinceId: data.provinceId,
+        vdcid: data.vdcid,
+        municipalityId: data.municipalityId,
+        districtId: data.districtId,
+        wardNumber: data.wardNumber,
+      };
+      const sanitizedData = Object.fromEntries(
+        Object.entries(updatedData).map(([key, value]) => [
+          key,
+          value === "" || value === null ? null : value,
+        ])
+      ) as IStudent;
+
+      // if (data.imageUrl instanceof File) {
+      //   sanitizedData.append("imageUrl", data.imageUrl);
+      // }
+
+      await toast.promise(addStudent.mutateAsync(sanitizedData), {
+        loading: "Adding Student...",
+        success: "Successfully added Student",
+      });
+
       handleClose();
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
     }
   };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [studentImgPath, setStudentImgPath] = useState<string>("");
+  const handleImageClick = () => fileInputRef.current?.click();
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setStudentImgPath(URL.createObjectURL(file));
+      form.setValue("imageUrl", file);
+    }
+  };
+
+  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
+  const { data: allParents } = useGetAllParents();
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
-             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-    >
-      <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] 
-               w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
-               max-h-[95vh] md:max-h-[92vh] h-full 
-               rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
-      >
-        <fieldset className="space-y-6">
+    <div className=" inset-0 flex items-center justify-center  w-full h-full">
+      <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
+        <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
               Add Student
             </h1>
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-red-400 text-3xl hover:text-red-500 transition-transform transform hover:scale-110"
             >
               <X strokeWidth={3} />
             </button>
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* ===== Personal Details Section ===== */}
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <section className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 border-b pb-2">
                 Personal Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                <InputElement
-                  label="First Name"
-                  form={form}
-                  name="firstName"
-                  placeholder="Enter First Name"
-                  required
-                />
-                <InputElement
-                  label="Middle Name"
-                  form={form}
-                  name="middleName"
-                  placeholder="Enter Middle Name"
-                />
-                <InputElement
-                  label="Last Name"
-                  form={form}
-                  name="lastName"
-                  placeholder="Enter Last Name"
-                />
-                <InputElement
-                  label="Date of Birth"
-                  form={form}
-                  name="dateOfBirth"
-                  inputType="date"
-                />
-                <AppCombobox
-                  label="Gender"
-                  dropdownPositionClass="absolute"
-                  name="genderStatus"
-                  value={genderStatus}
-                  options={[
-                    { id: 1, name: "Male" },
-                    { id: 2, name: "Female" },
-                    { id: 3, name: "Other" },
-                  ]}
-                  dropDownWidth="w-full"
-                  selected={
-                    [
+              <div className="flex">
+                <div className="flex flex-col items-center w-[20%]">
+                  <div
+                    onClick={handleImageClick}
+                    className="w-28 h-28 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-4 hover:ring-teal-500 transition-all"
+                  >
+                    {studentImgPath ? (
+                      <img
+                        src={studentImgPath}
+                        alt="Profile"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">
+                        Click to add
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-[80%]">
+                  <InputElement
+                    label="First Name"
+                    form={form}
+                    name="firstName"
+                    placeholder="Enter First Name"
+                    required
+                  />
+                  <InputElement
+                    label="Middle Name"
+                    form={form}
+                    name="middleName"
+                    placeholder="Enter Middle Name"
+                  />
+                  <InputElement
+                    label="Last Name"
+                    form={form}
+                    name="lastName"
+                    placeholder="Enter Last Name"
+                  />
+                  <InputElement
+                    label="Date of Birth"
+                    form={form}
+                    name="dateOfBirth"
+                    inputType="date"
+                  />
+                  <AppCombobox
+                    label="Gender"
+                    dropdownPositionClass="absolute"
+                    name="genderStatus"
+                    value={genderStatus}
+                    options={[
                       { id: 1, name: "Male" },
                       { id: 2, name: "Female" },
                       { id: 3, name: "Other" },
-                    ].find((g) => g.id === genderStatus) || null
-                  }
-                  onSelect={(option) => setGenderStatus(option?.id ?? null)}
-                  getLabel={(o) => o?.name || ""}
-                  getValue={(o) => o?.id ?? ""}
-                />
-                <AppCombobox
-                  value={selectedParenId}
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute"
-                  label="Parent Name"
-                  name="parentId"
-                  form={form}
-                  required
-                  options={allParents?.Items}
-                  selected={
-                    allParents?.Items?.find((g) => g.id === selectedParenId) ||
-                    null
-                  }
-                  onSelect={(group) => setSelectedParenId(group?.id ?? null)}
-                  getLabel={(g) => g?.fullName ?? ""}
-                  getValue={(g) => g?.id ?? ""}
-                />
+                    ]}
+                    dropDownWidth="w-full"
+                    selected={
+                      [
+                        { id: 1, name: "Male" },
+                        { id: 2, name: "Female" },
+                        { id: 3, name: "Other" },
+                      ].find((g) => g.id === genderStatus) || null
+                    }
+                    onSelect={(option) => setGenderStatus(option?.id ?? null)}
+                    getLabel={(o) => o?.name || ""}
+                    getValue={(o) => o?.id ?? ""}
+                  />
+                  <AppCombobox
+                    value={selectedParenId}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Parent Name"
+                    name="parentId"
+                    form={form}
+                    required
+                    options={allParents?.Items}
+                    selected={
+                      allParents?.Items?.find(
+                        (g) => g.id === selectedParenId
+                      ) || null
+                    }
+                    onSelect={(group) => setSelectedParenId(group?.id ?? null)}
+                    getLabel={(g) => g?.fullName ?? ""}
+                    getValue={(g) => g?.id ?? ""}
+                  />
+                </div>
               </div>
             </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
+            <section className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 border-b pb-2">
                 Address Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <InputElement
                   label="Address"
                   form={form}
@@ -253,6 +279,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   value={selectedMunicipalityId}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
+                  disabled={selectedVdcId !== 0 && selectedVdcId !== null}
                   label="Municipality"
                   name="municipalityId"
                   form={form}
@@ -273,6 +300,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
                   label="VDC"
+                  disabled={
+                    selectedMunicipalityId !== 0 &&
+                    selectedMunicipalityId !== null
+                  }
                   name="vdcid"
                   form={form}
                   options={filteredVdc}
@@ -292,11 +323,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 />
               </div>
             </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
+
+            {/* Educational Details */}
+            <section className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 border-b pb-2">
                 Educational Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <InputElement
                   label="Registration Number"
                   form={form}
@@ -339,7 +372,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   getLabel={(g) => g?.name ?? ""}
                   getValue={(g) => g?.id ?? ""}
                 />
-
                 <AppCombobox
                   label="Student Status"
                   name="studentStatus"
@@ -363,8 +395,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
               </div>
             </section>
 
-            <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+            {/* Submit Button */}
+            <div className="flex justify-center mt-8">
+              <ButtonElement
+                type="submit"
+                text="Submit"
+                className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
+              />
             </div>
           </form>
         </fieldset>
@@ -373,4 +410,4 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   );
 };
 
-export default EditStudentForm;
+export default AddStudentForm;

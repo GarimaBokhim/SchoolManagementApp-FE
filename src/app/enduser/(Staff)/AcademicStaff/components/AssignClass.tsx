@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { useGetAllClass } from "@/app/enduser/Academics/Class/hooks";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useAssignClass } from "../hooks";
 import { IAssignClass } from "../types/IAcademicTeam";
-import { IClass } from "@/app/enduser/Academics/Class/types/IClass";
+import { IClass } from "@/app/enduser/(Academics)/Class/types/IClass";
 
 interface Props {
   teacherId: string;

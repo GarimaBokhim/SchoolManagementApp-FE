@@ -12,7 +12,7 @@ export interface IAcademicTeam {
   municipalityId: number;
   wardNumber: number;
   gender: number;
-  rolesId: [string];
+  rolesId: string[];
 }
 
 export interface IFilterAcademicTeamByDate {

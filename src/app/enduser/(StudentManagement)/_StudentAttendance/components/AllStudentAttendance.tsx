@@ -1,0 +1,308 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import {
+  IFilterStudentAttendanceByDate,
+  IAllAttendance,
+} from "../types/IStudentAttendance";
+import { SubmitHandler, useForm } from "react-hook-form";
+import Pagination from "@/components/Pagination";
+import React from "react";
+import { ButtonElement } from "@/components/Buttons/ButtonElement";
+import toast, { Toaster } from "react-hot-toast";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
+import { Filter, Plus, RotateCcw } from "lucide-react";
+import DateRangeFilter, {
+  DateRangeFilterRef,
+} from "@/components/DateFilter/FilterComponent";
+import { useFilterStudentAttendanceByDate } from "../hooks";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import AddStudentAttendance from "../pages/Add";
+import { useGetAllStudents } from "../../Student/hooks";
+import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hooks";
+const AllStudentAttendanceForm = () => {
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  });
+  type SearchParam = {
+    pageSize: number;
+    pageIndex: number;
+    isPagination: boolean;
+  };
+  const handleSearch = (params: SearchParam) => {
+    params.pageSize = paginationParams.pageSize;
+    setPaginationParams(params);
+  };
+  const { data: allStudent } = useGetAllStudents();
+  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
+  const [addModal, setAddModal] = useState(false);
+  const { menuStatus } = usePermissions();
+  const { canAdd } = useMenuPermissionData(menuStatus);
+  const [params, setParams] = useState("");
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+  const form = useForm<IFilterStudentAttendanceByDate>({
+    defaultValues: {
+      studentId: "",
+      startDate: "",
+      endDate: "",
+    },
+  });
+  const fullQuery = query + (params || "");
+
+  const handleSubmit = useForm<SearchParam>({
+    defaultValues: {},
+  });
+  const {
+    data: filteredStudentAttendance,
+    refetch,
+    isLoading,
+  } = useFilterStudentAttendanceByDate(fullQuery);
+  useEffect(() => {
+    refetch();
+  }, [paginationParams, refetch]);
+  const { handleError, clearError } = useErrorHandler();
+  const [openFilter, setOpenFilter] = useState(false);
+  const onSubmit: SubmitHandler<IFilterStudentAttendanceByDate> = async (
+    formData
+  ) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.studentId
+          ? `studentId=${encodeURIComponent(formData.studentId)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+      const fullQuery = queryParams ? `&${queryParams}` : "";
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          await refetch();
+        })(),
+        {
+          loading: "Fetching data...",
+          success: "Data fetched successfully!",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
+      console.error("Error during form submission:", error);
+    }
+  };
+
+  const refForInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    refForInput.current?.focus();
+  }, []);
+  const formRef = useRef<DateRangeFilterRef>(null);
+  const { data: allStudents } = useGetAllStudents();
+  const { data: allAcademicTeam } = useGetAllAcademicTeams();
+  const onClearClick = () => {
+    refetch();
+    setParams("");
+    formRef.current?.handleClear();
+    setSelectedStudent("");
+    form.reset();
+  };
+  return (
+    <>
+      <Toaster position="top-right" />
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
+            <h1 className=" text-xl font-semibold ">All StudentAttendances</h1>
+            <div className="flex items-center space-x-3">
+              <ButtonElement
+                type="button"
+                text="Filter"
+                icon={<Filter size={14} />}
+                onClick={() => setOpenFilter(!openFilter)}
+                className="!bg-emerald-600 hover:!bg-emerald-700"
+              />
+
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={24} />}
+                  type="button"
+                  text="Add New StudentAttendance"
+                  onClick={() => setAddModal(true)}
+                  className="!text-md !font-bold"
+                />
+              )}
+            </div>
+          </div>
+          {openFilter && (
+            <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onSubmit}
+                  setParams={setParams}
+                />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedStudent}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Student"
+                    name="studentId"
+                    form={form}
+                    options={allStudent?.Items}
+                    selected={
+                      allStudent?.Items?.find(
+                        (g) => g.id === selectedStudent
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      if (group) {
+                        setSelectedStudent(group.id || null);
+                      } else {
+                        setSelectedStudent(null);
+                      }
+                    }}
+                    getLabel={(g) => g?.firstName ?? ""}
+                    getValue={(g) => g?.id ?? ""}
+                  />
+                </div>
+
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={onClearClick}
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
+                </div>
+              </form>
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Student</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Academic Team</th>
+                  <th className="px-4 py-3 text-left">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                      Loading StudentAttendances...
+                    </td>
+                  </tr>
+                ) : filteredStudentAttendance?.Items &&
+                  filteredStudentAttendance?.Items.length > 0 ? (
+                  filteredStudentAttendance?.Items.map(
+                    (StudentAttendance: IAllAttendance, index: number) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      >
+                        <td className="py-3 px-4">{index + 1}</td>
+                        <td className="py-3 px-4">
+                          {`${StudentAttendance.attendanceDate}`}
+                        </td>
+                        <td className="py-3 px-4">
+                          {
+                            allStudents?.Items.find(
+                              (i) => i.id === StudentAttendance.studentId
+                            )?.firstName
+                          }
+                        </td>
+                        <td className="py-3 px-4">
+                          {StudentAttendance.attendanceStatus === 0
+                            ? "Present"
+                            : "Absent"}
+                        </td>
+                        <td className="py-3 px-4">
+                          {
+                            allAcademicTeam?.Items.find(
+                              (i) => i.id === StudentAttendance.academicTeamId
+                            )?.fullName
+                          }
+                        </td>
+                        <td className="py-3 px-4">
+                          {StudentAttendance.remarks}
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
+                      No StudentAttendances found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <AddStudentAttendance
+            visible={addModal}
+            onClose={() => setAddModal(false)}
+          />
+        </div>
+
+        {filteredStudentAttendance?.Items &&
+          filteredStudentAttendance?.Items.length > 0 && (
+            <div className="mt-4">
+              <Pagination
+                form={handleSubmit}
+                pagination={{
+                  currentPage: Array.isArray(filteredStudentAttendance)
+                    ? 1
+                    : filteredStudentAttendance?.PageIndex ?? 1,
+                  firstPage: Array.isArray(filteredStudentAttendance)
+                    ? 1
+                    : filteredStudentAttendance?.FirstPage ?? 1,
+                  lastPage: Array.isArray(filteredStudentAttendance)
+                    ? 1
+                    : filteredStudentAttendance?.LastPage ?? 1,
+                  nextPage: Array.isArray(filteredStudentAttendance)
+                    ? 1
+                    : filteredStudentAttendance?.NextPage ?? 1,
+                  previousPage: Array.isArray(filteredStudentAttendance)
+                    ? 1
+                    : filteredStudentAttendance?.PreviousPage ?? 1,
+                }}
+                handleSearch={handleSearch}
+              />
+            </div>
+          )}
+      </div>
+    </>
+  );
+};
+
+export default AllStudentAttendanceForm;

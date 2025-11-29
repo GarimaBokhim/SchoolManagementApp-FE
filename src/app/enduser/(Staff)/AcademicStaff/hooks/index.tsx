@@ -3,7 +3,7 @@ import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IAcademicTeam, IAssignClass } from "../types/IAcademicTeam";
 const AcademicTeamEndPoints = {
-  getAllAcademicTeams: "/api/StaffControllers/all-AcademicTeams",
+  getAllAcademicTeams: "/api/StaffControllers/all-AcademicTeam",
   createAcademicTeams: "/api/StaffControllers/AddAcademicTeam",
   removeAcademicTeams: "/api/StaffControllers/DeleteAcademicTeams",
   updateAcademicTeams: "/api/StaffControllers/UpdateAcademicTeams",
@@ -34,7 +34,7 @@ type AcademicTeamRequest = {
   municipalityId: number;
   wardNumber: number;
   gender: number;
-  rolesId: [string];
+  rolesId: string[];
 };
 
 export const useAddAcademicTeam = () => {
