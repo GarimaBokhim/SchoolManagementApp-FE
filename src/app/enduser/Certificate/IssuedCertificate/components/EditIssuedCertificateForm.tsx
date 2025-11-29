@@ -13,7 +13,7 @@ import {
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
 type Props = {
   form: UseFormReturn<IIssuedCertificate>;

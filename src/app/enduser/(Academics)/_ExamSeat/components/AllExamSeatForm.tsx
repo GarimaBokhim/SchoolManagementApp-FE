@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { IExamResult, IFilterExamResultByDate } from "../types/IExamResults";
+import { IExamSeat, IFilterExamSeatByDate } from "../types/IExamSeat";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
@@ -10,20 +10,19 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { EditButton } from "@/components/Buttons/EditButton";
 import { Edit, Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
-import EditExamResult from "../pages/Edit";
+import EditExamSeat from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterExamResultByDate, useRemoveExamResult } from "../hooks";
+import { useFilterExamSeatByDate, useRemoveExamSeat } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddExamResult from "../pages/Add";
+import AddExamSeat from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllExams } from "../../Exam/hooks";
-import SchoolMarkSheet from "./SchoolMarkSheet";
-const AllExamResultForm = () => {
+const AllExamSeatForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -38,7 +37,7 @@ const AllExamResultForm = () => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  const [showExamResults, setShowExamResults] = useState(false);
+  const [showExamSeats, setShowExamSeats] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -50,7 +49,7 @@ const AllExamResultForm = () => {
         type="button"
         text=""
         onClick={() => {
-          setShowExamResults(true);
+          setShowExamSeats(true);
           setSelectedId(id);
         }}
         className="!text-xs font-bold !bg-teal-500"
@@ -61,13 +60,10 @@ const AllExamResultForm = () => {
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const { data: allExam } = useGetAllExams();
-  const [showStudentPrint, setShowStudentPrint] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
-  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
-  const form = useForm<IFilterExamResultByDate>({
+  const form = useForm<IFilterExamSeatByDate>({
     defaultValues: {
       studentId: "",
       subjectId: "",
@@ -78,10 +74,10 @@ const AllExamResultForm = () => {
   const fullQuery = query + (params || "");
 
   const {
-    data: filteredExamResult,
+    data: filteredExamSeat,
     refetch,
     isLoading,
-  } = useFilterExamResultByDate(fullQuery);
+  } = useFilterExamSeatByDate(fullQuery);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null
   );
@@ -91,7 +87,7 @@ const AllExamResultForm = () => {
   }, [paginationParams, refetch]);
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
-  const onSubmit: SubmitHandler<IFilterExamResultByDate> = async (formData) => {
+  const onSubmit: SubmitHandler<IFilterExamSeatByDate> = async (formData) => {
     clearError();
     try {
       const queryParams = [
@@ -132,10 +128,10 @@ const AllExamResultForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteExamResult = useRemoveExamResult();
+  const deleteExamSeat = useRemoveExamSeat();
   const handleDelete = async (id: string) => {
     try {
-      await deleteExamResult.mutateAsync(id);
+      await deleteExamSeat.mutateAsync(id);
       toast.success("User deleted successfully!");
       refetch();
     } catch {
@@ -155,7 +151,7 @@ const AllExamResultForm = () => {
       <div className="md:px-4  px-4 ">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All ExamResults</h1>
+            <h1 className=" text-xl font-semibold ">All ExamSeats</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
@@ -168,7 +164,7 @@ const AllExamResultForm = () => {
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
-                  text="Add New ExamResult"
+                  text="Add New ExamSeat"
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
@@ -189,7 +185,7 @@ const AllExamResultForm = () => {
                   setParams={setParams}
                 />
 
-                {/* ExamResult name filter */}
+                {/* ExamSeat name filter */}
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
                     dropDownWidth="w-[25rem]"
@@ -265,13 +261,13 @@ const AllExamResultForm = () => {
                 {isLoading ? (
                   <tr>
                     <td colSpan={7} className="p-4 text-center text-gray-500">
-                      Loading ExamResults...
+                      Loading ExamSeats...
                     </td>
                   </tr>
-                ) : filteredExamResult?.Items &&
-                  filteredExamResult?.Items.length > 0 ? (
-                  filteredExamResult?.Items.map(
-                    (ExamResult: IExamResult, index: number) => (
+                ) : filteredExamSeat?.Items &&
+                  filteredExamSeat?.Items.length > 0 ? (
+                  filteredExamSeat?.Items.map(
+                    (ExamSeat: IExamSeat, index: number) => (
                       <tr
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
@@ -280,35 +276,32 @@ const AllExamResultForm = () => {
                         <td className="py-3 px-4">
                           {" "}
                           {
-                            allExam?.Items.find(
-                              (i) => i.id === ExamResult.examId
-                            )?.name
+                            allExam?.Items.find((i) => i.id === ExamSeat.examId)
+                              ?.name
                           }
                         </td>
                         <td className="py-3 px-4">
                           {
                             allStudent?.Items.find(
-                              (i) => i.id === ExamResult.studentId
+                              (i) => i.id === ExamSeat.studentId
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">{ExamResult.remarks}</td>
+                        <td className="py-3 px-4">{ExamSeat.remarks}</td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(
-                                    ExamResult.id ? ExamResult.id : ""
-                                  )
+                                  handleDelete(ExamSeat.id ? ExamSeat.id : "")
                                 }
                                 headerText={<Trash />}
-                                content="Are you sure you want to delete this ExamResult?"
+                                content="Are you sure you want to delete this ExamSeat?"
                               />
                             )}
                             {canEdit && (
                               <EditButton
-                                button={buttonElement(ExamResult.id ?? "")}
+                                button={buttonElement(ExamSeat.id ?? "")}
                               />
                             )}
                             <EditButton
@@ -317,11 +310,7 @@ const AllExamResultForm = () => {
                                   icon={<Printer size={14} />}
                                   text=""
                                   type="button"
-                                  onClick={() => {
-                                    setShowStudentPrint(true);
-                                    setSelectedExamId(ExamResult.examId);
-                                    setSelectedStudent(ExamResult.studentId);
-                                  }}
+                                  onClick={() => {}}
                                   className="!text-xs"
                                 />
                               }
@@ -337,52 +326,49 @@ const AllExamResultForm = () => {
                       colSpan={7}
                       className="p-4 text-center text-gray-500 italic"
                     >
-                      No ExamResults found.
+                      No ExamSeats found.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          {showStudentPrint && selectedStudent && selectedExamId && (
+          {/* {showStudentPrint && selectedStudent && selectedExamId && (
             <SchoolMarkSheet
               studentId={selectedStudent}
               examId={selectedExamId}
               onClose={() => setShowStudentPrint(false)}
             />
-          )}
-          {showExamResults && selectedId && (
-            <EditExamResult
-              ExamResultId={selectedId}
-              visible={showExamResults}
-              onClose={() => setShowExamResults(false)}
+          )} */}
+          {showExamSeats && selectedId && (
+            <EditExamSeat
+              ExamSeatId={selectedId}
+              visible={showExamSeats}
+              onClose={() => setShowExamSeats(false)}
             />
           )}
-          <AddExamResult
-            visible={addModal}
-            onClose={() => setAddModal(false)}
-          />
+          <AddExamSeat visible={addModal} onClose={() => setAddModal(false)} />
         </div>
-        {filteredExamResult?.Items && filteredExamResult?.Items.length > 0 && (
+        {filteredExamSeat?.Items && filteredExamSeat?.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={handleSubmit}
               pagination={{
-                currentPage: Array.isArray(filteredExamResult)
+                currentPage: Array.isArray(filteredExamSeat)
                   ? 1
-                  : filteredExamResult?.PageIndex ?? 1,
-                firstPage: Array.isArray(filteredExamResult)
+                  : filteredExamSeat?.PageIndex ?? 1,
+                firstPage: Array.isArray(filteredExamSeat)
                   ? 1
-                  : filteredExamResult?.FirstPage ?? 1,
-                lastPage: Array.isArray(filteredExamResult)
+                  : filteredExamSeat?.FirstPage ?? 1,
+                lastPage: Array.isArray(filteredExamSeat)
                   ? 1
-                  : filteredExamResult?.LastPage ?? 1,
-                nextPage: Array.isArray(filteredExamResult)
+                  : filteredExamSeat?.LastPage ?? 1,
+                nextPage: Array.isArray(filteredExamSeat)
                   ? 1
-                  : filteredExamResult?.NextPage ?? 1,
-                previousPage: Array.isArray(filteredExamResult)
+                  : filteredExamSeat?.NextPage ?? 1,
+                previousPage: Array.isArray(filteredExamSeat)
                   ? 1
-                  : filteredExamResult?.PreviousPage ?? 1,
+                  : filteredExamSeat?.PreviousPage ?? 1,
               }}
               handleSearch={handleSearch}
             />
@@ -393,4 +379,4 @@ const AllExamResultForm = () => {
   );
 };
 
-export default AllExamResultForm;
+export default AllExamSeatForm;

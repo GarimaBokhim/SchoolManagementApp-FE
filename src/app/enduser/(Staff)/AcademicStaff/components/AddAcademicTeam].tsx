@@ -4,7 +4,7 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { IAcademicTeam } from "../types/IAcademicTeam";
 import { useAddAcademicTeam } from "../hooks";
@@ -16,6 +16,7 @@ import {
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
+import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
   form: UseFormReturn<IAcademicTeam>;
   onClose: () => void;
@@ -25,6 +26,7 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allProvince } = useGetAllProvince();
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
     null
   );
@@ -35,6 +37,7 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | null
   >(null);
+  const { data: allRoles } = useGetAllRoles();
   const { data: filteredDistrict } =
     useGetDistrictByProvince(selectedProvinceId);
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
@@ -59,16 +62,27 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [AcademicTeamImgPath, setAcademicTeamImgPath] = useState<string>("");
-
+  const [image, setImage] = useState<File | "">();
   const handleImageClick = () => fileInputRef.current?.click();
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setAcademicTeamImgPath(URL.createObjectURL(file));
-      form.setValue("teacherImg", file);
+      setImage(file);
     }
   };
-
+  useEffect(() => {
+    if (selectedRoleId) {
+      form.setValue("rolesId", [selectedRoleId], {
+        shouldValidate: true,
+      });
+    }
+    if (image) {
+      form.setValue("teacherImg", image, {
+        shouldValidate: true,
+      });
+    }
+  }, [selectedRoleId, image]);
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -138,6 +152,13 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                     type="email"
                     placeholder="Enter Email"
                   />
+                  <InputElement
+                    label="Password"
+                    form={form}
+                    name="password"
+                    type="Password"
+                    placeholder="Enter Password"
+                  />
                   <AppCombobox
                     label="Gender"
                     dropdownPositionClass="absolute"
@@ -159,6 +180,27 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                     onSelect={(option) => setGenderStatus(option?.id ?? null)}
                     getLabel={(o) => o?.name || ""}
                     getValue={(o) => o?.id ?? ""}
+                  />
+                  <AppCombobox
+                    value={selectedRoleId}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Role"
+                    name="rolesId"
+                    form={form}
+                    options={allRoles?.Items}
+                    selected={
+                      allRoles?.Items?.find((g) => g?.Id === selectedRoleId) ||
+                      null
+                    }
+                    onSelect={(group) => {
+                      const id = group?.Id ?? null;
+
+                      setSelectedRoleId(id);
+                      if (id) form.setValue("rolesId", [id]);
+                    }}
+                    getLabel={(g) => g?.Name ?? ""}
+                    getValue={(g) => g?.Id ?? ""}
                   />
                 </div>
               </div>

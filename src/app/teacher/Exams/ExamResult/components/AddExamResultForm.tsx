@@ -12,9 +12,9 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useEffect, useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
-import { useGetSubjectByClassId } from "@/app/enduser/Academics/Subject/hooks";
-import { IStudent } from "@/app/enduser/StudentManagement/Student/types/IStudents";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import { useGetSubjectByClassId } from "@/app/enduser/(Academics)/Subject/hooks";
+import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 
 type Props = {
   form: UseFormReturn<IExamResult>;

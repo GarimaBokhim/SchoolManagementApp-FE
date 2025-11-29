@@ -6,7 +6,7 @@ import {
   useGetAllProvince,
 } from "@/components/common/hooks";
 import { useGenerateCertificateByStudent } from "../hooks";
-import { useGetStudentById } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetStudentById } from "@/app/teacher/Students/Student/hooks";
 
 interface Props {
   studentId: string;

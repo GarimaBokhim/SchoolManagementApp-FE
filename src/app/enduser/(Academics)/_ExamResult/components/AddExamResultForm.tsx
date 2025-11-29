@@ -1,92 +1,62 @@
 "use client";
+
 import { SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { IExamResult } from "../types/IExamResults";
-import { useEditExamResult, useGetExamResultById } from "../hooks";
+import { useAddExamResult } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
+import { useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetSubjectByClassId } from "@/app/enduser/(Academics)/Subject/hooks";
-import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
+import { useGetStudentByClass } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import { useGetSubjectByClassId } from "../../Subject/hooks";
 
 type Props = {
   form: UseFormReturn<IExamResult>;
   onClose: () => void;
-  ExamResultId: string;
 };
 
-const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
-  const editExamResult = useEditExamResult();
+const AddExamResultForm = ({ form, onClose }: Props) => {
+  const addExamResult = useAddExamResult();
   const { handleError, clearError } = useErrorHandler();
 
-  const { control, reset } = form;
+  const { control } = form;
 
-  const { data: ExamResultData } = useGetExamResultById(ExamResultId);
-  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null
-  );
-  const [selectedStudent, setSelectedStudent] = useState<IStudent | null>();
-  useEffect(() => {
-    if (selectedStudent) {
-      setSelectedClassId(selectedStudent.classId || "");
-    }
-  }, [selectedStudent]);
-  const { data: allExam } = useGetAllExams();
-  const { data: allStudents } = useGetAllStudents();
-
-  const { data: allSubject } = useGetSubjectByClassId(selectedClassId || "");
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
-    [key: number]: string | null;
-  }>({});
-
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "marksObtained",
   });
 
-  useEffect(() => {
-    if (!ExamResultData) return;
-
-    reset({
-      examId: ExamResultData.examId,
-      studentId: ExamResultData.studentId,
-      remarks: ExamResultData.remarks,
-      marksObtained: ExamResultData.marksObtained ?? [],
-    });
-
-    setSelectedExamId(ExamResultData.examId);
-    setSelectedStudentId(ExamResultData.studentId);
-
-    replace(ExamResultData.marksObtained ?? []);
-  }, [ExamResultData]);
-
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null
+  );
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
+    [key: number]: string | null;
+  }>({});
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(
+    ""
+  );
+  const { data: allExam } = useGetAllExams();
+  const { data: allStudents } = useGetStudentByClass(selectedClassId || "");
+  const { data: allSubject } = useGetSubjectByClassId(selectedClassId || "");
   const handleClose = () => {
-    reset();
+    form.reset();
+    setSelectedClassId("");
     onClose();
   };
 
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError();
-
     try {
-      await toast.promise(
-        editExamResult.mutateAsync({
-          id: ExamResultId,
-          data,
-        }),
-        {
-          loading: "Updating Exam Result...",
-          success: "Successfully Updated Exam Result",
-        }
-      );
+      await toast.promise(addExamResult.mutateAsync(data), {
+        loading: "Adding ExamResult...",
+        success: "Successfully added ExamResult",
+      });
 
       handleClose();
     } catch (error) {
@@ -96,20 +66,14 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
-                    bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-    >
-      <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a]
-                      w-full max-w-[90vw] max-h-[95vh] rounded-lg
-                      overflow-auto p-6 shadow-lg"
-      >
+    <div className="inset-0 flex items-center justify-center w-full h-full">
+      <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
         <fieldset>
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold dark:text-gray-50">
-              Edit Exam Result
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+              Add ExamResult
             </h1>
+
             <button
               type="button"
               onClick={handleClose}
@@ -126,7 +90,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 label="Exam"
                 name="examId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedExamId}
                 options={allExam?.Items ?? []}
                 selected={
@@ -135,6 +99,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 onSelect={(exam) => {
                   const id = exam?.id ?? "";
                   setSelectedExamId(id);
+                  setSelectedClassId(exam?.classId);
                   form.setValue("examId", id);
                 }}
                 getLabel={(e) => e?.name ?? ""}
@@ -145,17 +110,16 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 label="Student Name"
                 name="studentId"
                 form={form}
-                dropdownPositionClass="fixed"
+                dropdownPositionClass="absolute"
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
                 selected={
-                  allStudents?.Items?.find((s) => s.id === selectedStudentId) ||
+                  allStudents?.Items.find((s) => s.id === selectedStudentId) ||
                   null
                 }
                 onSelect={(student) => {
                   const id = student?.id ?? "";
                   setSelectedStudentId(id);
-                  setSelectedStudent(student);
                   form.setValue("studentId", id);
                 }}
                 getLabel={(s) => s?.firstName ?? ""}
@@ -182,7 +146,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     label="Subject"
                     name={`marksObtained.${index}.subjectId`}
                     form={form}
-                    dropdownPositionClass="fixed"
+                    dropdownPositionClass="absolute"
                     value={selectedSubjectIds[index] ?? ""}
                     options={allSubject ?? []}
                     selected={
@@ -204,7 +168,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     getValue={(s) => s?.id ?? ""}
                   />
 
-                  {/* MARKS */}
                   <InputElement
                     label="Marks Obtained"
                     form={form}
@@ -212,8 +175,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     type="number"
                     placeholder="Enter marks"
                   />
-
-                  {/* REMOVE ROW */}
                   <button
                     type="button"
                     onClick={() => {
@@ -241,8 +202,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 }
               />
             </div>
-
-            {/* SUBMIT */}
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
             </div>
@@ -253,4 +212,4 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   );
 };
 
-export default EditExamResultForm;
+export default AddExamResultForm;

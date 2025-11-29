@@ -9,7 +9,7 @@ import { useAddIssuedCertificate } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllStudents } from "@/app/enduser/StudentManagement/Student/hooks";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useState } from "react";
 import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
 type Props = {

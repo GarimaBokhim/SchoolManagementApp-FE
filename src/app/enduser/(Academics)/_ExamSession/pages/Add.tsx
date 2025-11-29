@@ -1,32 +1,21 @@
-"use client";
 import { useForm } from "react-hook-form";
-import { IAcademicTeam } from "../types/IAcademicTeam";
-import AddAcademicTeamForm from "../components/AddAcademicTeam]";
+import { IExamSession } from "../types/IExamSession";
+import AddExamSessionForm from "../components/AddExamSessionForm";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
-const AddAcademicTeam = ({ visible, onClose }: Props) => {
-  const form = useForm<IAcademicTeam>({
+const AddExamSession = ({ visible, onClose }: Props) => {
+  const form = useForm<IExamSession>({
     defaultValues: {
       id: "",
-      email: "",
-      username: "",
-      password: "",
-      fullName: "",
-      address: "",
-      provinceId: 0,
-      // teacherImg: ,
-      districtId: 0,
-      vdcid: 0,
-      municipalityId: 0,
-      wardNumber: 0,
-      gender: 0,
-      rolesId: [],
+      name: "",
+      examDate: new Date(),
+      examHallDTOs: [],
     },
 
-    // resolver: yupResolver(AcademicTeamValidator),
+    // resolver: yupResolver(ExamSessionValidator),
   });
   const handleOnClose = () => {
     if (onClose) onClose();
@@ -45,9 +34,9 @@ const AddAcademicTeam = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddAcademicTeamForm form={form} onClose={handleOnClose} />
+        <AddExamSessionForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
 };
-export default AddAcademicTeam;
+export default AddExamSession;

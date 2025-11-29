@@ -17,7 +17,7 @@ import {
   useGetVDCByDistrict,
 } from "@/components/common/hooks";
 import { useGetAllParents } from "../../Parent/hooks";
-import { useGetAllClass } from "@/app/enduser/Academics/Class/hooks";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 type Props = {
   form: UseFormReturn<IStudent>;
   onClose: () => void;
