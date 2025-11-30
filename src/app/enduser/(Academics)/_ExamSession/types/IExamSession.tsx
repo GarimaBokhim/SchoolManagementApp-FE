@@ -5,6 +5,7 @@ export interface IExamSession {
   examHallDTOs: IHall[];
 }
 export interface IHall {
+  hallId?: string;
   hallName: string;
   capacity: number;
 }
@@ -17,4 +18,26 @@ export interface IAllExamSession {
   id: string;
   name: string;
   date: Date;
+  schoolId: string;
+}
+export interface ISeatPlanningRequest {
+  examSessionId: string;
+  classIds: string[];
+}
+export interface ISeatPlanning {
+  examSessionId: string;
+  totalStudents: string;
+  hallSeatResponses: IHallResponses[];
+}
+export interface IHallResponses {
+  hallId: string;
+  hallName: string;
+  capaCity: number;
+  studentSeatResponses: IStudentSeatResponses[];
+}
+export interface IStudentSeatResponses {
+  studentId: string;
+  studentName: string;
+  classId: string;
+  symbolNumber: string;
 }
