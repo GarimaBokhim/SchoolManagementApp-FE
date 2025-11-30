@@ -1,14 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IAllExamSession, IExamSession, IHall } from "../types/IExamSession";
+import {
+  IAllExamSession,
+  IExamSession,
+  IHall,
+  ISeatPlanning,
+} from "../types/IExamSession";
 const ExamSessionEndPoints = {
   getAllExamSessions: "/api/Academics/all-ExamSessions",
   createExamSessions: "/api/Academics/AddExamSession",
   filterExamSessionByDate: "/api/Academics/FilterExamSession",
+  generateSeatPlanning: "/api/Academics/GenerateSeatPlanning",
 };
 
 const queryKey = "ExamSessions";
+const seatPlanningQueryKey = "SeatPlanning";
 const filterExamSessionQueryKey = "filteredExamSession";
 type ExamSessionRequest = {
   id?: string;
@@ -17,6 +24,10 @@ type ExamSessionRequest = {
   examHallDTOs: IHall[];
 };
 
+type SeatPlanningRequest = {
+  examSessionId: string;
+  classIds: string[];
+};
 export const useAddExamSession = () => {
   const queryClient = useQueryClient();
   return useMutation<IExamSession, Error, ExamSessionRequest>({
@@ -73,5 +84,27 @@ export const useFilterExamSessionByDate = (params?: string) => {
     },
     staleTime: 0,
     retry: false,
+  });
+};
+
+export const useGenerateSeatPlanning = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ISeatPlanning, Error, SeatPlanningRequest>({
+    mutationFn: async (data: SeatPlanningRequest): Promise<ISeatPlanning> => {
+      const response = await api.post(
+        ExamSessionEndPoints.generateSeatPlanning,
+        data
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [seatPlanningQueryKey],
+      });
+    },
+    onError: (error) => {
+      console.error("Error adding ExamSession:", error);
+    },
   });
 };

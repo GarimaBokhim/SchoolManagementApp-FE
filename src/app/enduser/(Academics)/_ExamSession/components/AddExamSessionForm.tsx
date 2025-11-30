@@ -78,7 +78,7 @@ const AddExamSessionForm = ({ form, onClose }: Props) => {
               />
             </div>
             <div className="mt-10">
-              <h2 className="text-lg font-semibold mb-3">Students</h2>
+              <h2 className="text-lg font-semibold mb-3">Hall</h2>
 
               {fields.map((field, index) => (
                 <div

@@ -11,7 +11,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Filter, Plus, Printer, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -20,6 +20,8 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExamSession from "../pages/Add";
+import { EditButton } from "@/components/Buttons/EditButton";
+import SeatPlanGeneratorPage from "./AddSeatPlanningGenerator";
 const AllExamSessionForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -42,6 +44,10 @@ const AllExamSessionForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const [params, setParams] = useState("");
+  const [showStudentPrint, setShowStudentPrint] = useState(false);
+  const [selectedExamSessionId, setSelectedExamSessionId] = useState<
+    string | undefined
+  >("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const form = useForm<IFilterExamSessionByDate>({
     defaultValues: {
@@ -65,6 +71,7 @@ const AllExamSessionForm = () => {
   }, [paginationParams, refetch]);
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  const [schoolId, setSchoolId] = useState<string | undefined>("");
   const onSubmit: SubmitHandler<IFilterExamSessionByDate> = async (
     formData
   ) => {
@@ -202,6 +209,7 @@ const AllExamSessionForm = () => {
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">Exam Session Name</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,6 +230,23 @@ const AllExamSessionForm = () => {
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">{`${ExamSession.date}`}</td>
                         <td className="py-3 px-4">{ExamSession.name}</td>
+                        <td className="py-3 px-4">
+                          <EditButton
+                            button={
+                              <ButtonElement
+                                icon={<Printer size={14} />}
+                                text=""
+                                type="button"
+                                onClick={() => {
+                                  setShowStudentPrint(true);
+                                  setSelectedExamSessionId(ExamSession.id);
+                                  setSchoolId(ExamSession?.schoolId);
+                                }}
+                                className="!text-xs"
+                              />
+                            }
+                          />
+                        </td>
                       </tr>
                     )
                   )
@@ -238,6 +263,13 @@ const AllExamSessionForm = () => {
               </tbody>
             </table>
           </div>
+          {showStudentPrint && selectedExamSessionId && (
+            <SeatPlanGeneratorPage
+              examSessionId={selectedExamSessionId}
+              schoolId={schoolId || ""}
+              onClose={() => setShowStudentPrint(!showStudentPrint)}
+            />
+          )}
           <AddExamSession
             visible={addModal}
             onClose={() => setAddModal(false)}
