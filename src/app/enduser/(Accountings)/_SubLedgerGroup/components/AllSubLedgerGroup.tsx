@@ -8,7 +8,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
@@ -25,10 +25,11 @@ import {
   useFilterSubLedgerGroupByDate,
   useRemoveSubLedgerGroup,
 } from "../hooks";
+import { useGetAllLedgerGroups } from "../../_LedgerGroup/hooks";
 
 const AllSubLedgerForm = () => {
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 10,
+    pageSize: 9,
     pageIndex: 1,
     isPagination: true,
   });
@@ -59,6 +60,7 @@ const AllSubLedgerForm = () => {
 
   const fullQuery = query + (params || "");
   const [selectedId, setSelectedId] = useState<string>("");
+  const { data: allLedgerGroup } = useGetAllLedgerGroups();
   const [showSubLedger, setShowSubLedger] = useState<boolean>(false);
   const buttonElement = (id: string) => {
     return (
@@ -152,7 +154,6 @@ const AllSubLedgerForm = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
@@ -239,7 +240,13 @@ const AllSubLedgerForm = () => {
                       >
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">{SubLedger.name}</td>
-                        <td className="py-3 px-4">{SubLedger.ledgerGroupId}</td>
+                        <td className="py-3 px-4">
+                          {
+                            allLedgerGroup?.Items.find(
+                              (i) => i.id === SubLedger.ledgerGroupId
+                            )?.name
+                          }
+                        </td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (
@@ -284,7 +291,7 @@ const AllSubLedgerForm = () => {
             />
           )}
           {filteredSubLedger?.Items && filteredSubLedger?.Items.length > 0 && (
-            <div className="mt-4">
+            <div className="my-2">
               <Pagination
                 form={handleSubmit}
                 pagination={{

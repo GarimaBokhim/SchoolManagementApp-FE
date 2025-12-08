@@ -27,6 +27,7 @@ import {
   LockKeyholeOpen,
   Settings,
   NotepadText,
+  School2Icon,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -157,6 +158,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Navigation: Navigation,
     "Access Control": LockKeyholeOpen,
     "Institution SetUp": School,
+    "Company SetUp": School2Icon,
     Students: Users,
     "Parents Information": (
       <Icon icon="mynaui:users-group" width="24" height="24" />
@@ -214,12 +216,12 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
   };
   return (
     <div
-      className={`h-screen flex flex-col dark:bg-[#353535] bg-white border-r border-gray-200 shadow-sm 
+      className={`h-screen flex flex-col dark:bg-[#0A0A0A] bg-white border-r border-gray-200 shadow-sm 
     transition-[width,background-color,border-color] duration-300 ease-in-out overflow-hidden ${
       isOpen ? "w-64" : "w-16"
     }`}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 text-gray-800 dark:text-white bg-white dark:bg-[#353535] shadow-sm border-y dark:border-white space-y-2 md:space-y-0">
+      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 text-gray-800 dark:text-white bg-white dark:bg-[#0A0A0A] shadow-sm border-y dark:border-white space-y-2 md:space-y-0">
         <div className="flex items-center justify-center md:justify-start w-full md:w-auto space-x-3 ">
           <Image
             src={adi}
@@ -373,7 +375,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                   item.subItems.length > 0 &&
                   activeSection === item.key && (
                     <div
-                      className="fixed z-[9999] left-[4rem] bg-white dark:bg-[#353535] shadow-lg border rounded-md min-w-[180px]"
+                      className="fixed z-[9999] left-[4rem] bg-white dark:bg-[#0A0A0A] shadow-lg border rounded-md min-w-[180px]"
                       style={{
                         top: `${
                           document

@@ -51,15 +51,14 @@ const AddL = ({ visible, onClose }: Props) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center z-50
-    bg-black bg-opacity-50 dark:bg-[#303135] bg-opacity-50 sm:left-[5%] md:left-[24%] lg:left-[12.3%]
-    `}
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
     >
       <div
-        className={`bg-[#FBFBFB] border rounded-xl   dark:bg-[#27272a]
-        transition-all duration-300 ease-in-out
-        w-[55%] h-[54%] overflow-y-auto 
-        flex flex-col`}
+        className="bg-[#FBFBFB] dark:bg-[#27272a] 
+               w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+               max-h-[95vh] md:max-h-[92vh] h-full 
+               rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <AddLedgerForm form={form} onClose={handleFormClose} />
       </div>

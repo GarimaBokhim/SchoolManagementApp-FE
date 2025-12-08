@@ -5,6 +5,7 @@ import { PermissionProvider } from "@/context/auth/PermissionContext";
 import { ThemeProvider } from "@/context/Theme/ThemeContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { DateProvider } from "@/context/auth/PrimaryDateContext";
+import { ToasterProvider } from "@/components/Toast/ToasterProvider";
 
 export const metadata: Metadata = {
   title: "Next.js Sidebar Example",
@@ -24,7 +25,10 @@ export default function RootLayout({
             <ThemeProvider>
               <DateProvider>
                 <main>
-                  <SidebarProvider>{children}</SidebarProvider>
+                  <SidebarProvider>
+                    <ToasterProvider />
+                    {children}
+                  </SidebarProvider>
                 </main>
               </DateProvider>
             </ThemeProvider>

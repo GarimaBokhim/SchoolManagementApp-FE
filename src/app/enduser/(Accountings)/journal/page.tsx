@@ -1,10 +1,10 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import AllLedger from "./pages/All";
+import AllJournalForm from "./components/AllJournal";
 
 export default function LedgerModule() {
   return (
-    <LayoutWrapper title="Ledger">
-      <AllLedger />
+    <LayoutWrapper title="Journal">
+      <AllJournalForm />
     </LayoutWrapper>
   );
 }

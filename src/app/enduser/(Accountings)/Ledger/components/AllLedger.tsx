@@ -5,7 +5,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
@@ -22,7 +22,7 @@ import EditLedger from "../pages/Edit";
 
 const AllLedgerForm = () => {
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 10,
+    pageSize: 9,
     pageIndex: 1,
     isPagination: true,
   });
@@ -144,7 +144,6 @@ const AllLedgerForm = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
@@ -276,7 +275,7 @@ const AllLedgerForm = () => {
             />
           )}
           {filteredLedger?.Items && filteredLedger?.Items.length > 0 && (
-            <div className="mt-4">
+            <div className="my-2">
               <Pagination
                 form={handleSubmit}
                 pagination={{
