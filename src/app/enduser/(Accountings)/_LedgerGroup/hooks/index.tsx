@@ -3,7 +3,7 @@ import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { ILedgerGroup } from "../types/ILedgerGroup";
 const LedgerGroupEndPoints = {
-  getAllLedgerGroups: "/api/AccountControllers/all-LedgerGroup",
+  getAllLedgerGroups: "/api/AccountControllers/all-ledgerGroup",
   addLedgerGroups: "/api/AccountControllers/AddLedgerGroup",
   deleteLedgerGroups: "/api/AccountControllers/DeleteLedgerGroup",
   updateLedgerGroups: "/api/AccountControllers/UpdateLedgerGroup",
