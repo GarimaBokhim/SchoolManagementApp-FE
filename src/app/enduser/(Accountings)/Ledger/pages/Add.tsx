@@ -8,11 +8,9 @@ import { LedgerValidator } from "../validators";
 interface Props {
   visible: boolean;
   onClose?: () => void;
-  inset?: boolean;
-  selectedSubLedgerGroup?: string;
 }
 
-const AddL = ({ visible, onClose, selectedSubLedgerGroup, inset }: Props) => {
+const AddL = ({ visible, onClose }: Props) => {
   const form = useForm<ILedgers>({
     resolver: yupResolver(LedgerValidator),
     defaultValues: {
@@ -54,12 +52,8 @@ const AddL = ({ visible, onClose, selectedSubLedgerGroup, inset }: Props) => {
   return (
     <div
       className={`fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center z-50
-    bg-black bg-opacity-50
-    ${
-      inset
-        ? "bg-black dark:bg-[#303135] bg-opacity-50 sm:left-[5%] md:left-[24%] lg:left-[12.3%]"
-        : "bg-black dark:bg-[#303135] bg-opacity-50 sm:left-[5%] md:left-[24%] lg:left-[12.3%]"
-    }`}
+    bg-black bg-opacity-50 dark:bg-[#303135] bg-opacity-50 sm:left-[5%] md:left-[24%] lg:left-[12.3%]
+    `}
     >
       <div
         className={`bg-[#FBFBFB] border rounded-xl   dark:bg-[#27272a]
@@ -67,11 +61,7 @@ const AddL = ({ visible, onClose, selectedSubLedgerGroup, inset }: Props) => {
         w-[55%] h-[54%] overflow-y-auto 
         flex flex-col`}
       >
-        <AddLedgerForm
-          form={form}
-          selectedSubLedgerGroup={selectedSubLedgerGroup}
-          onClose={handleFormClose}
-        />
+        <AddLedgerForm form={form} onClose={handleFormClose} />
       </div>
     </div>
   );
