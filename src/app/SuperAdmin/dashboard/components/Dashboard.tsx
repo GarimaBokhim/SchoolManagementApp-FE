@@ -7,7 +7,7 @@ import PieChartSection from "./PieChart";
 const Dashboard: React.FC = () => {
   return (
     <div className=" bg-[#FBFBFB] dark:bg-[#0A0A0A] ">
-      <div className="px-6 flex flex-col gap-4">
+      <div className="px-6 py-4 flex flex-col gap-4">
         <div className="lg:w-full flex-none">
           <StatCard
             cards={[

@@ -8,7 +8,7 @@ const LedgerGroupEndPoints = {
   deleteLedgerGroups: "/api/AccountControllers/DeleteLedgerGroup",
   updateLedgerGroups: "/api/AccountControllers/UpdateLedgerGroup",
   getLedgerGroupsById: "/api/AccountControllers/LedgerGroup",
-  filterLedgerGroup: "/api/AccountControllers/FilterLedgerGroup",
+  filterLedgerGroup: "/api/AccountControllers/GetFilterLedgerGroup",
 };
 
 const queryKey = "LedgerGroups";

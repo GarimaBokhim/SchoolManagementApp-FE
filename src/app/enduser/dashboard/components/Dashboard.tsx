@@ -28,7 +28,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className=" bg-[#FBFBFB] dark:bg-[#0A0A0A] ">
-      <div className="px-6 flex flex-col gap-4">
+      <div className="p-6 flex flex-col gap-4">
         <div>
           <SchoolInfoCard schoolId={schoolId} />
         </div>

@@ -18,7 +18,7 @@ const TitleHeader = ({ title }: Props) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   return (
     <>
-      <header className="mb-4 py-4 px-8 font-bold dark:bg-[#353535] dark:text-white bg-white text-lg flex justify-between border-b border-l border-r border-[#ECECEC]">
+      <header className=" py-4 px-8 font-bold dark:bg-[#0A0A0A] dark:text-white bg-white text-lg flex justify-between border-b border-l border-r border-[#ECECEC]">
         <h1 className="">
           {`${title}`}
           <div className="text-xs font-bold text-[#035BBA]">

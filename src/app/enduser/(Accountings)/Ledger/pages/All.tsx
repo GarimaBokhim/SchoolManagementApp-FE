@@ -9,7 +9,7 @@ const AllLedger = () => {
     { id: "subLedgerGroup", label: "Sub Ledger Group", color: "gray" },
     { id: "ledgerGroup", label: "Ledger Group", color: "gray" },
   ];
-  const [activeReport, setActiveReport] = useState<string>("exam");
+  const [activeReport, setActiveReport] = useState<string>("ledger");
 
   const renderReport = () => {
     switch (activeReport) {
@@ -23,6 +23,12 @@ const AllLedger = () => {
         return (
           <div className=" text-center">
             <AllLedgerGroupForm />
+          </div>
+        );
+      case "ledger":
+        return (
+          <div className=" text-center">
+            <AllLedgerForm />
           </div>
         );
       default:
@@ -52,7 +58,7 @@ const AllLedger = () => {
           );
         })}
       </div>
-      <div className="border border-gray-200 dark:border-gray-700 rounded-b-lg h-[90%] p-6 bg-white dark:bg-gray-800 transition-all overflow-auto">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-b-lg h-[90%] px-6 py-2 bg-white dark:bg-gray-800 transition-all overflow-auto">
         {renderReport()}
       </div>
     </div>

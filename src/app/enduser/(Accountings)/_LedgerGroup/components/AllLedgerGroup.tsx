@@ -5,7 +5,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
@@ -23,7 +23,7 @@ import { useGetAllMaster } from "../../_Master/hooks";
 
 const AllLedgerGroupForm = () => {
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 10,
+    pageSize: 9,
     pageIndex: 1,
     isPagination: true,
   });
@@ -147,11 +147,10 @@ const AllLedgerGroupForm = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All Ledgers</h1>
+            <h1 className=" text-xl font-semibold ">All Ledger Group</h1>
 
             <div className="flex items-center space-x-3">
               <ButtonElement
@@ -166,7 +165,7 @@ const AllLedgerGroupForm = () => {
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
-                  text="Add New Ledger"
+                  text="Add New Ledger Group"
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
@@ -211,9 +210,9 @@ const AllLedgerGroupForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Ledger Name</th>
-                  <th className="px-4 py-3 text-left">LedgerGroup</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-left">Ledger Group Name</th>
+                  <th className="px-4 py-3 text-left">Master</th>
+                  <th className="px-4 py-3 text-center ">Actions</th>
                 </tr>
               </thead>
 
@@ -288,7 +287,7 @@ const AllLedgerGroupForm = () => {
           )}
           {filteredLedgerGroup?.Items &&
             filteredLedgerGroup?.Items.length > 0 && (
-              <div className="mt-4">
+              <div className="my-2">
                 <Pagination
                   form={handleSubmit}
                   pagination={{
