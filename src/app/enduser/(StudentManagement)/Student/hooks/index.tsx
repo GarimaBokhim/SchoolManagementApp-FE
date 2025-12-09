@@ -25,7 +25,7 @@ type StudentRequest = {
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
-  imageUrl: File;
+  studentImg: File;
   address: string;
   enrollmentDate: Date;
   parentId: string;
@@ -37,19 +37,27 @@ type StudentRequest = {
 
 export const useAddStudent = () => {
   const queryClient = useQueryClient();
-  return useMutation<IStudent, Error, StudentRequest>({
-    mutationFn: async (data: StudentRequest): Promise<IStudent> => {
-      console.log("Add Student", data);
-      const response = await api.post(StudentEndPoints.createStudents, data);
 
+  return useMutation<IStudent, Error, FormData>({
+    mutationFn: async (formData: FormData): Promise<IStudent> => {
+      console.log("Add Student (multipart)", formData);
+      const response = await api.post(
+        StudentEndPoints.createStudents,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       return response.data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
+
     onError: (error) => {
-      console.error("Error adding Student:", error);
+      console.error("Error adding student:", error);
     },
   });
 };

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   IAllExamSession,
   IFilterExamSessionByDate,
+  ISeatPlanning,
 } from "../types/IExamSession";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -11,7 +12,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, Printer, RotateCcw } from "lucide-react";
+import { FileLock, Filter, Plus, Printer, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -21,7 +22,8 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExamSession from "../pages/Add";
 import { EditButton } from "@/components/Buttons/EditButton";
-import SeatPlanGeneratorPage from "./AddSeatPlanningGenerator";
+import AssignClassToExamSession from "./AssignClassForm";
+import SeatPlanning from "./SeatPlanning";
 const AllExamSessionForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -44,7 +46,12 @@ const AllExamSessionForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const [params, setParams] = useState("");
+  const [showAssignClass, setShowAssignClass] = useState(false);
   const [showStudentPrint, setShowStudentPrint] = useState(false);
+  const [seatPlanDataMap, setSeatPlanDataMap] = useState<
+    Record<string, ISeatPlanning>
+  >({});
+
   const [selectedExamSessionId, setSelectedExamSessionId] = useState<
     string | undefined
   >("");
@@ -230,7 +237,21 @@ const AllExamSessionForm = () => {
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">{`${ExamSession.date}`}</td>
                         <td className="py-3 px-4">{ExamSession.name}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 flex space-x-2">
+                          <EditButton
+                            button={
+                              <ButtonElement
+                                icon={<FileLock size={14} />}
+                                text=""
+                                type="button"
+                                onClick={() => {
+                                  setShowAssignClass(true);
+                                  setSelectedExamSessionId(ExamSession.id);
+                                }}
+                                className="!text-xs"
+                              />
+                            }
+                          />
                           <EditButton
                             button={
                               <ButtonElement
@@ -263,11 +284,30 @@ const AllExamSessionForm = () => {
               </tbody>
             </table>
           </div>
-          {showStudentPrint && selectedExamSessionId && (
-            <SeatPlanGeneratorPage
+          {showStudentPrint &&
+            selectedExamSessionId &&
+            seatPlanDataMap[selectedExamSessionId] &&
+            schoolId && (
+              <SeatPlanning
+                data={seatPlanDataMap[selectedExamSessionId]}
+                schoolId={schoolId}
+                onClose={() => setShowStudentPrint(false)}
+              />
+            )}
+
+          {showAssignClass && selectedExamSessionId && (
+            <AssignClassToExamSession
               examSessionId={selectedExamSessionId}
-              schoolId={schoolId || ""}
-              onClose={() => setShowStudentPrint(!showStudentPrint)}
+              visible={showAssignClass}
+              onSuccess={(seatPlan) => {
+                if (selectedExamSessionId) {
+                  setSeatPlanDataMap((prev) => ({
+                    ...prev,
+                    [selectedExamSessionId]: seatPlan,
+                  }));
+                }
+              }}
+              onClose={() => setShowAssignClass(false)}
             />
           )}
           <AddExamSession

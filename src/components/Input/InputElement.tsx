@@ -15,6 +15,8 @@ interface IInput {
   inputType?: "text" | "date" | "file" | "password" | "number";
   placeholder?: string;
   required?: boolean;
+  accept?: string;
+  className?: string;
   value?: number | string | null | undefined | string[];
   defaultValue?: number | string | null | undefined | string[];
   disabled?: boolean;
@@ -44,6 +46,8 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
       maxDecimals = 2,
       isReport = false,
       value,
+      className,
+      accept,
       defaultValue,
       onChangeSelectedDate,
       onChange,
@@ -164,12 +168,15 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
               <input
                 id={name}
                 type="file"
+                accept={accept}
+                onChange={onChange}
+                onSelect={onChange}
                 {...form.register(name, { required: required })}
                 className={`px-3 mt-1 py-2 rounded border ${
                   form.formState.errors[name]
                     ? "border-red-500"
                     : "border-gray-300"
-                } focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm`}
+                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm`}
                 ref={ref}
               />
             )}

@@ -53,40 +53,34 @@ const AddStudentForm = ({ form, onClose }: Props) => {
     clearError();
 
     try {
-      const updatedData: IStudent = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        middleName: data.middleName,
-        registrationNumber: data.registrationNumber,
-        genderStatus: data.genderStatus,
-        studentStatus: data.studentStatus,
-        dateOfBirth: data.dateOfBirth,
-        email: data.email,
-        phoneNumber: data.phoneNumber,
-        address: data.address,
-        imageUrl: data.imageUrl,
-        enrollmentDate: data.enrollmentDate,
-        parentId: data.parentId,
-        classId: data.classId,
-        classSectionId: data.classSectionId,
-        provinceId: data.provinceId,
-        vdcid: data.vdcid,
-        municipalityId: data.municipalityId,
-        districtId: data.districtId,
-        wardNumber: data.wardNumber,
-      };
-      const sanitizedData = Object.fromEntries(
-        Object.entries(updatedData).map(([key, value]) => [
-          key,
-          value === "" || value === null ? null : value,
-        ])
-      ) as IStudent;
+      const formData = new FormData();
+      formData.append("firstName", data.firstName);
+      formData.append("middleName", data.middleName ?? "");
+      formData.append("lastName", data.lastName);
+      formData.append("registrationNumber", data.registrationNumber);
+      formData.append("genderStatus", String(genderStatus));
+      formData.append("studentStatus", String(studentStatus));
+      formData.append("dateOfBirth", new Date(data.dateOfBirth).toISOString());
+      formData.append("email", data.email);
+      formData.append("phoneNumber", data.phoneNumber);
+      formData.append("address", data.address);
+      formData.append(
+        "enrollmentDate",
+        new Date(data.enrollmentDate).toISOString()
+      );
+      formData.append("parentId", data.parentId);
+      formData.append("classId", data.classId);
+      formData.append("classSectionId", data.classSectionId ?? "");
+      formData.append("provinceId", String(data.provinceId));
+      formData.append("districtId", String(data.districtId));
+      formData.append("municipalityId", String(data.municipalityId ?? ""));
+      formData.append("vdcid", String(data.vdcid ?? ""));
+      formData.append("wardNumber", String(data.wardNumber));
+      if (data.studentImg instanceof File) {
+        formData.append("studentImg", data.studentImg);
+      }
 
-      // if (data.imageUrl instanceof File) {
-      //   sanitizedData.append("imageUrl", data.imageUrl);
-      // }
-
-      await toast.promise(addStudent.mutateAsync(sanitizedData), {
+      await toast.promise(addStudent.mutateAsync(formData), {
         loading: "Adding Student...",
         success: "Successfully added Student",
       });
@@ -103,9 +97,10 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const handleImageClick = () => fileInputRef.current?.click();
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log(file);
     if (file) {
       setStudentImgPath(URL.createObjectURL(file));
-      form.setValue("imageUrl", file);
+      form.setValue("studentImg", file);
     }
   };
 
@@ -154,6 +149,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   <input
                     type="file"
                     accept="image/*"
+                    name="imageUrl"
                     ref={fileInputRef}
                     className="hidden"
                     onChange={handleFileChange}

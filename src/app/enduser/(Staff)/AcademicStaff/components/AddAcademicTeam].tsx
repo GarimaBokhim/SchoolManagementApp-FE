@@ -49,8 +49,26 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
   };
   const onSubmit: SubmitHandler<IAcademicTeam> = async (data) => {
     clearError();
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("username", data.username);
+    formData.append("password", data.password);
+    formData.append("fullName", data.fullName);
+    if (data.teacherImg) {
+      formData.append("teacherImg", data.teacherImg as File);
+    }
+    formData.append("address", data.address);
+    formData.append("provinceId", String(data.provinceId));
+    formData.append("districtId", String(data.districtId));
+    formData.append("vdcid", String(data.vdcid));
+    formData.append("municipalityId", String(data.municipalityId));
+    formData.append("wardNumber", String(data.wardNumber));
+    formData.append("gender", String(data.gender));
+    data.rolesId.forEach((role) => {
+      formData.append("rolesId", role);
+    });
     try {
-      await toast.promise(addAcademicTeam.mutateAsync(data), {
+      await toast.promise(addAcademicTeam.mutateAsync(formData), {
         loading: "Adding AcademicTeam...",
         success: "Successfully added AcademicTeam",
       });
@@ -60,6 +78,7 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
       Toast.error(errorMsg);
     }
   };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [AcademicTeamImgPath, setAcademicTeamImgPath] = useState<string>("");
   const [image, setImage] = useState<File | "">();
