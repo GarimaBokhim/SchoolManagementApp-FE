@@ -95,7 +95,7 @@ export const useGenerateSeatPlanning = () => {
         ExamSessionEndPoints.generateSeatPlanning,
         data
       );
-
+      console.log(data);
       return response.data;
     },
     onSuccess: () => {

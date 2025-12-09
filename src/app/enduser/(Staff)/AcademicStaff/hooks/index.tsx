@@ -39,26 +39,30 @@ type AcademicTeamRequest = {
 
 export const useAddAcademicTeam = () => {
   const queryClient = useQueryClient();
-  return useMutation<IAcademicTeam, Error, AcademicTeamRequest>({
-    mutationFn: async (data: AcademicTeamRequest): Promise<IAcademicTeam> => {
-      console.log("Add AcademicTeam", data);
+
+  return useMutation<IAcademicTeam, Error, FormData>({
+    mutationFn: async (formData: FormData): Promise<IAcademicTeam> => {
+      console.log("Add Academic Team (multipart)", formData);
       const response = await api.post(
         AcademicTeamEndPoints.createAcademicTeams,
-        data
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
-
       return response.data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterAcademicTeamQueryKey] });
     },
+
     onError: (error) => {
-      console.error("Error adding AcademicTeam:", error);
+      console.error("Error adding student:", error);
     },
   });
 };
-
 export const useRemoveAcademicTeam = () => {
   const queryClient = useQueryClient();
   return useMutation<IAcademicTeam, Error, string | undefined>({
