@@ -1,23 +1,24 @@
 "use client";
-import { useState, MouseEvent } from "react";
+import { useState, MouseEvent, useEffect } from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useGetAllClass } from "../../Class/hooks";
-import { useGenerateSeatPlanning } from "../hooks";
-import { ISeatPlanning, ISeatPlanningRequest } from "../types/IExamSession";
+import { useGenerateSeatPlanning, useGetClassByExamSessionId } from "../hooks";
+import { ISeatPlanningRequest } from "../types/IExamSession";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
+import toast from "react-hot-toast";
 
 interface Props {
   examSessionId: string;
   visible: boolean;
   onClose: () => void;
-  onSuccess: (data: ISeatPlanning) => void;
 }
 
 const AssignClassToExamSession = ({
   examSessionId,
   visible,
   onClose,
-  onSuccess,
 }: Props) => {
   const form = useForm<ISeatPlanningRequest>({
     defaultValues: {
@@ -29,35 +30,49 @@ const AssignClassToExamSession = ({
   const { data: classes, isLoading } = useGetAllClass();
   const generateSeatPlanning = useGenerateSeatPlanning();
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
-  // useEffect(() => {
-  //   if (classes?.assignedClasses) {
-  //     const alreadyAssigned = classes.assignedClasses.map((c) => c.classId);
-  //     setSelectedClassIds(alreadyAssigned);
-  //   }
-  // }, [classes]);
+  const { data: assignedData } = useGetClassByExamSessionId(examSessionId);
+  const { handleError, clearError } = useErrorHandler();
+
+  useEffect(() => {
+    if (assignedData?.Items?.[0].classIds?.length) {
+      setSelectedClassIds([...assignedData?.Items?.[0].classIds]);
+      form.setValue("classIds", [...assignedData?.Items?.[0].classIds]);
+    }
+  }, [assignedData?.Items?.[0]?.classIds]);
 
   const toggleClass = (classId: string) => {
-    setSelectedClassIds((prev) =>
-      prev.includes(classId)
+    setSelectedClassIds((prev) => {
+      const updated = prev.includes(classId)
         ? prev.filter((id) => id !== classId)
-        : [...prev, classId]
-    );
+        : [...prev, classId];
+
+      form.setValue("classIds", updated);
+      return updated;
+    });
   };
 
   const onSubmit: SubmitHandler<ISeatPlanningRequest> = async () => {
+    clearError();
     if (selectedClassIds.length === 0) {
       console.log("No class selected");
       return;
     }
 
     try {
-      const result = await generateSeatPlanning.mutateAsync({
-        examSessionId,
-        classIds: selectedClassIds,
-      });
-      onSuccess(result);
+      await toast.promise(
+        generateSeatPlanning.mutateAsync({
+          examSessionId,
+          classIds: selectedClassIds,
+        }),
+        {
+          loading: "Assigning Classes...",
+          success: "Successfully Assigned Classes",
+        }
+      );
     } catch (error) {
       console.log("Failed to assign classes", error);
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     } finally {
       onClose();
     }
@@ -87,10 +102,14 @@ const AssignClassToExamSession = ({
                     key={cls.id}
                     className="flex items-center gap-2 py-1 cursor-pointer"
                   >
-                    <input
-                      type="checkbox"
-                      onChange={() => toggleClass(cls.id || "")}
-                    />
+                    {cls.id && (
+                      <input
+                        type="checkbox"
+                        checked={selectedClassIds.includes(String(cls.id))}
+                        onChange={() => toggleClass(String(cls.id))}
+                      />
+                    )}
+
                     <span className="text-md font-medium">{cls.name}</span>
                   </label>
                 );
