@@ -6,11 +6,13 @@ import {
   IExamSession,
   IHall,
   ISeatPlanning,
+  ISeatPlanningRequest,
 } from "../types/IExamSession";
 const ExamSessionEndPoints = {
   getAllExamSessions: "/api/Academics/all-ExamSessions",
   createExamSessions: "/api/Academics/AddExamSession",
   filterExamSessionByDate: "/api/Academics/FilterExamSession",
+  getClassByExamSession: "/api/Academics/ClassByExamSession",
   generateSeatPlanning: "/api/Academics/GenerateSeatPlanning",
 };
 
@@ -106,5 +108,23 @@ export const useGenerateSeatPlanning = () => {
     onError: (error) => {
       console.error("Error adding ExamSession:", error);
     },
+  });
+};
+
+export const useGetClassByExamSessionId = (ExamSessionId: string) => {
+  return useQuery({
+    queryKey: [queryKey, ExamSessionId],
+    queryFn: async (): Promise<IPaginationResponse<ISeatPlanningRequest>> => {
+      if (!ExamSessionId) {
+        throw new Error("Id is required to get a Exam");
+      }
+      const response = await api.get<IPaginationResponse<ISeatPlanningRequest>>(
+        `${ExamSessionEndPoints.getClassByExamSession}?ExamSessionId=${ExamSessionId}`
+      );
+      return response.data;
+    },
+    enabled: !!ExamSessionId,
+    staleTime: 0,
+    retry: false,
   });
 };

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   IAllExamSession,
   IFilterExamSessionByDate,
-  ISeatPlanning,
 } from "../types/IExamSession";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -48,9 +47,6 @@ const AllExamSessionForm = () => {
   const [params, setParams] = useState("");
   const [showAssignClass, setShowAssignClass] = useState(false);
   const [showStudentPrint, setShowStudentPrint] = useState(false);
-  const [seatPlanDataMap, setSeatPlanDataMap] = useState<
-    Record<string, ISeatPlanning>
-  >({});
 
   const [selectedExamSessionId, setSelectedExamSessionId] = useState<
     string | undefined
@@ -284,29 +280,18 @@ const AllExamSessionForm = () => {
               </tbody>
             </table>
           </div>
-          {showStudentPrint &&
-            selectedExamSessionId &&
-            seatPlanDataMap[selectedExamSessionId] &&
-            schoolId && (
-              <SeatPlanning
-                data={seatPlanDataMap[selectedExamSessionId]}
-                schoolId={schoolId}
-                onClose={() => setShowStudentPrint(false)}
-              />
-            )}
+          {showStudentPrint && selectedExamSessionId && schoolId && (
+            <SeatPlanning
+              examSessionId={selectedExamSessionId}
+              schoolId={schoolId}
+              onClose={() => setShowStudentPrint(false)}
+            />
+          )}
 
           {showAssignClass && selectedExamSessionId && (
             <AssignClassToExamSession
               examSessionId={selectedExamSessionId}
               visible={showAssignClass}
-              onSuccess={(seatPlan) => {
-                if (selectedExamSessionId) {
-                  setSeatPlanDataMap((prev) => ({
-                    ...prev,
-                    [selectedExamSessionId]: seatPlan,
-                  }));
-                }
-              }}
               onClose={() => setShowAssignClass(false)}
             />
           )}
