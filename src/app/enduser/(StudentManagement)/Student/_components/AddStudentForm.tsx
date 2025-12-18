@@ -30,16 +30,16 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
-    null
-  );
-  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
-    null
-  );
-  const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<
+    number | undefined
+  >(0);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<
+    number | undefined
+  >(0);
+  const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
-    number | null
-  >(null);
+    number | undefined
+  >(0);
   const { data: filteredDistrict } =
     useGetDistrictByProvince(selectedProvinceId);
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
@@ -49,6 +49,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const handleClose = () => {
     form.reset();
   };
+
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError();
 
@@ -70,11 +71,10 @@ const AddStudentForm = ({ form, onClose }: Props) => {
       );
       formData.append("parentId", data.parentId);
       formData.append("classId", data.classId);
-      formData.append("classSectionId", data.classSectionId ?? "");
       formData.append("provinceId", String(data.provinceId));
       formData.append("districtId", String(data.districtId));
-      formData.append("municipalityId", String(data.municipalityId ?? ""));
-      formData.append("vdcid", String(data.vdcid ?? ""));
+      formData.append("municipalityId", String(data.municipalityId ?? 0));
+      formData.append("vdcid", String(data.vdcid ?? 0));
       formData.append("wardNumber", String(data.wardNumber));
       if (data.studentImg instanceof File) {
         formData.append("studentImg", data.studentImg);
@@ -249,7 +249,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                       (g) => g.Id === selectedProvinceId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -267,7 +267,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                       (g) => g.Id === selectedDistrictId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -275,7 +275,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   value={selectedMunicipalityId}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
-                  disabled={selectedVdcId !== 0 && selectedVdcId !== null}
+                  disabled={selectedVdcId !== 0 && selectedVdcId !== undefined}
                   label="Municipality"
                   name="municipalityId"
                   form={form}
@@ -286,7 +286,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     ) || null
                   }
                   onSelect={(group) =>
-                    setSelectedMunicipalityId(group?.Id ?? null)
+                    setSelectedMunicipalityId(group?.Id ?? 0)
                   }
                   getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
@@ -298,7 +298,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   label="VDC"
                   disabled={
                     selectedMunicipalityId !== 0 &&
-                    selectedMunicipalityId !== null
+                    selectedMunicipalityId !== undefined
                   }
                   name="vdcid"
                   form={form}
@@ -306,7 +306,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   selected={
                     filteredVdc?.find((g) => g.Id === selectedVdcId) || null
                   }
-                  onSelect={(group) => setSelectedVdcId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedVdcId(group?.Id ?? 0)}
                   getLabel={(g) => g?.VdcNameInNepali ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />

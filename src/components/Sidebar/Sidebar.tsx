@@ -28,6 +28,7 @@ import {
   Settings,
   NotepadText,
   School2Icon,
+  Notebook,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -172,6 +173,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     "Staff Management": BriefcaseBusiness,
     User: User,
     Role: UserCog,
+    Notice: Notebook,
     Inventory: Factory,
     Sales: BadgeCent,
     Report: SheetIcon,

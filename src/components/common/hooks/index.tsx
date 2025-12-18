@@ -53,7 +53,7 @@ export const useGetAllDistrict = (params?: string) => {
   });
 };
 
-export const useGetDistrictByProvince = (ProvinceId: number | null) => {
+export const useGetDistrictByProvince = (ProvinceId: number | undefined) => {
   return useQuery({
     queryKey: [queryKey, ProvinceId],
     queryFn: async (): Promise<IDistrict[]> => {
@@ -70,7 +70,9 @@ export const useGetDistrictByProvince = (ProvinceId: number | null) => {
     retry: false,
   });
 };
-export const useGetMunicipalityByDistrict = (DistrictId: number | null) => {
+export const useGetMunicipalityByDistrict = (
+  DistrictId: number | undefined
+) => {
   return useQuery({
     queryKey: [queryKeyForMunicipality, DistrictId],
     queryFn: async (): Promise<IMunicipality[]> => {
@@ -88,7 +90,7 @@ export const useGetMunicipalityByDistrict = (DistrictId: number | null) => {
   });
 };
 
-export const useGetVDCByDistrict = (DistrictId: number | null) => {
+export const useGetVDCByDistrict = (DistrictId: number | undefined) => {
   return useQuery({
     queryKey: [queryKeyForVdc, DistrictId],
     queryFn: async (): Promise<IVdc[]> => {

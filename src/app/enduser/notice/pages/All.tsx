@@ -1,32 +1,26 @@
 "use client";
 import { useState } from "react";
-import AllParent from "../../_Parent/pages/All";
-import AllStudentForm from "../_components/AllStudentForm";
-import AllStudentAttendance from "../../_StudentAttendance/pages/All";
-const AllStudent = () => {
-  const exam = [
-    { id: "student", label: "Student", color: "gray" },
-    { id: "parent", label: "Parent", color: "gray" },
-    { id: "attendance", label: "Attendance", color: "gray" },
-  ];
-  const [activeReport, setActiveReport] = useState<string>("student");
+import AllNoticeForm from "../_components/AllNotice";
+const AllNotice = () => {
+  const exam = [{ id: "Notice", label: "Notice", color: "gray" }];
+  const [activeReport, setActiveReport] = useState<string>("Notice");
 
   const renderReport = () => {
     switch (activeReport) {
-      case "parent":
+      case "notice":
         return (
           <div className=" text-center">
-            <AllParent />
+            <AllNotice />
           </div>
         );
-      case "attendance":
-        return (
-          <div className=" text-center">
-            <AllStudentAttendance />
-          </div>
-        );
+      // case "attendance":
+      //   return (
+      //     <div className=" text-center">
+      //       <AllNoticeAttendance />
+      //     </div>
+      //   );
       default:
-        return <AllStudentForm />;
+        return <AllNoticeForm />;
     }
   };
 
@@ -59,4 +53,4 @@ const AllStudent = () => {
   );
 };
 
-export default AllStudent;
+export default AllNotice;

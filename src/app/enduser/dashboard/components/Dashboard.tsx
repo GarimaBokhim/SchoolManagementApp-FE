@@ -127,61 +127,70 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="w-[60%]">
-            <div className="relative h-full">
-              <div className="relative h-full dark:bg-[#171717] bg-white backdrop-blur-sm p-8 rounded-2xl border border-[#4e97f1]">
-                <div className="flex items-center justify-start gap-3 mb-6">
-                  <h3 className="text-lg font-bold text-[#4e97f1] tracking-wider">
+          <div className="lg:w-full flex space-x-6 h-[20rem]">
+            {/* Notices */}
+            <div className="w-[50%]">
+              <div className="relative h-full">
+                <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-[#4e97f1] tracking-wider">
+                      LATEST NOTICES
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3 overflow-y-auto max-h-[13rem] pr-2">
+                    {[1, 2, 3, 4].map((_, index) => (
+                      <div
+                        key={index}
+                        className="group p-4 rounded-xl border border-gray-200 dark:border-gray-600 
+                         hover:shadow-md transition-all bg-gray-50 dark:bg-[#2a2a2a]"
+                      >
+                        <h4 className="text-sm font-semibold text-gray-800 dark:text-white line-clamp-1">
+                          Exam Schedule Published
+                        </h4>
+
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                          The final examination schedule for Grade 10 has been
+                          published.
+                        </p>
+
+                        <div className="text-[10px] text-gray-400 mt-2">
+                          Oct 11, 2025
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activities */}
+            <div className="w-[50%]">
+              <div className="relative h-full">
+                <div className="relative h-full dark:bg-[#171717] bg-white p-6 rounded-2xl border border-[#4e97f1]">
+                  <h3 className="text-lg font-bold text-[#4e97f1] tracking-wider mb-4">
                     RECENT ACTIVITIES
                   </h3>
-                </div>
-                <div className="max-h-[12rem] overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#e6f0ff]">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-[#4e97f1] uppercase tracking-wider">
-                          Activity
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-[#4e97f1] uppercase tracking-wider">
-                          Time
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200 dark:bg-[#353535]">
-                      <tr className="hover:bg-[#f0f8ff] dark:hover:bg-gray-600  transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-white">
-                          Purchased New Feature by Reliance School
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">
-                          Oct 10, 2025
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-[#f0f8ff] transition-colors dark:hover:bg-gray-600 ">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-white">
-                          Subscription about to expire of Mother School
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">
-                          Oct 11, 2025
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-[#f0f8ff] transition-colors dark:hover:bg-gray-600 ">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-white">
-                          Sidhartha School Started the Subscription
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">
-                          Oct 11, 2025
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-[#f0f8ff] transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-white">
-                          Subscription about to expire of Mother School
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">
-                          Oct 11, 2025
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+
+                  <div className="space-y-3 overflow-y-auto max-h-[13rem] pr-2">
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
+                      <p className="text-sm text-gray-700 dark:text-white">
+                        Purchased New Feature by Reliance School
+                      </p>
+                      <span className="text-xs text-gray-400">
+                        Oct 10, 2025
+                      </span>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
+                      <p className="text-sm text-gray-700 dark:text-white">
+                        Subscription about to expire of Mother School
+                      </p>
+                      <span className="text-xs text-gray-400">
+                        Oct 11, 2025
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
