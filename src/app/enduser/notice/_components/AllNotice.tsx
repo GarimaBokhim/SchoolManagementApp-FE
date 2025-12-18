@@ -8,15 +8,21 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { EyeIcon, Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterNoticeByDate } from "../hooks";
+import {
+  useFilterNoticeByDate,
+  usePublishNotice,
+  useUnPublishNotice,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddNotice from "../pages/Add";
+import { EditButton } from "@/components/Buttons/EditButton";
+import GenerateNotice from "./GenerateNotice";
 const AllNoticeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -37,24 +43,27 @@ const AllNoticeForm = () => {
   const [selectedNoticeName, setSelectedNoticeName] = useState<string | null>(
     ""
   );
+  const publishNotice = usePublishNotice();
+  const unPublishNotice = useUnPublishNotice();
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
-  // const [selectedId, setSelectedId] = useState<string>("");
-  // const buttonElement = (id: string) => {
-  //   return (
-  //     <ButtonElement
-  //       icon={<Edit size={14} />}
-  //       type="button"
-  //       text=""
-  //       onClick={() => {
-  //         setShowNotices(true);
-  //         setSelectedId(id);
-  //       }}
-  //       className="!text-xs font-bold !bg-teal-500"
-  //     />
-  //   );
-  // };
+  const [viewNotice, setViewNotice] = useState<boolean>(false);
+  const [selectedNotice, setSelectedNotice] = useState<INotice>();
+  const buttonElement = (notice: INotice) => {
+    return (
+      <ButtonElement
+        type="button"
+        icon={<EyeIcon size={16} />}
+        text=""
+        onClick={() => {
+          setSelectedNotice(notice);
+          setViewNotice(true);
+        }}
+        className="!bg-blue-500 hover:!bg-blue-600 !p-2"
+      />
+    );
+  };
   const [params, setParams] = useState("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const form = useForm<IFilterNotice>({
@@ -108,6 +117,35 @@ const AllNoticeForm = () => {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
       console.error("Error during form submission:", error);
+    }
+  };
+  const handleTogglePublish = async (notice: INotice) => {
+    try {
+      await toast.promise(
+        (async () => {
+          if (notice.publishStatus === 1) {
+            publishNotice.mutateAsync({
+              noticeId: notice.id as string,
+            });
+          } else {
+            unPublishNotice.mutateAsync({
+              noticeId: notice.id as string,
+            });
+          }
+          await refetch();
+        })(),
+        {
+          loading:
+            notice.publishStatus === 0 ? "Unpublishing..." : "Publishing...",
+          success:
+            notice.publishStatus === 0
+              ? "Notice unpublished"
+              : "Notice published",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 
@@ -206,7 +244,7 @@ const AllNoticeForm = () => {
               </form>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 p-4">
+          <div className="flex flex-col gap-4 p-4">
             {isLoading ? (
               <div className="col-span-full text-center text-gray-500">
                 Loading Notices...
@@ -216,29 +254,68 @@ const AllNoticeForm = () => {
                 <div
                   key={index}
                   className="group bg-white dark:bg-[#3a3a3a] border border-gray-200 dark:border-gray-600 
-                   rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                  rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between gap-6 px-6 py-4"
                 >
-                  <div className="p-4 border-b border-gray-100 dark:border-gray-600">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white line-clamp-1">
+                  <div className="flex flex-col gap-1 w-1/4">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
                       {notice.title}
                     </h3>
+
+                    <span
+                      className={`w-fit text-xs px-2 py-0.5 rounded-full font-medium ${
+                        notice.publishStatus === 0
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {notice.publishStatus === 0 ? "Published" : "Unpublished"}
+                    </span>
                   </div>
-                  <div className="p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                       {notice.shortDescription}
                     </p>
                   </div>
-                  <div className="flex justify-between items-center p-4 pt-0">
-                    <span className="text-xs text-gray-400">#{index + 1}</span>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`text-xs font-medium transition-colors ${
+                        notice.publishStatus === 1
+                          ? "text-gray-500"
+                          : "text-emerald-600"
+                      }`}
+                    >
+                      Unpublished
+                    </span>
 
-                    <div className="flex gap-2">
-                      {/* Future action buttons */}
-                      {/* <ButtonElement
-              type="button"
-              text="View"
-              className="!text-xs !bg-emerald-600"
-            /> */}
-                    </div>
+                    <button
+                      onClick={() => handleTogglePublish(notice)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200  ${
+                        notice.publishStatus === 0
+                          ? "bg-emerald-600"
+                          : "bg-gray-300 dark:bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200    ${
+                          notice.publishStatus === 0
+                            ? "translate-x-5"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+
+                    <span
+                      className={`text-xs font-medium transition-colors ${
+                        notice.publishStatus === 0
+                          ? "text-emerald-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      Published
+                    </span>
+                  </div>
+                  <div>
+                    <EditButton button={buttonElement(notice)} />
                   </div>
                 </div>
               ))
@@ -251,7 +328,12 @@ const AllNoticeForm = () => {
 
           <AddNotice visible={addModal} onClose={() => setAddModal(false)} />
         </div>
-
+        {selectedNotice && viewNotice && (
+          <GenerateNotice
+            notice={selectedNotice}
+            onClose={() => setViewNotice(!viewNotice)}
+          />
+        )}
         {filteredNotice?.Items && filteredNotice?.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
