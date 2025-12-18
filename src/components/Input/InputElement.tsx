@@ -118,7 +118,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   placeholder={placeholder}
                   readOnly={readOnly}
                   min={inputType === "number" ? 0 : undefined}
-                  className={`w-full p-2 py-3 border ${
+                  className={`w-full p-2  border ${
                     form.formState.errors[name]
                       ? "border-red-500"
                       : "border-gray-400"

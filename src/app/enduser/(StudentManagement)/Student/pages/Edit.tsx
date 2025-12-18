@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { IStudent } from "../types/IStudents";
-import EditStudentForm from "../components/EditStudentForm";
+import EditStudentForm from "../_components/EditStudentForm";
 import { useGetStudentById } from "../hooks";
 
 interface Props {
@@ -23,7 +23,7 @@ const EditStudent = ({ visible, onClose, StudentId }: Props) => {
       dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
       email: StudentData?.email ?? "",
       phoneNumber: StudentData?.phoneNumber ?? "",
-      imageUrl: StudentData?.imageUrl,
+      studentImg: StudentData?.studentImg,
       address: StudentData?.address ?? "",
       enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
       parentId: StudentData?.parentId ?? "",

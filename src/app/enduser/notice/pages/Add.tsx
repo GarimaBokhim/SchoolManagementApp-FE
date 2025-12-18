@@ -1,32 +1,18 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { IStudent } from "../types/IStudents";
-import AddStudentForm from "../_components/AddStudentForm";
+import { INotice } from "../types/INotice";
+import AddNoticeForm from "../_components/AddNotice";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
 const AddStudent = ({ visible, onClose }: Props) => {
-  const form = useForm<IStudent>({
+  const form = useForm<INotice>({
     defaultValues: {
-      firstName: "",
-      middleName: null,
-      lastName: "",
-      registrationNumber: "",
-      genderStatus: 0,
-      studentStatus: 0,
-      dateOfBirth: new Date(),
-      email: "",
-      phoneNumber: "",
-      address: "",
-      enrollmentDate: new Date(),
-      parentId: "",
-      classId: "",
-      classSectionId: null,
-      provinceId: 0,
-      districtId: 0,
-      wardNumber: null,
+      title: "",
+      contentHtml: "",
+      shortDescription: "",
     },
 
     // resolver: yupResolver(StudentValidator),
@@ -48,7 +34,7 @@ const AddStudent = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddStudentForm form={form} onClose={handleOnClose} />
+        <AddNoticeForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
