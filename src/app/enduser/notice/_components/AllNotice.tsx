@@ -250,75 +250,107 @@ const AllNoticeForm = () => {
                 Loading Notices...
               </div>
             ) : filteredNotice?.Items && filteredNotice.Items.length > 0 ? (
-              filteredNotice.Items.map((notice: INotice, index: number) => (
-                <div
-                  key={index}
-                  className="group bg-white dark:bg-[#3a3a3a] border border-gray-200 dark:border-gray-600 
-                  rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between gap-6 px-6 py-4"
-                >
-                  <div className="flex flex-col gap-1 w-1/4">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
-                      {notice.title}
-                    </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse bg-white dark:bg-[#3a3a3a] rounded-xl overflow-hidden">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-[#2f2f2f] text-left">
+                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        Notice Title
+                      </th>
+                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        Short Description
+                      </th>
+                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200 text-right">
+                        Quick Actions
+                      </th>
+                    </tr>
+                  </thead>
 
-                    <span
-                      className={`w-fit text-xs px-2 py-0.5 rounded-full font-medium ${
-                        notice.publishStatus === 0
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {notice.publishStatus === 0 ? "Published" : "Unpublished"}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                      {notice.shortDescription}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`text-xs font-medium transition-colors ${
-                        notice.publishStatus === 1
-                          ? "text-gray-500"
-                          : "text-emerald-600"
-                      }`}
-                    >
-                      Unpublished
-                    </span>
+                  <tbody>
+                    {filteredNotice.Items.map(
+                      (notice: INotice, index: number) => (
+                        <tr
+                          key={index}
+                          className="border-t border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#444] transition"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1 max-w-[220px]">
+                              <h3 className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+                                {notice.title}
+                              </h3>
 
-                    <button
-                      onClick={() => handleTogglePublish(notice)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200  ${
-                        notice.publishStatus === 0
-                          ? "bg-emerald-600"
-                          : "bg-gray-300 dark:bg-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200    ${
-                          notice.publishStatus === 0
-                            ? "translate-x-5"
-                            : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+                              <span
+                                className={`w-fit text-xs px-2 py-0.5 rounded-full font-medium ${
+                                  notice.publishStatus === 0
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-gray-200 text-gray-600"
+                                }`}
+                              >
+                                {notice.publishStatus === 0
+                                  ? "Published"
+                                  : "Unpublished"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 max-w-md">
+                              {notice.shortDescription}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={`text-xs font-medium ${
+                                  notice.publishStatus === 1
+                                    ? "text-gray-500"
+                                    : "text-emerald-600"
+                                }`}
+                              >
+                                Unpublished
+                              </span>
 
-                    <span
-                      className={`text-xs font-medium transition-colors ${
-                        notice.publishStatus === 0
-                          ? "text-emerald-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      Published
-                    </span>
-                  </div>
-                  <div>
-                    <EditButton button={buttonElement(notice)} />
-                  </div>
-                </div>
-              ))
+                              <button
+                                onClick={() => handleTogglePublish(notice)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                                  notice.publishStatus === 0
+                                    ? "bg-emerald-600"
+                                    : "bg-gray-300 dark:bg-gray-600"
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                                    notice.publishStatus === 0
+                                      ? "translate-x-5"
+                                      : "translate-x-1"
+                                  }`}
+                                />
+                              </button>
+
+                              <span
+                                className={`text-xs font-medium ${
+                                  notice.publishStatus === 0
+                                    ? "text-emerald-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                Published
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Quick Actions */}
+                          <td className="px-6 py-4 text-right">
+                            <EditButton button={buttonElement(notice)} />
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="col-span-full text-center text-gray-500 italic">
                 No Notices found.

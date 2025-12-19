@@ -6,10 +6,12 @@ import PieChartSection from "./PieChart";
 import SchoolInfoCard from "./SchoolCard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGetAllNotices } from "../../notice/hooks";
 
 const Dashboard: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
   const navigate = useRouter();
+  const { data: allNotice } = useGetAllNotices();
   useEffect(() => {
     const userDetailsString = localStorage.getItem("userDetails");
 
@@ -128,7 +130,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="lg:w-full flex space-x-6 h-[20rem]">
-            {/* Notices */}
             <div className="w-[50%]">
               <div className="relative h-full">
                 <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
@@ -139,23 +140,22 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   <div className="space-y-3 overflow-y-auto max-h-[13rem] pr-2">
-                    {[1, 2, 3, 4].map((_, index) => (
+                    {allNotice?.map((n, index) => (
                       <div
                         key={index}
                         className="group p-4 rounded-xl border border-gray-200 dark:border-gray-600 
                          hover:shadow-md transition-all bg-gray-50 dark:bg-[#2a2a2a]"
                       >
                         <h4 className="text-sm font-semibold text-gray-800 dark:text-white line-clamp-1">
-                          Exam Schedule Published
+                          {n.title}
                         </h4>
 
                         <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
-                          The final examination schedule for Grade 10 has been
-                          published.
+                          {n.shortDescription}
                         </p>
 
                         <div className="text-[10px] text-gray-400 mt-2">
-                          Oct 11, 2025
+                          {n.createdAt}
                         </div>
                       </div>
                     ))}
@@ -163,8 +163,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Recent Activities */}
             <div className="w-[50%]">
               <div className="relative h-full">
                 <div className="relative h-full dark:bg-[#171717] bg-white p-6 rounded-2xl border border-[#4e97f1]">

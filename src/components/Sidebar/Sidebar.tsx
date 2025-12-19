@@ -29,6 +29,7 @@ import {
   NotepadText,
   School2Icon,
   Notebook,
+  GiftIcon,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -166,6 +167,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     ),
     Academics: BookOpen,
     "Fee and Accounting": Banknote,
+    Miscellaneous: GiftIcon,
     "Attendance Management": Hand,
     "Exam and Grading": BookCheck,
     "Class Management": NotebookPen,

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { INotice, IPublish } from "../types/INotice";
+import { IDisplayNotice, INotice, IPublish } from "../types/INotice";
 const NoticeEndPoints = {
   getAllNotices: "/api/Communication/all-Notice",
   createNotices: "/api/Communication/AddNotice",
@@ -9,6 +9,7 @@ const NoticeEndPoints = {
   publishNotice: "/api/Communication/PublishNotice",
   unPublishNotice: "/api/Communication/UnPublishNotice",
   filterNoticeByDate: "/api/Communication/FilterNotice",
+  DisplayNotice: "/api/Communication/DisplayNotice",
 };
 
 const queryKey = "Notice";
@@ -62,14 +63,12 @@ export const useGetNoticeById = (NoticeId: string) => {
   });
 };
 
-export const useGetAllNotices = (params?: string) => {
+export const useGetAllNotices = () => {
   return useQuery({
-    queryKey: [queryKey, params],
+    queryKey: [queryKey],
     queryFn: async () => {
-      const url = params
-        ? `${NoticeEndPoints.getAllNotices}${params}`
-        : `${NoticeEndPoints.getAllNotices}`;
-      const response = await api.get<IPaginationResponse<INotice>>(url);
+      const url = `${NoticeEndPoints.DisplayNotice}`;
+      const response = await api.get<IDisplayNotice[]>(url);
       return (
         response.data ?? {
           data: [],
