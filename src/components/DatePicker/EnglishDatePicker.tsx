@@ -108,7 +108,7 @@ export default function EnglishDatePicker({
               setShowCalendar(true);
             }
           }}
-          className={`w-full p-2 py-[1.2rem] border rounded-md outline-none peer bg-[#FBFBFB] ${
+          className={`w-full p-2 py-[1rem] border rounded-md outline-none peer bg-[#FBFBFB] ${
             error ? "border-red-500" : "border-gray-400"
           } dark:text-white dark:bg-[#27272a] focus:border-[#14b8a6]`}
         />
