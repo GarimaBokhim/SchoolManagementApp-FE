@@ -92,7 +92,7 @@ function InnerCombobox<T>(
               <ComboboxInput
                 {...(isFiler ? { value: query } : {})}
                 {...(form?.register ? form.register(name, { required }) : {})}
-                className={`w-full p-2  border  rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white  ${
+                className={`w-full p-2  py-1.5 border  rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white  ${
                   form?.formState?.errors?.[name]
                     ? "border-red-500"
                     : "border-gray-400"
