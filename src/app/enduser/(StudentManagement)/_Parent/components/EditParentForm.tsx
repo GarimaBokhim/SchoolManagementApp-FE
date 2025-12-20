@@ -3,8 +3,7 @@ import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
 import { IParent } from "../types/IParents";
 import { useEditParent, useGetParentById } from "../hooks";
@@ -19,7 +18,6 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
   const editParent = useEditParent();
   const { handleError, clearError } = useErrorHandler();
   const { data: ParentData } = useGetParentById(ParentId);
-  const [ParentStatus, setParentStatus] = useState<number | null>(null);
   const handleClose = () => {
     form.reset();
   };
@@ -33,7 +31,6 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
         occupation: ParentData?.occupation ?? "",
         address: ParentData?.address ?? "",
       });
-      setParentStatus(ParentData.parentType);
     }
   }, [ParentData]);
   const onSubmit: SubmitHandler<IParent> = async (data) => {
@@ -114,27 +111,6 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
                 form={form}
                 name="occupation"
                 placeholder="Enter the Occupation"
-              />
-
-              <AppCombobox
-                label="Parent Status"
-                name="parentType"
-                dropdownPositionClass="absolute"
-                value={ParentStatus}
-                dropDownWidth="w-full"
-                options={[
-                  { id: 1, name: "Active" },
-                  { id: 2, name: "Inactive" },
-                ]}
-                selected={
-                  [
-                    { id: 1, name: "Active" },
-                    { id: 2, name: "Inactive" },
-                  ].find((s) => s.id === ParentStatus) || null
-                }
-                onSelect={(option) => setParentStatus(option?.id ?? null)}
-                getLabel={(o) => o?.name || ""}
-                getValue={(o) => o?.id ?? ""}
               />
             </div>
             <div className="flex justify-center mt-6">

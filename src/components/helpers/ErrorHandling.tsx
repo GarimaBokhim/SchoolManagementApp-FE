@@ -5,18 +5,17 @@ function useErrorHandler(initialState: string | null = null) {
   const [error, setError] = useState<string | null>(initialState);
 
   const handleError = (err: any): string => {
-    let message = "An unexpected error occurred.";
-
+    let message = err.response.data[0];
     if (err?.response) {
       const { status, data } = err.response;
       message =
-        data?.message ||
+        data?.Message ||
         data?.error ||
         (status >= 400 && status < 500
-          ? `Client Error (${status}): ${err.response?.data.errors}.`
+          ? `${err.response?.data.Message || err.response?.data[0]}.`
           : status >= 500
-          ? `Server Error (${status}): Please try again later.`
-          : message);
+          ? `${err.response?.data.Message || err.response?.data[0]}.`
+          : data.Message);
     } else if (err?.status) {
       const { status, statusText } = err;
       message =

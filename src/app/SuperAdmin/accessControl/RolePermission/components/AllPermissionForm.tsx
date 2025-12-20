@@ -188,6 +188,20 @@ const AllRolePermissionForm = () => {
                             customStyle="!text-xs font-bold !bg-teal-500"
                           />
                         </div>
+                        {selectedIdForRole === permission.id &&
+                          modalForRole && (
+                            <div className="">
+                              <AddPermissionToRole
+                                permissionId={selectedIdForRole}
+                                key={selectedIdForRole}
+                                onClose={() => {
+                                  setModalForRole(false);
+                                  setSelectedIdForRole("");
+                                }}
+                                visible={modalForRole}
+                              />
+                            </div>
+                          )}
                       </td>
                     </tr>
                   )
@@ -205,19 +219,6 @@ const AllRolePermissionForm = () => {
             </tbody>
           </table>
           <Add visible={addModal} onClose={() => setAddModal(false)} />
-          {selectedIdForRole && modalForRole && (
-            <div className="">
-              <AddPermissionToRole
-                permissionId={selectedIdForRole}
-                key={selectedIdForRole}
-                onClose={() => {
-                  setModalForRole(false);
-                  setSelectedIdForRole("");
-                }}
-                visible={modalForRole}
-              />
-            </div>
-          )}
         </div>
       </div>
       {data && data?.Items?.length > 0 && (

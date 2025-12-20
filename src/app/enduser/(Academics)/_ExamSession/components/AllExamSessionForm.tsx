@@ -210,8 +210,8 @@ const AllExamSessionForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Exam Session Name</th>
+                  <th className="px-4 py-3 ">Date</th>
+                  <th className="px-4 py-3 ">Exam Session Name</th>
                   <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>

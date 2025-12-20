@@ -23,7 +23,7 @@ const EditRole = ({ visible, Id, onClose, roleId }: Props) => {
   if (!visible) return null;
   return (
     <div onClick={handleOnClose}>
-      <EditRoleForm form={form} Id={Id} onClose={() => onClose} />
+      <EditRoleForm form={form} Id={Id} onClose={onClose} />
     </div>
   );
 };

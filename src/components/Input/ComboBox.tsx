@@ -120,7 +120,7 @@ function InnerCombobox<T>(
               />
               <label
                 htmlFor={name}
-                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[0.8rem] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[0.8rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200  dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500  transition-all pointer-events-none ${
+                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[1.2em] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[1.1rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200  dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500  transition-all pointer-events-none ${
                   value || (form ? form.watch(name) : value)
                     ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
                     : ""

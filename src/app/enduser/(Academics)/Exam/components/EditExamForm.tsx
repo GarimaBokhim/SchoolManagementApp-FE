@@ -25,11 +25,6 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   };
   const { data: allClass } = useGetAllClass();
   const [selectedClass, setSelectedClass] = useState<string | undefined>("");
-  const { watch, setValue } = form;
-  const isChecked = watch("isfinalExam", false);
-  const handleCheckBoxChange = () => {
-    setValue("isfinalExam", !isChecked);
-  };
   useEffect(() => {
     if (ExamData) {
       form.reset({
@@ -131,20 +126,6 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 getLabel={(e) => e?.name ?? ""}
                 getValue={(e) => e?.id ?? ""}
               />
-              <div className="mb-6 relative flex items-center">
-                <label className="pl-2 test-slate-500 pr-2">
-                  {"Is Final Exam"}
-                </label>
-                <InputElement
-                  layout="row"
-                  form={form}
-                  checked={isChecked}
-                  onChange={handleCheckBoxChange}
-                  name="isfinalExam"
-                  inputTypeCheckBox="checkbox"
-                  customStyle="!border-0 after:!content-none"
-                />
-              </div>
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />

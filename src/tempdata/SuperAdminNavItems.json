@@ -84,22 +84,6 @@
           "role": "superadmin"
         }
       ]
-    },
-    {
-      "name": "Company SetUp",
-      "icon": "Shool",
-      "targetUrl": "/SuperAdmin/company",
-      "routeName": "company",
-      "role": "superadmins",
-      "subModulesResponse": [
-        {
-          "name": "Company",
-          "icon": "User",
-          "targetUrl": "/Admin/company/all-company",
-          "routeName": "users",
-          "role":"superadmins"
-        }
-      ]
     }
   ]
 }

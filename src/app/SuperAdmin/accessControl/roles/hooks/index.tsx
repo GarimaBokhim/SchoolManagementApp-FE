@@ -33,7 +33,6 @@ export const useAddRole = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [query_Key],
-        exact: true,
       });
     },
     onError: (error) => {
@@ -42,6 +41,7 @@ export const useAddRole = () => {
   });
 };
 export const useRemoveRole = () => {
+  const queryClient = useQueryClient();
   return useMutation<IRoles, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IRoles> => {
       if (!Id) {
@@ -49,6 +49,11 @@ export const useRemoveRole = () => {
       }
       const response = await api.delete(`${rolesEntryPoints.deleteRole}/${Id}`);
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [query_Key],
+      });
     },
   });
 };
@@ -107,6 +112,7 @@ export const useGetRolesByRoleId = (Id: string | undefined) => {
   });
 };
 export const useEditRole = (Id: string | undefined) => {
+  const queryClient = useQueryClient();
   return useMutation<IRoles, Error, RoleRequest>({
     mutationFn: async (data: RoleRequest): Promise<IRoles> => {
       if (!Id) {
@@ -117,6 +123,11 @@ export const useEditRole = (Id: string | undefined) => {
         data
       );
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [query_Key],
+      });
     },
   });
 };

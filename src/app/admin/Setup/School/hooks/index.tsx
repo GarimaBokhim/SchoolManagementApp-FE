@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { ISchool, ISchoolDetails, ISchoolUser } from "../types/ISchool";
+import {
+  IFiscalYear,
+  ISchool,
+  ISchoolDetails,
+  ISchoolUser,
+} from "../types/ISchool";
 const SchoolEndPoints = {
   getAllSchool: "/api/SetupControllers/all-school",
   createSchool: "/api/SetupControllers/AddSchool",
@@ -11,9 +16,12 @@ const SchoolEndPoints = {
   updateSchool: "/api/SetupControllers/UpdateSchool",
   filterSchoolByDate: "/api/SetupControllers/FilterSchoolByDate",
   GetSchoolDetails: "/api/SetupControllers/GetSchoolDetails",
+  fiscalYear: "/api/Settings/all-FiscalYear",
 };
 
-const queryKey = "";
+const queryKey = "school";
+const filterSchoolQuery = "Filtered School";
+const fiscalYearQuery = "fiscalYear";
 enum Status {
   Manual = 0,
   Automatic = 1,
@@ -103,8 +111,8 @@ export const useAddSchool = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["School"] });
-      queryClient.refetchQueries({ queryKey: ["School"] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.refetchQueries({ queryKey: [filterSchoolQuery] });
     },
     onError: (error: Error) => {
       console.error("Error adding School:", error);
@@ -113,6 +121,7 @@ export const useAddSchool = () => {
 };
 
 export const useEditSchool = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     ISchool,
     Error,
@@ -126,12 +135,18 @@ export const useEditSchool = () => {
         `${SchoolEndPoints.updateSchool}/${id}`,
         data
       );
+
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.refetchQueries({ queryKey: [filterSchoolQuery] });
     },
   });
 };
 
 export const useRemoveSchool = () => {
+  const queryClient = useQueryClient();
   return useMutation<ISchool, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<ISchool> => {
       if (!Id) {
@@ -142,15 +157,20 @@ export const useRemoveSchool = () => {
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.refetchQueries({ queryKey: [filterSchoolQuery] });
+    },
   });
 };
+
 export const useGetFilterSchoolByDate = (
   startDate: string,
   endDate: string,
   name: string | null
 ) => {
   return useQuery({
-    queryKey: [queryKey, name, startDate, endDate],
+    queryKey: [filterSchoolQuery, queryKey],
     queryFn: async () => {
       if (!startDate || !endDate || !name) {
         throw new Error("StartDate and EndDate are required to get a School");
@@ -167,7 +187,21 @@ export const useGetFilterSchoolByDate = (
 
       return response.data;
     },
+
     staleTime: 0,
     retry: false,
+  });
+};
+
+export const useGetAllFiscalYear = (params?: string) => {
+  return useQuery({
+    queryKey: [fiscalYearQuery],
+    queryFn: async () => {
+      const url = params
+        ? `${SchoolEndPoints.fiscalYear}${params}`
+        : `${SchoolEndPoints.fiscalYear}`;
+      const response = await api.get<IPaginationResponse<IFiscalYear>>(url);
+      return response.data;
+    },
   });
 };

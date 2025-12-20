@@ -64,8 +64,8 @@ const AddUserForm = ({ form, onClose }: Props) => {
     clearError();
     try {
       await toast.promise(addUser.mutateAsync(data), {
-        loading: "Adding ledger...",
-        success: "Successfully added ledger",
+        loading: "Adding User...",
+        success: "Successfully added User",
       });
       onClose();
       refetch();

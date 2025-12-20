@@ -1,16 +1,17 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { ISchool } from "../types/ISchool";
-import { useAddSchool, useGetAllSchool } from "../hooks";
+import { useAddSchool, useGetAllFiscalYear } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { AxiosError } from "axios";
 import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import toast from "react-hot-toast";
 
 type Props = {
   form: UseFormReturn<ISchool>;
@@ -18,25 +19,23 @@ type Props = {
 };
 
 const AddSchoolForm = ({ form, onClose }: Props) => {
-  const { refetch: schoolRefetch } = useGetAllSchool();
   const addSchool = useAddSchool();
   const [institutionId, setInstitutionId] = useState("");
-  const { data: institution, refetch } = useGetAllInstitution();
-
+  const { data: institution } = useGetAllInstitution();
+  const { data: fiscalYear } = useGetAllFiscalYear();
+  const [fiscalYearId, setFiscalYearId] = useState("");
+  const { handleError, clearError } = useErrorHandler();
   const onSubmit: SubmitHandler<ISchool> = async (data) => {
+    clearError();
     try {
-      await addSchool.mutateAsync(data);
-      Toast.success("Successfully added School");
-      refetch();
-      schoolRefetch();
-    } catch (error: AxiosError | unknown) {
-      if (error instanceof AxiosError) {
-        Toast.error(error.response?.data);
-      } else {
-        Toast.error("Failed to add School" + error);
-      }
-    } finally {
+      await toast.promise(addSchool.mutateAsync(data), {
+        loading: "Adding School...",
+        success: "Successfully added School",
+      });
       onClose();
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 
@@ -51,7 +50,7 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
   return (
     <div
       id="container"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto ml-56 md:ml-64 sm:ml-16 "
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 bg-opacity-50 backdrop-blur-sm overflow-y-auto ml-56 md:ml-64 sm:ml-16 "
     >
       <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%] bg-white rounded-xl shadow-2xl p-4 sm:p-6 m-4">
         <div className="w-full">
@@ -158,6 +157,28 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                   }}
                   getLabel={(g) => g?.name || ""}
                   getValue={(g) => g?.id ?? ""}
+                />
+                <AppCombobox
+                  required
+                  value={fiscalYearId}
+                  form={form}
+                  name="fiscalYearId"
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute z-50"
+                  label="Fiscal Year"
+                  options={fiscalYear?.Items}
+                  selected={
+                    fiscalYear?.Items.find((g) => g.Id === fiscalYearId) || null
+                  }
+                  onSelect={(group) => {
+                    if (group) {
+                      setFiscalYearId(group.Id || "");
+                    } else {
+                      setFiscalYearId("");
+                    }
+                  }}
+                  getLabel={(g) => g?.FyName || ""}
+                  getValue={(g) => g?.Id ?? ""}
                 />
                 <div className="flex items-center">
                   <InputElement

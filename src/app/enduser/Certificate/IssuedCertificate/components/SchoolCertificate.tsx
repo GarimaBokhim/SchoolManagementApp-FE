@@ -6,7 +6,7 @@ import {
   useGetAllProvince,
 } from "@/components/common/hooks";
 import { useGenerateCertificateByStudent } from "../hooks";
-import { useGetStudentById } from "@/app/teacher/Students/Student/hooks";
+import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
 
 interface Props {
   studentId: string;
@@ -166,9 +166,9 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
               CHARACTER CERTIFICATE
             </h1>
             <div className="w-[120px] h-[130px] border-2 mt-[-2.5rem] border-black flex items-center justify-center relative overflow-hidden">
-              {StudentData?.imageUrl && (
+              {StudentData?.studentImg && (
                 <img
-                  src={`https://schoolapp.netraverselabs.com/${StudentData.imageUrl}`}
+                  src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
                   alt="Student Image"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
