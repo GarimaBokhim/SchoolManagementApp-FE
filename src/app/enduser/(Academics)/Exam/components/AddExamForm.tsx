@@ -23,11 +23,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const handleClose = () => {
     form.reset();
   };
-  const { watch, setValue } = form;
-  const isChecked = watch("isfinalExam", false);
-  const handleCheckBoxChange = () => {
-    setValue("isfinalExam", !isChecked);
-  };
   const onSubmit: SubmitHandler<IExam> = async (data) => {
     clearError();
     try {
@@ -100,20 +95,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 getLabel={(e) => e?.name ?? ""}
                 getValue={(e) => e?.id ?? ""}
               />
-              <div className="mb-6 relative flex items-center">
-                <label className="pl-2 test-slate-500 pr-2">
-                  {"Is Final Exam"}
-                </label>
-                <InputElement
-                  layout="row"
-                  form={form}
-                  checked={isChecked}
-                  onChange={handleCheckBoxChange}
-                  name="isfinalExam"
-                  inputTypeCheckBox="checkbox"
-                  customStyle="!border-0 after:!content-none"
-                />
-              </div>
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />

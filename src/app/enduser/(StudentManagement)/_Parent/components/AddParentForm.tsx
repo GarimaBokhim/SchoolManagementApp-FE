@@ -1,10 +1,7 @@
-"use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
 import { X } from "lucide-react";
 import { IParent } from "../types/IParents";
 import { useAddParent } from "../hooks";
@@ -17,7 +14,6 @@ type Props = {
 const AddParentForm = ({ form, onClose }: Props) => {
   const addParent = useAddParent();
   const { handleError, clearError } = useErrorHandler();
-  const [ParentStatus, setParentStatus] = useState<number | null>(null);
   const handleClose = () => {
     form.reset();
   };
@@ -83,27 +79,6 @@ const AddParentForm = ({ form, onClose }: Props) => {
                 form={form}
                 name="occupation"
                 placeholder="Enter the Occupation"
-              />
-
-              <AppCombobox
-                label="Parent Status"
-                name="parentType"
-                dropdownPositionClass="absolute"
-                value={ParentStatus}
-                dropDownWidth="w-full"
-                options={[
-                  { id: 1, name: "Active" },
-                  { id: 2, name: "Inactive" },
-                ]}
-                selected={
-                  [
-                    { id: 1, name: "Active" },
-                    { id: 2, name: "Inactive" },
-                  ].find((s) => s.id === ParentStatus) || null
-                }
-                onSelect={(option) => setParentStatus(option?.id ?? null)}
-                getLabel={(o) => o?.name || ""}
-                getValue={(o) => o?.id ?? ""}
               />
             </div>
             <div className="flex justify-center mt-6">

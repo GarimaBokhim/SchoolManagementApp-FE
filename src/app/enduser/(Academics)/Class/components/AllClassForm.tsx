@@ -234,7 +234,7 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                 <thead>
                   <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                     <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                    <th className="px-4 py-3 text-left">Class Name</th>
+                    <th className="px-4 py-3 ">Class Name</th>
                     <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                   </tr>
                 </thead>

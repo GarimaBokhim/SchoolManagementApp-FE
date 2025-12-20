@@ -43,3 +43,11 @@ export interface IFilterSchoolByDate {
   endDate: string;
   name: string;
 }
+
+export interface IFiscalYear {
+  Id: string;
+  FyName: string;
+  StartDate: string;
+  EndDate: string;
+  IsActive: boolean;
+}

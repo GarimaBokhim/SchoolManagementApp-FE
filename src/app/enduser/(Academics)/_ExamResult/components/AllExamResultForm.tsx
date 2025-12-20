@@ -255,9 +255,9 @@ const AllExamResultForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Exam Name</th>
-                  <th className="px-4 py-3 text-left">Student Name</th>
-                  <th className="px-4 py-3 text-left">Remarks</th>
+                  <th className="px-4 py-3 ">Exam Name</th>
+                  <th className="px-4 py-3 ">Student Name</th>
+                  <th className="px-4 py-3 ">Remarks</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
@@ -292,7 +292,7 @@ const AllExamResultForm = () => {
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">{ExamResult.remarks}</td>
+                        <td className="px-2 md:px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (

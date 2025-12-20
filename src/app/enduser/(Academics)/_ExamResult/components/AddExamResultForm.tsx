@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetStudentByClass } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
+import { useGetAllClass } from "../../Class/hooks";
 
 type Props = {
   form: UseFormReturn<IExamResult>;
@@ -23,7 +24,7 @@ type Props = {
 const AddExamResultForm = ({ form, onClose }: Props) => {
   const addExamResult = useAddExamResult();
   const { handleError, clearError } = useErrorHandler();
-
+  const { data: allClass } = useGetAllClass();
   const { control } = form;
 
   const { fields, append, remove } = useFieldArray({
@@ -124,6 +125,11 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 }}
                 getLabel={(s) => s?.firstName ?? ""}
                 getValue={(s) => s?.id ?? ""}
+                renderOptionExtra={(s) => (
+                  <div>
+                    {allClass?.Items.find((i) => i.id === s?.classId)?.name}
+                  </div>
+                )}
               />
               <InputElement
                 label="Remark"
@@ -148,7 +154,14 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     form={form}
                     dropdownPositionClass="absolute"
                     value={selectedSubjectIds[index] ?? ""}
-                    options={allSubject ?? []}
+                    options={(allSubject ?? []).filter((subj) => {
+                      const currentId = selectedSubjectIds[index];
+                      const selectedIds = Object.values(selectedSubjectIds);
+
+                      return (
+                        subj.id === currentId || !selectedIds.includes(subj.id)
+                      );
+                    })}
                     selected={
                       allSubject?.find(
                         (subj) => subj.id === selectedSubjectIds[index]
@@ -167,14 +180,16 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     getLabel={(s) => s?.subjectName ?? ""}
                     getValue={(s) => s?.id ?? ""}
                   />
+                  <div className="mt-1">
+                    <InputElement
+                      label="Marks Obtained"
+                      form={form}
+                      name={`marksObtained.${index}.marksObtained`}
+                      type="number"
+                      placeholder="Enter marks"
+                    />
+                  </div>
 
-                  <InputElement
-                    label="Marks Obtained"
-                    form={form}
-                    name={`marksObtained.${index}.marksObtained`}
-                    type="number"
-                    placeholder="Enter marks"
-                  />
                   <button
                     type="button"
                     onClick={() => {

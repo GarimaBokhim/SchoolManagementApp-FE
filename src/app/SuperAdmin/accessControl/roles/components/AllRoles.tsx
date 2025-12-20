@@ -39,7 +39,7 @@ const AllRoleForm = () => {
   const [modalForMenu, setModalForMenu] = useState(false);
   const [selectedIdForMenu, setSelectedIdForMenu] = useState("");
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 5,
+    pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
@@ -171,19 +171,8 @@ const AllRoleForm = () => {
                             content="Are you sure you want to delete this Role?"
                           />
                         </div>
-                        {/* )} */}
-                        {/* {canEdit && ( */}
                         <div className="tooltip">
-                          {/* <span className="tooltiptext">Edit Role</span> */}
                           <EditButton button={buttonElement(role?.Id ?? "")} />
-                          {selectedIdEdit && selectedIdEdit !== " " && (
-                            <EditRole
-                              visible={modalEdit}
-                              onClose={() => setModalEdit(false)}
-                              Id={selectedIdEdit}
-                              roleId={selectedIdEdit}
-                            />
-                          )}
                         </div>
                       </div>
                     </td>
@@ -346,6 +335,14 @@ const AllRoleForm = () => {
               )}
             </tbody>
           </table>
+          {modalEdit && selectedIdEdit !== " " && (
+            <EditRole
+              visible={modalEdit}
+              onClose={() => setModalEdit(!modalEdit)}
+              Id={selectedIdEdit}
+              roleId={selectedIdEdit}
+            />
+          )}
           <Add visible={addModal} onClose={() => setAddModal(false)} />
         </div>
       </div>

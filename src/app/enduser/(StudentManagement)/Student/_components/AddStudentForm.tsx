@@ -28,7 +28,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { data: allProvince } = useGetAllProvince();
   const { data: allClass } = useGetAllClass();
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<
     number | undefined
@@ -60,7 +59,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
       formData.append("lastName", data.lastName);
       formData.append("registrationNumber", data.registrationNumber);
       formData.append("genderStatus", String(genderStatus));
-      formData.append("studentStatus", String(studentStatus));
       formData.append("dateOfBirth", new Date(data.dateOfBirth).toISOString());
       formData.append("email", data.email);
       formData.append("phoneNumber", data.phoneNumber);
@@ -367,26 +365,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   onSelect={(group) => setSelectedClassId(group?.id ?? null)}
                   getLabel={(g) => g?.name ?? ""}
                   getValue={(g) => g?.id ?? ""}
-                />
-                <AppCombobox
-                  label="Student Status"
-                  name="studentStatus"
-                  dropdownPositionClass="absolute"
-                  value={studentStatus}
-                  dropDownWidth="w-full"
-                  options={[
-                    { id: 1, name: "Active" },
-                    { id: 2, name: "Inactive" },
-                  ]}
-                  selected={
-                    [
-                      { id: 1, name: "Active" },
-                      { id: 2, name: "Inactive" },
-                    ].find((s) => s.id === studentStatus) || null
-                  }
-                  onSelect={(option) => setStudentStatus(option?.id ?? null)}
-                  getLabel={(o) => o?.name || ""}
-                  getValue={(o) => o?.id ?? ""}
                 />
               </div>
             </section>

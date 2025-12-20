@@ -9,7 +9,7 @@ export interface IStudent {
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
-  imageUrl: string;
+  studentImg: string;
   address: string;
   enrollmentDate: Date;
   parentId: string;

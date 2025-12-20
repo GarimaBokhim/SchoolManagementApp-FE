@@ -4,7 +4,7 @@ import AllCompany from "./pages/All";
 const Company = () => {
   return (
     <div>
-      <LayoutWrapper title="Company">
+      <LayoutWrapper title="School">
         <AllCompany />
       </LayoutWrapper>
     </div>
