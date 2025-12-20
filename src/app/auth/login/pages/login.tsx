@@ -11,7 +11,7 @@ import { InputElement } from "@/components/Input/InputElement";
 import { Toast } from "@/components/Toast/toast";
 import { AuthContext } from "@/context/auth/AuthContext";
 import { useLogin } from "../hooks";
-import bgImg from "@/assets/background.png";
+import bgImg from "../../../../../public/assets/background.png";
 import { NormalizeStringCase } from "@/components/helpers/normalizeStringCase";
 import {
   ILoginType,
@@ -19,8 +19,9 @@ import {
   ITokenPayloadObject,
 } from "../types/loginResponse";
 import { IUserRole } from "../types/userRoles";
-import dashboardPic from "@/assets/Screenshot 2025-10-16 at 14.21.48.png";
-import attendanceQr from "@/assets/Screenshot 2025-10-16 at 14.21.22.png";
+import dashboardPic from "../../../../../public/assets/dashboard.png";
+import attendanceQr from "../../../../../public/assets/scan.png";
+import { StaticImageData } from "next/image";
 
 const LoginForm = () => {
   const form = useForm<ILoginType>({
@@ -28,7 +29,7 @@ const LoginForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [showPassword, setShowPassword] = useState(false);
-  const [toggleImg, setToggleImg] = useState(dashboardPic);
+  const [toggleImg, setToggleImg] = useState<StaticImageData>(dashboardPic);
   const router = useRouter();
   const login = useLogin();
   const { updateUserDetails } = useContext(AuthContext);
@@ -38,7 +39,6 @@ const LoginForm = () => {
       prev === dashboardPic ? attendanceQr : dashboardPic
     );
   };
-
   const handleSubmit = async (values: ILoginType) => {
     console.log("Test", values);
     setIsSubmitting(true);

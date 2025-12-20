@@ -2,7 +2,7 @@
 "use client";
 import { Icon } from "@iconify/react";
 import React, { useState, useEffect } from "react";
-import adi from "@/assets/adi.jpg";
+import adi from "../../../public/assets/adi.jpg";
 import {
   BadgeCent,
   Banknote,
