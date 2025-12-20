@@ -31,12 +31,12 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const { data: allClass } = useGetAllClass();
   const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
-    null
-  );
-  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
-    null
-  );
+  const [selectedProvinceId, setSelectedProvinceId] = useState<
+    number | undefined
+  >(0);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<
+    number | undefined
+  >(0);
   const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const { data: allParents } = useGetAllParents();
@@ -65,7 +65,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
         email: StudentData?.email ?? "",
         phoneNumber: StudentData?.phoneNumber ?? "",
-        imageUrl: StudentData?.imageUrl ?? "",
+        studentImg: StudentData?.studentImg ?? "",
         address: StudentData?.address ?? "",
         enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
         parentId: StudentData?.parentId ?? "",
@@ -227,7 +227,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                       (g) => g.Id === selectedProvinceId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -245,7 +245,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                       (g) => g.Id === selectedDistrictId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />

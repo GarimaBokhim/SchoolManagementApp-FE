@@ -24,13 +24,16 @@ type StudentRequest = {
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
-  imageUrl: string;
+  studentImg: string;
   address: string;
   enrollmentDate: Date;
   parentId: string;
   classSectionId?: string | null;
+  classId: string;
   provinceId: number;
   districtId: number;
+  municipalityId: number;
+  vdcid: number;
   wardNumber?: number | null;
 };
 

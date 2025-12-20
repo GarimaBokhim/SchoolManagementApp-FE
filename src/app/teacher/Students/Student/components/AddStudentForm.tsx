@@ -30,12 +30,12 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const [studentStatus, setStudentStatus] = useState<number | null>(null);
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
-    null
-  );
-  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
-    null
-  );
+  const [selectedProvinceId, setSelectedProvinceId] = useState<
+    number | undefined
+  >(0);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<
+    number | undefined
+  >(0);
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | null
@@ -222,7 +222,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                       (g) => g.Id === selectedProvinceId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -240,7 +240,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                       (g) => g.Id === selectedDistrictId
                     ) || null
                   }
-                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? null)}
+                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
