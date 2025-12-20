@@ -16,9 +16,9 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { IJournal } from "../types/IJournal";
 import { AxiosError } from "axios";
-import { useGetAllLedgers } from "../../ledger/hooks";
+import { useGetAllLedgers } from "../../Ledger/hooks";
 import { useGetAllSubLedgerGroups } from "../../_SubLedgerGroup/hooks";
-import { LedgerBalance } from "../../ledger/components/GetBalance";
+import { LedgerBalance } from "../../Ledger/components/GetBalance";
 type Props = {
   form: UseFormReturn<IJournal>;
   onClose: () => void;

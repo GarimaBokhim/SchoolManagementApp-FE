@@ -1,20 +1,17 @@
 "use client";
 import { useForm } from "react-hook-form";
-import AddContributorForm from "../_components/AddSchoolItemForm";
-import { IContributor } from "../types/ISchoolItem";
+import AddSchoolItemForm from "../_components/AddSchoolItemForm";
+import { ISchoolItem } from "../types/ISchoolItem";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
-const AddContributor = ({ visible, onClose }: Props) => {
-  const form = useForm<IContributor>({
+const AddSchoolItem = ({ visible, onClose }: Props) => {
+  const form = useForm<ISchoolItem>({
     defaultValues: {
       id: "",
       name: "",
-      organization: "",
-      contactNumber: "",
-      email: "",
     },
 
     // resolver: yupResolver(StudentValidator),
@@ -36,9 +33,9 @@ const AddContributor = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddContributorForm form={form} onClose={handleOnClose} />
+        <AddSchoolItemForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
 };
-export default AddContributor;
+export default AddSchoolItem;

@@ -1,5 +1,5 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import AllStudent from "./pages/All";
+import AllStudent from "../../(StudentManagement)/Student/pages/All";
 
 export default function DashboardPageEndUser() {
   return (

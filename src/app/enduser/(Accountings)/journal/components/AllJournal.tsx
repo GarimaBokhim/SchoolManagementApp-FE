@@ -27,7 +27,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { EditButton } from "@/components/Buttons/EditButton";
 import EditJournal from "../pages/Edit";
-import { useGetAllLedgers } from "../../ledger/hooks";
+import { useGetAllLedgers } from "../../Ledger/hooks";
 
 const AllJournalForm = () => {
   const [paginationParams, setPaginationParams] = useState({
