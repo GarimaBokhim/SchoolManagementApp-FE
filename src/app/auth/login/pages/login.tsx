@@ -29,17 +29,16 @@ const LoginForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [showPassword, setShowPassword] = useState(false);
-  const [toggleImg, setToggleImg] = useState(dashboardPic);
+  const [toggleImg, setToggleImg] = useState<StaticImageData>(dashboardPic);
   const router = useRouter();
   const login = useLogin();
   const { updateUserDetails } = useContext(AuthContext);
 
   const handleToggleImg = () => {
-    setToggleImg((prev: StaticImageData) =>
+    setToggleImg((prev) =>
       prev === dashboardPic ? attendanceQr : dashboardPic
     );
   };
-
   const handleSubmit = async (values: ILoginType) => {
     console.log("Test", values);
     setIsSubmitting(true);
