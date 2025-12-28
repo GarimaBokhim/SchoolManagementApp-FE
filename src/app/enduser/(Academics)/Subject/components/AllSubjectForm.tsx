@@ -48,7 +48,7 @@ const AllSubjectForm = () => {
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
-        icon={<Edit size={14} />}
+        icon={<Edit size={13} />}
         type="button"
         text=""
         onClick={() => {
@@ -234,6 +234,8 @@ const AllSubjectForm = () => {
                   <th className="px-2 md:px-4 py-3 text-left">Subject Code</th>
                   <th className="px-2 md:px-4 py-3 text-left">Credit Hours</th>
                   <th className="px-2 md:px-4 py-3 text-left">Class</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Full Marks</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Pass Marks</th>
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
@@ -253,29 +255,35 @@ const AllSubjectForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-3 px-2 md:px-4">{index + 1}</td>
-                        <td className="py-3 px-2 md:px-4 break-words max-w-[120px] sm:max-w-none">
+                        <td className="py-1 px-2 md:px-4">{index + 1}</td>
+                        <td className="py-1 px-2 md:px-4 break-words max-w-[120px] sm:max-w-none">
                           {Subject.name}
                         </td>
-                        <td className="py-3 px-2 md:px-4">{Subject.code}</td>
-                        <td className="py-3 px-2 md:px-4">
+                        <td className="py-1 px-2 md:px-4">{Subject.code}</td>
+                        <td className="py-1 px-2 md:px-4">
                           {Subject.creditHours}
                         </td>
-                        <td className="py-3 px-2 md:px-4">
+                        <td className="py-1 px-2 md:px-4">
                           {
                             allClass?.Items?.find(
                               (i) => i.id === Subject.classId
                             )?.name
                           }
                         </td>
-                        <td className="py-3 px-2 md:px-4">
+                        <td className="py-1 px-2 md:px-4">
+                          {Subject.fullMarks}
+                        </td>
+                        <td className="py-1 px-2 md:px-4">
+                          {Subject.passMarks}
+                        </td>
+                        <td className="py-1 px-2 md:px-4">
                           <div className="flex justify-center flex-wrap gap-1 md:gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
                                   handleDelete(Subject.Id ? Subject.Id : "")
                                 }
-                                headerText={<Trash />}
+                                headerText={<Trash size={13} />}
                                 content="Are you sure you want to delete this Subject?"
                               />
                             )}

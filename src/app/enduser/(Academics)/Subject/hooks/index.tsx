@@ -22,6 +22,9 @@ type SubjectRequest = {
   creditHours: number;
   description: string;
   classId: string;
+  examId: string;
+  fullMarks: number;
+  passMarks: number;
 };
 
 export const useAddSubject = () => {

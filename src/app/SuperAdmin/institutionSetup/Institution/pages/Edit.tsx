@@ -7,16 +7,8 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   institutionId: string;
-  currentPageIndex: number;
-  organizationId: string;
 };
-const EditInstitution = ({
-  visible,
-  onClose,
-  institutionId,
-  currentPageIndex,
-  organizationId,
-}: Props) => {
+const EditInstitution = ({ visible, onClose, institutionId }: Props) => {
   const { data: institutionData } = useGetInstitutionById(institutionId);
   const form = useForm<IInstitution>({
     values: {
@@ -40,9 +32,7 @@ const EditInstitution = ({
     <EditInstitutionForm
       form={form}
       institutionId={institutionId}
-      organizationId={organizationId}
       onClose={() => onClose()}
-      currentPageIndex={currentPageIndex}
     />
   );
 };

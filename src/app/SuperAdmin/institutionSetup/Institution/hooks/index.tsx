@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IInstitution } from "../types/IInstitution";
+import { IInstitution, IOrganization } from "../types/IInstitution";
 const institutionEndPoints = {
   getAllInstitution: "/api/SetupControllers/all-institution",
   createInstitution: "/api/SetupControllers/AddInstitution",
@@ -9,8 +9,8 @@ const institutionEndPoints = {
   getInstitutionByOrganizationId: "/api/SetupControllers/GetInstitution",
   removeInstitution: "/api/SetupControllers/DeleteInstitution",
   updateInstitution: "/api/SetupControllers/UpdateInstitution",
+  getAllOrganization: "/api/SetupControllers/all-organization",
   filterInstitutionByDate: "/api/SetupControllers/FilterInstitutionByDate",
-  
 };
 
 const queryKey = "institution";
@@ -57,6 +57,18 @@ export const useGetAllInstitution = (params?: string) => {
     },
   });
 };
+export const useGetAllOrganization = (params?: string) => {
+  return useQuery({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const url = params
+        ? `${institutionEndPoints.getAllOrganization}${params}`
+        : `${institutionEndPoints.getAllOrganization}`;
+      const response = await api.get<IPaginationResponse<IOrganization>>(url);
+      return response.data;
+    },
+  });
+};
 
 export const useGetInstitutionById = (Id: string | null) => {
   return useQuery({
@@ -84,8 +96,7 @@ export const useAddInstitution = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["institution"] });
-      queryClient.refetchQueries({ queryKey: ["institution"] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
     onError: (error: Error) => {
       console.error("Error adding institution:", error);
@@ -94,6 +105,7 @@ export const useAddInstitution = () => {
 };
 
 export const useEditInstitution = () => {
+  const queryClient = useQueryClient();
   return useMutation<
     IInstitution,
     Error,
@@ -109,10 +121,17 @@ export const useEditInstitution = () => {
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+    },
+    onError: (error: Error) => {
+      console.error("Error updating institution:", error);
+    },
   });
 };
 
 export const useRemoveInstitution = () => {
+  const queryClient = useQueryClient();
   return useMutation<IInstitution, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IInstitution> => {
       if (!Id) {
@@ -122,6 +141,12 @@ export const useRemoveInstitution = () => {
         `${institutionEndPoints.removeInstitution}/${Id}`
       );
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+    },
+    onError: (error: Error) => {
+      console.error("Error deleting institution:", error);
     },
   });
 };

@@ -253,13 +253,13 @@ const AllParentForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{Parent.fullName}</td>
-                        <td className="py-3 px-4">{Parent.email}</td>
-                        <td className="py-3 px-4">{Parent.phoneNumber}</td>
-                        <td className="py-3 px-4">{Parent.occupation}</td>
-                        <td className="py-3 px-4">{Parent.address}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">{index + 1}</td>
+                        <td className="py-1 px-4">{Parent.fullName}</td>
+                        <td className="py-1 px-4">{Parent.email}</td>
+                        <td className="py-1 px-4">{Parent.phoneNumber}</td>
+                        <td className="py-1 px-4">{Parent.occupation}</td>
+                        <td className="py-1 px-4">{Parent.address}</td>
+                        <td className="py-1 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (
                               <DeleteButton

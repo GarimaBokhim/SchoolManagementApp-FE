@@ -18,3 +18,14 @@ export interface IFilterInstitutionByDate {
   endDate: string;
   name: string;
 }
+
+export interface IOrganization {
+  id: string;
+  name: string;
+  address: string;
+  email: string;
+  phoneNumber: string;
+  mobileNumber: string;
+  logo: string;
+  province: number;
+}

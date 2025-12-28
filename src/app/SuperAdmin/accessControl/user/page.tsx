@@ -1,7 +1,7 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import { AllUsers } from "./pages/All";
 
-const Users = () => {
+const UserPage = () => {
   return (
     <div>
       <LayoutWrapper title="User">
@@ -10,4 +10,4 @@ const Users = () => {
     </div>
   );
 };
-export default Users;
+export default UserPage;

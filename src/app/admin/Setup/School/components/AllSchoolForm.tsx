@@ -47,8 +47,7 @@ const AllSchoolForm = () => {
   }, [navigate]);
 
   const query = `?pagesize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const { data: allSchool, refetch } = useGetAllSchool(query);
-
+  const { data: allSchool } = useGetAllSchool(query);
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
@@ -60,7 +59,6 @@ const AllSchoolForm = () => {
   const handleDelete = async (id: string | undefined) => {
     try {
       await deleteCompany.mutateAsync(id);
-      refetch();
     } catch (error) {
       console.error("Error deleting:", error);
     }
@@ -69,10 +67,6 @@ const AllSchoolForm = () => {
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
-
-  useEffect(() => {
-    refetch();
-  }, [paginationParams]);
 
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
@@ -102,6 +96,7 @@ const AllSchoolForm = () => {
                   <th className="px-4 py-3 text-left">Name</th>
                   <th className="px-4 py-3 text-left">Address</th>
                   <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Class</th>
                   <th className="px-4 py-3 text-left">Short Name</th>
                   <th className="px-4 py-3 text-left">Contact Number</th>
                   <th className="px-4 py-3 text-left">Contact Person</th>
@@ -121,6 +116,7 @@ const AllSchoolForm = () => {
                       <td className="py-3 px-4">{School.name}</td>
                       <td className="py-3 px-4">{School.address}</td>
                       <td className="py-3 px-4">{School.email}</td>
+
                       <td className="py-3 px-4">{School.shortName}</td>
                       <td className="py-3 px-4">{School.contactNumber}</td>
                       <td className="py-3 px-4">{School.contactPerson}</td>

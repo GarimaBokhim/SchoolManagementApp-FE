@@ -38,7 +38,6 @@ const AllUserForm = () => {
     refetch,
     isLoading,
   } = useGetFilterUserByDate(params || "");
-  console.log(params);
   useEffect(() => {
     if (!localStorage.getItem("token")) navigate.push("/");
   }, [navigate]);

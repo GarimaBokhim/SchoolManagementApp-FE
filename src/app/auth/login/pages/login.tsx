@@ -21,14 +21,13 @@ import {
 import { IUserRole } from "../types/userRoles";
 import dashboardPic from "../../../../../public/assets/dashboard.png";
 import attendanceQr from "../../../../../public/assets/scan.png";
-import { StaticImageData } from "next/image";
+import Image, { StaticImageData } from "next/image";
 
 const LoginForm = () => {
   const form = useForm<ILoginType>({
     defaultValues: { email: "", password: "" },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [showPassword, setShowPassword] = useState(false);
   const [toggleImg, setToggleImg] = useState<StaticImageData>(dashboardPic);
   const router = useRouter();
   const login = useLogin();
@@ -220,10 +219,11 @@ const LoginForm = () => {
               Log in to access your CRM dashboard and manage your team.
             </p>
             <div className="flex justify-center">
-              <img
-                src={toggleImg.src}
+              <Image
+                src={toggleImg}
                 alt="Dashboard Preview"
-                className="rounded-xl shadow-2xl border border-white/20 mb-6 "
+                className="rounded-xl shadow-2xl border border-white/20 mb-6"
+                priority
               />
             </div>
             <span className="">

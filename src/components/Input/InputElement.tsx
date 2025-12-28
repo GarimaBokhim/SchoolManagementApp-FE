@@ -29,6 +29,8 @@ interface IInput {
   [key: string]: any;
   type?: string;
   rules?: RegisterOptions;
+  max?: number;
+  min?: number;
   maxDecimals?: number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -47,6 +49,8 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
       isReport = false,
       value,
       className,
+      max,
+      min,
       accept,
       defaultValue,
       onChangeSelectedDate,
@@ -68,7 +72,6 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
       if (inputType === "number") {
         const raw = e.target.value;
         const regex = new RegExp(`^(\\d+)?(\\.\\d{0,${maxDecimals}})?$`);
-
         if (raw === "" || regex.test(raw)) {
           onChange?.(e);
         }
@@ -76,7 +79,14 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
         onChange?.(e);
       }
     };
-    const { ref: registerRef, ...rest } = form.register(name);
+    const {
+      ref: registerRef,
+      onChange: rhfOnChange,
+      ...rest
+    } = form.register(name, {
+      required,
+    });
+
     return (
       <div className={`font-poppins`}>
         {preview ? (
@@ -117,8 +127,9 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   {...form.register(name, { required: required })}
                   placeholder={placeholder}
                   readOnly={readOnly}
-                  min={inputType === "number" ? 0 : undefined}
-                  className={`w-full p-2 py-1.5  border ${
+                  min={inputType === "number" ? min : 0}
+                  max={max}
+                  className={`w-full p-2 py-1.2  border ${
                     form.formState.errors[name]
                       ? "border-red-500"
                       : "border-gray-400"
@@ -130,7 +141,10 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   defaultValue={defaultValue}
                   inputMode={inputType === "number" ? "decimal" : undefined}
                   value={value}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    rhfOnChange(e);
+                  }}
                   onKeyDown={(e) => {
                     if (inputType === "number" && e.key === "-") {
                       e.preventDefault();

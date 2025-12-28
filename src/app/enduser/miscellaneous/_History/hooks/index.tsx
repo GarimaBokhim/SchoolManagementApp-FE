@@ -1,117 +1,116 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IParent } from "../types/IParents";
-const ParentEndPoints = {
-  getAllParents: "/api/Student/all-Parents",
-  createParents: "/api/Student/AddParent",
-  removeParents: "/api/Student/DeleteParents",
-  updateParents: "/api/Student/UpdateParents",
-  getParentsById: "/api/Student/GetParentsBy",
-  filterParentByDate: "/api/Student/FilterParents",
+import { IHistory } from "../types/IHistory";
+const HistoryEndPoints = {
+  getAllHistory: "/api/SchoolAssetsControllers/all-History",
+  createHistory: "/api/SchoolAssetsControllers/AddSchoolItemHistory",
+  removeHistory: "/api/SchoolAssetsControllers/DeleteHistory",
+  updateHistory: "/api/SchoolAssetsControllers/UpdateHistory",
+  getHistoryById: "/api/SchoolAssetsControllers/HistoryBy",
+  filterHistoryByDate: "/api/SchoolAssetsControllers/FilterSchoolItemsHistory",
+  getHistoryByClass: "/api/SchoolAssetsControllers/GetHistoryByClass",
 };
 
-const queryKey = "Parents";
-const filterParentQueryKey = "filteredParent";
-type ParentRequest = {
+const queryKey = "History";
+const filterQueryKey = "filteredHistory";
+type HistoryRequest = {
   id?: string;
-  fullName: string;
-  parentType: 0;
-  phoneNumber: string;
-  email: string;
-  address: string;
-  occupation: string;
-  imageUrl: string;
+  schoolItemId: string;
+  previousStatus: number;
+  currentStatus: number;
+  remarks: string;
 };
 
-export const useAddParent = () => {
+export const useAddHistory = () => {
   const queryClient = useQueryClient();
-  return useMutation<IParent, Error, ParentRequest>({
-    mutationFn: async (data: ParentRequest): Promise<IParent> => {
-      console.log("Add Parent", data);
-      const response = await api.post(ParentEndPoints.createParents, data);
 
+  return useMutation<IHistory, Error, HistoryRequest>({
+    mutationFn: async (formData: HistoryRequest): Promise<IHistory> => {
+      const response = await api.post(HistoryEndPoints.createHistory, formData);
       return response.data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
+
     onError: (error) => {
-      console.error("Error adding Parent:", error);
+      console.error("Error adding History:", error);
     },
   });
 };
 
-export const useRemoveParent = () => {
+export const useRemoveHistory = () => {
   const queryClient = useQueryClient();
-  return useMutation<IParent, Error, string | undefined>({
-    mutationFn: async (Id: string | undefined): Promise<IParent> => {
+  return useMutation<IHistory, Error, string | undefined>({
+    mutationFn: async (Id: string | undefined): Promise<IHistory> => {
       if (!Id) {
-        throw new Error("Id is required to remove a Parent");
+        throw new Error("Id is required to remove a History");
       }
       const response = await api.delete(
-        `${ParentEndPoints.removeParents}/${Id}`
+        `${HistoryEndPoints.removeHistory}/${Id}`
       );
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
   });
 };
 
-export const useEditParent = () => {
+export const useEditHistory = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    IParent,
+    IHistory,
     Error,
-    { id: string | unknown; data: ParentRequest }
+    { id: string | unknown; data: HistoryRequest }
   >({
-    mutationFn: async ({ id, data }): Promise<IParent> => {
+    mutationFn: async ({ id, data }): Promise<IHistory> => {
       if (!id) {
-        throw new Error("Ïd is required to edit Parent");
+        throw new Error("Ïd is required to edit History");
       }
       const response = await api.patch(
-        `${ParentEndPoints.updateParents}/${id}`,
+        `${HistoryEndPoints.updateHistory}/${id}`,
         data
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [filterParentQueryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });
 };
 
-export const useGetParentById = (ParentId: string) => {
+export const useGetHistoryById = (HistoryId: string) => {
   return useQuery({
-    queryKey: [queryKey, ParentId],
-    queryFn: async (): Promise<IParent> => {
-      if (!ParentId) {
-        throw new Error("Id is required to get a Parent");
+    queryKey: [queryKey, HistoryId],
+    queryFn: async (): Promise<IHistory> => {
+      if (!HistoryId) {
+        throw new Error("Id is required to get a History");
       }
-      const response = await api.get<IParent>(
-        `${ParentEndPoints.getParentsById}/${ParentId}`
+      const response = await api.get<IHistory>(
+        `${HistoryEndPoints.getHistoryById}/${HistoryId}`
       );
       return response.data;
     },
-    enabled: !!ParentId,
+    enabled: !!HistoryId,
     staleTime: 0,
     retry: false,
   });
 };
 
-export const useGetAllParents = (params?: string) => {
+export const useGetAllHistory = (params?: string) => {
   return useQuery({
     queryKey: [queryKey, params],
     queryFn: async () => {
       const url = params
-        ? `${ParentEndPoints.getAllParents}${params}`
-        : `${ParentEndPoints.getAllParents}`;
-      const response = await api.get<IPaginationResponse<IParent>>(url);
+        ? `${HistoryEndPoints.getAllHistory}${params}`
+        : `${HistoryEndPoints.getAllHistory}`;
+      const response = await api.get<IPaginationResponse<IHistory>>(url);
       return (
         response.data ?? {
           data: [],
@@ -124,14 +123,14 @@ export const useGetAllParents = (params?: string) => {
   });
 };
 
-export const useFilterParentByDate = (params?: string) => {
+export const useFilterHistoryByDate = (params?: string) => {
   return useQuery({
-    queryKey: [filterParentQueryKey, params, queryKey],
+    queryKey: [filterQueryKey, params, queryKey],
     queryFn: async () => {
       const url = params
-        ? `${ParentEndPoints.filterParentByDate}${params}`
-        : ParentEndPoints.filterParentByDate;
-      const response = await api.get<IPaginationResponse<IParent>>(url);
+        ? `${HistoryEndPoints.filterHistoryByDate}${params}`
+        : HistoryEndPoints.filterHistoryByDate;
+      const response = await api.get<IPaginationResponse<IHistory>>(url);
       return response.data;
     },
     staleTime: 0,

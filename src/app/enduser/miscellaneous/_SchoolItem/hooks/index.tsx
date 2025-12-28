@@ -9,6 +9,7 @@ const SchoolItemEndPoints = {
   updateSchoolItems: "/api/SchoolAssetsControllers/UpdateSchoolItems",
   getSchoolItemsById: "/api/SchoolAssetsControllers/SchoolItemsBy",
   filterSchoolItemByDate: "/api/SchoolAssetsControllers/FilterSchoolItems",
+  getSchoolItemsByClass: "/api/SchoolAssetsControllers/GetSchoolItemByClass",
 };
 
 const queryKey = "SchoolItems";
@@ -20,7 +21,7 @@ type SchoolItemRequest = {
   itemStatus: number;
   itemCondition: number;
   receivedDate: Date;
-  estimatedValue: string;
+  estimatedValue: number;
   quantity: number;
   unitType: number;
 };
