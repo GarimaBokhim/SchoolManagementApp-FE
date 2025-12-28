@@ -14,9 +14,9 @@ const AddSubject = ({ visible, onClose }: Props) => {
       Id: "",
       name: "",
       code: "",
-      creditHours: 0,
       description: "",
       classId: "",
+      examId: "",
     },
 
     // resolver: yupResolver(SubjectValidator),

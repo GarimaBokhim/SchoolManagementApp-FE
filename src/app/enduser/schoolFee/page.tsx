@@ -1,10 +1,10 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import AllStudent from "../../(StudentManagement)/Student/pages/All";
+import AllFeeType from "./_FeeType/pages/All";
 
 export default function DashboardPageEndUser() {
   return (
-    <LayoutWrapper title="Student">
-      <AllStudent />
+    <LayoutWrapper title="School Fee">
+      <AllFeeType />
     </LayoutWrapper>
   );
 }

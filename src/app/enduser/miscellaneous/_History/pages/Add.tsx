@@ -1,25 +1,23 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { IParent } from "../types/IParents";
-import AddParentForm from "../components/AddParentForm";
+import AddHistoryForm from "../_components/AddHistory";
+import { IHistory } from "../types/IHistory";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
-const AddParent = ({ visible, onClose }: Props) => {
-  const form = useForm<IParent>({
+const AddHistory = ({ visible, onClose }: Props) => {
+  const form = useForm<IHistory>({
     defaultValues: {
       id: "",
-      fullName: "",
-      parentType: 0,
-      email: "",
-      phoneNumber: "",
-      imageUrl: "",
-      address: "",
+      schoolItemId: "",
+      previousStatus: 0,
+      currentStatus: 0,
+      remarks: "",
     },
 
-    // resolver: yupResolver(ParentValidator),
+    // resolver: yupResolver(StudentValidator),
   });
   const handleOnClose = () => {
     if (onClose) onClose();
@@ -38,9 +36,9 @@ const AddParent = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddParentForm form={form} onClose={handleOnClose} />
+        <AddHistoryForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
 };
-export default AddParent;
+export default AddHistory;

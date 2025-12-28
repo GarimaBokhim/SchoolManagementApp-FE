@@ -167,6 +167,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     ),
     Academics: BookOpen,
     "Fee and Accounting": Banknote,
+    Finance: Banknote,
     Miscellaneous: GiftIcon,
     "Attendance Management": Hand,
     "Exam and Grading": BookCheck,

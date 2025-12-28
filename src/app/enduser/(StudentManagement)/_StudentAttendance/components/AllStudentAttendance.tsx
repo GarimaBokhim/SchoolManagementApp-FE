@@ -226,30 +226,30 @@ const AllStudentAttendanceForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">{index + 1}</td>
+                        <td className="py-1 px-4">
                           {`${StudentAttendance.attendanceDate}`}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">
                           {
                             allStudents?.Items.find(
                               (i) => i.id === StudentAttendance.studentId
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">
                           {StudentAttendance.attendanceStatus === 0
                             ? "Present"
                             : "Absent"}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">
                           {
                             allAcademicTeam?.Items.find(
                               (i) => i.id === StudentAttendance.academicTeamId
                             )?.fullName
                           }
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">
                           {StudentAttendance.remarks}
                         </td>
                       </tr>

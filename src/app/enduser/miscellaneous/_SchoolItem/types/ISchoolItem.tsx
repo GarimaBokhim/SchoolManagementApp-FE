@@ -5,9 +5,10 @@ export interface ISchoolItem {
   itemStatus: number;
   itemCondition: number;
   receivedDate: Date;
-  estimatedValue: string;
+  estimatedValue: number;
   quantity: number;
   unitType: number;
+  fiscalYearId: string;
 }
 
 export interface IFilterSchoolItem {

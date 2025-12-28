@@ -10,7 +10,7 @@ import { useAddExamResult } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetStudentByClass } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
@@ -26,7 +26,9 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
   const { control } = form;
-
+  const [selectedFullMarks, setSelectedFullMarks] = useState<{
+    [key: number]: number;
+  }>({});
   const { fields, append, remove } = useFieldArray({
     control,
     name: "marksObtained",
@@ -65,7 +67,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
       Toast.error(errorMsg);
     }
   };
-
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
       <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
@@ -142,7 +143,10 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
             <div className="mt-10">
               <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
-              {fields.map((field, index) => (
+              {fields.map((field, index: number) => (
+                // const selectedSubject = allSubject?.find(
+                //   (subj) => subj.id === selectedSubjectIds[index]
+                // );
                 <div
                   key={field.id}
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md mb-4 relative"
@@ -172,6 +176,10 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       form.setValue(`marksObtained.${index}.subjectId`, id, {
                         shouldValidate: true,
                       });
+                      setSelectedFullMarks((prev) => ({
+                        ...prev,
+                        [index]: subject?.fullMarks || 100,
+                      }));
                       setSelectedSubjectIds((prev) => ({
                         ...prev,
                         [index]: id,
@@ -185,11 +193,24 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       label="Marks Obtained"
                       form={form}
                       name={`marksObtained.${index}.marksObtained`}
-                      type="number"
+                      inputType="number"
                       placeholder="Enter marks"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const value = Number(e.target.value);
+                        const max = selectedFullMarks[index];
+                        if (value > max) {
+                          alert(`Obtained Marks cannot exceed ${max}`);
+                          form.setValue(
+                            `marksObtained.${index}.marksObtained`,
+                            max,
+                            { shouldValidate: true }
+                          );
+
+                          return;
+                        }
+                      }}
                     />
                   </div>
-
                   <button
                     type="button"
                     onClick={() => {

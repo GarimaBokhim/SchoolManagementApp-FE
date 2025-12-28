@@ -1,39 +1,31 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { IInstitution } from "../types/IInstitution";
-import { useEditInstitution, useGetAllInstitution } from "../hooks";
+import { useEditInstitution, useGetAllOrganization } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { X } from "lucide-react";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useState } from "react";
 
 type Props = {
   form: UseFormReturn<IInstitution>;
   institutionId: string;
   onClose: () => void;
-  currentPageIndex: number;
-  organizationId: string;
 };
-const EditInstitutionForm = ({
-  form,
-  onClose,
-  institutionId,
-  currentPageIndex,
-}: Props) => {
+const EditInstitutionForm = ({ form, onClose, institutionId }: Props) => {
   const editInstitution = useEditInstitution();
-  const pageSize = 5;
-  const query = `?pagesize=${pageSize}&pageIndex=${currentPageIndex}&IsPagination=true`;
-  const { refetch } = useGetAllInstitution(query);
+  const [organizationId, setSelectedOrganizationId] = useState("");
+  const { data: organizations } = useGetAllOrganization();
   const onSubmit: SubmitHandler<IInstitution> = async (form) => {
     try {
       await editInstitution.mutateAsync({
         id: institutionId,
         data: form,
       });
-
       Toast.success("Successfully Updated Module");
-      refetch();
       onClose();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
@@ -51,7 +43,7 @@ const EditInstitutionForm = ({
         <fieldset className="bg-white  dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              sUpdate Institution
+              Update Institution
             </h1>
             <button
               type="button"
@@ -149,10 +141,11 @@ const EditInstitutionForm = ({
                   />
                 </div>
 
-                {/* <div className="mb-4">
+                <div className="mb-4">
                   <AppCombobox
                     value={organizationId}
                     dropDownWidth="w-full"
+                    form={form}
                     name="organizationId"
                     dropdownPositionClass="absolute"
                     label="Organization"
@@ -172,7 +165,7 @@ const EditInstitutionForm = ({
                     getLabel={(g) => g?.name || ""}
                     getValue={(g) => g?.id ?? ""}
                   />
-                </div> */}
+                </div>
 
                 <div className="flex items-center mb-2">
                   <InputElement

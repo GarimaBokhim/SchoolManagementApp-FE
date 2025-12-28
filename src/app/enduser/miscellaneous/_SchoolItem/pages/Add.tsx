@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
-import AddSchoolItemForm from "../_components/AddSchoolItemForm";
+import AddSchoolItemForm from "../_components/AddSchoolItem";
 import { ISchoolItem } from "../types/ISchoolItem";
 
 interface Props {
@@ -12,6 +12,14 @@ const AddSchoolItem = ({ visible, onClose }: Props) => {
     defaultValues: {
       id: "",
       name: "",
+      contributorId: "",
+      itemStatus: 0,
+      itemCondition: 0,
+      receivedDate: new Date(),
+      estimatedValue: 0,
+      quantity: 0,
+      unitType: 0,
+      fiscalYearId: "",
     },
 
     // resolver: yupResolver(StudentValidator),

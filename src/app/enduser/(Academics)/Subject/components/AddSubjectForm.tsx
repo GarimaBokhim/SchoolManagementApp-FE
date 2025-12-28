@@ -11,6 +11,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllClass } from "../../Class/hooks";
 import { useState } from "react";
+import { useGetAllExams } from "../../Exam/hooks";
 type Props = {
   form: UseFormReturn<ISubject>;
   onClose: () => void;
@@ -19,6 +20,8 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
   const addSubject = useAddSubject();
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
+  const { data: allExam } = useGetAllExams();
+  const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const handleClose = () => {
     form.reset();
@@ -74,7 +77,7 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 label="Credit Hours"
                 form={form}
                 name="creditHours"
-                type="number"
+                inputType="number"
                 placeholder="Enter Credit Hours"
                 required
               />
@@ -106,6 +109,44 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 }}
                 getLabel={(g) => g?.name ?? ""}
                 getValue={(g) => g?.id ?? ""}
+              />
+              <AppCombobox
+                value={selectedExamId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Exam"
+                name="examId"
+                form={form}
+                required
+                options={allExam?.Items}
+                selected={
+                  allExam?.Items?.find((g) => g.id === selectedExamId) || null
+                }
+                onSelect={(group) => {
+                  if (group) {
+                    setSelectedExamId(group.id || "");
+                  } else {
+                    setSelectedExamId("");
+                  }
+                }}
+                getLabel={(g) => g?.name ?? ""}
+                getValue={(g) => g?.id ?? ""}
+              />
+              <InputElement
+                label="Full Marks"
+                form={form}
+                name="fullMarks"
+                inputType="number"
+                placeholder="Enter Full Marks"
+                required
+              />
+              <InputElement
+                label="Pass Marks"
+                form={form}
+                inputType="number"
+                name="passMarks"
+                placeholder="Enter Pass Marks"
+                required
               />
             </div>
             <div className="flex justify-center mt-6">

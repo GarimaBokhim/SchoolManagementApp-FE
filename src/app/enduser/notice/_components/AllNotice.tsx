@@ -60,7 +60,7 @@ const AllNoticeForm = () => {
           setSelectedNotice(notice);
           setViewNotice(true);
         }}
-        className="!bg-blue-500 hover:!bg-blue-600 !p-2"
+        className="!bg-blue-500 hover:!bg-blue-600 "
       />
     );
   };
@@ -254,16 +254,16 @@ const AllNoticeForm = () => {
                 <table className="w-full border-collapse bg-white dark:bg-[#3a3a3a] rounded-xl overflow-hidden">
                   <thead>
                     <tr className="bg-gray-100 dark:bg-[#2f2f2f] text-left">
-                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
                         Notice Title
                       </th>
-                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
                         Short Description
                       </th>
-                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
                         Status
                       </th>
-                      <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200 text-right">
+                      <th className="px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 text-right">
                         Quick Actions
                       </th>
                     </tr>
@@ -276,7 +276,7 @@ const AllNoticeForm = () => {
                           key={index}
                           className="border-t border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#444] transition"
                         >
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-2">
                             <div className="flex flex-col gap-1 max-w-[220px]">
                               <h3 className="text-sm font-semibold text-gray-800 dark:text-white truncate">
                                 {notice.title}
@@ -295,12 +295,12 @@ const AllNoticeForm = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-2">
                             <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 max-w-md">
                               {notice.shortDescription}
                             </p>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-2">
                             <div className="flex items-center gap-3">
                               <span
                                 className={`text-xs font-medium ${
@@ -340,9 +340,7 @@ const AllNoticeForm = () => {
                               </span>
                             </div>
                           </td>
-
-                          {/* Quick Actions */}
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-6 py-2 text-right">
                             <EditButton button={buttonElement(notice)} />
                           </td>
                         </tr>
