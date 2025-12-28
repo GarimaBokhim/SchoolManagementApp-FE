@@ -1,17 +1,10 @@
-import { defineConfig } from 'eslint/config'
 import nextPlugin from '@next/eslint-plugin-next'
- 
-const eslintConfig = defineConfig([
-  // Your other configurations...
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    plugins: {
-      '@next/next': nextPlugin,
-    },
-    rules: {
-      ...nextPlugin.configs.recommended.rules,
-    },
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', '@next/next'],
+  extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
+  rules: {
+...nextPlugin.configs.recommended.rules,
   },
-])
- 
-export default eslintConfig
+}
