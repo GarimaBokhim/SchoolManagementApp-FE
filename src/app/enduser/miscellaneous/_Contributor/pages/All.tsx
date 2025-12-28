@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import AllContributorForm from "../_components/AllContributor";
+import AllSchoolItemForm from "../../_SchoolItem/_components/AllSchoolItem";
+import AllHistoryForm from "../../_History/_components/AllHIstory";
 const AllContributor = () => {
   const exam = [
     { id: "contributor", label: "Contributor", color: "gray" },
@@ -12,11 +14,11 @@ const AllContributor = () => {
   const renderReport = () => {
     switch (activeReport) {
       case "schoolItem":
-        return <div className=" text-center">{/* <AllParent /> */}</div>;
+        return <div className=" text-center">{<AllSchoolItemForm />}</div>;
       case "history":
         return (
           <div className=" text-center">
-            {/* <AllContributorAttendance /> */}
+            <AllHistoryForm />
           </div>
         );
       default:

@@ -5,6 +5,9 @@ export interface ISubject {
   creditHours: number;
   description: string;
   classId: string;
+  examId: string;
+  fullMarks: number;
+  passMarks: number;
 }
 
 export interface IFilterSubjectByDate {
@@ -16,4 +19,5 @@ export interface IFilterSubjectByDate {
 export interface ISubjectByClass {
   id: string;
   subjectName: string;
+  fullMarks: number;
 }

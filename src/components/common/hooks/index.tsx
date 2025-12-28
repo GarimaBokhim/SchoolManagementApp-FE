@@ -12,8 +12,6 @@ const CommonEndPoints = {
 
 const queryKey = "Province";
 const queryKeyForDistrict = "District";
-const queryKeyForMunicipality = "Municipality";
-const queryKeyForVdc = "VDC";
 export const useGetAllProvince = (params?: string) => {
   return useQuery({
     queryKey: [queryKey],
@@ -74,7 +72,7 @@ export const useGetMunicipalityByDistrict = (
   DistrictId: number | undefined
 ) => {
   return useQuery({
-    queryKey: [queryKeyForMunicipality, DistrictId],
+    queryKey: [queryKey, DistrictId],
     queryFn: async (): Promise<IMunicipality[]> => {
       if (!DistrictId) {
         throw new Error("DistrictId is required to get a Municipality");
@@ -92,7 +90,7 @@ export const useGetMunicipalityByDistrict = (
 
 export const useGetVDCByDistrict = (DistrictId: number | undefined) => {
   return useQuery({
-    queryKey: [queryKeyForVdc, DistrictId],
+    queryKey: [queryKey, DistrictId],
     queryFn: async (): Promise<IVdc[]> => {
       if (!DistrictId) {
         throw new Error("DistrictId is required to get a Municipality");

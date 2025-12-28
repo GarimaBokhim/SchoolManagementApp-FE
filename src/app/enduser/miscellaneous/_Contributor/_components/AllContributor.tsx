@@ -111,6 +111,7 @@ const AllContributorForm = () => {
   const onClearClick = () => {
     refetch();
     setParams("");
+    setSelectedContributorName("");
     formRef.current?.handleClear();
     form.reset();
   };
@@ -157,8 +158,8 @@ const AllContributorForm = () => {
                     value={selectedContributorName}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Parent Name"
-                    name="firstName"
+                    label="Contributors"
+                    name="name"
                     form={form}
                     options={allContributor?.Items}
                     selected={

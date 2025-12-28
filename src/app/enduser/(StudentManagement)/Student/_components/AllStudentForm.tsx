@@ -24,6 +24,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -70,6 +71,7 @@ const AllStudentForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  const { data: allClass } = useGetAllClass();
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError();
     try {
@@ -215,6 +217,9 @@ const AllStudentForm = () => {
                   <th className="px-4 py-3 text-left hidden lg:table-cell">
                     Email
                   </th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
+                    Class
+                  </th>
                   <th className="px-4 py-3 text-left hidden xl:table-cell">
                     Address
                   </th>
@@ -244,27 +249,34 @@ const AllStudentForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{student.firstName}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-1 px-4">{index + 1}</td>
+                        <td className="py-1 px-4">{student.firstName}</td>
+                        <td className="py-1 px-4">
                           {student.registrationNumber}
                         </td>
-                        <td className="py-3 px-4 hidden md:table-cell">
+                        <td className="py-1 px-4 hidden md:table-cell">
                           {student.genderStatus === 0 ? "M" : "F"}
                         </td>
-                        <td className="py-3 px-4 hidden lg:table-cell">
+                        <td className="py-1 px-4 hidden lg:table-cell">
                           {student.email}
                         </td>
-                        <td className="py-3 px-4 hidden xl:table-cell">
+                        <td className="py-1 px-4 hidden lg:table-cell">
+                          {
+                            allClass?.Items?.find(
+                              (i) => i.id === student.classId
+                            )?.name
+                          }
+                        </td>
+                        <td className="py-1 px-4 hidden xl:table-cell">
                           {student.address}
                         </td>
-                        <td className="py-3 px-4 hidden md:table-cell">
+                        <td className="py-1 px-4 hidden md:table-cell">
                           {student.phoneNumber}
                         </td>
-                        <td className="py-3 px-4 hidden md:table-cell">
+                        <td className="py-1 px-4 hidden md:table-cell">
                           {`${student.dateOfBirth}`}
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-1 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
                             {canDelete && (
                               <DeleteButton

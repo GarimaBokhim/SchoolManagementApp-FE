@@ -25,7 +25,7 @@ type userRequest = {
   userName: string;
   email: string;
   password: string;
-  rolesId: string[];
+  rolesIds: string[];
   institutionId: string;
   schoolIds: string[];
 };

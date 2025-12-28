@@ -44,7 +44,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
   const { data: filteredMunicipality } =
     useGetMunicipalityByDistrict(selectedDistrictId);
-
   const handleClose = () => {
     form.reset();
   };

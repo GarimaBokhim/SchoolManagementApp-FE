@@ -3,9 +3,8 @@ export interface IUserResponse {
   userName: string;
   email: string;
   password: string;
-  rolesId: string[];
+  rolesIds: string[];
   institutionId: string;
-  schoolId?: string;
   schoolIds: string[];
 }
 export interface IUserResponseForAll {

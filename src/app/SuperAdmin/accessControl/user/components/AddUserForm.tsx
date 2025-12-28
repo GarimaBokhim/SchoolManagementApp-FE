@@ -45,12 +45,12 @@ const AddUserForm = ({ form, onClose }: Props) => {
   }
 
   useEffect(() => {
-    localStorage.setItem("SchoolId", selectedCompany ?? "");
+    localStorage.setItem("SchoolId", selectedCompany ?? "string");
   }, [selectedCompany]);
 
   useEffect(() => {
     if (selectedRole)
-      form.setValue("rolesId", [selectedRole], { shouldValidate: true });
+      form.setValue("rolesIds", [selectedRole], { shouldValidate: true });
     if (selectedInstitution)
       form.setValue("institutionId", selectedInstitution, {
         shouldValidate: true,
@@ -194,7 +194,7 @@ const AddUserForm = ({ form, onClose }: Props) => {
                   <InputElement
                     label="Institution"
                     form={form}
-                    name="InstitutionId"
+                    name="institutionId"
                     value={institutionName || ""}
                   />
                   <InstitutionFormForAddUser

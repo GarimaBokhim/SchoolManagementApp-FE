@@ -1,23 +1,26 @@
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { IInstitution } from "../types/IInstitution";
-import { useAddInstitution, useGetAllInstitution } from "../hooks";
+import { useAddInstitution, useGetAllOrganization } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { X } from "lucide-react";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useState } from "react";
 type Props = {
   form: UseFormReturn<IInstitution>;
   onClose: () => void;
 };
 const AddInstitutionForm = ({ form, onClose }: Props) => {
   const addInstitution = useAddInstitution();
-  const { refetch } = useGetAllInstitution();
+
+  const { data: organization } = useGetAllOrganization();
+  const [organizationId, setOrganizationId] = useState("");
   const onSubmit: SubmitHandler<IInstitution> = async (data) => {
     try {
       await addInstitution.mutateAsync(data);
       Toast.success("Successfully added Institution");
-      refetch();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
         Toast.error(error.response?.data);
@@ -131,11 +134,12 @@ const AddInstitutionForm = ({ form, onClose }: Props) => {
                     customStyle="text-base px-4 py-2 h-12"
                   />
                 </div>
-                {/* 
+
                 <div className="mb-4">
                   <AppCombobox
                     value={organizationId}
                     dropDownWidth="w-full"
+                    form={form}
                     name="organizationId"
                     dropdownPositionClass="absolute"
                     label="Organization"
@@ -155,7 +159,7 @@ const AddInstitutionForm = ({ form, onClose }: Props) => {
                     getLabel={(g) => g?.name || ""}
                     getValue={(g) => g?.id ?? ""}
                   />
-                </div> */}
+                </div>
 
                 <div className="flex items-center mb-2">
                   <InputElement
