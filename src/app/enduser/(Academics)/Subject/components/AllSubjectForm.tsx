@@ -234,8 +234,8 @@ const AllSubjectForm = () => {
                   <th className="px-2 md:px-4 py-3 text-left">Subject Code</th>
                   <th className="px-2 md:px-4 py-3 text-left">Credit Hours</th>
                   <th className="px-2 md:px-4 py-3 text-left">Class</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Full Marks</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Pass Marks</th>
+                  {/* <th className="px-2 md:px-4 py-3 text-left">Full Marks</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Pass Marks</th> */}
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
@@ -270,12 +270,12 @@ const AllSubjectForm = () => {
                             )?.name
                           }
                         </td>
-                        <td className="py-1 px-2 md:px-4">
+                        {/* <td className="py-1 px-2 md:px-4">
                           {Subject.fullMarks}
                         </td>
                         <td className="py-1 px-2 md:px-4">
                           {Subject.passMarks}
-                        </td>
+                        </td> */}
                         <td className="py-1 px-2 md:px-4">
                           <div className="flex justify-center flex-wrap gap-1 md:gap-2">
                             {canDelete && (
