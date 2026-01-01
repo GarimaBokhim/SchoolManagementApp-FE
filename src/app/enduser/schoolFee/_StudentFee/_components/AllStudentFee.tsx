@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -19,6 +19,8 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddStudentFee from "../pages/Add";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
+import { Eye } from "lucide-react";
+import ViewStudentFeeForm from "./filterstudentsfeedetail";
 const AllStudentFeeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -35,6 +37,8 @@ const AllStudentFeeForm = () => {
     setPaginationParams(params);
   };
   const [addModal, setAddModal] = useState(false);
+  const [viewModal, setViewModal] = useState(false);
+
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -42,6 +46,8 @@ const AllStudentFeeForm = () => {
   const { data: allStudent } = useGetAllStudents();
   const { data: allFeeStructure } = useGetAllFeeStructure();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
+  const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
+
   const fullQuery = query + (params || "");
 
   const {
@@ -199,12 +205,12 @@ const AllStudentFeeForm = () => {
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left">S.N</th>
-                  <th className="px-4 py-3 text-left">Student</th>
-                  <th className="px-4 py-3 text-left">Fee Structure</th>
-                  <th className="px-4 py-3 text-left">Total Amount</th>
-                  <th className="px-4 py-3 text-left">Discount</th>
-                  <th className="px-4 py-3 text-left">Paid Amount</th>
+                  <th className="px-4 py-3 text-center">S.N</th>
+                  <th className="px-4 py-3 text-center">Student</th>
+                  <th className="px-4 py-3 text-center">Fee Structure</th>
+                  <th className="px-4 py-3 text-center">Total Amount</th>
+                  <th className="px-4 py-3 text-center">Discount</th>
+                  <th className="px-4 py-3 text-center">Paid Amount</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -250,20 +256,19 @@ const AllStudentFeeForm = () => {
                           {StudentFee.paidAmount}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <div className="flex justify-center gap-2 flex-wrap">
-                            {/* {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    StudentFee.id ? StudentFee.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this StudentFee?"
-                              />
-                            )} */}
-                          </div>
-                        </td>
+                <div className="flex justify-center gap-2">
+                  <ButtonElement
+                  text="view"
+                    icon={<Eye color="white" size={15} />} // only icon
+                    onClick={() => {
+                      setSelectedStudentFee(StudentFee);
+                      setViewModal(true);
+                    }}
+                    className="!bg-teal-500 hover:!bg-teal-600 p-2 rounded-full"
+                  />
+                </div>
+              </td>
+
                       </tr>
                     )
                   )
@@ -298,6 +303,20 @@ const AllStudentFeeForm = () => {
         )}
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
       </div>
+        {viewModal && (
+          <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[90vh] p-6 rounded-xl overflow-auto shadow-lg relative">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                onClick={() => setViewModal(false)}
+              >
+                Close
+              </button>
+              <ViewStudentFeeForm  />
+            </div>
+          </div>
+        )}
+
     </>
   );
 };
