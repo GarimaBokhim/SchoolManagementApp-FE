@@ -17,9 +17,15 @@ type ExamRequest = {
   id?: string;
   name: string;
   examDate: Date;
-  totalMarks: number;
-  passingMarks: number;
   isfinalExam: boolean;
+  classId: string;
+  examSubjects?:IExamSubjects[];
+}
+type IExamSubjects={
+
+  subjectId:string;
+  passMarks:number;
+  fullMarks:number;
 };
 
 export const useAddExam = () => {
