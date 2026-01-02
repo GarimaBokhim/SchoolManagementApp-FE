@@ -2,10 +2,14 @@ export interface IExam {
   id?: string;
   name: string;
   examDate: Date;
-  totalMarks: number;
-  passingMarks: number;
   isfinalExam: boolean;
   classId: string;
+  examSubjects?:IExamSubjects[];
+}
+export interface IExamSubjects{
+  subjectId:string;
+  passMarks:number;
+  fullMarks:number;
 }
 
 export interface IFilterExamByDate {

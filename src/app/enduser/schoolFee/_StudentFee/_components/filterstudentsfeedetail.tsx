@@ -35,7 +35,6 @@ const ViewStudentFeeForm = () => {
     refetch();
   }, []);
 
-  // ✅ YOUR EXACT onSubmit LOGIC
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
     clearError();
     try {
@@ -77,7 +76,6 @@ const ViewStudentFeeForm = () => {
     <>
       <Toaster position="top-right" />
 
-      {/* FILTER SECTION */}
       <div className="bg-white p-4 rounded-xl border mb-4">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -118,7 +116,6 @@ const ViewStudentFeeForm = () => {
         </form>
       </div>
 
-      {/* CONTENT SECTION */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>

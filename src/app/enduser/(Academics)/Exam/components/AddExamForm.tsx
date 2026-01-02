@@ -1,28 +1,41 @@
 "use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { X } from "lucide-react";
-import { IExam } from "../types/IExams";
+import { IExam, IExamSubjects } from "../types/IExams";
 import { useAddExam } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
 import { useGetAllClass } from "../../Class/hooks";
+import { useGetAllSubjects } from "../../Subject/hooks";
+
 type Props = {
   form: UseFormReturn<IExam>;
   onClose: () => void;
 };
+
 const AddExamForm = ({ form, onClose }: Props) => {
   const addExam = useAddExam();
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
+  const {data:allSubjects} = useGetAllSubjects();
   const [selectedClass, setSelectedClass] = useState<string | undefined>("");
+
+  // UseFieldArray for examSubjects
+  const { fields, append, remove } = useFieldArray({
+    name: "examSubjects",
+    control: form.control,
+  });
+
   const handleClose = () => {
     form.reset();
+    onClose();
   };
+
   const onSubmit: SubmitHandler<IExam> = async (data) => {
     clearError();
     try {
@@ -36,10 +49,11 @@ const AddExamForm = ({ form, onClose }: Props) => {
       Toast.error(errorMsg);
     }
   };
+
   return (
-    <div className=" inset-0 flex items-center justify-center  w-full h-full">
-      <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
-        <fieldset className="">
+    <div className="inset-0 flex items-center justify-center w-full h-full">
+      <div className="w-full h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
+        <fieldset>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add Exam
@@ -52,6 +66,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
               <X strokeWidth={3} />
             </button>
           </div>
+
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               <InputElement
@@ -61,20 +76,12 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 placeholder="Enter Name"
                 required
               />
-
               <InputElement
-                label="Total mark"
+                label="Exam Date"
                 form={form}
-                name="totalMarks"
-                type="number"
-                placeholder="Enter totalMarks"
-              />
-              <InputElement
-                label="Passing mark"
-                form={form}
-                name="passingMarks"
-                type="number"
-                placeholder="Enter passingMark"
+                name="examDate"
+                placeholder="Enter Exam Date"
+                inputType="date"
               />
               <AppCombobox
                 dropDownWidth="w-[25rem]"
@@ -96,6 +103,69 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 getValue={(e) => e?.id ?? ""}
               />
             </div>
+
+            <div className="mt-6">
+              <h2 className="font-semibold mb-2">Exam Subjects</h2>
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="flex items-center gap-2 mb-2"
+                >
+                  <AppCombobox
+                    dropDownWidth="w-[25rem]"
+                    label="Subject"
+                    name={`examSubjects.${index}.subjectId`}
+                    form={form}
+                    dropdownPositionClass="absolute"
+                    value={field.subjectId}
+                    options={allSubjects?.Items ?? []}
+                    selected={
+                      allSubjects?.Items?.find(
+                        (e) => e.Id === field.subjectId
+                      ) || null
+                    }
+                    onSelect={(subject) => {
+                      const id = subject?.Id ?? "";
+                      form.setValue(`examSubjects.${index}.subjectId`, id);
+                    }}
+                    getLabel={(e) => e?.name ?? ""}
+                    getValue={(e) => e?.Id ?? ""}
+                  />
+                  
+                  <InputElement
+                    label="Full Marks"
+                    form={form}
+                    name={`examSubjects.${index}.fullMarks`}
+                    placeholder="Full Marks"
+                    type="number"
+                    required
+                  />
+                  <InputElement
+                    label="Pass Marks"
+                    form={form}
+                    name={`examSubjects.${index}.passMarks`}
+                    placeholder="Pass Marks"
+                    type="number"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="text-red-500 mt-6"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => append({ subjectId: "", fullMarks: 0, passMarks: 0 })}
+                className="mt-2 px-3 py-1 bg-teal-500 text-white rounded"
+              >
+                Add Subject
+              </button>
+            </div>
+
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />
             </div>
