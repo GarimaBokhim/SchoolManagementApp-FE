@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IClass } from "../types/IClass";
+import {  IClass } from "../types/IClass";
 const ClassEndPoints = {
   getAllClass: "/api/Academics/all-SchoolClass",
   createClass: "/api/Academics/AddSchoolClass",
@@ -16,7 +16,14 @@ const filteredClassQuery = "FilteredClass";
 type ClassRequest = {
   classId?: string;
   name: string;
+  subjects?: classsubjects[];
 };
+type classsubjects = {
+  name: string;
+  code: string;
+  creditHours: number;
+  description: string;
+}
 
 export const useAddClass = () => {
   const queryClient = useQueryClient();

@@ -252,8 +252,8 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{Class.name}</td>
+                        <td className="py-3 px-4 text-center">{index + 1}</td>
+                        <td className="py-3 px-4 text-center">{Class.name}</td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (
