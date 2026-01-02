@@ -14,6 +14,8 @@ import { useState } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
 import { IFeeStructure } from "../../_FeeStructure/types/IFeeStructure";
+import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
@@ -26,6 +28,9 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const { data: allFeeStructure } = useGetAllFeeStructure();
+  const {data:allfeetype} = useGetAllFeeTypes();
+  const {data:allclassname}=useGetAllClass();
+
   const { handleError, clearError } = useErrorHandler();
   const handleClose = () => {
     onClose();
@@ -81,27 +86,41 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 getLabel={(g) => g?.firstName ?? ""}
                 getValue={(g) => g?.id ?? ""}
               />
-              <AppCombobox
-                value={selectedFeeStructureId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Fee Structure"
-                name="feeStructureId"
-                form={form}
-                required
-                options={allFeeStructure?.Items}
-                selected={
-                  allFeeStructure?.Items?.find(
-                    (g) => g.id === selectedFeeStructureId
-                  ) || null
-                }
-                onSelect={(group) => {
-                  setSelectedFeeStructureId(group?.id ?? "");
-                  if (group) setSelectedFeeStructure(group);
-                }}
-                getLabel={(g) => g?.amount?.toString() ?? ""}
-                getValue={(g) => g?.id ?? ""}
-              />
+            <AppCombobox
+  value={selectedFeeStructureId}
+  dropDownWidth="w-full"
+  dropdownPositionClass="absolute"
+  label="Fee Structure"
+  name="feeStructureId"
+  form={form}
+  required
+  options={allFeeStructure?.Items}
+  selected={
+    allFeeStructure?.Items?.find(
+      (g) => g.id === selectedFeeStructureId
+    ) || null
+  }
+  onSelect={(group) => {
+    setSelectedFeeStructureId(group?.id ?? "");
+    if (group) setSelectedFeeStructure(group);
+  }}
+  getLabel={(g) => {
+    if (!g) return "-";
+
+    const feeTypeName = allfeetype?.Items?.find(
+      (f) => f.id === g.feeTypeId
+    )?.name ?? "-";
+    const classIdname = allclassname?.Items?.find(
+      (f) => f.id === g.classId
+    )?.name ?? "-";
+    
+
+    return `${feeTypeName} (${classIdname}) - rs${g.amount ?? 0}`;
+  }}
+  getValue={(g) => g?.id ?? ""}
+/>
+
+
 
               <InputElement
                 label="Discount"
