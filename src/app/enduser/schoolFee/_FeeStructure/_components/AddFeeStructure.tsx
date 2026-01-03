@@ -5,7 +5,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 
 import { X } from "lucide-react";
-import { IFeeStructure } from "../types/IFeeStructure";
+import { IFeeStructure, NameOfMonthsEnum } from "../types/IFeeStructure";
 import { useAddFeeStructure } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
@@ -13,6 +13,7 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+
 type Props = {
   form: UseFormReturn<IFeeStructure>;
   onClose: () => void;
@@ -99,7 +100,17 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                 onSelect={(group) => {
                   setSelectedFeeType(group?.id ?? "");
                 }}
-                getLabel={(g) => g?.name ?? ""}
+                getLabel={(g) => {
+                  if (!g) return "";
+
+                  const monthName =
+                    typeof g.nameOfMonths === "number"
+                      ? NameOfMonthsEnum[g.nameOfMonths]
+                      : "";
+
+                  return `${g.name ?? ""} - ${monthName}`;
+                }}
+
                 getValue={(g) => g?.id ?? ""}
               />
               <InputElement
