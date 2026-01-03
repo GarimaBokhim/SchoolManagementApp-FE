@@ -87,41 +87,38 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 getValue={(g) => g?.id ?? ""}
               />
             <AppCombobox
-  value={selectedFeeStructureId}
-  dropDownWidth="w-full"
-  dropdownPositionClass="absolute"
-  label="Fee Structure"
-  name="feeStructureId"
-  form={form}
-  required
-  options={allFeeStructure?.Items}
-  selected={
-    allFeeStructure?.Items?.find(
-      (g) => g.id === selectedFeeStructureId
-    ) || null
-  }
-  onSelect={(group) => {
-    setSelectedFeeStructureId(group?.id ?? "");
-    if (group) setSelectedFeeStructure(group);
-  }}
-  getLabel={(g) => {
-    if (!g) return "-";
+                    value={selectedFeeStructureId}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Fee Structure"
+                    name="feeStructureId"
+                    form={form}
+                    required
+                    options={allFeeStructure?.Items}
+                    selected={
+                      allFeeStructure?.Items?.find(
+                        (g) => g.id === selectedFeeStructureId
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      setSelectedFeeStructureId(group?.id ?? "");
+                      if (group) setSelectedFeeStructure(group);
+                    }}
+                    getLabel={(g) => {
+                      if (!g) return "-";
 
-    const feeTypeName = allfeetype?.Items?.find(
-      (f) => f.id === g.feeTypeId
-    )?.name ?? "-";
-    const classIdname = allclassname?.Items?.find(
-      (f) => f.id === g.classId
-    )?.name ?? "-";
-    
+                      const feeTypeName = allfeetype?.Items?.find(
+                        (f) => f.id === g.feeTypeId
+                      )?.name ?? "-";
+                      const classIdname = allclassname?.Items?.find(
+                        (f) => f.id === g.classId
+                      )?.name ?? "-";
+                      
 
-    return `${feeTypeName} (${classIdname}) - rs${g.amount ?? 0}`;
-  }}
-  getValue={(g) => g?.id ?? ""}
-/>
-
-
-
+                      return `${feeTypeName} (${classIdname}) - rs${g.amount ?? 0}`;
+                    }}
+                    getValue={(g) => g?.id ?? ""}
+                  />
               <InputElement
                 label="Discount"
                 form={form}

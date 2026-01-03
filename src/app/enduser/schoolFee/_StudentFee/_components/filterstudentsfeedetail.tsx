@@ -12,14 +12,20 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 
 import { IFilterStudentFee, IStudentFee } from "../types/IStudentFee";
 import { useFilterStudentFeeByDate } from "../hooks";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 
 const ViewStudentFeeForm = () => {
   const { handleError, clearError } = useErrorHandler();
+const { data: allStudents } = useGetAllStudents();
+  const [selectedStudentId, setSelectedStudentId] = useState("");
 
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [params, setParams] = useState("");
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
+      studentId: "",
       startDate: "",
       endDate: "",
     },
@@ -39,6 +45,10 @@ const ViewStudentFeeForm = () => {
     clearError();
     try {
       const queryParams = [
+        formData.studentId
+          ? `studentId=${encodeURIComponent(formData.studentId)}`
+          : null,
+          console.log("studentID",formData.studentId),
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -77,43 +87,81 @@ const ViewStudentFeeForm = () => {
       <Toaster position="top-right" />
 
       <div className="bg-white p-4 rounded-xl border mb-4">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col lg:flex-row gap-4 items-end"
-        >
-          <InputElement
-            isReport
-            layout="column"
-            label="Start Date"
-            inputType="date"
-            name="startDate"
-            form={form}
-          />
+      <form
+  onSubmit={form.handleSubmit(onSubmit)}
+  className="flex flex-wrap gap-4 items-end w-full"
+>
+  {/* Student Combobox */}
+  <div className="flex-1 min-w-[200px]">
+    <AppCombobox
+      value={selectedStudentId}
+      dropDownWidth="w-full"
+      dropdownPositionClass="absolute"
+      label="Student Name"
+      name="studentId"
+      form={form}
+      required
+      options={allStudents?.Items ?? []}
+      selected={
+        allStudents?.Items?.find((s) => s.id === selectedStudentId) ?? null
+      }
+      onSelect={(student) => {
+        setSelectedStudentId(student?.id ?? "");
+        if (student) setSelectedStudent(selectedStudent);
+      }}
+      getLabel={(s) => (s ? `${s.firstName} ${s.lastName}` : "-")}
+      getValue={(s) => s?.id ?? ""}
+    />
+  </div>
 
-          <InputElement
-            isReport
-            layout="column"
-            label="End Date"
-            inputType="date"
-            name="endDate"
-            form={form}
-          />
+  {/* Start Date */}
+  <div className="flex-1 min-w-[150px]">
+    <InputElement
+      isReport
+      layout="column"
+      label="Start Date"
+      inputType="date"
+      name="startDate"
+      form={form}
+      className="w-full"
+    />
+  </div>
 
-          <ButtonElement
-            type="submit"
-            text="Filter"
-            icon={<Filter size={14} />}
-            className="!bg-emerald-600 hover:!bg-emerald-700"
-          />
+  {/* End Date */}
+  <div className="flex-1 min-w-[150px]">
+    <InputElement
+      isReport
+      layout="column"
+      label="End Date"
+      inputType="date"
+      name="endDate"
+      form={form}
+      className="w-full"
+    />
+  </div>
 
-          <ButtonElement
-            type="button"
-            text="Clear"
-            icon={<RotateCcw size={14} />}
-            onClick={onClear}
-            className="!bg-gray-500 hover:!bg-gray-600"
-          />
-        </form>
+  {/* Filter Button */}
+  <div className="min-w-[120px]">
+    <ButtonElement
+      type="submit"
+      text="Filter"
+      icon={<Filter size={14} />}
+      className="!bg-emerald-600 hover:!bg-emerald-700 w-full"
+    />
+  </div>
+
+  {/* Clear Button */}
+  <div className="min-w-[120px]">
+    <ButtonElement
+      type="button"
+      text="Clear"
+      icon={<RotateCcw size={14} />}
+      onClick={onClear}
+      className="!bg-gray-500 hover:!bg-gray-600 w-full"
+    />
+  </div>
+</form>
+
       </div>
 
       <div className="bg-white rounded-xl border overflow-x-auto">

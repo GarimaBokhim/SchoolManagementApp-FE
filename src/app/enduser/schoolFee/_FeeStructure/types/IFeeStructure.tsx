@@ -10,3 +10,18 @@ export interface IFilterFeeStructure {
   endDate: string;
   classId: string;
 }
+
+export enum NameOfMonthsEnum {
+  Baisakh = 1,
+  Jestha,
+  Ashadh,
+  Shrawan,
+  Bhadra,
+  Ashwin,
+  Kartik,
+  Mangsir,
+  Poush,
+  Magh,
+  Falgun,
+  Chaitra,
+}
