@@ -127,6 +127,7 @@ const AddClassForm = ({ form, onClose }: Props) => {
                     name: "",
                     code: "",
                     creditHours: 0,
+                    classId: "",
                     description: "",
                   })
                 }

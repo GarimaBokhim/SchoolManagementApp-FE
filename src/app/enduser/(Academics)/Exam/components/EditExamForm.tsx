@@ -25,19 +25,19 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   };
   const { data: allClass } = useGetAllClass();
   const [selectedClass, setSelectedClass] = useState<string | undefined>("");
-  useEffect(() => {
-    if (ExamData) {
-      form.reset({
-        name: ExamData?.name ?? "",
-        examDate: ExamData?.examDate ?? new Date(),
-        totalMarks: ExamData?.totalMarks ?? 0,
-        passingMarks: ExamData?.passingMarks ?? 0,
-        isfinalExam: ExamData?.isfinalExam ?? true,
-        classId: ExamData?.classId ?? "",
-      });
-      setSelectedClass(ExamData?.classId);
-    }
-  }, [ExamData]);
+ useEffect(() => {
+  if (ExamData && ExamData.examSubjects) {
+    form.reset({
+      name: ExamData?.name ?? "",
+      examDate: ExamData?.examDate ?? new Date(),
+      totalMarks: ExamData.examSubjects.length > 0 ? ExamData.examSubjects[0].fullMarks : 0,
+      passingMarks: ExamData.examSubjects.length > 0 ? ExamData.examSubjects[0].passMarks : 0,
+      isfinalExam: ExamData?.isfinalExam ?? true,
+      classId: ExamData?.classId ?? "",
+    });
+    setSelectedClass(ExamData?.classId);
+  }
+}, [ExamData]);
   const onSubmit: SubmitHandler<IExam> = async (data) => {
     clearError();
 
