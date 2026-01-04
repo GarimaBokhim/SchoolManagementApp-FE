@@ -62,12 +62,11 @@ const AllExamResultForm = () => {
   const { data: allStudent } = useGetAllStudents();
   const { data: allExam } = useGetAllExams();
   const [showStudentPrint, setShowStudentPrint] = useState(false);
-const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
- const paginationForm = useForm<SearchParam>({
-  defaultValues: {},
-});
-
+  const handleSubmit = useForm<SearchParam>({
+    defaultValues: {},
+  });
   const form = useForm<IFilterExamResultByDate>({
     defaultValues: {
       studentId: "",
@@ -367,7 +366,7 @@ const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
         {filteredExamResult?.Items && filteredExamResult?.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
-              form={paginationForm}
+              form={handleSubmit}
               pagination={{
                 currentPage: Array.isArray(filteredExamResult)
                   ? 1

@@ -11,6 +11,8 @@ const AcademicTeamEndPoints = {
   filterAcademicTeamByDate: "/api/StaffControllers/FilterAcademicTeam",
   assignClass: "/api/StaffControllers/AssignClass",
   unAssignClass: "/api/StaffControllers/UnAssignClass",
+  unAssignAllClass: "/api/StaffControllers/UnAssignAllClass",
+  allschoolclass: "/api/Academics/all-SchoolClass",
 };
 
 const queryKey = "AcademicTeams";
@@ -18,7 +20,8 @@ const filterAcademicTeamQueryKey = "filteredAcademicTeam";
 const AssignQueryKey = "assignedClass";
 type AssignRequestClass = {
   academicTeamId: string;
-  classesId: string;
+  subjectIds: string[];
+  classIds: string[];
 };
 type AcademicTeamRequest = {
   id?: string;
