@@ -23,5 +23,11 @@ export interface IFilterAcademicTeamByDate {
 
 export interface IAssignClass {
   academicTeamId: string;
+  subjectIds: string[];
+  classIds: string[];
+}
+export interface unAssignClass {
+
+  academicTeamId: string;
   classesId: string;
 }

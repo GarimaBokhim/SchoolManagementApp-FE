@@ -243,12 +243,14 @@ const AllAcademicTeamForm = () => {
                           </div>
                           {selectedTeacherId === AcademicTeam.id &&
                             isModalOpen && (
+                              <div className="relative ">
                               <AssignClass
                                 key={selectedTeacherId}
                                 teacherId={selectedTeacherId || ""}
                                 visible={isModalOpen}
                                 onClose={() => setIsModalOpen(false)}
                               />
+                            </div>
                             )}
                         </td>
                       </tr>

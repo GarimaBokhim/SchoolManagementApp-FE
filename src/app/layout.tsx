@@ -8,7 +8,7 @@ import { DateProvider } from "@/context/auth/PrimaryDateContext";
 import { ToasterProvider } from "@/components/Toast/ToasterProvider";
 
 export const metadata: Metadata = {
-  title: "Next.js Sidebar Example",
+  title: "School management system",
   description: "Sidebar with navigation",
 };
 
