@@ -319,8 +319,7 @@ const AllStudentFeeForm = () => {
         {viewModal && (
           <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
-              
-                <button
+               <button
                   className="absolute top-[-6px] right-1
                             w-10 h-10
                             flex items-center justify-center
@@ -335,12 +334,14 @@ const AllStudentFeeForm = () => {
         )}
     {viewpaymentModal && selectedStudentFee && (
   <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
-    <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[90vh] p-6 rounded-xl overflow-auto shadow-lg relative">
-      <button
-        className="absolute top-4 right-4 text-red-500 hover:text-gray-700"
+            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
+                 <button  className="absolute top-[-6px] right-1
+                            w-10 h-10
+                            flex items-center justify-center
+                            text-red-500 hover:text-gray-700"
         onClick={() => setViewpaymentModal(false)}
       >
-        X
+        <X size={24} strokeWidth={2.5} />
       </button>
 
       <PaymentRecordForm
