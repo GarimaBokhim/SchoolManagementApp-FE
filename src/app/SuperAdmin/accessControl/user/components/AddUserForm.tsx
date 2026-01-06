@@ -50,7 +50,7 @@ const AddUserForm = ({ form, onClose }: Props) => {
 
   useEffect(() => {
     if (selectedRole)
-      form.setValue("rolesIds", [selectedRole], { shouldValidate: true });
+      form.setValue("rolesId", [selectedRole], { shouldValidate: true });
     if (selectedInstitution)
       form.setValue("institutionId", selectedInstitution, {
         shouldValidate: true,
@@ -178,9 +178,10 @@ const AddUserForm = ({ form, onClose }: Props) => {
                   <InputElement
                     label="Role"
                     form={form}
-                    name="rolesId"
+                    name="rolesIds"
                     value={roleName || ""}
                   />
+
                   <AssignRoleForAddUser
                     setRoleName={setRoleName}
                     userId=""

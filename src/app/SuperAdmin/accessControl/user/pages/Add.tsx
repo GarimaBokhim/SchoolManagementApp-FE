@@ -19,7 +19,7 @@ const Add = ({ visible, onClose }: Props) => {
       userName: "",
       email: "",
       password: "",
-      rolesIds: [""],
+      rolesId: [""],
       institutionId: "",
       schoolIds: [""],
     },
@@ -32,7 +32,7 @@ const Add = ({ visible, onClose }: Props) => {
         userName: "",
         email: "",
         password: "",
-        rolesIds: [""],
+        rolesId: [""],
         institutionId: "",
         schoolIds: [""],
       });
