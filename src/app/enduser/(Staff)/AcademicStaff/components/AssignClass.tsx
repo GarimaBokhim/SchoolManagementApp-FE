@@ -3,7 +3,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetAllSubjects } from "@/app/enduser/(Academics)/Subject/hooks";
-import { useAssignClass } from "../hooks";
+import { useAssignClass, useUnassignClass } from "../hooks";
 import { IAssignClass } from "../types/IAcademicTeam";
 import { IClass } from "@/app/enduser/(Academics)/Class/types/IClass";
 import { ISubject } from "@/app/enduser/(Academics)/Subject/types/ISubjects";
@@ -24,8 +24,8 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   const assignClass = useAssignClass();
+  const unassignClass = useUnassignClass();
 
-  /* -------------------- Class Toggle -------------------- */
   const toggleClass = (classId: string) => {
     setSelectedClasses((prev) =>
       prev.includes(classId)
@@ -34,7 +34,6 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
     );
   };
 
-  /* -------------------- Subject Toggle -------------------- */
   const toggleSubject = (subjectId: string) => {
     setSelectedSubjects((prev) =>
       prev.includes(subjectId)
@@ -42,14 +41,11 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
         : [...prev, subjectId]
     );
   };
-
-  /* -------------------- Filter Subjects by Class -------------------- */
   const filteredSubjects =
     allSubject?.Items?.filter((sub: ISubject) =>
       selectedClasses.includes(sub.classId)
     ) || [];
 
-  /* -------------------- Cleanup subjects when class changes -------------------- */
   useEffect(() => {
     setSelectedSubjects((prev) =>
       prev.filter((id) =>
@@ -58,7 +54,6 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
     );
   }, [selectedClasses]);
 
-  /* -------------------- Submit -------------------- */
   const onSubmit: SubmitHandler<IAssignClass> = async () => {
     if (!selectedClasses.length) {
       console.log("Please select at least one class");

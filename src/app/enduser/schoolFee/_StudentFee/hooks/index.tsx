@@ -1,17 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IStudentFee } from "../types/IStudentFee";
+import { IPaymentRecord, IStudentFee } from "../types/IStudentFee";
 const StudentFeeEndPoints = {
   getAllStudentFees: "/api/Finance/StudentFee",
   createStudentFees: "/api/Finance/AddStudentFee",
   removeStudentFees: "/api/Finance/DeleteStudentFees",
   updateStudentFees: "/api/Finance/UpdateStudentFees",
   filterStudentFeeByDate: "/api/Finance/FilterStudentFee",
+  addpaymentrecords: "/api/Finance/AddPaymentsRecords",
 };
 
 const queryKey = "StudentFees";
 const filterQueryKey = "filteredStudentFee";
+const paymentRecordKey = "PaymentRecords";
 type StudentFeeRequest = {
   id?: string;
   studentId: string;
@@ -20,6 +22,13 @@ type StudentFeeRequest = {
   totalAmount: number;
   paidAmount: number;
 };
+type IPaymentRequest = {
+  studentfeeId: string;
+  amountPaid: number;
+  paymentDate: string;
+  paymentMethod: number;
+  reference: string;
+}
 
 export const useAddStudentFee = () => {
   const queryClient = useQueryClient();
@@ -119,5 +128,28 @@ export const useFilterStudentFeeByDate = (params?: string) => {
     },
     staleTime: 0,
     retry: false,
+  });
+};
+
+export const useAddPaymentRecord = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<IPaymentRecord, Error, IPaymentRequest>({
+    mutationFn: async (formData: IPaymentRequest): Promise<IPaymentRecord> => {
+      const response = await api.post(
+        StudentFeeEndPoints.addpaymentrecords,
+        formData
+      );
+      return response.data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [paymentRecordKey] });
+    },
+
+    onError: (error) => {
+      console.error("Error adding StudentFee:", error);
+    },
   });
 };
