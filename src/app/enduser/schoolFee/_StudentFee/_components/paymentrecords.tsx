@@ -1,6 +1,3 @@
-// paymentrecords.tsx
-"use client";
-
 import { useForm, SubmitHandler } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -11,8 +8,8 @@ import { IPaymentRecord } from "../types/IStudentFee";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 
 interface PaymentRecordFormProps {
-  studentfeeId: string;          // <-- required
-  onClose?: () => void;           // optional callback to close modal
+  studentfeeId: string;        
+  onClose?: () => void;           
 }
 
 const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
@@ -50,7 +47,7 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
           paymentMethod: 1,
           reference: "",
         });
-        if (onClose) onClose(); // close modal
+        if (onClose) onClose();
       },
       onError: (error) => {
         toast.error(handleError(error) || "Failed to record payment");
@@ -71,11 +68,12 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
+       <div className="bg-white p-5 rounded-xl border shadow-sm mb-4 flex justify-center">
+       <form
+  onSubmit={form.handleSubmit(onSubmit)}
+  className="flex flex-col gap-4 w-full max-w-lg"
+>
+
           <InputElement
             label="Payment Date *"
             inputType="date"
@@ -96,7 +94,7 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
           />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Payment Method *
+              Payment Method 
             </label>
             <select
               {...form.register("paymentMethod", { valueAsNumber: true })}
@@ -118,13 +116,12 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
             placeholder="Payment reference..."
             className="w-full h-[42px] md:col-span-2"
           />
-          <div className="flex gap-3 md:col-span-2">
+          <div className="flex gap-3 md:col-span-2 ">
             <ButtonElement
               type="submit"
               text={isPending ? "Adding..." : "Add Payment"}
-              icon={<DollarSign size={16} />}
               disabled={isPending}
-              className="h-[42px] px-8 !bg-emerald-600 hover:!bg-emerald-700 disabled:opacity-70"
+              className="h-[42px] px-8 !bg-teal-400 hover:!bg-teal-500 disabled:opacity-70"
             />
             <ButtonElement
               type="button"
