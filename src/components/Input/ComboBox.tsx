@@ -29,6 +29,7 @@ interface AppComboboxProps<T> {
   renderOptionExtra?: (option: T) => JSX.Element;
   readOnly?: boolean;
   disabled?: boolean;
+  className?: string;
 }
 
 function InnerCombobox<T>(
@@ -51,6 +52,7 @@ function InnerCombobox<T>(
     disabled,
     renderOptionExtra,
     readOnly,
+    className,
   }: AppComboboxProps<T>,
   ref: React.Ref<HTMLInputElement>
 ) {

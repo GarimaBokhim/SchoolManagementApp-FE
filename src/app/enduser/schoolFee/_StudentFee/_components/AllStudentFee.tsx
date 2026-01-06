@@ -20,7 +20,10 @@ import AddStudentFee from "../pages/Add";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
 import { Eye } from "lucide-react";
+import { CreditCard } from "lucide-react";
+import { X } from "lucide-react";
 import ViewStudentFeeForm from "./filterstudentsfeedetail";
+import PaymentRecordForm from "./paymentrecords";
 const AllStudentFeeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -38,7 +41,7 @@ const AllStudentFeeForm = () => {
   };
   const [addModal, setAddModal] = useState(false);
   const [viewModal, setViewModal] = useState(false);
-
+  const [viewpaymentModal, setViewpaymentModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -255,19 +258,29 @@ const AllStudentFeeForm = () => {
                         <td className="py-3 px-4 hidden lg:table-cell">
                           {StudentFee.paidAmount}
                         </td>
-                        <td className="py-3 px-4 text-center">
-                <div className="flex justify-center gap-2">
-                  <ButtonElement
-                  text="view"
-                    icon={<Eye color="white" size={15} />} // only icon
-                    onClick={() => {
-                      setSelectedStudentFee(StudentFee);
-                      setViewModal(true);
-                    }}
-                    className="!bg-teal-500 hover:!bg-teal-600 p-2 rounded-full"
-                  />
-                </div>
-              </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex justify-center gap-2">
+                          <ButtonElement
+                            text=""
+                            icon={<Eye className="text-white" size={15} />}
+                            onClick={() => {
+                              setSelectedStudentFee(StudentFee);
+                              setViewModal(true);
+                            }}
+                            className="!bg-teal-500 hover:!bg-teal-600"
+                          />
+
+                         <ButtonElement
+                            text=""
+                            icon={<CreditCard className="text-white" size={15} />}
+                            onClick={() => {
+                              setSelectedStudentFee(StudentFee); 
+                              setViewpaymentModal(true);
+                            }}
+                          />
+
+                        </div>
+                      </td>
 
                       </tr>
                     )
@@ -305,17 +318,40 @@ const AllStudentFeeForm = () => {
       </div>
         {viewModal && (
           <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[90vh] p-6 rounded-xl overflow-auto shadow-lg relative">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                onClick={() => setViewModal(false)}
-              >
-                Close
-              </button>
+            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
+              
+                <button
+                  className="absolute top-[-6px] right-1
+                            w-10 h-10
+                            flex items-center justify-center
+                            text-red-500 hover:text-gray-700"
+                  onClick={() => setViewModal(false)}
+                >
+                  <X size={24} strokeWidth={2.5} />
+                </button>
               <ViewStudentFeeForm  />
             </div>
           </div>
         )}
+    {viewpaymentModal && selectedStudentFee && (
+  <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[90vh] p-6 rounded-xl overflow-auto shadow-lg relative">
+      <button
+        className="absolute top-4 right-4 text-red-500 hover:text-gray-700"
+        onClick={() => setViewpaymentModal(false)}
+      >
+        X
+      </button>
+
+      <PaymentRecordForm
+        studentfeeId={selectedStudentFee?.id || ""} 
+        onClose={() => setViewpaymentModal(false)}
+      />
+    </div>
+  </div>
+)}
+
+
 
     </>
   );

@@ -12,3 +12,14 @@ export interface IFilterStudentFee {
   endDate: string;
   studentId: string;
 }
+
+export interface IPaymentRecord {
+  id?: string;
+
+  studentfeeId: string;
+  amountPaid: number;
+  paymentDate: string;
+  paymentMethod: number;
+  reference: string;
+
+}
