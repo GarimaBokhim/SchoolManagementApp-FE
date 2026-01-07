@@ -3,6 +3,7 @@ import { useState } from "react";
 import AllContributorForm from "../_components/AllContributor";
 import AllSchoolItemForm from "../../_SchoolItem/_components/AllSchoolItem";
 import AllHistoryForm from "../../_History/_components/AllHIstory";
+import AssetsReportByFiscalYear from "../../_Assetsreport/_components/Allassetsreport";
 const AllContributor = () => {
   const exam = [
     { id: "contributor", label: "Contributor", color: "gray" },
@@ -23,7 +24,7 @@ const AllContributor = () => {
           </div>
         );
         case "assetsreport":
-        return <div className=" text-center">{<AllSchoolItemForm />}</div>;
+        return <div className=" text-center">{<AssetsReportByFiscalYear  />}</div>;
       default:
         return <AllContributorForm />;
     }
