@@ -168,7 +168,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                     value || form.watch(name)
                       ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
                       : ""
-                  } scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[0.8rem] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[0.8rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 peer-focus:bg-[#ffffff] dark:peer-focus:bg-[#353535] text-gray-500 transition-all pointer-events-none`}
+                  } scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[0.8rem] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[0.8rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 peer-focus:bg-[#ffffff] dark:peer-focus:bg-[#353535] text-gray-500 bg-[#ffffff] dark:bg-[#353535] transition-all pointer-events-none`}
                 >
                   <div className="flex items-center">
                     {required && (
@@ -190,7 +190,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   form.formState.errors[name]
                     ? "border-red-500"
                     : "border-gray-300"
-                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm`}
+                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm bg-white dark:bg-[#353535] dark:text-white border-[#035BBA] dark:bg-[#353535] focus:border-[#4788CD] ${customStyle}`}
                 ref={ref}
               />
             )}

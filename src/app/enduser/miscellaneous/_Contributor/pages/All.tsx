@@ -8,6 +8,7 @@ const AllContributor = () => {
     { id: "contributor", label: "Contributor", color: "gray" },
     { id: "schoolItem", label: "School Item", color: "gray" },
     { id: "history", label: "History", color: "gray" },
+    { id: "assetsreport", label: "Asset Report", color: "gray" },
   ];
   const [activeReport, setActiveReport] = useState<string>("contributor");
 
@@ -21,6 +22,8 @@ const AllContributor = () => {
             <AllHistoryForm />
           </div>
         );
+        case "assetsreport":
+        return <div className=" text-center">{<AllSchoolItemForm />}</div>;
       default:
         return <AllContributorForm />;
     }

@@ -107,55 +107,57 @@ const AddExamForm = ({ form, onClose }: Props) => {
             <div className="mt-6">
               <h2 className="font-semibold mb-2">Exam Subjects</h2>
               {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="flex items-center gap-2 mb-2"
+             <div
+                key={field.id}
+               className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 items-start mb-2">
+
+                <AppCombobox
+                  dropDownWidth="w-[25rem]"
+                  label="Subject"
+                  name={`examSubjects.${index}.subjectId`}
+                  form={form}
+                  dropdownPositionClass="absolute"
+                  value={field.subjectId}
+                  options={allSubjects?.Items ?? []}
+                  selected={
+                    allSubjects?.Items?.find(
+                      (e) => e.Id === field.subjectId
+                    ) || null
+                  }
+                  onSelect={(subject) =>
+                    form.setValue(
+                      `examSubjects.${index}.subjectId`,
+                      subject?.Id ?? ""
+                    )
+                  }
+                  getLabel={(e) => e?.name ?? ""}
+                  getValue={(e) => e?.Id ?? ""}
+                />
+           <InputElement
+                  label="Full Marks"
+                  form={form}
+                  name={`examSubjects.${index}.fullMarks`}
+                  type="number"
+                  required
+                />
+
+                <InputElement
+                  label="Pass Marks"
+                  form={form}
+                  name={`examSubjects.${index}.passMarks`}
+                  type="number"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="text-red-500 h-10 self-end"
                 >
-                  <AppCombobox
-                    dropDownWidth="w-[25rem]"
-                    label="Subject"
-                    name={`examSubjects.${index}.subjectId`}
-                    form={form}
-                    dropdownPositionClass="absolute"
-                    value={field.subjectId}
-                    options={allSubjects?.Items ?? []}
-                    selected={
-                      allSubjects?.Items?.find(
-                        (e) => e.Id === field.subjectId
-                      ) || null
-                    }
-                    onSelect={(subject) => {
-                      const id = subject?.Id ?? "";
-                      form.setValue(`examSubjects.${index}.subjectId`, id);
-                    }}
-                    getLabel={(e) => e?.name ?? ""}
-                    getValue={(e) => e?.Id ?? ""}
-                  />
-                  
-                  <InputElement
-                    label="Full Marks"
-                    form={form}
-                    name={`examSubjects.${index}.fullMarks`}
-                    placeholder="Full Marks"
-                    type="number"
-                    required
-                  />
-                  <InputElement
-                    label="Pass Marks"
-                    form={form}
-                    name={`examSubjects.${index}.passMarks`}
-                    placeholder="Pass Marks"
-                    type="number"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="text-red-500 mt-6"
-                  >
-                    Remove
-                  </button>
-                </div>
+                  Remove
+                </button>
+              </div>
+
               ))}
               <button
                 type="button"
