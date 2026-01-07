@@ -177,3 +177,21 @@ export const useAssignClass = () => {
     },
   });
 };
+
+export const useUnassignClass = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<IAssignClass, Error, AssignRequestClass>({
+    mutationFn: async (data: AssignRequestClass): Promise<IAssignClass> => {
+      const response = await api.post(AcademicTeamEndPoints.unAssignClass, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Refresh assigned class queries after unassigning
+      queryClient.invalidateQueries({ queryKey: [AssignQueryKey] });
+    },
+    onError: (error: Error) => {
+      console.error("Error unassigning class/subject", error);
+    },
+  });
+};
