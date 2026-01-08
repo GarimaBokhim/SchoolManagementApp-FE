@@ -8,7 +8,7 @@ import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 type Props = {
@@ -29,8 +29,19 @@ const EditSchoolForm = ({
   const query = `?pagesize=${pageSize}&pageIndex=${currentPageIndex}&IsPagination=true`;
   const { refetch } = useGetAllSchool(query);
   const [institutionId, setInstitutionId] = useState("");
+      const [schoollogo, setschoollogo] = useState("");
+        const fileInputRef = useRef<HTMLInputElement>(null);
+   const handleImageClick = () => fileInputRef.current?.click();
   const handleSelectInstitution = (id: string) => {
     form.setValue("institutionId", id);
+  };
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setschoollogo(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
   const onSubmit: SubmitHandler<ISchool> = async (form) => {
     try {
@@ -56,9 +67,9 @@ const EditSchoolForm = ({
   return (
     <div
       id="container"
-      className=" fixed inset-0 flex justify-center  items-center border-rounded-lg bg-opacity-30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-transparent bg-opacity-80 backdrop-blur-sm overflow-y-auto ml-56 md:ml-64 sm:ml-16 "
     >
-      <div className="w-[36rem] flex  bg-white py-4 rounded-lg drop-shadow-lg">
+      <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%] bg-white rounded-xl shadow-2xl p-4 sm:p-6 m-4">
         <div className="w-full">
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex justify-between items-center mb-4">
@@ -138,15 +149,30 @@ const EditSchoolForm = ({
                   />
                 </div>
               </div>
-              <div>
-                <div className="mb-4">
-                  <InputElement
-                    label="Image Url"
-                    layout="row"
-                    form={form}
-                    name="imageUrl"
-                    placeholder="Enter Image Url"
-                  />
+      <div className="my-4">
+              <div className="flex-shrink-0 flex flex-col items-center justify-center">
+
+                  <div
+                  onClick={handleImageClick}
+                  className="w-24 h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
+                >
+                  {schoollogo ? (
+                    <img
+                      src={schoollogo}
+                      alt="School Logo"
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-sm">Click to add</span>
+                  )}
+                  <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+               </div>
                 </div>
                 <div className="my-4 justify-between mt-[3%]">
                   <AppCombobox
@@ -172,7 +198,7 @@ const EditSchoolForm = ({
                     getValue={(g) => g?.id ?? ""}
                   />
                 </div>
-                <div className="mb-2 flex items-center">
+                {/* <div className="mb-2 flex items-center">
                   <InputElement
                     label=""
                     layout="row"
@@ -182,7 +208,7 @@ const EditSchoolForm = ({
                     customStyle="!border-0 after:!content-none"
                   />
                   <p className="ml-4 ">Is Deleted</p>
-                </div>
+                </div> */}
                 {/* <div className="">
                   <label className=" text-sm !text-slate-500 ml-2">
                     Bill Number Generation Type For Purchase

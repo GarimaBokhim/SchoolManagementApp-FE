@@ -1,4 +1,5 @@
 "use client";
+
 import { Box, CircuitBoard, School, User, UserCog } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
@@ -6,10 +7,15 @@ import PieChartSection from "./PieChart";
 import SchoolInfoCard from "./SchoolCard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useGetAllSchool } from "../../Setup/School/hooks";
+import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+import { useGetAllUsers } from "@/app/SuperAdmin/accessControl/user/hooks";
+import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 
 const Dashboard: React.FC = () => {
   const [institutionId, setInstitutionId] = useState("");
   const navigate = useRouter();
+
   useEffect(() => {
     const userDetailsString = localStorage.getItem("userDetails");
 
@@ -25,48 +31,48 @@ const Dashboard: React.FC = () => {
     const token = localStorage.getItem("token");
     if (!token) navigate.push("/");
   }, [navigate]);
+
+  // Fetch counts from APIs
+  const { data: schools } = useGetAllSchool();
+  const { data: roles } = useGetAllRoles();
+  const { data: users } = useGetAllUsers();
+  const { data: institutions } = useGetAllInstitution();
+
+  // Build cards dynamically
+  const cards = [
+ 
+    {
+      cardHead: "Total Role",
+      cardStats: String(roles?.TotalItems ?? 0),
+      cardStyle: "!bg-blue-500/30",
+      cardIcon: <UserCog className="text-blue-400 text-4xl" />,
+    },
+    {
+      cardHead: "Total User",
+      cardStats: String(users?.TotalItems ?? 0),
+      cardStyle: "!bg-red-500/30",
+      cardIcon: <User className="text-red-400 text-4xl" />,
+    },
+    {
+      cardHead: "Total Institution",
+      cardStats: String(institutions?.TotalItems ?? 0),
+      cardStyle: "!bg-amber-500/30",
+      cardIcon: <School className="text-amber-800 text-4xl" />,
+    },
+    {
+      cardHead: "Total Schools",
+      cardStats: String(schools?.TotalItems ?? 0),
+      cardStyle: "!bg-teal-500/30",
+      cardIcon: <School className="text-teal-400 text-4xl" />,
+    },
+  ];
+
   return (
-    <div className=" bg-[#FBFBFB]  dark:bg-[#0A0A0A] ">
+    <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="px-6 flex flex-col gap-4">
-        <div>
-          <SchoolInfoCard institutionId={institutionId} />
-        </div>
-        <div className="lg:w-full flex-none">
-          <StatCard
-            cards={[
-              {
-                cardHead: "Total Module",
-                cardStats: "12",
-                cardIcon: <CircuitBoard className="text-green-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total Sub Module",
-                cardStats: "8",
-                cardStyle: "!bg-orange-500/30",
-                cardIcon: <Box className="text-orange-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total Role",
-                cardStats: "5",
-                cardStyle: "!bg-blue-500/30",
-                cardIcon: <UserCog className="text-blue-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total User",
-                cardStats: "5",
-                cardStyle: "!bg-red-500/30",
-                cardIcon: <User className="text-red-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total Institution",
-                cardStats: "5",
-                cardStyle: "!bg-amber-500/30",
-                cardIcon: <School className="text-amber-800 text-4xl" />,
-              },
-            ]}
-          />
-        </div>
-        <div className="lg:w-full  flex space-x-6 h-[28rem]">
+        <SchoolInfoCard institutionId={institutionId} />
+        <StatCard cards={cards} />
+        <div className="lg:w-full flex space-x-6 h-[28rem]">
           <div className="w-[70%]">
             <BarChartSection />
           </div>

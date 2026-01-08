@@ -175,12 +175,12 @@ const AddUserForm = ({ form, onClose }: Props) => {
             <div className="space-y-4">
               {activeTab === "Assign roles" && (
                 <>
-                  <InputElement
+                  {/* <InputElement
                     label="Role"
                     form={form}
                     name="rolesIds"
                     value={roleName || ""}
-                  />
+                  /> */}
 
                   <AssignRoleForAddUser
                     setRoleName={setRoleName}
@@ -192,12 +192,12 @@ const AddUserForm = ({ form, onClose }: Props) => {
               )}
               {role === "superadmin" && activeTab === "Institution" && (
                 <>
-                  <InputElement
+                  {/* <InputElement
                     label="Institution"
                     form={form}
                     name="institutionId"
                     value={institutionName || ""}
-                  />
+                  /> */}
                   <InstitutionFormForAddUser
                     setInstitutionName={setInstitutionName}
                     userId=""
@@ -208,12 +208,12 @@ const AddUserForm = ({ form, onClose }: Props) => {
               )}
               {role !== "superadmin" && activeTab === "Company" && (
                 <>
-                  <InputElement
+                  {/* <InputElement
                     label="Company"
                     form={form}
                     name="schoolIds"
                     value={companyName || ""}
-                  />
+                  /> */}
                   <CompanyFormForAddUser
                     userId=""
                     selectedSchool={selectedCompany}

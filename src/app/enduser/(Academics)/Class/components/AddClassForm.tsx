@@ -9,6 +9,8 @@ import { IClass } from "../types/IClass";
 import { useAddClass } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useGetAllSubjects } from "../../Subject/hooks";
 
 type Props = {
   form: UseFormReturn<IClass>;
@@ -17,6 +19,7 @@ type Props = {
 
 const AddClassForm = ({ form, onClose }: Props) => {
   const addClass = useAddClass();
+  const {data: allsubjects} = useGetAllSubjects();
   const { handleError, clearError } = useErrorHandler();
 
   const { fields, append, remove } = useFieldArray({
@@ -73,51 +76,64 @@ const AddClassForm = ({ form, onClose }: Props) => {
               />
             </div>
 
-            {/* Subjects Section */}
             <div className="mt-6">
               <h2 className="font-semibold mb-2">Subjects</h2>
 
               {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="flex flex-wrap gap-2 mb-2 items-end border-b border-gray-200 pb-2"
-                >
-                  <InputElement
-                    label="Subject Name"
-                    form={form}
-                    name={`subjects.${index}.name`}
-                    placeholder="Enter Subject Name"
-                    required
-                  />
-                  <InputElement
-                    label="Code"
-                    form={form}
-                    name={`subjects.${index}.code`}
-                    placeholder="Enter Code"
-                    required
-                  />
-                  <InputElement
-                    label="Credit Hours"
-                    form={form}
-                    name={`subjects.${index}.creditHours`}
-                    placeholder="Credit Hours"
-                    type="number"
-                    required
-                  />
-                  <InputElement
-                    label="Description"
-                    form={form}
-                    name={`subjects.${index}.description`}
-                    placeholder="Description"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="text-red-500 mt-6"
-                  >
-                    Remove
-                  </button>
-                </div>
+               <div
+  key={field.id}
+  className="flex gap-2 mb-2 items-end border-b border-gray-200 pb-2"
+>
+  <AppCombobox
+    dropDownWidth="w-[15rem]"
+    label="Subject"
+    name={`subjects.${index}.id`}
+    form={form}
+    dropdownPositionClass="absolute"
+    value={field.id}
+    options={allsubjects?.Items ?? []}
+    selected={
+      allsubjects?.Items?.find((e) => e.Id === field.id) || null
+    }
+    onSelect={(subject) =>
+      form.setValue(`subjects.${index}.id`, subject?.Id ?? "")
+    }
+    getLabel={(e) => e?.name ?? ""}
+    getValue={(e) => e?.Id ?? ""}
+  />
+  <InputElement
+    label="Code"
+    form={form}
+    name={`subjects.${index}.code`}
+    placeholder="Enter Code"
+    required
+    className="w-32"
+  />
+  <InputElement
+    label="Credit Hours"
+    form={form}
+    name={`subjects.${index}.creditHours`}
+    placeholder="Credit Hours"
+    type="number"
+    required
+    className="w-32"
+  />
+  <InputElement
+    label="Description"
+    form={form}
+    name={`subjects.${index}.description`}
+    placeholder="Description"
+    className="w-48"
+  />
+  <button
+    type="button"
+    onClick={() => remove(index)}
+    className="text-red-500 mt-6"
+  >
+    Remove
+  </button>
+</div>
+
               ))}
 
               <button
@@ -137,7 +153,6 @@ const AddClassForm = ({ form, onClose }: Props) => {
               </button>
             </div>
 
-            {/* Submit */}
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
             </div>

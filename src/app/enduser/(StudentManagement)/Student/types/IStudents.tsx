@@ -13,12 +13,12 @@ export interface IStudent {
   address: string;
   enrollmentDate: Date;
   parentId: string;
-  classSectionId?: string | null;
+  classSectionId?: string | "";
   classId: string;
   provinceId: number;
   districtId: number;
-  municipalityId: number;
-  vdcid: number;
+  municipalityId: number | 0;
+  vdcid: number | 0;
   wardNumber?: number | null;
 }
 

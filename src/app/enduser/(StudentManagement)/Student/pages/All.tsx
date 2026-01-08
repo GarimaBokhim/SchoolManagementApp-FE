@@ -5,11 +5,11 @@ import AllStudentForm from "../_components/AllStudentForm";
 import AllStudentAttendance from "../../_StudentAttendance/pages/All";
 const AllStudent = () => {
   const exam = [
+     { id: "parent", label: "Parent", color: "gray" },
     { id: "student", label: "Student", color: "gray" },
-    { id: "parent", label: "Parent", color: "gray" },
     { id: "attendance", label: "Attendance", color: "gray" },
   ];
-  const [activeReport, setActiveReport] = useState<string>("student");
+  const [activeReport, setActiveReport] = useState<string>("parent");
 
   const renderReport = () => {
     switch (activeReport) {

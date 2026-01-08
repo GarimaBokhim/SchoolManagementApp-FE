@@ -17,6 +17,8 @@ import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Toast } from "@/components/Toast/toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+import Pagination from "@/components/Pagination";
+import { SearchParams } from "next/dist/server/request/search-params";
 
 const AllUserForm = () => {
   const navigate = useRouter();
@@ -24,6 +26,7 @@ const AllUserForm = () => {
   const [selectedEmail, setSelectedEmail] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
   const { data: allschool } = useGetAllSchool();
+  
   const [params, setParams] = useState<string | null>(null);
   const form = useForm<IFilterUserByDate>({
     defaultValues: {
@@ -43,7 +46,11 @@ const AllUserForm = () => {
   }, [navigate]);
 
   const deleteUser = useDeleteUser();
-
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  });
   const handleDelete = async (id: string) => {
     try {
       await deleteUser.mutateAsync(id);
@@ -92,6 +99,15 @@ const AllUserForm = () => {
       Toast.error(errorMsg);
     }
   };
+    const handleSubmit = useForm<SearchParams>({
+    defaultValues: {},
+  });
+
+  const handleSearch = (params: { pageSize: number; pageIndex: number; isPagination: boolean; }) => {
+  params.pageSize = paginationParams.pageSize;
+  setPaginationParams(params);
+};
+
   const handleClear = () => {
     setSelectedUserName("");
     setSelectedEmail("");
@@ -308,6 +324,21 @@ const AllUserForm = () => {
           <Add visible={addModal} onClose={() => setAddModal(false)} />
         </div>
       </div>
+       {allUsers && allUsers?.Items?.length > 0 && (
+        <Pagination
+          form={handleSubmit}
+          pagination={{
+            currentPage: Array.isArray(allUsers) ? 1 : allUsers?.PageIndex ?? 1,
+            firstPage: Array.isArray(allUsers) ? 1 : allUsers?.FirstPage ?? 1,
+            lastPage: Array.isArray(allUsers) ? 1 : allUsers?.LastPage ?? 1,
+            nextPage: Array.isArray(allUsers) ? 1 : allUsers?.NextPage ?? 1,
+            previousPage: Array.isArray(allUsers)
+              ? 1
+              : allUsers?.PreviousPage ?? 1,
+          }}
+          handleSearch={handleSearch}
+        />
+      )}
     </>
   );
 };

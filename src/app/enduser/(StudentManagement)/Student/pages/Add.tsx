@@ -23,9 +23,11 @@ const AddStudent = ({ visible, onClose }: Props) => {
       enrollmentDate: new Date(),
       parentId: "",
       classId: "",
-      classSectionId: null,
+      classSectionId: "",
       provinceId: 0,
       districtId: 0,
+      municipalityId: 0,
+      vdcid: 0,
       wardNumber: null,
     },
 

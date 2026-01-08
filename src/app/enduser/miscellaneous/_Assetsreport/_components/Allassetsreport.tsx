@@ -25,7 +25,6 @@ const AllAssetsReportByFiscalYear = () => {
 
   const { handleError, clearError } = useErrorHandler();
 
-  /* form */
   const form = useForm<FilterForm>({
     defaultValues: {
       fiscalYearId: "",
@@ -141,11 +140,11 @@ const AllAssetsReportByFiscalYear = () => {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 dark:bg-[#80878c]">
                 <tr className="text-left font-semibold">
-                  <th className="px-4 py-3">S.N</th>
-                  <th className="px-4 py-3">Contributor</th>
-                  <th className="px-4 py-3">Fiscal Year</th>
-                  <th className="px-4 py-3 text-right">Items</th>
-                  <th className="px-4 py-3 text-right">Estimated Value</th>
+                  <th className="px-4 py-3 text-center">S.N</th>
+                  <th className="px-4 py-3 text-center">Contributor</th>
+                  <th className="px-4 py-3 text-center">Fiscal Year</th>
+                  <th className="px-4 py-3 text-center">Items</th>
+                  <th className="px-4 py-3 text-center">Estimated Value</th>
                 </tr>
               </thead>
 
@@ -163,17 +162,17 @@ const AllAssetsReportByFiscalYear = () => {
                         key={index}
                         className="border-b hover:bg-gray-50"
                       >
-                        <td className="px-4 py-3">{index + 1}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-center">{index + 1}</td>
+                        <td className="px-4 py-3 text-center">
                           {item.contributorName}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-center">
                           {item.fiscalYearName}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-center">
                           {item.totalItemsCount}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-center">
                           {item.totalEstimatedValue}
                         </td>
                       </tr>

@@ -29,10 +29,12 @@ type StudentRequest = {
   address: string;
   enrollmentDate: Date;
   parentId: string;
-  classSectionId?: string | null;
+  classSectionId?: string | "";
   provinceId: number;
   districtId: number;
   wardNumber?: number | null;
+  municipalityId: number | 0;
+  vdcid: number | 0;
 };
 
 export const useAddStudent = () => {
