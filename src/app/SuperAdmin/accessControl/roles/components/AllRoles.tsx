@@ -125,13 +125,13 @@ const AllRoleForm = () => {
       <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
         <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
           <h1 className=" text-xl font-semibold ">All Roles</h1>
-          <ButtonElement
+          {/* <ButtonElement
             icon={<Plus size={24} />}
             type="button"
             text="Add New Role"
             onClick={() => setAddModal(true)}
             className="!text-md !font-bold"
-          />
+          /> */}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto text-left border border-gray-200 rounded-lg">

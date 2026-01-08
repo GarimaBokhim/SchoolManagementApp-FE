@@ -44,6 +44,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
   const { data: filteredMunicipality } =
     useGetMunicipalityByDistrict(selectedDistrictId);
+    console.log("data",filteredMunicipality);
   const handleClose = () => {
     form.reset();
   };
@@ -285,9 +286,10 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   onSelect={(group) =>
                     setSelectedMunicipalityId(group?.Id ?? 0)
                   }
-                  getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
+                  getLabel={(g) => g?.MunicipalityNameinNepali ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
+                
                 <AppCombobox
                   value={selectedVdcId}
                   dropDownWidth="w-full"

@@ -8,7 +8,7 @@ import { Toast } from "@/components/Toast/toast";
 import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import toast from "react-hot-toast";
@@ -38,7 +38,17 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
       Toast.error(errorMsg);
     }
   };
-
+    const [schoollogo, setschoollogo] = useState("");
+      const fileInputRef = useRef<HTMLInputElement>(null);
+ const handleImageClick = () => fileInputRef.current?.click();
+   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setschoollogo(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
   // const handleSelectFiscalYear = (id: string) => {
   //   form.setValue("fiscalYearId", id);
   // };
@@ -126,14 +136,30 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                 />
               </div>
               <div className="space-y-4">
-                <InputElement
-                  label="Image Url"
-                  layout="column"
-                  form={form}
-                  name="imageUrl"
-                  placeholder="Enter Image Url"
-                  customStyle="w-full"
+
+              <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                <div
+                  onClick={handleImageClick}
+                  className="w-24 h-24   bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
+                >
+                  {schoollogo ? (
+                    <img
+                      src={schoollogo}
+                      alt="School Logo"
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-sm">Click to add</span>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
                 />
+                </div>
                 <AppCombobox
                   required
                   value={institutionId}
@@ -180,7 +206,7 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                   getLabel={(g) => g?.FyName || ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <InputElement
                     label=""
                     layout="column"
@@ -201,7 +227,7 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                     customStyle="!border-0 after:!content-none"
                   />
                   <p className="ml-3 text-sm sm:text-base">Is Deleted</p>
-                </div>
+                </div> */}
                 {/* <div>
                   <label className="text-sm text-slate-500 mb-1 block">
                     Type For Purchase

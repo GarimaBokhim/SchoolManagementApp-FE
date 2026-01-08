@@ -1,4 +1,5 @@
 "use client";
+
 import { BriefcaseBusiness, Bus, DollarSign, School, User } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
@@ -7,11 +8,22 @@ import SchoolInfoCard from "./SchoolCard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGetAllNotices } from "../../notice/hooks";
+import { useGetAllStudents } from "../../(StudentManagement)/Student/hooks";
+import { useGetAllAcademicTeams } from "../../(Staff)/AcademicStaff/hooks";
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
+
 
 const Dashboard: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
   const navigate = useRouter();
   const { data: allNotice } = useGetAllNotices();
+
+  const { data: students } = useGetAllStudents();
+  const { data: staffs } = useGetAllAcademicTeams();
+  const {data: school} = useGetAllSchool();
+  // const { data: vehicles } = useGetAllVehicles(schoolId);
+  // const { data: revenue } = useGetRevenueBySchoolId(schoolId);
+
   useEffect(() => {
     const userDetailsString = localStorage.getItem("userDetails");
 
@@ -28,50 +40,47 @@ const Dashboard: React.FC = () => {
     if (!token) navigate.push("/");
   }, [navigate]);
 
+  const cards = [
+    {
+      cardHead: "Total Students",
+      cardStats: String(students?.TotalItems ?? 0),
+      cardIcon: <User className="text-green-400 text-4xl" />,
+    },
+    {
+      cardHead: "Total Staffs",
+      cardStats: String(staffs?.TotalItems ?? 0),
+      cardStyle: "!bg-orange-500/30",
+      cardIcon: <BriefcaseBusiness className="text-orange-400 text-4xl" />,
+    },
+    // {
+    //   cardHead: "Total Vehicle",
+    //   cardStats: String(vehicles?.length ?? 0),
+    //   cardStyle: "!bg-blue-500/30",
+    //   cardIcon: <Bus className="text-blue-400 text-4xl" />,
+    // },
+    // {
+    //   cardHead: "Total Revenue",
+    //   cardStats: revenue ? `$${revenue.total}` : "0",
+    //   cardStyle: "!bg-red-500/30",
+    //   cardIcon: <DollarSign className="text-red-400 text-4xl" />,
+    // },
+      {
+      cardHead: "Total School",
+      cardStats: String(school?.TotalItems ?? 0),
+      cardStyle: "!bg-orange-500/30",
+      cardIcon: <BriefcaseBusiness className="text-orange-400 text-4xl" />,
+    },
+  ];
+
   return (
-    <div className=" bg-[#FBFBFB] dark:bg-[#0A0A0A] ">
+    <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="p-6 flex flex-col gap-4">
-        <div>
-          <SchoolInfoCard schoolId={schoolId} />
-        </div>
-        <div className="lg:w-full flex-none">
-          <StatCard
-            cards={[
-              {
-                cardHead: "Total Students",
-                cardStats: "1200",
-                cardIcon: <User className="text-green-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total Staffs",
-                cardStats: "40",
-                cardStyle: "!bg-orange-500/30",
-                cardIcon: (
-                  <BriefcaseBusiness className="text-orange-400 text-4xl" />
-                ),
-              },
-              {
-                cardHead: "Total Vehicle",
-                cardStats: "5",
-                cardStyle: "!bg-blue-500/30",
-                cardIcon: <Bus className="text-blue-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total Revenue",
-                cardStats: "500k",
-                cardStyle: "!bg-red-500/30",
-                cardIcon: <DollarSign className="text-red-400 text-4xl" />,
-              },
-              {
-                cardHead: "Total ",
-                cardStats: "5",
-                cardStyle: "!bg-amber-500/30",
-                cardIcon: <School className="text-amber-800 text-4xl" />,
-              },
-            ]}
-          />
-        </div>
-        <div className="lg:w-full  flex space-x-6 h-[28rem]">
+        <SchoolInfoCard schoolId={schoolId} />
+
+        {/* Dynamic Stats */}
+        <StatCard cards={cards} />
+
+        <div className="lg:w-full flex space-x-6 h-[28rem]">
           <div className="w-[70%]">
             <BarChartSection />
           </div>
@@ -200,3 +209,5 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
+
