@@ -248,15 +248,11 @@ const AllExamForm = () => {
                         {Exam.name}
                       </td>
                       <td className="py-3 px-2 md:px-4">
-  {Array.isArray(Exam.examSubjects) && Exam.examSubjects.length > 0
-    ? Exam.examSubjects.map((s) => s.fullMarks).join(", ")
-    : "-"}
-</td>
-<td className="py-3 px-2 md:px-4">
-  {Array.isArray(Exam.examSubjects) && Exam.examSubjects.length > 0
-    ? Exam.examSubjects.map((s) => s.passMarks).join(", ")
-    : "-"}
-</td>
+                             {Exam.totalMarks}
+                            </td>
+                            <td className="py-3 px-2 md:px-4">
+                            {Exam.passingMarks}
+                            </td>
 
 
                       <td className="py-3 px-2 md:px-4">

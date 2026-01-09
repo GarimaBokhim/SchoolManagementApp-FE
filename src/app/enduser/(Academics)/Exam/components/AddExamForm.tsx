@@ -11,7 +11,8 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
 import { useGetAllClass } from "../../Class/hooks";
-import { useGetAllSubjects } from "../../Subject/hooks";
+import {  useGetSubjectByClassId } from "../../Subject/hooks";
+
 
 type Props = {
   form: UseFormReturn<IExam>;
@@ -22,10 +23,16 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const addExam = useAddExam();
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
-  const {data:allSubjects} = useGetAllSubjects();
-  const [selectedClass, setSelectedClass] = useState<string | undefined>("");
 
-  // UseFieldArray for examSubjects
+  const [selectedClass, setSelectedClass] = useState<string | undefined>("");
+    const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
+    [key: number]: string | null;
+  }>({});
+    const [selectedFullMarks, setSelectedFullMarks] = useState<{
+    [key: number]: number;
+  }>({});
+ const { data: allSubjects } = useGetSubjectByClassId(selectedClass || "");
+
   const { fields, append, remove } = useFieldArray({
     name: "examSubjects",
     control: form.control,
@@ -83,25 +90,25 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 placeholder="Enter Exam Date"
                 inputType="date"
               />
-              <AppCombobox
-                dropDownWidth="w-[25rem]"
+             <AppCombobox
+                dropDownWidth="w-[20rem]"
                 label="Class"
                 name="classId"
                 form={form}
                 dropdownPositionClass="absolute"
                 value={selectedClass}
                 options={allClass?.Items ?? []}
-                selected={
-                  allClass?.Items?.find((e) => e.id === selectedClass) || null
-                }
+                selected={allClass?.Items?.find((e) => e.id === selectedClass) || null}
                 onSelect={(exam) => {
                   const id = exam?.id ?? "";
                   setSelectedClass(id);
                   form.setValue("classId", id);
+                  form.setValue("examSubjects", []);
                 }}
                 getLabel={(e) => e?.name ?? ""}
                 getValue={(e) => e?.id ?? ""}
               />
+
             </div>
 
             <div className="mt-6">
@@ -111,28 +118,44 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 key={field.id}
                className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 items-start mb-2">
 
-                <AppCombobox
-                  dropDownWidth="w-[25rem]"
-                  label="Subject"
-                  name={`examSubjects.${index}.subjectId`}
-                  form={form}
-                  dropdownPositionClass="absolute"
-                  value={field.subjectId}
-                  options={allSubjects?.Items ?? []}
-                  selected={
-                    allSubjects?.Items?.find(
-                      (e) => e.Id === field.subjectId
-                    ) || null
-                  }
-                  onSelect={(subject) =>
-                    form.setValue(
-                      `examSubjects.${index}.subjectId`,
-                      subject?.Id ?? ""
-                    )
-                  }
-                  getLabel={(e) => e?.name ?? ""}
-                  getValue={(e) => e?.Id ?? ""}
-                />
+               <AppCombobox
+                    dropDownWidth="w-[25rem]"
+                    label="Subject"
+                    name={`marksObtained.${index}.subjectId`}
+                    form={form}
+                    dropdownPositionClass="absolute"
+                    value={selectedSubjectIds[index] ?? ""}
+                    options={(allSubjects ?? []).filter((subj) => {
+                      const currentId = selectedSubjectIds[index];
+                      const selectedIds = Object.values(selectedSubjectIds);
+
+                      return (
+                        subj.id === currentId || !selectedIds.includes(subj.id)
+                      );
+                    })}
+                    selected={
+                      allSubjects?.find(
+                        (subj) => subj.id === selectedSubjectIds[index]
+                      ) || null
+                    }
+                    onSelect={(subject) => {
+                      const id = subject?.id ?? "";
+                      form.setValue(`examSubjects.${index}.subjectId`, id, {
+                        shouldValidate: true,
+                      });
+                      setSelectedFullMarks((prev) => ({
+                        ...prev,
+                        [index]: subject?.fullMarks || 100,
+                      }));
+                      setSelectedSubjectIds((prev) => ({
+                        ...prev,
+                        [index]: id,
+                      }));
+                    }}
+                    getLabel={(s) => s?.subjectName ?? ""}
+                    getValue={(s) => s?.id ?? ""}
+                  />
+
            <InputElement
                   label="Full Marks"
                   form={form}
