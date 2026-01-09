@@ -18,9 +18,7 @@ type StudentFeeRequest = {
   id?: string;
   studentId: string;
   feeStructureId: string;
-  discount: number;
-  totalAmount: number;
-  paidAmount: number;
+  discountPercentage: number;
 };
 type IPaymentRequest = {
   studentfeeId: string;

@@ -65,7 +65,7 @@ const AddClassForm = ({ form, onClose }: Props) => {
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            {/* Class Name */}
+         
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               <InputElement
                 label="Class Name"
@@ -81,58 +81,58 @@ const AddClassForm = ({ form, onClose }: Props) => {
 
               {fields.map((field, index) => (
                <div
-  key={field.id}
-  className="flex gap-2 mb-2 items-end border-b border-gray-200 pb-2"
->
-  <AppCombobox
-    dropDownWidth="w-[15rem]"
-    label="Subject"
-    name={`subjects.${index}.id`}
-    form={form}
-    dropdownPositionClass="absolute"
-    value={field.id}
-    options={allsubjects?.Items ?? []}
-    selected={
-      allsubjects?.Items?.find((e) => e.Id === field.id) || null
-    }
-    onSelect={(subject) =>
-      form.setValue(`subjects.${index}.id`, subject?.Id ?? "")
-    }
-    getLabel={(e) => e?.name ?? ""}
-    getValue={(e) => e?.Id ?? ""}
-  />
-  <InputElement
-    label="Code"
-    form={form}
-    name={`subjects.${index}.code`}
-    placeholder="Enter Code"
-    required
-    className="w-32"
-  />
-  <InputElement
-    label="Credit Hours"
-    form={form}
-    name={`subjects.${index}.creditHours`}
-    placeholder="Credit Hours"
-    type="number"
-    required
-    className="w-32"
-  />
-  <InputElement
-    label="Description"
-    form={form}
-    name={`subjects.${index}.description`}
-    placeholder="Description"
-    className="w-48"
-  />
-  <button
-    type="button"
-    onClick={() => remove(index)}
-    className="text-red-500 mt-6"
-  >
-    Remove
-  </button>
-</div>
+                key={field.id}
+                className="flex gap-2 mb-2 items-end border-b border-gray-200 pb-2"
+              >
+                <AppCombobox
+                  dropDownWidth="w-[15rem]"
+                  label="Subject"
+                  name={`subjects.${index}.id`}
+                  form={form}
+                  dropdownPositionClass="absolute"
+                  value={field.id}
+                  options={allsubjects?.Items ?? []}
+                  selected={
+                    allsubjects?.Items?.find((e) => e.Id === field.id) || null
+                  }
+                  onSelect={(subject) =>
+                    form.setValue(`subjects.${index}.id`, subject?.Id ?? "")
+                  }
+                  getLabel={(e) => e?.name ?? ""}
+                  getValue={(e) => e?.Id ?? ""}
+                />
+                <InputElement
+                  label="Code"
+                  form={form}
+                  name={`subjects.${index}.code`}
+                  placeholder="Enter Code"
+                  required
+                  className="w-32"
+                />
+                <InputElement
+                  label="Credit Hours"
+                  form={form}
+                  name={`subjects.${index}.creditHours`}
+                  placeholder="Credit Hours"
+                  type="number"
+                  required
+                  className="w-32"
+                />
+                <InputElement
+                  label="Description"
+                  form={form}
+                  name={`subjects.${index}.description`}
+                  placeholder="Description"
+                  className="w-48"
+                />
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="text-red-500 mt-6"
+                >
+                  Remove
+                </button>
+              </div>
 
               ))}
 

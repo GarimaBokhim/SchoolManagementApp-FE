@@ -2,9 +2,8 @@ export interface IStudentFee {
   id?: string;
   studentId: string;
   feeStructureId: string;
-  discount: number;
-  totalAmount: number;
-  paidAmount: number;
+  discountPercentage: number;
+
 }
 
 export interface IFilterStudentFee {
@@ -15,11 +14,9 @@ export interface IFilterStudentFee {
 
 export interface IPaymentRecord {
   id?: string;
-
   studentfeeId: string;
   amountPaid: number;
   paymentDate: string;
   paymentMethod: number;
   reference: string;
-
 }

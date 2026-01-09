@@ -83,7 +83,14 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                   null
                 }
                 onSelect={(group) => setSelectedStudentId(group?.id ?? "")}
-                getLabel={(g) => g?.firstName ?? ""}
+                getLabel={(g) => {
+                  const name = g?.firstName ?? "";
+                  const classObj = allclassname?.Items?.find((c) => c.id === g?.classId);
+                  const className = classObj?.name ?? "";
+
+                  return `${name} - (${className})`;
+                }}
+
                 getValue={(g) => g?.id ?? ""}
               />
             <AppCombobox
@@ -122,27 +129,11 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
               <InputElement
                 label="Discount"
                 form={form}
-                name="discount"
-                placeholder="Enter Discount"
+                name="discountPercentage"
+                placeholder="Enter DiscountPercentage"
                 inputType="number"
               />
-              <InputElement
-                label="Total Amount"
-                form={form}
-                value={selectedFeeStructure?.amount}
-                name="totalAmount"
-                placeholder="Enter the Total Amount"
-                inputType="number"
-                required
-              />
-              <InputElement
-                label="Paid Amount"
-                form={form}
-                name="paidAmount"
-                placeholder="Enter the Paid Amount"
-                inputType="number"
-                required
-              />
+             
             </div>
             <div className="flex justify-center mt-8">
               <ButtonElement
