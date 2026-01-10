@@ -8,6 +8,7 @@ const FeeStructureEndPoints = {
   removeFeeStructure: "/api/Finance/DeleteFeeStructure",
   updateFeeStructure: "/api/Finance/UpdateFeeStructure",
   filterFeeStructureByDate: "/api/Finance/FilterFeeStructure",
+  feestructurebyclass: "/api/Finance/FeeStructureByClass",
 };
 
 const queryKey = "FeeStructure";
@@ -121,3 +122,18 @@ export const useFilterFeeStructureByDate = (params?: string) => {
     retry: false,
   });
 };
+
+export const useGetFeeStructureByClassId = (classId?: string) => {
+  return useQuery({
+    queryKey: [filterQueryKey, classId, queryKey],
+    queryFn: async () => {
+      const url = classId
+        ? `${FeeStructureEndPoints.feestructurebyclass}${classId}`
+        : FeeStructureEndPoints.feestructurebyclass;
+      const response = await api.get<IPaginationResponse<IFeeStructure>>(url);
+      return response.data;
+    },
+    staleTime: 0,
+    retry: false,
+  });
+}

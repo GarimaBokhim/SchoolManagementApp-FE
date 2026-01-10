@@ -1,10 +1,10 @@
 export interface IStudentFee {
-  id?: string;
   studentId: string;
-  feeStructureId: string;
+  feeStructureId:string[];
+  classId: string;
   discountPercentage: number;
-
 }
+
 
 export interface IFilterStudentFee {
   startDate: string;
