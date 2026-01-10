@@ -2,62 +2,76 @@
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-
 import { X } from "lucide-react";
 import { IStudentFee } from "../types/IStudentFee";
 import { useAddStudentFee } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
+import {  useGetAllFeeStructure, useGetFeeStructureByClassId } from "../../_FeeStructure/hooks";
 import { IFeeStructure } from "../../_FeeStructure/types/IFeeStructure";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
 };
+
 const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const addStudentFee = useAddStudentFee();
-  const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [selectedFeeStructure, setSelectedFeeStructure] =
-    useState<IFeeStructure>();
-  const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
-  const { data: allStudent } = useGetAllStudents();
-  const { data: allFeeStructure } = useGetAllFeeStructure();
-  const {data:allfeetype} = useGetAllFeeTypes();
-  const {data:allclassname}=useGetAllClass();
-
   const { handleError, clearError } = useErrorHandler();
+
+  const { data: allStudents } = useGetAllStudents();
+  const { data: allClasses } = useGetAllClass();
+  const { data: allFeeStructure } = useGetAllFeeStructure();
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeStructure | undefined>(undefined);
+
+const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
+
+ useEffect(() => {
+  const student = allStudents?.Items?.find(s => s.id === selectedStudentId);
+  if (student) {
+    setSelectedClassId(student.classId ?? "");
+    setSelectedFeeStructureId(""); 
+  }
+}, [selectedStudentId, allStudents]);
+
+
   const handleClose = () => {
     onClose();
     form.reset();
+    setSelectedStudentId("");
+    setSelectedClassId("");
+    setSelectedFeeStructureId("");
+    setSelectedFeeStructure(undefined);
   };
+
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
     try {
       await toast.promise(addStudentFee.mutateAsync(data), {
-        loading: "Adding StudentFee...",
-        success: "Successfully added StudentFee",
+        loading: "Adding Student Fee...",
+        success: "Successfully added Student Fee",
       });
       handleClose();
     } catch (error) {
       const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
   return (
-    <div className=" inset-0 flex items-center justify-center  w-full h-full">
-      <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
+    <div className="inset-0 flex items-center justify-center w-full h-full">
+      <div className="w-full max-w-4xl h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
         <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
-              Add StudentFee
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">Add Student Fee</h1>
             <button
               type="button"
               onClick={onClose}
@@ -69,6 +83,8 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+
+              {/* Student Combobox */}
               <AppCombobox
                 value={selectedStudentId}
                 dropDownWidth="w-full"
@@ -77,64 +93,59 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 name="studentId"
                 form={form}
                 required
-                options={allStudent?.Items}
-                selected={
-                  allStudent?.Items?.find((g) => g.id === selectedStudentId) ||
-                  null
-                }
-                onSelect={(group) => setSelectedStudentId(group?.id ?? "")}
-                getLabel={(g) => {
-                  const name = g?.firstName ?? "";
-                  const classObj = allclassname?.Items?.find((c) => c.id === g?.classId);
-                  const className = classObj?.name ?? "";
-
-                  return `${name} - (${className})`;
+                options={allStudents?.Items}
+                selected={allStudents?.Items?.find(s => s.id === selectedStudentId) || null}
+                onSelect={(s) => setSelectedStudentId(s?.id ?? "")}
+                getLabel={(s) => {
+                  const className = allClasses?.Items?.find(c => c.id === s?.classId)?.name ?? "";
+                  return `${s?.firstName ?? ""} - (${className})`;
                 }}
-
-                getValue={(g) => g?.id ?? ""}
+                getValue={(s) => s?.id ?? ""}
               />
-            <AppCombobox
-                    value={selectedFeeStructureId}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="Fee Structure"
-                    name="feeStructureId"
-                    form={form}
-                    required
-                    options={allFeeStructure?.Items}
-                    selected={
-                      allFeeStructure?.Items?.find(
-                        (g) => g.id === selectedFeeStructureId
-                      ) || null
-                    }
-                    onSelect={(group) => {
-                      setSelectedFeeStructureId(group?.id ?? "");
-                      if (group) setSelectedFeeStructure(group);
-                    }}
-                    getLabel={(g) => {
-                      if (!g) return "-";
 
-                      const feeTypeName = allfeetype?.Items?.find(
-                        (f) => f.id === g.feeTypeId
-                      )?.name ?? "-";
-                      const classIdname = allclassname?.Items?.find(
-                        (f) => f.id === g.classId
-                      )?.name ?? "-";
-                      
-
-                      return `${feeTypeName} (${classIdname}) - rs${g.amount ?? 0}`;
-                    }}
-                    getValue={(g) => g?.id ?? ""}
-                  />
               <InputElement
-                label="Discount"
+                label="Class"
+                inputType="text"
+                form={form}
+                name="classDisplay"
+                value={allClasses?.Items?.find(c => c.id === selectedClassId)?.name ?? ""}
+                disabled
+              />
+
+              <input
+                type="hidden"
+                {...form.register("classId")}
+                value={selectedClassId}
+              />
+                <AppCombobox
+                  value={selectedFeeStructureId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Fee Structure"
+                  name="feeStructureId"
+                  form={form}
+                  required
+                  options={allFeeStructure?.Items ?? []}  
+                  selected={allFeeStructure?.Items?.find(f => f.id === selectedFeeStructureId) || null}
+                  onSelect={(f) => {
+                    setSelectedFeeStructureId(f?.id ?? "");
+                    setSelectedFeeStructure(f ?? undefined);
+                  }}
+                  getLabel={(f) => `Rs ${f?.amount ?? 0}`} 
+                  getValue={(f) => f?.id ?? ""}
+                />
+
+              {/* Discount */}
+              <InputElement
+                label="Discount (%)"
                 form={form}
                 name="discountPercentage"
-                placeholder="Enter DiscountPercentage"
+                placeholder="Enter Discount Percentage"
                 inputType="number"
               />
-             
+
             </div>
+
             <div className="flex justify-center mt-8">
               <ButtonElement
                 type="submit"

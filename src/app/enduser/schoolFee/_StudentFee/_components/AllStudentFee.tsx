@@ -212,7 +212,6 @@ const AllStudentFeeForm = () => {
                   <th className="px-4 py-3 text-center">Student</th>
                   <th className="px-4 py-3 text-center">Fee Structure</th>
                   <th className="px-4 py-3 text-center">Total Amount</th>
-                  <th className="px-4 py-3 text-center">Discount</th>
                   <th className="px-4 py-3 text-center">Paid Amount</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
@@ -242,19 +241,16 @@ const AllStudentFeeForm = () => {
                             )?.firstName
                           }
                         </td>
-                        <td className="py-3 px-4">
-                          {
-                            allFeeStructure?.Items.find(
-                              (i) => i.id === StudentFee.feeStructureId
-                            )?.amount
-                          }
+                       <td className="py-3 px-4">
+                          {StudentFee.feeStructureId?.map((fee, idx) => (
+                            <div key={idx}>{fee}</div>
+                          )) ?? "-"}
                         </td>
+
                         <td className="py-3 px-4 hidden md:table-cell">
                           {StudentFee.totalAmount}
                         </td>
-                        <td className="py-3 px-4 hidden md:table-cell">
-                          {StudentFee.discount}
-                        </td>
+                        
                         <td className="py-3 px-4 hidden lg:table-cell">
                           {StudentFee.paidAmount}
                         </td>
@@ -345,7 +341,7 @@ const AllStudentFeeForm = () => {
       </button>
 
       <PaymentRecordForm
-        studentfeeId={selectedStudentFee?.id || ""} 
+        studentfeeId={selectedStudentFee?.studentId || ""} 
         onClose={() => setViewpaymentModal(false)}
       />
     </div>

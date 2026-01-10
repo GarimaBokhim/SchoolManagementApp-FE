@@ -17,7 +17,8 @@ const paymentRecordKey = "PaymentRecords";
 type StudentFeeRequest = {
   id?: string;
   studentId: string;
-  feeStructureId: string;
+  feeStructureId: string[];
+  classId: string;
   discountPercentage: number;
 };
 type IPaymentRequest = {

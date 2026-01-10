@@ -102,10 +102,11 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
               required
             >
               <option value={1}>Cash</option>
-              <option value={2}>Card</option>
-              <option value={3}>Bank Transfer</option>
-              <option value={4}>Online Payment</option>
-              <option value={5}>Cheque</option>
+              <option value={2}>Credit Card</option>
+              <option value={3}>Debit Card</option>
+              <option value={4}>Bank Transfer</option>
+              <option value={5}>Mobile Payment</option>
+              <option value={6}>Cheque</option>
             </select>
           </div>
           <InputElement

@@ -190,12 +190,12 @@ const ViewStudentFeeForm = () => {
                   >
                     <td className="px-4 py-3">{index + 1}</td>
                     <td className="px-4 py-3">{fee.studentId}</td>
-                    <td className="px-4 py-3 text-center">
+                    {/* <td className="px-4 py-3 text-center">
                       {fee.totalAmount}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {fee.paidAmount}
-                    </td>
+                    </td> */}
                   </tr>
                 )
               )
