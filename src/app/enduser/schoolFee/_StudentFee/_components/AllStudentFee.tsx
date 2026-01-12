@@ -211,8 +211,8 @@ const AllStudentFeeForm = () => {
                   <th className="px-4 py-3 text-center">S.N</th>
                   <th className="px-4 py-3 text-center">Student</th>
                   <th className="px-4 py-3 text-center">Fee Structure</th>
-                  <th className="px-4 py-3 text-center">Total Amount</th>
-                  <th className="px-4 py-3 text-center">Paid Amount</th>
+                  {/* <th className="px-4 py-3 text-center">Total Amount</th>
+                  <th className="px-4 py-3 text-center">Paid Amount</th> */}
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -247,13 +247,13 @@ const AllStudentFeeForm = () => {
                           )) ?? "-"}
                         </td>
 
-                        <td className="py-3 px-4 hidden md:table-cell">
+                        {/* <td className="py-3 px-4 hidden md:table-cell">
                           {StudentFee.totalAmount}
                         </td>
                         
                         <td className="py-3 px-4 hidden lg:table-cell">
                           {StudentFee.paidAmount}
-                        </td>
+                        </td> */}
                       <td className="py-3 px-4 text-center">
                         <div className="flex justify-center gap-2">
                           <ButtonElement
@@ -312,22 +312,26 @@ const AllStudentFeeForm = () => {
         )}
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
       </div>
-        {viewModal && (
-          <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
-               <button
-                  className="absolute top-[-6px] right-1
-                            w-10 h-10
-                            flex items-center justify-center
-                            text-red-500 hover:text-gray-700"
-                  onClick={() => setViewModal(false)}
-                >
-                  <X size={24} strokeWidth={2.5} />
-                </button>
-              <ViewStudentFeeForm  />
-            </div>
-          </div>
-        )}
+      {viewModal && selectedStudentFee && (
+  <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
+      <button
+        className="absolute top-[-6px] right-1
+                   w-10 h-10
+                   flex items-center justify-center
+                   text-red-500 hover:text-gray-700"
+        onClick={() => setViewModal(false)}
+      >
+        <X size={24} strokeWidth={2.5} />
+      </button>
+
+      <ViewStudentFeeForm
+        studentId={selectedStudentFee.studentId}
+      />
+    </div>
+  </div>
+)}
+
     {viewpaymentModal && selectedStudentFee && (
   <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">

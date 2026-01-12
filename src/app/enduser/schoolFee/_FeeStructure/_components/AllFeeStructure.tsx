@@ -8,17 +8,18 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterFeeStructureByDate } from "../hooks";
+import { useFilterFeeStructureByDate, useRemoveFeeStructure } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddFeeStructure from "../pages/Add";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+import DeleteButton from "@/components/Buttons/DeleteButton";
 const AllFeeStructureForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -36,7 +37,7 @@ const AllFeeStructureForm = () => {
   };
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
-  const { canAdd } = useMenuPermissionData(menuStatus);
+  const { canAdd,canDelete } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allClass } = useGetAllClass();
@@ -99,16 +100,16 @@ const AllFeeStructureForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  // const deleteFeeStructure = useRemoveFeeStructure();
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteFeeStructure.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+  const deleteFeeStructure = useRemoveFeeStructure();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteFeeStructure.mutateAsync(id);
+      toast.success("User deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting user.");
+    }
+  };
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -239,7 +240,7 @@ const AllFeeStructureForm = () => {
                         <td className="py-3 px-4">{FeeStructure.amount}</td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                            {/* {canDelete && (
+                            {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
                                   handleDelete(
@@ -249,7 +250,7 @@ const AllFeeStructureForm = () => {
                                 headerText={<Trash />}
                                 content="Are you sure you want to delete this FeeStructure?"
                               />
-                            )} */}
+                            )}
                           </div>
                         </td>
                       </tr>

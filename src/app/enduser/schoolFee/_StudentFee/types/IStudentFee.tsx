@@ -20,3 +20,15 @@ export interface IPaymentRecord {
   paymentMethod: number;
   reference: string;
 }
+export interface Istudentfeesummary {
+  classId: string;
+  totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  paymentMethod: number;
+}
+export interface filtersummary {
+  startDate: string;
+  endDate: string;
+  studentId: string;
+}
