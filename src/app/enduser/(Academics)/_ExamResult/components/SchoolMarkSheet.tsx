@@ -91,40 +91,42 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
           style={{ backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}
         >
           <div className="border-4 border-sky-500 p-3 sm:p-5">
-            <header className="pb-4 mb-2">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-0">
-                <div className="w-28 flex-shrink-0">
-                  <div className="w-[120px] h-[130px] border-2 border-black flex items-center justify-center relative overflow-hidden">
-                    {StudentData?.studentImg && (
-                      <img
-                        src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
-                        alt="Student Image"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+            <header className="pb-4 mb-2 relative">
+            <div className="flex items-start justify-center w-full">
+          
+              {StudentData?.studentImg && (
+                <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                  <img
+                    src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                    alt="Student Image"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
+              )}
 
-                <div className="flex-1 text-center sm:text-left sm:ml-4">
-                  <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
-                  <p className="text-sm">{SchoolData?.address}</p>
-                  <p className="font-semibold mt-2 underline">
-                    SECOND TERMINAL EXAMINATION 2082
-                  </p>
-                  <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
-                </div>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
+                <p className="text-sm">{SchoolData?.address}</p>
+                <p className="font-semibold mt-2 underline">
+                  SECOND TERMINAL EXAMINATION 2082
+                </p>
+                <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
               </div>
-            </header>
+            </div>
+          </header>
+
+
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
-              <p>
+              <p className="flex">
                 <strong>Name:</strong> {StudentData?.firstName}{" "}
                 {StudentData?.lastName}
               </p>
               <p>
                 <strong>Section:</strong> A
               </p>
-              <p>
+              <p className="flex">
                 <strong>Class:</strong> {StudentData?.classSectionId || 6}
               </p>
               <p>
@@ -215,25 +217,34 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </table>
 
               <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
-                <strong className="border border-sky-500 inline-block px-2">
-                  OBT.MARKS
-                </strong>
-                <div>{data?.totalObtainedMarks}</div>
+                <p className=" inline-block px-2">
+                  OBT.MARKS :
+                </p>
+                <strong>{data?.totalObtainedMarks}</strong>
                 <div>
-                  <p className="border border-sky-500 inline-block px-2 mr-2">
+                  <p className=" inline-block px-2">
+                  GPA :
+                </p>
+                  <strong>
                     {data?.GPA}
-                  </p>
-                  {data?.grade}
+                  </strong>
+                 <strong>({data?.grade})</strong>
                 </div>
               </div>
             </div>
 
             <div className="mt-5 text-sm">
-              <p>
+              <p className="flex">
                 <strong>Remarks:</strong> {data?.remarks}
               </p>
-              <p>
-                <strong>DATE OF ISSUE:</strong>
+              <p className="flex">
+                <strong>DATE OF ISSUE:</strong>{"date of issue yaha"}
+              </p>
+              <p className="flex justify-end gap-4">
+                <strong>Total Running Days:</strong>
+                <strong>Total Absent Days</strong>
+                <strong> Total Present Days</strong>
+
               </p>
             </div>
 
