@@ -30,8 +30,6 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
     form.reset({
       name: ExamData?.name ?? "",
       examDate: ExamData?.examDate ?? new Date(),
-      totalMarks: ExamData.examSubjects.length > 0 ? ExamData.examSubjects[0].fullMarks : 0,
-      passingMarks: ExamData.examSubjects.length > 0 ? ExamData.examSubjects[0].passMarks : 0,
       isfinalExam: ExamData?.isfinalExam ?? true,
       classId: ExamData?.classId ?? "",
     });

@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Filter, Plus, RotateCcw, School } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -230,15 +230,15 @@ const AllSchoolItemForm = () => {
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left">S.N</th>
-                  <th className="px-4 py-3 text-left">Received Date</th>
-                  <th className="px-4 py-3 text-left">Name of Item</th>
-                  <th className="px-4 py-3 text-left">Contributor</th>
-                  <th className="px-4 py-3 text-left">Estimated Value</th>
-                  <th className="px-4 py-3 text-left">Item Status</th>
-                  <th className="px-4 py-3 text-left">Item Condition</th>
-                  <th className="px-4 py-3 text-left">Item Quantity</th>
-                  <th className="px-4 py-3 text-left">Unit Type</th>
+                  <th className="px-4 py-3 text-center">S.N</th>
+                  <th className="px-4 py-3 text-center">Received Date</th>
+                  <th className="px-4 py-3 text-center">Name of Item</th>
+                  <th className="px-4 py-3 text-center">Contributor</th>
+                  <th className="px-4 py-3 text-center">Estimated Value</th>
+                  <th className="px-4 py-3 text-center">Item Status</th>
+                  <th className="px-4 py-3 text-center">Item Condition</th>
+                  <th className="px-4 py-3 text-center">Item Quantity</th>
+                  <th className="px-4 py-3 text-center">Unit Type</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -260,7 +260,7 @@ const AllSchoolItemForm = () => {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
                         <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{`${SchoolItem.receivedDate}`}</td>
+                        {new Date(SchoolItem.receivedDate).toISOString().split("T")[0]}
                         <td className="py-3 px-4">{SchoolItem.name}</td>
                         <td className="py-3 px-4">
                           {

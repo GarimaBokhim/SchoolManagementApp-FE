@@ -14,7 +14,7 @@ const EditClass = ({ visible, onClose, ClassId }: Props) => {
 
   const form = useForm<IClass>({
     defaultValues: {
-      name: ClassData?.name ?? "",
+      name: ClassData?.name,
     },
   });
 
