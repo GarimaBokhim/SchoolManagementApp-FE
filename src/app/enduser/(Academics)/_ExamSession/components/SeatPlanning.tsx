@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 import {
   IHallResponses,
   ISeatPlanning,
-  IStudentSeatResponses,
 } from "../types/IExamSession";
 import { useGetAllClass } from "../../Class/hooks";
 import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
@@ -66,10 +65,8 @@ const handlePrint = () => {
   const content = document.getElementById("seatplan-content");
   if (!content) return;
 
-  // Clone the content so we don't mutate the live DOM
   const clonedContent = content.cloneNode(true) as HTMLElement;
 
-  // Create print window
   const printWindow = window.open("", "", "width=1200,height=800");
   if (!printWindow) return;
 
@@ -94,7 +91,6 @@ const handlePrint = () => {
 
   printWindow.document.close();
 
-  // Wait for styles to load before printing
   printWindow.focus();
   setTimeout(() => {
     printWindow.print();
