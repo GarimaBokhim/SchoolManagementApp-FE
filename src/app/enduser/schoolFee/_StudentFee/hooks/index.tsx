@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IPaymentRecord, IStudentFee } from "../types/IStudentFee";
+import { IPaymentRecord, IStudentFee, Istudentfeesummary } from "../types/IStudentFee";
 const StudentFeeEndPoints = {
   getAllStudentFees: "/api/Finance/StudentFee",
   createStudentFees: "/api/Finance/AddStudentFee",
@@ -9,6 +9,7 @@ const StudentFeeEndPoints = {
   updateStudentFees: "/api/Finance/UpdateStudentFees",
   filterStudentFeeByDate: "/api/Finance/FilterStudentFee",
   addpaymentrecords: "/api/Finance/AddPaymentsRecords",
+  studentfeesummary: "/api/Finance/StudentFeeSummary",
 };
 
 const queryKey = "StudentFees";
@@ -150,5 +151,20 @@ export const useAddPaymentRecord = () => {
     onError: (error) => {
       console.error("Error adding StudentFee:", error);
     },
+  });
+};
+
+export const useGetStudentFeesummary = (params?: string) => {
+  return useQuery({
+    queryKey: [filterQueryKey, params, queryKey],
+    queryFn: async () => {
+      const url = params
+        ? `${StudentFeeEndPoints.studentfeesummary}${params}`
+        : StudentFeeEndPoints.studentfeesummary;
+      const response = await api.get<IPaginationResponse<Istudentfeesummary>>(url);
+      return response.data;
+    },
+    staleTime: 0,
+    retry: false,
   });
 };

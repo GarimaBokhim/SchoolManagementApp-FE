@@ -10,9 +10,8 @@ interface Props {
 const AddStudentFee = ({ visible, onClose }: Props) => {
   const form = useForm<IStudentFee>({
     defaultValues: {
-      id: "",
       studentId: "",
-      feeStructureId: "",
+      feeStructureId: [""],
     },
 
     // resolver: yupResolver(StudentValidator),

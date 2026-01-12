@@ -135,7 +135,6 @@ const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClass
                   getValue={(f) => f?.id ?? ""}
                 />
 
-              {/* Discount */}
               <InputElement
                 label="Discount (%)"
                 form={form}
