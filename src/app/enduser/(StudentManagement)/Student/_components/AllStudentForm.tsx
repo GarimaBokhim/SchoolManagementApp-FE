@@ -274,7 +274,7 @@ const AllStudentForm = () => {
                           {student.phoneNumber}
                         </td>
                         <td className="py-1 px-4 hidden md:table-cell">
-                          {`${student.dateOfBirth}`}
+                          {new Date(student.dateOfBirth).toISOString().split("T")[0]}
                         </td>
                         <td className="py-1 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">

@@ -21,13 +21,14 @@ const EditClassForm = ({ form, onClose, ClassId }: Props) => {
   const handleClose = () => {
     form.reset();
   };
-  useEffect(() => {
-    if (ClassData) {
-      form.reset({
-        name: ClassData?.name ?? "",
-      });
-    }
-  }, [ClassData]);
+useEffect(() => {
+  if (ClassData) {
+    form.reset({
+      name: ClassData.name,
+    });
+  }
+}, [ClassData]);
+
   const onSubmit: SubmitHandler<IClass> = async (data) => {
     clearError();
 
@@ -82,6 +83,7 @@ const EditClassForm = ({ form, onClose, ClassId }: Props) => {
                 placeholder="Enter Name"
                 required
               />
+
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />

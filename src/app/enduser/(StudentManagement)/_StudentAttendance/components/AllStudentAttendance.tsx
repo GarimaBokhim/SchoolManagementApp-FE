@@ -203,12 +203,12 @@ const AllStudentAttendanceForm = () => {
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Student</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Academic Team</th>
-                  <th className="px-4 py-3 text-left">Remarks</th>
+                  <th className="px-4 py-3 text-center w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-center">Date</th>
+                  <th className="px-4 py-3 text-center">Student</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-center">Academic Team</th>
+                  <th className="px-4 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -228,7 +228,7 @@ const AllStudentAttendanceForm = () => {
                       >
                         <td className="py-1 px-4">{index + 1}</td>
                         <td className="py-1 px-4">
-                          {`${StudentAttendance.attendanceDate}`}
+                          {new Date(StudentAttendance.attendanceDate).toISOString().split("T")[0]}
                         </td>
                         <td className="py-1 px-4">
                           {

@@ -97,21 +97,21 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
-                    bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-    >
-      <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a]
-                      w-full max-w-[90vw] max-h-[95vh] rounded-lg
-                      overflow-auto p-6 shadow-lg"
-      >
+  className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+>
+  <div
+    className="bg-[#FBFBFB] dark:bg-[#27272a]
+               w-full h-full max-w-[90vw] max-h-full rounded-lg
+               overflow-auto p-10 shadow-lg"
+  >
         <fieldset>
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold dark:text-gray-50">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Edit Exam Result
             </h1>
             <button
-              type="button"
+              type="button" 
               onClick={handleClose}
               className="text-red-400 text-2xl hover:text-red-500"
             >
@@ -175,55 +175,63 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md mb-4 relative"
+                  className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
                 >
-                  <AppCombobox
-                    dropDownWidth="w-[25rem]"
-                    label="Subject"
-                    name={`marksObtained.${index}.subjectId`}
-                    form={form}
-                    dropdownPositionClass="absolute"
-                    value={selectedSubjectIds[index] ?? ""}
-                    options={allSubject ?? []}
-                    selected={
-                      allSubject?.find(
-                        (subj) => subj.id === selectedSubjectIds[index]
-                      ) || null
-                    }
-                    onSelect={(subject) => {
-                      const id = subject?.id ?? "";
-                      form.setValue(`marksObtained.${index}.subjectId`, id, {
-                        shouldValidate: true,
-                      });
-                      setSelectedSubjectIds((prev) => ({
-                        ...prev,
-                        [index]: id,
-                      }));
-                    }}
-                    getLabel={(s) => s?.subjectName ?? ""}
-                    getValue={(s) => s?.id ?? ""}
-                  />
-                  <InputElement
-                    label="Marks Obtained"
-                    form={form}
-                    name={`marksObtained.${index}.marksObtained`}
-                    type="number"
-                    placeholder="Enter marks"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      remove(index);
-                      setSelectedSubjectIds((prev) => {
-                        const updated = { ...prev };
-                        delete updated[index];
-                        return updated;
-                      });
-                    }}
-                    className="absolute right-2 top-2 text-red-400 hover:text-red-600"
-                  >
-                    <X />
-                  </button>
+                  <div className="col-span-12 md:col-span-5">
+                    <AppCombobox
+                      dropDownWidth="w-full"
+                      label="Subject"
+                      name={`marksObtained.${index}.subjectId`}
+                      form={form}
+                      dropdownPositionClass="absolute"
+                      value={selectedSubjectIds[index] ?? ""}
+                      options={allSubject ?? []}
+                      selected={
+                        allSubject?.find(
+                          (subj) => subj.id === selectedSubjectIds[index]
+                        ) || null
+                      }
+                      onSelect={(subject) => {
+                        const id = subject?.id ?? "";
+                        form.setValue(`marksObtained.${index}.subjectId`, id, {
+                          shouldValidate: true,
+                        });
+                        setSelectedSubjectIds((prev) => ({
+                          ...prev,
+                          [index]: id,
+                        }));
+                      }}
+                      getLabel={(s) => s?.subjectName ?? ""}
+                      getValue={(s) => s?.id ?? ""}
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-5">
+                    <InputElement
+                      label="Marks Obtained"
+                      form={form}
+                      name={`marksObtained.${index}.marksObtained`}
+                      type="number"
+                      placeholder="Enter marks"
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-2 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        remove(index);
+                        setSelectedSubjectIds((prev) => {
+                          const updated = { ...prev };
+                          delete updated[index];
+                          return updated;
+                        });
+                      }}
+                      className="text-red-400 hover:text-red-600 text-xl font-bold"
+                    >
+                      <X />
+                    </button>
+                  </div>
                 </div>
               ))}
               <ButtonElement
@@ -236,6 +244,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   })
                 }
               />
+
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
