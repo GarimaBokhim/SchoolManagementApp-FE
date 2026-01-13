@@ -11,7 +11,7 @@ const AddStudentFee = ({ visible, onClose }: Props) => {
   const form = useForm<IStudentFee>({
     defaultValues: {
       studentId: "",
-      feeStructureId: [""],
+      feeStructureId: "",
     },
 
     // resolver: yupResolver(StudentValidator),

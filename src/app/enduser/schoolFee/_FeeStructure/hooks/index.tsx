@@ -125,15 +125,15 @@ export const useFilterFeeStructureByDate = (params?: string) => {
 
 export const useGetFeeStructureByClassId = (classId?: string) => {
   return useQuery({
-    queryKey: [filterQueryKey, classId, queryKey],
+    queryKey: [queryKey, classId],
     queryFn: async () => {
-      const url = classId
-        ? `${FeeStructureEndPoints.feestructurebyclass}${classId}`
-        : FeeStructureEndPoints.feestructurebyclass;
-      const response = await api.get<IPaginationResponse<IFeeStructure>>(url);
+      const response = await api.get<IPaginationResponse<IFeeStructure>>(
+        `${FeeStructureEndPoints.feestructurebyclass}?classId=${classId}`
+      );
       return response.data;
     },
+    enabled: !!classId,
     staleTime: 0,
     retry: false,
   });
-}
+};

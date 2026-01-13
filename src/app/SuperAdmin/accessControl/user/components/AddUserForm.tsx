@@ -144,7 +144,7 @@ const AddUserForm = ({ form, onClose }: Props) => {
                 </div>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*"  
                   ref={fileInputRef}
                   className="hidden"
                   onChange={handleFileChange}

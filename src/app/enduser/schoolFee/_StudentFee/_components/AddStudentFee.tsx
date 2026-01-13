@@ -34,7 +34,15 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
 
 const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
 
- useEffect(() => {
+ const handleClose = () => {
+  form.reset();
+  setSelectedStudentId("");
+  setSelectedClassId("");
+  setSelectedFeeStructureId("");
+  onClose();
+};
+
+useEffect(() => {
   const student = allStudents?.Items?.find(s => s.id === selectedStudentId);
   if (student) {
     setSelectedClassId(student.classId ?? "");
@@ -42,15 +50,11 @@ const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClass
   }
 }, [selectedStudentId, allStudents]);
 
+// Sync classId with form
+useEffect(() => {
+  form.setValue("classId", selectedClassId);
+}, [selectedClassId, form]);
 
-  const handleClose = () => {
-    onClose();
-    form.reset();
-    setSelectedStudentId("");
-    setSelectedClassId("");
-    setSelectedFeeStructureId("");
-    setSelectedFeeStructure(undefined);
-  };
 
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
@@ -117,23 +121,27 @@ const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClass
                 {...form.register("classId")}
                 value={selectedClassId}
               />
-                <AppCombobox
-                  value={selectedFeeStructureId}
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute"
-                  label="Fee Structure"
-                  name="feeStructureId"
-                  form={form}
-                  required
-                  options={allFeeStructure?.Items ?? []}  
-                  selected={allFeeStructure?.Items?.find(f => f.id === selectedFeeStructureId) || null}
-                  onSelect={(f) => {
-                    setSelectedFeeStructureId(f?.id ?? "");
-                    setSelectedFeeStructure(f ?? undefined);
-                  }}
-                  getLabel={(f) => `Rs ${f?.amount ?? 0}`} 
-                  getValue={(f) => f?.id ?? ""}
-                />
+              <AppCombobox
+                value={selectedFeeStructureId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Fee Structure"
+                name="feeStructureId"
+                form={form}
+                required
+                options={feeStructuresByClass?.Items ?? []}  
+                selected={feeStructuresByClass?.Items?.find(f => f.id === selectedFeeStructureId) ?? null}
+                onSelect={(f) => {
+                  const id = f?.id ?? "";
+                  setSelectedFeeStructureId(id);
+                  form.setValue("feeStructureId", id);  
+                }}
+                getLabel={(f) => f?.feeTypeId ?? ""} 
+                getValue={(f) => f?.id ?? ""}
+                disabled={!selectedClassId} 
+              />
+
+
 
               <InputElement
                 label="Discount (%)"
