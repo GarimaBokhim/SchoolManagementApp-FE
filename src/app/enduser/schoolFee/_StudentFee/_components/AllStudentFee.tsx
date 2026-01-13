@@ -242,9 +242,11 @@ const AllStudentFeeForm = () => {
                           }
                         </td>
                        <td className="py-3 px-4">
-                          {StudentFee.feeStructureId?.map((fee, idx) => (
-                            <div key={idx}>{fee}</div>
-                          )) ?? "-"}
+                          {Array.isArray(StudentFee.feeStructureId) ? 
+                            StudentFee.feeStructureId.map((fee, idx) => (
+                              <div key={idx}>{fee}</div>
+                            )) : 
+                            "-"}
                         </td>
 
                         {/* <td className="py-3 px-4 hidden md:table-cell">
@@ -322,7 +324,7 @@ const AllStudentFeeForm = () => {
                    text-red-500 hover:text-gray-700"
         onClick={() => setViewModal(false)}
       >
-        <X size={24} strokeWidth={2.5} />
+        <X size={23} strokeWidth={2.5} />
       </button>
 
       <ViewStudentFeeForm

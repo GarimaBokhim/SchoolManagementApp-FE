@@ -1,6 +1,6 @@
 export interface IStudentFee {
   studentId: string;
-  feeStructureId:string[];
+  feeStructureId:string;
   classId: string;
   discountPercentage: number;
 }
