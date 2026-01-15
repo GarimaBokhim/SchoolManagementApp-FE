@@ -50,7 +50,6 @@ useEffect(() => {
   }
 }, [selectedStudentId, allStudents]);
 
-// Sync classId with form
 useEffect(() => {
   form.setValue("classId", selectedClassId);
 }, [selectedClassId, form]);
