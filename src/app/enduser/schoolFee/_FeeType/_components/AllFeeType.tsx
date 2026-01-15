@@ -214,7 +214,7 @@ const AllFeeTypeForm = () => {
                   <th className="px-4 py-3 text-left">S.N</th>
                   <th className="px-4 py-3 text-left">Name</th>
                   <th className="px-4 py-3 text-left">Description</th>
-                  <th className="px-4 py-3 text-left">Month</th>
+                  {/* <th className="px-4 py-3 text-left">Month</th> */}
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -238,12 +238,12 @@ const AllFeeTypeForm = () => {
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">{FeeType.name}</td>
                         <td className="py-3 px-4">{FeeType.description}</td>
-                        <td className="py-3 px-4">
+                        {/* <td className="py-3 px-4">
                           {
                             months.find((i) => i.id === FeeType.nameOfMonths)
                               ?.name
                           }
-                        </td>
+                        </td> */}
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
                             {canDelete && (

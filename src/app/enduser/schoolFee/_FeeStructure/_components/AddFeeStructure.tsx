@@ -25,6 +25,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
   const { data: allFeeType } = useGetAllFeeTypes();
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeType, setSelectedFeeType] = useState("");
+    const [months, setMonths] = useState(0);
   const handleClose = () => {
     form.reset();
     onClose();
@@ -120,6 +121,47 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                 inputType="number"
                 required
                 placeholder="Enter amount"
+              />
+                <AppCombobox
+                label="Months"
+                dropdownPositionClass="absolute"
+                name="nameOfMonths"
+                form={form}
+                value={months}
+                options={[
+                  { id: 1, name: "Baisakh" },
+                  { id: 2, name: "Jestha" },
+                  { id: 3, name: "Ashadh" },
+                  { id: 4, name: "Shrawan" },
+                  { id: 5, name: "Bhadra" },
+                  { id: 6, name: "Ashwin" },
+                  { id: 7, name: "Kartik" },
+                  { id: 8, name: "Mangsir" },
+                  { id: 9, name: "Poush" },
+                  { id: 10, name: "Magh" },
+                  { id: 11, name: "Falgun" },
+                  { id: 12, name: "Chaitra" },
+                ]}
+                dropDownWidth="w-full"
+                selected={
+                  [
+                    { id: 1, name: "Baisakh" },
+                    { id: 2, name: "Jestha" },
+                    { id: 3, name: "Ashadh" },
+                    { id: 4, name: "Shrawan" },
+                    { id: 5, name: "Bhadra" },
+                    { id: 6, name: "Ashwin" },
+                    { id: 7, name: "Kartik" },
+                    { id: 8, name: "Mangsir" },
+                    { id: 9, name: "Poush" },
+                    { id: 10, name: "Magh" },
+                    { id: 11, name: "Falgun" },
+                    { id: 12, name: "Chaitra" },
+                  ].find((g) => g.id === months) || null
+                }
+                onSelect={(option) => setMonths(option?.id ?? 0)}
+                getLabel={(o) => o?.name || ""}
+                getValue={(o) => o?.id ?? ""}
               />
             </div>
             <div className="flex justify-center mt-8">

@@ -18,7 +18,7 @@ type Props = {
 const AddFeeTypeForm = ({ form, onClose }: Props) => {
   const addFeeType = useAddFeeType();
   const { handleError, clearError } = useErrorHandler();
-  const [months, setMonths] = useState(0);
+  // const [months, setMonths] = useState(0);
   const handleClose = () => {
     form.reset();
     onClose();
@@ -55,7 +55,7 @@ const AddFeeTypeForm = ({ form, onClose }: Props) => {
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
               <InputElement
                 label="Name"
                 form={form}
@@ -69,47 +69,7 @@ const AddFeeTypeForm = ({ form, onClose }: Props) => {
                 name="description"
                 placeholder="Enter Description"
               />
-              <AppCombobox
-                label="Months"
-                dropdownPositionClass="absolute"
-                name="nameOfMonths"
-                form={form}
-                value={months}
-                options={[
-                  { id: 1, name: "Baisakh" },
-                  { id: 2, name: "Jestha" },
-                  { id: 3, name: "Ashadh" },
-                  { id: 4, name: "Shrawan" },
-                  { id: 5, name: "Bhadra" },
-                  { id: 6, name: "Ashwin" },
-                  { id: 7, name: "Kartik" },
-                  { id: 8, name: "Mangsir" },
-                  { id: 9, name: "Poush" },
-                  { id: 10, name: "Magh" },
-                  { id: 11, name: "Falgun" },
-                  { id: 12, name: "Chaitra" },
-                ]}
-                dropDownWidth="w-full"
-                selected={
-                  [
-                    { id: 1, name: "Baisakh" },
-                    { id: 2, name: "Jestha" },
-                    { id: 3, name: "Ashadh" },
-                    { id: 4, name: "Shrawan" },
-                    { id: 5, name: "Bhadra" },
-                    { id: 6, name: "Ashwin" },
-                    { id: 7, name: "Kartik" },
-                    { id: 8, name: "Mangsir" },
-                    { id: 9, name: "Poush" },
-                    { id: 10, name: "Magh" },
-                    { id: 11, name: "Falgun" },
-                    { id: 12, name: "Chaitra" },
-                  ].find((g) => g.id === months) || null
-                }
-                onSelect={(option) => setMonths(option?.id ?? 0)}
-                getLabel={(o) => o?.name || ""}
-                getValue={(o) => o?.id ?? ""}
-              />
+            
             </div>
             <div className="flex justify-center mt-8">
               <ButtonElement
