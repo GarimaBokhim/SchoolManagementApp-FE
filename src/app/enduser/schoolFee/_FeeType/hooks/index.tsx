@@ -16,7 +16,7 @@ type FeeTypeRequest = {
   id?: string;
   name: string;
   description: string;
-  nameOfMonths: number;
+  // nameOfMonths: number;
 };
 
 export const useAddFeeType = () => {

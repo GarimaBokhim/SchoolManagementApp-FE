@@ -61,7 +61,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
               onClick={onClose}
               className="text-red-400 text-3xl hover:text-red-500 transition-transform transform hover:scale-110"
             >
-              <X strokeWidth={3} />
+              <X strokeWidth={4} />
             </button>
           </div>
 
