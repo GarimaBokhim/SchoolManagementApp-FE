@@ -276,7 +276,8 @@ const AllStudentFeeForm = () => {
                               setViewpaymentModal(true);
                             }}
                           />
-
+                          
+                         
                         </div>
                       </td>
 

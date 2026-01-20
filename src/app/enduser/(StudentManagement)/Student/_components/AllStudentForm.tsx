@@ -25,6 +25,9 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+import { PrintButton } from "@/components/Buttons/PrintButton";
+import { useRouter } from "next/navigation";
+import AllPrintFormForStudents from "./PrintFormForStudentFee";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -68,7 +71,7 @@ const AllStudentForm = () => {
       endDate: "",
     },
   });
-
+const router = useRouter();
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const { data: allClass } = useGetAllClass();
@@ -150,6 +153,12 @@ const AllStudentForm = () => {
                   className="!font-semibold"
                 />
               )}
+             <PrintButton>
+              <AllPrintFormForStudents
+                startDate={form.watch("startDate")}
+                endDate={form.watch("endDate")}
+              />
+            </PrintButton>
             </div>
           </div>
           {openFilter && (
@@ -303,6 +312,7 @@ const AllStudentForm = () => {
                                 }
                               />
                             )}
+                            
                           </div>
                         </td>
                       </tr>
