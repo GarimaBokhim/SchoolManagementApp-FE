@@ -24,6 +24,8 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddParent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { PrintButton } from "@/components/Buttons/PrintButton";
+import AllPrintFormForParents from "./PrintAllParentsform";
 const AllParentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -167,6 +169,11 @@ const AllParentForm = () => {
                   className="!text-md !font-bold"
                 />
               )}
+          <PrintButton>
+          <AllPrintFormForParents   
+          startDate={form.watch("startDate")}
+          endDate={form.watch("endDate")} />
+        </PrintButton>
             </div>
           </div>
           {openFilter && (

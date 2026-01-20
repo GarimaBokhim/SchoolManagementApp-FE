@@ -1,7 +1,7 @@
 "use client";
 import { ButtonElement } from "./ButtonElement";
 import { ReactNode, useRef, useState } from "react";
-import { Printer } from "lucide-react";
+import { Download } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
@@ -76,7 +76,6 @@ export const PrintButton = ({ children }: Props) => {
 
   return (
     <div className="mx">
-      {/* only mount children when printing */}
       {showContent && (
         <div style={{ display: "none" }}>
           <div ref={printRef}>{children}</div>
@@ -87,9 +86,9 @@ export const PrintButton = ({ children }: Props) => {
         <ButtonElement
           type="button"
           text=""
-          icon={<Printer size={20} />}
+          icon={<Download  size={20} />}
           onClick={handlePrint}
-          className="!text-xs font-bold !bg-teal-500 !p-[0.4rem] mx-2"
+          className="!text-xs font-bold !bg-teal-500 !p-[0.4rem] mx-2 cursor-pointer"
         />
       </div>
     </div>
