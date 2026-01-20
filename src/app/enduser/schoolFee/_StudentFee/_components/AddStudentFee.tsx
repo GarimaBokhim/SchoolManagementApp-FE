@@ -26,6 +26,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
 
   const { data: allStudents } = useGetAllStudents();
   const { data: allClasses } = useGetAllClass();
+  const { data: allFeeTypes } = useGetAllFeeTypes();
   const { data: allFeeStructure } = useGetAllFeeStructure();
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -87,7 +88,6 @@ useEffect(() => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
-              {/* Student Combobox */}
               <AppCombobox
                 value={selectedStudentId}
                 dropDownWidth="w-full"
@@ -135,13 +135,14 @@ useEffect(() => {
                   setSelectedFeeStructureId(id);
                   form.setValue("feeStructureId", id);  
                 }}
-                getLabel={(f) => f?.feeTypeId ?? ""} 
+               getLabel={(f) =>
+                allFeeTypes?.Items?.find(
+                  (t) => t?.id === f?.feeTypeId
+                )?.name ?? ""
+              }
                 getValue={(f) => f?.id ?? ""}
                 disabled={!selectedClassId} 
               />
-
-
-
               <InputElement
                 label="Discount (%)"
                 form={form}
