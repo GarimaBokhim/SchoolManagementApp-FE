@@ -93,7 +93,6 @@ function InnerCombobox<T>(
             <div className="relative items-center flex">
               <ComboboxInput
                 {...(isFiler ? { value: query } : {})}
-                {...(form?.register ? form.register(name, { required }) : {})}
                 className={`w-full p-2  py-1.5 border  rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white  ${
                   form?.formState?.errors?.[name]
                     ? "border-red-500"
@@ -142,12 +141,13 @@ function InnerCombobox<T>(
                       dropdownPositionClass || "top-full left-0 right-0 mt-1"
                     } ${dropDownWidth}`}
                   >
-                    {filteredOptions.map((option) => (
-                      <ComboboxOption
-                        key={getValue(option)}
-                        value={option}
-                        className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
-                      >
+                    {filteredOptions.map((option, index) => (
+                    <ComboboxOption
+                      key={`${getValue(option)}-${index}`}
+                      value={option}
+                      className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
+                    >
+
                         {({ active }) => (
                           <div
                             className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${
