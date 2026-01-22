@@ -12,6 +12,8 @@ const AddStudentFee = ({ visible, onClose }: Props) => {
     defaultValues: {
       studentId: "",
       feeStructureId: "",
+      classId: "",
+      discountPercentage: 0,
     },
 
     // resolver: yupResolver(StudentValidator),
