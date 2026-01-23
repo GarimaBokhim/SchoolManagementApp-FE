@@ -23,7 +23,8 @@ type StudentFeeRequest = {
   discountPercentage: number;
 };
 type IPaymentRequest = {
-  studentfeeId: string;
+  studentid: string;
+  classid: string;
   amountPaid: number;
   paymentDate: string;
   paymentMethod: number;

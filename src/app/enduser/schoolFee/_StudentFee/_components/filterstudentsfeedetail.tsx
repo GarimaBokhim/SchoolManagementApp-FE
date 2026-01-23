@@ -17,8 +17,8 @@ import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hoo
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 
-/* 🔹 ACCEPT studentId FROM MODAL */
 interface ViewStudentFeeFormProps {
   studentId?: string;
 }
@@ -26,10 +26,12 @@ interface ViewStudentFeeFormProps {
 const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allStudents } = useGetAllStudents();
+  const {data: allClasses} = useGetAllClass();
  const { menuStatus } = usePermissions();
   const { canDelete } = useMenuPermissionData(menuStatus);
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [params, setParams] = useState("");
+
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
@@ -101,6 +103,17 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
     setParams("");
     refetch();
   };
+const getPaymentMethodLabel = (value: number) => {
+  switch (value) {
+    case 0: return "Cash";
+    case 1: return "Credit Card";
+    case 2: return "Debit Card";
+    case 3: return "Bank Transfer";
+    case 4: return "Mobile Payment";
+    case 5: return "Cheque";
+    default: return "Unknown";
+  }
+};
 
   return (
     <>
@@ -111,7 +124,6 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
     onSubmit={form.handleSubmit(onSubmit)}
     className="flex items-start gap-3 w-full max-w-[900px] flex-wrap sm:flex-nowrap"
           >
-            {/* Student Name */}
           <div className="flex-none w-[250px]">
           <AppCombobox
             value={selectedStudentId}
@@ -152,12 +164,9 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
         form={form}
         className="w-full h-[42px]"
       />
-      <div className="text-xs text-teal-600 mt-1 h-4 leading-4">
-        2082-09-22 (BS)
-      </div>
+     
     </div>
 
-    {/* End Date */}
     <div className="flex-none w-[170px]">
       <InputElement
         label="End Date"
@@ -166,12 +175,9 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
         form={form}
         className="w-full h-[42px]"
       />
-      <div className="text-xs text-teal-600 mt-1 h-4 leading-4">
-        2082-09-22 (BS)
-      </div>
+    
     </div>
 
-    {/* Filter Button */}
     <div className="flex-none">
       <ButtonElement
         type="submit"
@@ -181,7 +187,6 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
       />
     </div>
 
-    {/* Clear Button */}
     <div className="flex-none">
       <ButtonElement
         type="button"
@@ -194,7 +199,6 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
   </form>
       </div>
 
-      {/* TABLE */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100">
@@ -220,9 +224,12 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
                 (fee: Istudentfeesummary, index: number) => (
                   <tr key={index}>
                     <td className="px-4 py-3">{index + 1}</td>
-                    <td className="px-4 py-3">{fee.classId}</td>
+                    <td className="px-4 py-3">{allClasses?.Items?.find((c) => c.id === fee.classId)?.name}</td>
                     <td className="px-4 py-3">{fee.paidAmount}</td>
-                    <td className="px-4 py-3">{fee.paymentMethod}</td>
+                    <td className="px-4 py-3">
+                      {getPaymentMethodLabel(fee.paymentMethod)}
+                    </td>
+
                     <td className="px-4 py-3">{fee.totalAmount}</td>
                     <td className="px-4 py-3">{fee.dueAmount}</td>
                     {/* <td className="px-4 py-3">
