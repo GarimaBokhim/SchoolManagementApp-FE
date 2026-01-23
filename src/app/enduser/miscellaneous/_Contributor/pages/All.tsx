@@ -1,59 +1,53 @@
 "use client";
-import { useState } from "react";
-import AllContributorForm from "../_components/AllContributor";
-import AllSchoolItemForm from "../../_SchoolItem/_components/AllSchoolItem";
-import AllHistoryForm from "../../_History/_components/AllHIstory";
-import AssetsReportByFiscalYear from "../../_Assetsreport/_components/Allassetsreport";
-const AllContributor = () => {
-  const exam = [
-    { id: "contributor", label: "Contributor", color: "gray" },
-    { id: "schoolItem", label: "School Item", color: "gray" },
-    { id: "history", label: "History", color: "gray" },
-    { id: "assetsreport", label: "Asset Report", color: "gray" },
-  ];
-  const [activeReport, setActiveReport] = useState<string>("contributor");
 
-  const renderReport = () => {
-    switch (activeReport) {
-      case "schoolItem":
-        return <div className=" text-center">{<AllSchoolItemForm />}</div>;
-      case "history":
-        return (
-          <div className=" text-center">
-            <AllHistoryForm />
-          </div>
-        );
-        case "assetsreport":
-        return <div className=" text-center">{<AssetsReportByFiscalYear  />}</div>;
+import { useState } from "react";
+import AllContributorForm from "../_components/AllContributor"; // Student Awards
+import AllSchoolItemForm from "../../_SchoolItem/_components/AllSchoolItem"; // School Awards
+
+const AllContributor = () => {
+  const tabs = [
+    { id: "studentAwards", label: "Student Awards" },
+    { id: "schoolAwards", label: "School Awards" },
+  ];
+
+  const [activeTab, setActiveTab] = useState<string>("studentAwards");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "schoolAwards":
+        return <AllSchoolItemForm />;
+      case "studentAwards":
       default:
         return <AllContributorForm />;
     }
   };
 
   return (
-    <div className="p-4 h-full ">
-      <div className="bg-blue-100 rounded-t-xl px-4 pt-4 flex gap-1">
-        {exam.map((t) => {
-          const isActive = activeReport === t.id;
+    <div className="p-4 h-full">
+      {/* Tabs */}
+      <div className="bg-blue-100 rounded-t-xl px-4 pt-4 flex gap-2">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
 
           return (
             <button
-              key={t.id}
-              onClick={() => setActiveReport(t.id)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               className={
-                "px-6 py-2  text-sm font-medium  " +
+                "px-6 py-2 text-sm font-medium transition-all " +
                 (isActive
-                  ? " text-blue-700 border-b-2 border-blue-700 font-semibold"
-                  : "text-lue-600 hover:bg-blue-200 rounded-sm")
+                  ? "text-blue-700 border-b-2 border-blue-700 font-semibold"
+                  : "text-blue-600 hover:bg-blue-200 rounded-sm")
               }
             >
-              {t.label}
+              {tab.label}
             </button>
           );
         })}
       </div>
-      <div className="border border-gray-200 dark:border-gray-700 rounded-b-lg h-[90%] p-6 bg-white dark:bg-gray-800 transition-all overflow-auto">
-        {renderReport()}
+
+      <div className="border border-gray-200 dark:border-gray-700 rounded-b-lg h-[90%] p-6 bg-white dark:bg-gray-800 overflow-auto">
+        {renderContent()}
       </div>
     </div>
   );
