@@ -141,7 +141,6 @@ useEffect(() => {
                 )?.name ?? ""
               }
                 getValue={(f) => f?.id ?? ""}
-                disabled={!selectedClassId} 
               />
               <InputElement
                 label="Discount (%)"
