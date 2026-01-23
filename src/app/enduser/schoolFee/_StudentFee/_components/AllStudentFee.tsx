@@ -47,7 +47,6 @@ const AllStudentFeeForm = () => {
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
-  const { data: allFeeStructure } = useGetAllFeeStructure();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
 
@@ -348,7 +347,8 @@ const AllStudentFeeForm = () => {
       </button>
 
       <PaymentRecordForm
-        studentfeeId={selectedStudentFee?.studentId || ""} 
+        studentid={selectedStudentFee?.studentId || ""} 
+        classid={selectedStudentFee?.classId || ""}
         onClose={() => setViewpaymentModal(false)}
       />
     </div>
