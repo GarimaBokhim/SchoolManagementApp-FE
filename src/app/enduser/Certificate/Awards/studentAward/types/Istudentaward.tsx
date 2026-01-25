@@ -12,7 +12,7 @@ export interface Istudentaward {
     isActive: boolean;
 }
  
-export interface IfilterStufentAward {
+export interface IfilterStudentAward {
     studentId: string;
     startDate: string;
     endDate: string;
