@@ -11,7 +11,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Eye, Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -22,6 +22,8 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddStudentAttendance from "../pages/Add";
 import { useGetAllStudents } from "../../Student/hooks";
 import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hooks";
+import { PrintButton } from "@/components/Buttons/PrintButton";
+import MonthlyAttendanceSheet from "./studentattendencedetail";
 const AllStudentAttendanceForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -52,7 +54,10 @@ const AllStudentAttendanceForm = () => {
     },
   });
   const fullQuery = query + (params || "");
+const [selectedStudentAttendance, setSelectedStudentAttendance] =
+  useState<IAllAttendance | null>(null);
 
+const [ViewModal, setViewModal] = useState(false);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -250,8 +255,19 @@ const AllStudentAttendanceForm = () => {
                           }
                         </td>
                         <td className="py-1 px-4">
-                          {StudentAttendance.remarks}
+                          <ButtonElement
+                            text=""
+                            icon={<Eye size={14} />}
+                            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                            onClick={() => {
+                              setSelectedStudentAttendance(
+                                StudentAttendance
+                              );
+                              setViewModal(true);
+                            }}
+                          />
                         </td>
+
                       </tr>
                     )
                   )
@@ -273,6 +289,7 @@ const AllStudentAttendanceForm = () => {
             onClose={() => setAddModal(false)}
           />
         </div>
+       
 
         {filteredStudentAttendance?.Items &&
           filteredStudentAttendance?.Items.length > 0 && (
@@ -300,6 +317,13 @@ const AllStudentAttendanceForm = () => {
               />
             </div>
           )}
+           {ViewModal && (
+          <MonthlyAttendanceSheet
+            visible={ViewModal}
+            onClose={() => setViewModal(false)}
+            studentAttendance={selectedStudentAttendance}
+          />
+        )}
       </div>
     </>
   );
