@@ -11,16 +11,15 @@ import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
-import DeleteButton from "@/components/Buttons/DeleteButton";
 import {  useFilterStudentAwardByDate } from "../hooks";
 
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-import { IfilterStudentAward } from "../types/Istudentaward";
+import { IfilterStudentAward, Istudentaward } from "../types/Istudentaward";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import AddStudentAward from "./AddstudentAward";
 
 const AllStudentAwardForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -64,6 +63,7 @@ const AllStudentAwardForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
   const formRef = useRef<DateRangeFilterRef>(null);
+const Awardform = useForm<Istudentaward>()
 
   useEffect(() => {
     refetch();
@@ -244,7 +244,7 @@ const AllStudentAwardForm = () => {
           </div>
         )}
 
-        {/* <AddSchoolAward visible={addModal} onClose={() => setAddModal(false)} /> */}
+        <AddStudentAward form={Awardform} visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );
