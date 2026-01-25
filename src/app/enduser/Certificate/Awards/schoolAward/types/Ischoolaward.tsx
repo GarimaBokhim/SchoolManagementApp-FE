@@ -1,6 +1,6 @@
 
 export interface ISchoolAward {
-  id: string;
+  Id: string;
   awardedAt: string;        
   awardedBy: string;
   awardDescriptions: string;

@@ -5,7 +5,7 @@ import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { Istudentaward } from "../types/Istudentaward";
 
 type IstudentawardRequest = {
-    id: string;
+    Id: string;
     studentId: string;
     awardedAt: string;
     awardedBy: string;
@@ -22,6 +22,7 @@ const StudentAwardEndPoints = {
     getAllStudentAward: "/api/Certificate/GetAllSchoolsAwards",
     filterStudentAwardByDate: "/api/Certificate/FilterStudentsAwards",
     AddStudentAward: "/api/Certificate/AddStudentsAwards",
+    deleteStudentAwards: "/api/Certificate/DeleteAwards",
 }
 const queryKey = "studentAward";
 const filterQueryKey = "filteredstudentAward";
@@ -62,6 +63,23 @@ export const useAddStudentAward = () => {
 
     onError: (error) => {
       console.error("Error adding Student Award:", error);
+    },
+  });
+};
+
+export const useRemoveStudentAward = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Istudentaward, Error, string | undefined>({
+    mutationFn: async (Id: string | undefined): Promise<Istudentaward> => {
+      if (!Id) {
+        throw new Error("Id is required to remove a School award");
+      }
+      const response = await api.delete(`${StudentAwardEndPoints.deleteStudentAwards}/${Id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
   });
 };
