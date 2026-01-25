@@ -14,7 +14,8 @@ import DateRangeFilter, {
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
-import {  useFilterStudentAwardByDate } from "../hooks";
+import DeleteButton from "@/components/Buttons/DeleteButton";
+import {  useFilterStudentAwardByDate, useRemoveStudentAward } from "../hooks";
 
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { IfilterStudentAward, Istudentaward } from "../types/Istudentaward";
@@ -52,7 +53,7 @@ const AllStudentAwardForm = () => {
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
-
+  const deleteStudentAward = useRemoveStudentAward();
   const form = useForm<IfilterStudentAward>({
     defaultValues: {
       studentId: "",
@@ -63,7 +64,7 @@ const AllStudentAwardForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
   const formRef = useRef<DateRangeFilterRef>(null);
-const Awardform = useForm<Istudentaward>()
+const StudentAwardform = useForm<Istudentaward>()
 
   useEffect(() => {
     refetch();
@@ -104,17 +105,17 @@ const Awardform = useForm<Istudentaward>()
     }
   };
 
-//   const deleteSchoolAward = useRemoveSchoolAward();
 
-//   const handleDelete = async (id: string) => {
-//     try {
-//       await deleteSchoolAward.mutateAsync(id);
-//       toast.success("School award deleted successfully!");
-//       refetch();
-//     } catch {
-//       toast.error("Error deleting school award.");
-//     }
-//   };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteStudentAward.mutateAsync(id);
+      toast.success("Student award deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting Student award.");
+    }
+  };
 
   const onClearClick = () => {
     refetch();
@@ -204,14 +205,23 @@ const Awardform = useForm<Istudentaward>()
                     </tr>
                     ) : data?.Items?.length ? (
                     data.Items.map((award, index) => (
-                        <tr key={award.id} className="border-t">
+                        <tr key={award.Id} className="border-t">
                         <td className="px-4 py-2">{index + 1}</td>
                         <td className="px-4 py-2">{allStudents?.Items?.find(  (i) => i.id === award.studentId )?.firstName}</td>
                         <td className="px-4 py-2"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
                         <td className="px-4 py-2">{award.awardedBy}</td>
                         <td className="px-4 py-2">{award.awardDescriptions}</td>
-                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}
-                        </td>
+                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-2">  {canDelete && award.Id && (
+                        <DeleteButton
+                          onConfirm={async () => {
+                            await deleteStudentAward.mutateAsync(award.Id);
+                            toast.success("School award deleted successfully!");
+                          }}
+                          headerText={<Trash />}
+                          content="Are you sure you want to delete this School Award?"
+                        />
+                      )}</td>
                         </tr>
                     ))
                     ) : (
@@ -244,7 +254,7 @@ const Awardform = useForm<Istudentaward>()
           </div>
         )}
 
-        <AddStudentAward form={Awardform} visible={addModal} onClose={() => setAddModal(false)} />
+        <AddStudentAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );

@@ -12,7 +12,7 @@ interface props {
 const Add = ({  onClose }: props) => {
   const form = useForm<Istudentaward>({
     defaultValues: {
-      id: "",
+      Id: "",
       studentId: "",
       awardedAt: new Date().toISOString().split("T")[0],
       awardedBy: "",
@@ -35,7 +35,7 @@ const Add = ({  onClose }: props) => {
       <Toaster position="top-right" />
       <div className="p-6 max-w-3xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Add student Award</h1>
-        <div className="bg-white  p-6 rounded-xl shadow-md">
+        <div className="  p-6 rounded-xl shadow-md">
           <AddStudentAward form={form} visible={true} onClose={handleOnClose} />
         </div>
       </div>

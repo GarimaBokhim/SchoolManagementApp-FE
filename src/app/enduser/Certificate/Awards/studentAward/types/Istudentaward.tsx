@@ -1,5 +1,5 @@
 export interface Istudentaward {
-    id: string;
+    Id: string;
     studentId: string;
     awardedAt: string;
     awardedBy: string;

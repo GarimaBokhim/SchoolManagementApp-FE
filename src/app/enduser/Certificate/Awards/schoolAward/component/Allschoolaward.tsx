@@ -16,9 +16,10 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { useFilterSchoolAwardByDate } from "../hooks";
-import { IfilterSchoolAward } from "../types/Ischoolaward";
+import { useFilterSchoolAwardByDate, useRemoveSchoolAward } from "../hooks";
+import { IfilterSchoolAward, ISchoolAward } from "../types/Ischoolaward";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
+import AddschoolAward from "./Addschoolaward";
 
 const AllSchoolAwardForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -41,12 +42,12 @@ const AllSchoolAwardForm = () => {
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const fullQuery = query + (params || "");
-
+  const StudentAwardform = useForm<ISchoolAward>()
   const { data, refetch, isLoading } = useFilterSchoolAwardByDate(fullQuery);
   const { data: allSchools } = useGetAllSchool();
   const { menuStatus } = usePermissions();
   const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
-
+  const deleteSchoolAward = useRemoveSchoolAward();
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
@@ -65,49 +66,40 @@ const AllSchoolAwardForm = () => {
     refetch();
   }, [paginationParams, refetch]);
 
-  const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
-    clearError();
+const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
+  clearError();
+
+  try {
+    const queryParams = [
+      formData.startDate
+        ? `startDate=${encodeURIComponent(formData.startDate)}`
+        : null,
+      formData.endDate
+        ? `endDate=${encodeURIComponent(formData.endDate)}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("&");
+
+    setParams(queryParams ? `&${queryParams}` : "");
+  } catch (error) {
+    const errorMsg = handleError(error);
+    Toast.error(errorMsg);
+  }
+};
+
+
+ 
+
+  const handleDelete = async (id: string) => {
     try {
-      const queryParams = [
-        formData.startDate
-          ? `startDate=${encodeURIComponent(formData.startDate)}`
-          : null,
-        formData.endDate
-          ? `endDate=${encodeURIComponent(formData.endDate)}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join("&");
-
-      const fullQuery = queryParams ? `&${queryParams}` : "";
-
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery);
-          await refetch();
-        })(),
-        {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
-        }
-      );
-    } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      await deleteSchoolAward.mutateAsync(id);
+      toast.success("School award deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting school award.");
     }
   };
-
-//   const deleteSchoolAward = useRemoveSchoolAward();
-
-//   const handleDelete = async (id: string) => {
-//     try {
-//       await deleteSchoolAward.mutateAsync(id);
-//       toast.success("School award deleted successfully!");
-//       refetch();
-//     } catch {
-//       toast.error("Error deleting school award.");
-//     }
-//   };
 
   const onClearClick = () => {
     refetch();
@@ -145,7 +137,6 @@ const AllSchoolAwardForm = () => {
             </div>
           </div>
 
-          {/* Filter */}
           {openFilter && (
             <div className="p-4 border-t border-gray-200">
               <form
@@ -158,9 +149,6 @@ const AllSchoolAwardForm = () => {
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
-
-               
-
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} />
                   <ButtonElement
@@ -196,12 +184,24 @@ const AllSchoolAwardForm = () => {
                     </tr>
                     ) : data?.Items?.length ? (
                     data.Items.map((award, index) => (
-                        <tr key={award.id} className="border-t">
+                        <tr key={award.Id} className="border-t">
                         <td className="px-4 py-2">{index + 1}</td>
                         <td className="px-4 py-2"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
                         <td className="px-4 py-2">{award.awardedBy}</td>
                         <td className="px-4 py-2">{award.awardDescriptions}</td>
-                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}
+                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-2">
+                       {canDelete && award.Id && (
+                        <DeleteButton
+                          onConfirm={async () => {
+                            await deleteSchoolAward.mutateAsync(award.Id);
+                            toast.success("School award deleted successfully!");
+                          }}
+                          headerText={<Trash />}
+                          content="Are you sure you want to delete this School Award?"
+                        />
+                      )}
+
                         </td>
                         </tr>
                     ))
@@ -235,7 +235,7 @@ const AllSchoolAwardForm = () => {
           </div>
         )}
 
-        {/* <AddSchoolAward visible={addModal} onClose={() => setAddModal(false)} /> */}
+        <AddschoolAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );
