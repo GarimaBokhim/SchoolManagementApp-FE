@@ -10,14 +10,13 @@ import { InputElement } from "@/components/Input/InputElement";
 import { Toast } from "@/components/Toast/toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 
-import { IFilterStudentFee, IStudentFee, Istudentfeesummary } from "../types/IStudentFee";
+import { IFilterStudentFee, IPaymentRecord, IStudentFee, Istudentfeesummary } from "../types/IStudentFee";
 import { useGetStudentFeesummary } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import DeleteButton from "@/components/Buttons/DeleteButton";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+import { PrintButton } from "@/components/Buttons/PrintButton";
+import PaymentReceiptPrint from "./printpaymentrecordindividually";
 
 interface ViewStudentFeeFormProps {
   studentId?: string;
@@ -27,10 +26,9 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allStudents } = useGetAllStudents();
   const {data: allClasses} = useGetAllClass();
- const { menuStatus } = usePermissions();
-  const { canDelete } = useMenuPermissionData(menuStatus);
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [params, setParams] = useState("");
+  const [printData, setPrintData] = useState<IPaymentRecord | null>(null);
 
 
   const form = useForm<IFilterStudentFee>({
@@ -87,15 +85,17 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
       Toast.error(handleError(error));
     }
   };
-  //  const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteFeeStructure.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+// const handleprint = async (id: string) => {
+//   try {
+//     await refetch();
+//     const data = filteredStudentFee?.Items.find((item) => item.classId === id);
+//     if (data !== undefined) {
+//       setPrintData(data);
+//     }
+//   } catch (error) {
+//     Toast.error(handleError(error));
+//   }
+// };
 
   const onClear = () => {
     form.reset();
@@ -232,18 +232,13 @@ const getPaymentMethodLabel = (value: number) => {
 
                     <td className="px-4 py-3">{fee.totalAmount}</td>
                     <td className="px-4 py-3">{fee.dueAmount}</td>
-                    {/* <td className="px-4 py-3">
-                      {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    fee.classId ? fee.classId : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this FeeStructure?"
-                              />
-                            )}</td> */}
+                    <td className="px-4 py-3">
+                    <PrintButton>
+                      {/* <PaymentReceiptPrint data={fee}/> */}
+                    </PrintButton>
+                  </td>
+
+
                   </tr>
                 )
               )

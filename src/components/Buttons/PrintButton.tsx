@@ -1,7 +1,7 @@
 "use client";
 import { ButtonElement } from "./ButtonElement";
 import { ReactNode, useRef, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, PrinterIcon } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
@@ -86,7 +86,7 @@ export const PrintButton = ({ children }: Props) => {
         <ButtonElement
           type="button"
           text=""
-          icon={<Download  size={20} />}
+          icon={<PrinterIcon  size={20} />}
           onClick={handlePrint}
           className="!text-xs font-bold !bg-teal-500 !p-[0.4rem] mx-2 cursor-pointer"
         />
