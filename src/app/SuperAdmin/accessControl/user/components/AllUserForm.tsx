@@ -200,16 +200,16 @@ const AllUserForm = () => {
                   selected={
                     selectedSchool
                       ? allUsers?.Items?.find(
-                          (g) => g.SchoolId === selectedSchool
+                          (g) => g.CompanyId === selectedSchool
                         ) ?? null
                       : null
                   }
-                  onSelect={(user) => setSelectedSchool(user?.SchoolId ?? "")}
+                  onSelect={(user) => setSelectedSchool(user?.CompanyId ?? "")}
                   getLabel={(g) =>
-                    allschool?.Items.find((i) => i.id === g?.SchoolId)?.name ??
+                    allschool?.Items.find((i) => i.id === g?.CompanyId)?.name ??
                     ""
                   }
-                  getValue={(g) => g?.SchoolId ?? ""}
+                  getValue={(g) => g?.CompanyId ?? ""}
                 />
 
                 <div className="flex gap-2 ml-auto">
@@ -236,11 +236,9 @@ const AllUserForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Company</th>
+                  <th className="px-4 py-3 text-left">School</th>
                   <th className="px-4 py-3 text-left">User Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Created At</th>
-                  <th className="px-4 py-3 text-left">Expires At</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
@@ -251,8 +249,8 @@ const AllUserForm = () => {
                       Loading users...
                     </td>
                   </tr>
-                ) : filteredUser && filteredUser.length > 0 ? (
-                  filteredUser.map(
+                ) : filteredUser && filteredUser?.Items.length > 0 ? (
+                  filteredUser?.Items.map(
                     (user: IUserResponseForAll, index: number) => (
                       <tr
                         key={index}
@@ -260,13 +258,11 @@ const AllUserForm = () => {
                       >
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">
-                          {allschool?.Items.find((i) => i.id === user.SchoolId)
-                            ?.name ?? ""}
+                         {allschool?.Items.find((i) => i.id === user.CompanyId)?.name}
                         </td>
                         <td className="py-3 px-4">{user.UserName}</td>
                         <td className="py-3 px-4">{user.Email}</td>
-                        <td className="py-3 px-4">—</td>
-                        <td className="py-3 px-4">—</td>
+                   
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
                             <DeleteButton
@@ -324,17 +320,17 @@ const AllUserForm = () => {
           <Add visible={addModal} onClose={() => setAddModal(false)} />
         </div>
       </div>
-       {allUsers && allUsers?.Items?.length > 0 && (
+       {filteredUser && filteredUser?.Items.length > 0 && (
         <Pagination
           form={handleSubmit}
           pagination={{
-            currentPage: Array.isArray(allUsers) ? 1 : allUsers?.PageIndex ?? 1,
-            firstPage: Array.isArray(allUsers) ? 1 : allUsers?.FirstPage ?? 1,
-            lastPage: Array.isArray(allUsers) ? 1 : allUsers?.LastPage ?? 1,
-            nextPage: Array.isArray(allUsers) ? 1 : allUsers?.NextPage ?? 1,
-            previousPage: Array.isArray(allUsers)
+            currentPage: Array.isArray(filteredUser) ? 1 : filteredUser?.PageIndex ?? 1,
+            firstPage: Array.isArray(filteredUser) ? 1 : filteredUser?.FirstPage ?? 1,
+            lastPage: Array.isArray(filteredUser) ? 1 : filteredUser?.LastPage ?? 1,
+            nextPage: Array.isArray(filteredUser) ? 1 : filteredUser?.NextPage ?? 1,
+            previousPage: Array.isArray(filteredUser)
               ? 1
-              : allUsers?.PreviousPage ?? 1,
+              : filteredUser?.PreviousPage ?? 1,
           }}
           handleSearch={handleSearch}
         />

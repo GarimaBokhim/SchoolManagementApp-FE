@@ -5,6 +5,7 @@ export interface IUserResponse {
   password: string;
   rolesId: string[];
   institutionId: string;
+  SchoolId?: string;
   schoolIds: string[];
 }
 export interface IUserResponseForAll {
@@ -14,7 +15,7 @@ export interface IUserResponseForAll {
   Password: string;
   rolesId: string[];
   institutionId: string;
-  SchoolId?: string;
+  CompanyId: string;
   SchoolIds: string[];
 }
 export interface IAssign {
