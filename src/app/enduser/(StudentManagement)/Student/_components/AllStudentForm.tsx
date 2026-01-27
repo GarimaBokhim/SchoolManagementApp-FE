@@ -29,6 +29,9 @@ import { PrintButton } from "@/components/Buttons/PrintButton";
 import { useRouter } from "next/navigation";
 import AllPrintFormForStudents from "./PrintFormForStudentFee";
 import ImportButtonForm from "@/components/Buttons/importbutton";
+import ExportButtonForm from "@/components/Buttons/exportbuttonform";
+import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
+import ExcelParentTable from "../../_Parent/components/Excelprint";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -154,12 +157,21 @@ const router = useRouter();
                   className="!font-semibold"
                 />
               )}
-             <PrintButton>
-              <AllPrintFormForStudents
-                startDate={form.watch("startDate")}
-                endDate={form.watch("endDate")}
-              />
-            </PrintButton>
+              <ExportButtonForm
+          file="/template/ledgerTemplate.xlsx"
+          data={
+            <AllPrintFormForParents
+              startDate={form.watch("startDate")}
+              endDate={form.watch("endDate")}
+            />
+          }
+          excelData={
+            <ExcelParentTable
+              startDate={form.watch("startDate")}
+              endDate={form.watch("endDate")}
+            />
+          }
+        />
             <ImportButtonForm
             handleExcelImport={async (file) => {
               // await toast.promise(uploadLedger(file), {
