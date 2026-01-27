@@ -6,4 +6,6 @@ export type IUserRole =
   | "BranchAdmin"
   | "BranchUser"
   | "BranchSuperAdmin"
-  | "BranchManager";
+  | "BranchManager"
+  | "crm";
+
