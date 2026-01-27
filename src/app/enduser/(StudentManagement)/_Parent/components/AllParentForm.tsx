@@ -26,6 +26,8 @@ import AddParent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { PrintButton } from "@/components/Buttons/PrintButton";
 import AllPrintFormForParents from "./PrintAllParentsform";
+import ImportButtonForm from "@/components/Buttons/importbutton";
+// const { mutateAsync: importParent } = useImportParents();
 const AllParentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -160,6 +162,7 @@ const AllParentForm = () => {
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
 
+
               {canAdd && (
                 <ButtonElement
                   icon={<Plus size={24} />}
@@ -174,6 +177,15 @@ const AllParentForm = () => {
           startDate={form.watch("startDate")}
           endDate={form.watch("endDate")} />
         </PrintButton>
+        <ImportButtonForm
+            handleExcelImport={async (file) => {
+              // await toast.promise(importParent(file), {
+              //   loading: "Uploading...",
+              //   success: "Parents uploaded successfully!",
+              //   error: "Upload failed! Please Check the format",
+              // });
+            }}
+          />
             </div>
           </div>
           {openFilter && (

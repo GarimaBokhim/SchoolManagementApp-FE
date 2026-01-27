@@ -28,6 +28,7 @@ import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { PrintButton } from "@/components/Buttons/PrintButton";
 import { useRouter } from "next/navigation";
 import AllPrintFormForStudents from "./PrintFormForStudentFee";
+import ImportButtonForm from "@/components/Buttons/importbutton";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -159,6 +160,15 @@ const router = useRouter();
                 endDate={form.watch("endDate")}
               />
             </PrintButton>
+            <ImportButtonForm
+            handleExcelImport={async (file) => {
+              // await toast.promise(uploadLedger(file), {
+              //   loading: "Uploading...",
+              //   success: "Ledger uploaded successfully!",
+              //   error: "Upload failed! Please Check the format",
+              // });
+            }}
+          />
             </div>
           </div>
           {openFilter && (
