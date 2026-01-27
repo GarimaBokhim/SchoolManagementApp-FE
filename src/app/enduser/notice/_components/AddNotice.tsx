@@ -22,6 +22,7 @@ const AddNoticeForm = ({ onClose, form }: Props) => {
   const details = watch("contentHtml");
   const handleClose = () => {
     form.reset();
+    if(onClose)onClose()
   };
   const onSubmit: SubmitHandler<INotice> = async (data) => {
     clearError();

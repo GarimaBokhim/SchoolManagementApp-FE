@@ -1,29 +1,6 @@
 import "./index.css"
-import { useEditor, EditorContent } from '@tiptap/react'  
-import StarterKit from '@tiptap/starter-kit'
-import Blockquote from '@tiptap/extension-blockquote'
-import Underline from '@tiptap/extension-underline'
-import TextAlign from '@tiptap/extension-text-align'
-import BulletList from '@tiptap/extension-bullet-list'
-import Document from '@tiptap/extension-document'
-import ListItem from '@tiptap/extension-list-item'
-import OrderedList from '@tiptap/extension-ordered-list'
-import Link from '@tiptap/extension-link'
-import Code from '@tiptap/extension-code'
-import Image from '@tiptap/extension-image'
-import Highlight from '@tiptap/extension-highlight'
-import Placeholder from '@tiptap/extension-placeholder'
-import { TextStyle } from "@tiptap/extension-text-style"
-import Heading from '@tiptap/extension-heading'
-import Color from '@tiptap/extension-color'
-import {Table} from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import Subscript from '@tiptap/extension-subscript';
-import Superscript from '@tiptap/extension-superscript'
-import Paragraph from '@tiptap/extension-paragraph'
-import { Text as TextExtension } from '@tiptap/extension-text'
+import {  Editor, EditorContent } from '@tiptap/react'  
+
 import {
   Bold,
   Italic,
@@ -62,11 +39,9 @@ import {
   Subscript as SubscriptIcon,
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
-
-import CodeBlock from '@tiptap/extension-code-block'
 import { Tooltip } from "@/components/Buttons/Tooltip"
 
-const RichTextEditor = () => {
+const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [tableModalShow, setTableModalShow] = useState(false)
   const [open, setOpen] = useState(false);
@@ -80,130 +55,6 @@ const RichTextEditor = () => {
   const buttonClasses = 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900'
 
   const activeButtonClasses = 'border-2 border-blue-400'
-
-
-  const editor = useEditor({
-    extensions: [
-      Document,
-      Paragraph,
-      StarterKit,
-      TextExtension,
-      Heading.configure({
-        levels: [1, 2, 3],
-      }),
-      CodeBlock.configure({
-        languageClassPrefix: 'language-',
-        defaultLanguage: 'javascript',
-        HTMLAttributes: {
-          class: `${
-            'bg-gray-100 text-gray-800 border-gray-200'} p-4 rounded-md overflow-x-auto font-mono text-sm border`
-        },
-      }),
-      BulletList.configure({
-        HTMLAttributes: {
-          class: `list-disc pl-6`,
-        },
-      }),
-      OrderedList.configure({
-        HTMLAttributes: {
-          class: `list-decimal pl-6`,
-        },
-      }),
-      ListItem,
-      Underline,
-      Subscript,
-      Blockquote.configure({
-        HTMLAttributes: {
-          class: `border-l-4 border-blue-500 pl-4 italic my-4`,
-        }
-      }),
-      Superscript,
-      TextStyle,
-      Color,
-      Highlight.configure({
-        multicolor: true,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: `${ 'text-blue-600 hover:text-blue-500'} cursor-pointer underline`,
-        },
-        autolink: true,
-        defaultProtocol: 'https',
-        protocols: ['http', 'https'],
-        isAllowedUri: (url, ctx) => {
-          try {
-            const parsedUrl = url.includes(':') ? new URL(url) : new URL(`${ctx.defaultProtocol}://${url}`)
-            if (!ctx.defaultValidate(parsedUrl.href)) {
-              return false
-            }
-
-            const disallowedProtocols = ['ftp', 'file', 'mailto']
-            const protocol = parsedUrl.protocol.replace(':', '')
-
-            if (disallowedProtocols.includes(protocol)) {
-              return false
-            }
-
-            const allowedProtocols = ctx.protocols.map(p => (typeof p === 'string' ? p : p.scheme))
-
-            if (!allowedProtocols.includes(protocol)) {
-              return false
-            }
-
-            const disallowedDomains = ['example-phishing.com', 'malicious-site.net']
-            const domain = parsedUrl.hostname
-
-            if (disallowedDomains.includes(domain)) {
-              return false
-            }
-            return true
-          } catch {
-            return false
-          }
-        },
-        shouldAutoLink: url => {
-          try {
-            const parsedUrl = url.includes(':') ? new URL(url) : new URL(`https://${url}`)
-            const disallowedDomains = ['example-no-autolink.com', 'another-no-autolink.com']
-            const domain = parsedUrl.hostname
-
-            return !disallowedDomains.includes(domain)
-          } catch {
-            return false
-          }
-        },
-
-      }),
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'rounded-md',
-        },
-      }),
-      Placeholder.configure({
-        placeholder: 'Write something amazing...',
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Code.configure({
-        HTMLAttributes: {
-          class: "bg-purple-100 text-gray-800 p-1 rounded font-mono text-sm border border-gray-300 dark:border-gray-700"
-
-        },
-      }),
-    ],
-     immediatelyRender: false,
-    content: `<p>Type your text here...</p>`,
-  })
 
   const addImage = () => {
     const url = window.prompt('Enter the URL of the image:')
@@ -240,10 +91,9 @@ const RichTextEditor = () => {
 
 
   return (
-    <div className={`min-h-screen p-6 transition-all duration-300 ${themeClasses}`}>
+    <div className={` p-6 transition-all duration-300 ${themeClasses}`}>
       <div className={`border rounded-lg p-4 mb-4 shadow-lg ${toolbarClasses}`}>
         <div className="flex flex-wrap gap-2 items-center">
-          {/* History Controls */}
           <div className="flex items-center space-x-1 mr-4">
             <button
               type="button"
@@ -285,6 +135,7 @@ const RichTextEditor = () => {
               <Italic className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => editor.chain().focus().toggleUnderline().run()}
               className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('underline') ? activeButtonClasses : ''}`}
               title="Underline (Ctrl+U)"
@@ -292,6 +143,7 @@ const RichTextEditor = () => {
               <UnderlineIcon className="w-4 h-4" />
             </button>
             <button
+            type="button"
               onClick={() => editor.chain().focus().toggleStrike().run()}
               className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('strike') ? activeButtonClasses : ''}`}
               title="Strikethrough"
@@ -540,6 +392,7 @@ const RichTextEditor = () => {
         <div className="flex items-center space-x-2">
             <Tooltip content="Insert Table">
   <button
+  type="button"
     className="p-2 rounded hover:bg-gray-200"
     onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
   >
@@ -676,36 +529,6 @@ const RichTextEditor = () => {
     </button>
   </div>
 )}
-
-
-      <div className={`border rounded-lg p-6 min-h-96 shadow-lg transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editorClasses}`}>
-        <EditorContent editor={editor} />
-      </div>
-
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div
-            className={`p-6 rounded-xl w-[340px] shadow-xl border ${
-               'bg-white border-gray-200 text-gray-900'
-              }`}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold tracking-tight">Download Format</h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                title="Close"
-                className={`rounded-full p-1 ${buttonClasses} hover:bg-gray-200 dark:hover:bg-gray-700`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
 
     </div>
   )
