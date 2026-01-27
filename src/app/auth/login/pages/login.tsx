@@ -72,6 +72,7 @@ const LoginForm = () => {
       const roleToDashboardMap: Partial<Record<IUserRole, string>> = {
         superadmin: "/SuperAdmin/dashboard",
         developeruser: "/developer",
+        crm: "/crm",
       };
       const storedUser = localStorage.getItem("userDetails");
 
