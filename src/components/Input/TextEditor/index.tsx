@@ -2,58 +2,66 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import MenuBar from "./MenuBar";
-import TextAlign from "@tiptap/extension-text-align";
-import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
+
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Highlight } from "@tiptap/extension-highlight";
+import { Placeholder } from "@tiptap/extension-placeholder";
+import { CharacterCount } from "@tiptap/extension-character-count";
+import {Table} from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableHeader from "@tiptap/extension-table-header";
+import TableCell from "@tiptap/extension-table-cell";
+import RichTextEditor from "./MenuBar";
 
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
 }
+
 const TextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bulletList: {
-          HTMLAttributes: {
-            class: "list-disc ml-3",
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: "list-decimal ml-3",
-          },
-        },
+        heading: { levels: [1, 2, 3] },
       }),
+
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
-      Highlight.configure({
-        multicolor: true,
+
+      Highlight,
+
+      Placeholder.configure({
+        placeholder: "Start typing here...",
       }),
-      Link.configure({
-        openOnClick: true,
-        linkOnPaste: true,
+
+      CharacterCount,
+
+      Table.configure({
+        resizable: true,
       }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
-    content: content,
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        class:
-          "min-h-[20rem] border rounded-md bg-slate-50 py-2 px-3 lg:w-[56.75rem]",
-      },
-    },
+
+    content,
+  immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      onChange(html);
+
+      const wordCount = editor.storage.characterCount.words();
+      const charCount = editor.storage.characterCount.characters();
+
+      console.log("Words:", wordCount, "Characters:", charCount);
     },
   });
 
   return (
-    <div>
-      <MenuBar editor={editor} />
-      <div className="h-[20rem] overflow-y-auto w-full">
+    <div className="w-full border rounded-md">
+      <RichTextEditor/>
+      <div className=" overflow-y-auto w-full p-4 editor-content">
         <EditorContent editor={editor} className="prose w-full min-w-0" />
       </div>
     </div>
