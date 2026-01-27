@@ -7,7 +7,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -21,6 +21,7 @@ import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { IfilterStudentAward, Istudentaward } from "../types/Istudentaward";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import AddStudentAward from "./AddstudentAward";
+import StudentAwardCertificate from "./studentawardcertificate";
 
 const AllStudentAwardForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -49,11 +50,13 @@ const AllStudentAwardForm = () => {
   const {data: allStudents} = useGetAllStudents();
   const { menuStatus } = usePermissions();
   const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
-
+  const [ShowAwardPrint, setShowAwardPrint] = useState(false);
+  const [AwardId, setAwardId] = useState<string | null>(null);
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
   const deleteStudentAward = useRemoveStudentAward();
+  
   const form = useForm<IfilterStudentAward>({
     defaultValues: {
       studentId: "",
@@ -212,7 +215,8 @@ const StudentAwardform = useForm<Istudentaward>()
                         <td className="px-4 py-2">{award.awardedBy}</td>
                         <td className="px-4 py-2">{award.awardDescriptions}</td>
                         <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}</td>
-                        <td className="px-4 py-2">  {canDelete && award.Id && (
+                         <td className="px-4 py-2  flex gap-2 items-center"> 
+                          {canDelete && award.Id && (
                         <DeleteButton
                           onConfirm={async () => {
                             await deleteStudentAward.mutateAsync(award.Id);
@@ -221,7 +225,19 @@ const StudentAwardform = useForm<Istudentaward>()
                           headerText={<Trash />}
                           content="Are you sure you want to delete this School Award?"
                         />
-                      )}</td>
+                      )}
+                        <ButtonElement
+                        icon={<Printer size={14} />}
+                        text=""
+                        type="button"
+                        onClick={() => {
+                          setShowAwardPrint(true);
+                          setAwardId(
+                            data?.Items?.find((i) => i.Id === award.Id)?.Id || null
+                          );
+                        }}
+                        className="!text-xs"
+                      /></td>
                         </tr>
                     ))
                     ) : (
@@ -252,6 +268,13 @@ const StudentAwardform = useForm<Istudentaward>()
               handleSearch={handleSearch}
             />
           </div>
+        )}
+         {ShowAwardPrint && (
+          <StudentAwardCertificate
+            visible={ShowAwardPrint}
+            onClose={() => setShowAwardPrint(false)}
+            awardId={AwardId || ""}
+          />
         )}
 
         <AddStudentAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />

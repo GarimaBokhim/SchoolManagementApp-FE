@@ -7,7 +7,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -20,6 +20,8 @@ import { useFilterSchoolAwardByDate, useRemoveSchoolAward } from "../hooks";
 import { IfilterSchoolAward, ISchoolAward } from "../types/Ischoolaward";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import AddschoolAward from "./Addschoolaward";
+import { EditButton } from "@/components/Buttons/EditButton";
+import SchoolAwardCertificate from "./printawardcertificate";
 
 const AllSchoolAwardForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -51,6 +53,8 @@ const AllSchoolAwardForm = () => {
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
+    const [ShowAwardPrint, setShowAwardPrint] = useState(false);
+    const [AwardId, setAwardId] = useState<string | null>(null);
 
   const form = useForm<IfilterSchoolAward>({
     defaultValues: {
@@ -167,11 +171,11 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-4 py-3">S.N</th>
-                  <th className="px-4 py-3">School</th>
-                  <th className="px-4 py-3">Awarded By</th>
-                  <th className="px-4 py-3">Description</th>
-                  <th className="px-4 py-3">Awarded At</th>
+                  <th className="px-4 py-3 text-center">S.N</th>
+                  <th className="px-4 py-3 text-center">School</th>
+                  <th className="px-4 py-3 text-center">Awarded By</th>
+                  <th className="px-4 py-3 text-center">Description</th>
+                  <th className="px-4 py-3 text-center">Awarded At</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -185,13 +189,13 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
                     ) : data?.Items?.length ? (
                     data.Items.map((award, index) => (
                         <tr key={award.Id} className="border-t">
-                        <td className="px-4 py-2">{index + 1}</td>
-                        <td className="px-4 py-2"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
-                        <td className="px-4 py-2">{award.awardedBy}</td>
-                        <td className="px-4 py-2">{award.awardDescriptions}</td>
-                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}</td>
-                        <td className="px-4 py-2">
-                       {canDelete && award.Id && (
+                        <td className="px-4 py-2 text-center">{index + 1}</td>
+                        <td className="px-4 py-2 text-center"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
+                        <td className="px-4 py-2 text-center">{award.awardedBy}</td>
+                        <td className="px-4 py-2 text-center">{award.awardDescriptions}</td>
+                        <td className="px-4 py-2 text-center"> {new Date(award.awardedAt).toLocaleDateString()}</td>
+                       <td className="px-4 py-2  flex gap-2 items-center">
+                      {canDelete && award.Id && (
                         <DeleteButton
                           onConfirm={async () => {
                             await deleteSchoolAward.mutateAsync(award.Id);
@@ -201,8 +205,20 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
                           content="Are you sure you want to delete this School Award?"
                         />
                       )}
+                      <ButtonElement
+                        icon={<Printer size={14} />}
+                        text=""
+                        type="button"
+                        onClick={() => {
+                          setShowAwardPrint(true);
+                          setAwardId(
+                            data?.Items?.find((i) => i.Id === award.Id)?.Id || null
+                          );
+                        }}
+                        className="!text-xs"
+                      />
+                    </td>
 
-                        </td>
                         </tr>
                     ))
                     ) : (
@@ -223,7 +239,7 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
           <div className="mt-4">
             <Pagination
               form={form}
-              pagination={{
+              pagination={{         
                 currentPage: data.PageIndex,
                 firstPage: data.FirstPage,
                 lastPage: data.LastPage,
@@ -233,6 +249,13 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
               handleSearch={handleSearch}
             />
           </div>
+        )}
+         {ShowAwardPrint && (
+          <SchoolAwardCertificate
+            visible={ShowAwardPrint}
+            onClose={() => setShowAwardPrint(false)}
+            awardId={AwardId || ""}
+          />
         )}
 
         <AddschoolAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />
