@@ -76,7 +76,6 @@ const SeatPlanning: React.FC<Props> = ({ examSessionId, onClose, schoolId }) => 
     run();
   }, [assignedData]);
 
-  // Print functionality
   const handlePrint = () => {
     const content = document.getElementById("seatplan-content");
     if (!content) return;
