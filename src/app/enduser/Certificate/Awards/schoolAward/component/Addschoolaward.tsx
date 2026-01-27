@@ -25,6 +25,7 @@ const AddschoolAward = ({ visible, onClose, form }: props) => {
   const {
     handleSubmit,
     reset,
+    setValue,
   } = form;
 
   const addAwardMutation = useAddSchoolAward();
