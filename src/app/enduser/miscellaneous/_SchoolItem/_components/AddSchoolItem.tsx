@@ -95,7 +95,7 @@ const AddSchoolItemForm = ({ form, onClose }: Props) => {
                 getLabel={(g) => g?.name ?? ""}
                 getValue={(g) => g?.id ?? ""}
               />
-              <AppCombobox
+              {/* <AppCombobox
                 label="Item Status"
                 dropdownPositionClass="absolute"
                 name="itemStatus"
@@ -121,7 +121,7 @@ const AddSchoolItemForm = ({ form, onClose }: Props) => {
                 onSelect={(option) => setItemStatus(option?.id ?? 0)}
                 getLabel={(o) => o?.name || ""}
                 getValue={(o) => o?.id ?? ""}
-              />
+              /> */}
               <AppCombobox
                 label="Item Condition"
                 dropdownPositionClass="absolute"
@@ -214,7 +214,7 @@ const AddSchoolItemForm = ({ form, onClose }: Props) => {
                 getLabel={(o) => o?.name || ""}
                 getValue={(o) => o?.id ?? ""}
               />
-              <AppCombobox
+              {/* <AppCombobox
                 value={selectedFiscalYear}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
@@ -231,7 +231,7 @@ const AddSchoolItemForm = ({ form, onClose }: Props) => {
                 onSelect={(group) => setSelectedFiscalYear(group?.Id ?? "")}
                 getLabel={(g) => g?.FyName ?? ""}
                 getValue={(g) => g?.Id ?? ""}
-              />
+              /> */}
             </div>
             <div className="flex justify-center mt-8">
               <ButtonElement

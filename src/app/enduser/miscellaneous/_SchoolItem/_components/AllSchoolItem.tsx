@@ -235,7 +235,7 @@ const AllSchoolItemForm = () => {
                   <th className="px-4 py-3 text-center">Name of Item</th>
                   <th className="px-4 py-3 text-center">Contributor</th>
                   <th className="px-4 py-3 text-center">Estimated Value</th>
-                  <th className="px-4 py-3 text-center">Item Status</th>
+                  {/* <th className="px-4 py-3 text-center">Item Status</th> */}
                   <th className="px-4 py-3 text-center">Item Condition</th>
                   <th className="px-4 py-3 text-center">Item Quantity</th>
                   <th className="px-4 py-3 text-center">Unit Type</th>
@@ -272,13 +272,13 @@ const AllSchoolItemForm = () => {
                         <td className="py-3 px-4 hidden md:table-cell">
                           {SchoolItem.estimatedValue}
                         </td>
-                        <td className="py-3 px-4">
+                        {/* <td className="py-3 px-4">
                           {
                             itemStatus.find(
                               (i) => i.id === SchoolItem.itemStatus
                             )?.name
                           }
-                        </td>
+                        </td> */}
                         <td className="py-3 px-4">
                           {
                             itemCondition.find(
