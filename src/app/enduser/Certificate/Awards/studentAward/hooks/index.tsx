@@ -23,6 +23,7 @@ const StudentAwardEndPoints = {
     filterStudentAwardByDate: "/api/Certificate/FilterStudentsAwards",
     AddStudentAward: "/api/Certificate/AddStudentsAwards",
     deleteStudentAwards: "/api/Certificate/DeleteAwards",
+    getStudentAwardbyAwardId: "/api/Certificate/StudentsAwards",
 }
 const queryKey = "studentAward";
 const filterQueryKey = "filteredstudentAward";
@@ -81,5 +82,22 @@ export const useRemoveStudentAward = () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
+  });
+};
+export const useGetStudentAwardById = (awardsId: string) => {
+  return useQuery({
+    queryKey: [queryKey, awardsId],
+    queryFn: async (): Promise<Istudentaward> => {
+      if (!awardsId) {
+        throw new Error("Id is required to get a StudentAward");
+      }
+      const response = await api.get<Istudentaward>(
+        `${StudentAwardEndPoints.getStudentAwardbyAwardId}/${awardsId}`
+      );
+      return response.data;
+    },
+    enabled: !!awardsId,
+    staleTime: 0,
+    retry: false,
   });
 };
