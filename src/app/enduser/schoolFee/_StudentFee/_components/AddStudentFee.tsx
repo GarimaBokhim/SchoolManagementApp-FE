@@ -120,28 +120,32 @@ useEffect(() => {
                 {...form.register("classId")}
                 value={selectedClassId}
               />
-              <AppCombobox
-                value={selectedFeeStructureId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Fee Structure"
-                name="feeStructureId"
-                form={form}
-                required
-                options={feeStructuresByClass?.Items ?? []}  
-                selected={feeStructuresByClass?.Items?.find(f => f.id === selectedFeeStructureId) ?? null}
-                onSelect={(f) => {
-                  const id = f?.id ?? "";
-                  setSelectedFeeStructureId(id);
-                  form.setValue("feeStructureId", id);  
-                }}
-               getLabel={(f) =>
-                allFeeTypes?.Items?.find(
-                  (t) => t?.id === f?.feeTypeId
-                )?.name ?? ""
+             <AppCombobox
+              value={selectedFeeStructureId}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              label="Fee Structure"
+              name="feeStructureId"
+              form={form}
+              required
+              options={feeStructuresByClass?.Items ?? []}
+              selected={
+                feeStructuresByClass?.Items?.find(
+                  f => f.id === selectedFeeStructureId
+                ) ?? null
               }
-                getValue={(f) => f?.id ?? ""}
-              />
+              onSelect={(f) => {
+                const id = f?.id?.toString() ?? "";
+                setSelectedFeeStructureId(id);
+                form.setValue("feeStructureId", id); 
+              }}
+              getLabel={(f) => {
+                const feeType = allFeeTypes?.Items?.find(t => t?.id === f?.feeTypeId);
+                return feeType?.name ?? "Unknown Fee Type";
+              }}
+              getValue={(f) => f?.id ?? ""}
+            />
+
               <InputElement
                 label="Discount (%)"
                 form={form}
