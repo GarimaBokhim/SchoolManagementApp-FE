@@ -27,7 +27,10 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { PrintButton } from "@/components/Buttons/PrintButton";
 import AllPrintFormForParents from "./PrintAllParentsform";
 import ImportButtonForm from "@/components/Buttons/importbutton";
-// const { mutateAsync: importParent } = useImportParents();
+import ExportButtonForm from "@/components/Buttons/exportbuttonform";
+import ExcelParentTable from "./Excelprint";
+
+
 const AllParentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -48,6 +51,7 @@ const AllParentForm = () => {
   const [selectedParentName, setSelectedParentName] = useState<string | null>(
     ""
   );
+  // const { mutateAsync: importParent } = useImportParents();
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -146,6 +150,8 @@ const AllParentForm = () => {
     setSelectedParentName("");
     form.reset();
   };
+ 
+
   return (
     <>
       <Toaster position="top-right" />
@@ -172,11 +178,7 @@ const AllParentForm = () => {
                   className="!text-md !font-bold"
                 />
               )}
-          <PrintButton>
-          <AllPrintFormForParents   
-          startDate={form.watch("startDate")}
-          endDate={form.watch("endDate")} />
-        </PrintButton>
+          
         <ImportButtonForm
             handleExcelImport={async (file) => {
               // await toast.promise(importParent(file), {
@@ -186,6 +188,22 @@ const AllParentForm = () => {
               // });
             }}
           />
+         <ExportButtonForm
+          file="/template/ledgerTemplate.xlsx"
+          data={
+            <AllPrintFormForParents
+              startDate={form.watch("startDate")}
+              endDate={form.watch("endDate")}
+            />
+          }
+          excelData={
+            <ExcelParentTable
+              startDate={form.watch("startDate")}
+              endDate={form.watch("endDate")}
+            />
+          }
+        />
+
             </div>
           </div>
           {openFilter && (
