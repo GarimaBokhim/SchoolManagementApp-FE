@@ -20,7 +20,6 @@ export const ImportExcel = ({ onImport }: ImportExcelProps) => {
 
   return (
     <div className="mx-2 tooltip">
-      <span className="tooltiptext">Import ExcelSheet</span>
       <img
   src={excelIcon.src}
   alt="Import Excel"
