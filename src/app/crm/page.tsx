@@ -1,5 +1,5 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import Dashboard from "./dashboard/components/card";
+import Dashboard from "./dashboard/dashboard";
 
 export default function DashboardPageForAdmin() {
   return (
