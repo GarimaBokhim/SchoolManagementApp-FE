@@ -22,10 +22,13 @@ export interface IPaymentRecord {
   reference: string;
 }
 export interface Istudentfeesummary {
+  studentId: string;
+  paymentDate: string;
   classId: string;
   totalAmount: number;
   paidAmount: number;
   dueAmount: number;
+  reference: string;
   paymentMethod: number;
 }
 export interface filtersummary {
