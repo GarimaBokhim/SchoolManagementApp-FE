@@ -1,3 +1,5 @@
+"use client";
+
 import { useForm, SubmitHandler } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -5,14 +7,11 @@ import { InputElement } from "@/components/Input/InputElement";
 import { useAddPaymentRecord } from "../hooks";
 import { IPaymentRecord } from "../types/IStudentFee";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import {  useState } from "react";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+import { useState } from "react";
 import PaymentReceiptPrint from "./printpaymentrecordindividually";
 
-
 interface PaymentRecordFormProps {
-  classid: string;
+  classid: string; // already determined from student
   studentid: string;
   onClose?: () => void;
 }
@@ -23,16 +22,14 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
   onClose,
 }) => {
   const { handleError, clearError } = useErrorHandler();
-  const [selectedClassId, setSelectedClassId] = useState("");
   const [printData, setPrintData] = useState<IPaymentRecord | null>(null);
 
   const { mutate: addPayment, isPending } = useAddPaymentRecord();
-  const { data: allClass } = useGetAllClass();
 
   const form = useForm<IPaymentRecord>({
     defaultValues: {
       studentid,
-      classid,
+      classid, 
       amountPaid: 0,
       paymentDate: new Date().toISOString().split("T")[0],
       paymentMethod: 1,
@@ -99,20 +96,8 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
               required
             />
 
-            <AppCombobox
-              value={selectedClassId}
-              label="Class"
-              name="classid"
-              form={form}
-              required
-              options={allClass?.Items}
-              selected={
-                allClass?.Items?.find((c) => c.id === selectedClassId) || null
-              }
-              onSelect={(c) => setSelectedClassId(c?.id ?? "")}
-              getLabel={(c) => c?.name ?? ""}
-              getValue={(c) => c?.id ?? ""}
-            />
+            {/* Class ID is automatically set via hidden input */}
+            <input type="hidden" {...form.register("classid")} />
 
             <InputElement
               label="Amount *"

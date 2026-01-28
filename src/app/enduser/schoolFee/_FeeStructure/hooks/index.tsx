@@ -14,7 +14,7 @@ const FeeStructureEndPoints = {
 const queryKey = "FeeStructure";
 const filterQueryKey = "filteredFeeStructure";
 type FeeStructureRequest = {
-  id?: string;
+  id: string;
   amount: number;
   classId: string;
   feeTypeId: string;

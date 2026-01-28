@@ -130,9 +130,7 @@ useEffect(() => {
               required
               options={feeStructuresByClass?.Items ?? []}
               selected={
-                feeStructuresByClass?.Items?.find(
-                  f => f.id === selectedFeeStructureId
-                ) ?? null
+                feeStructuresByClass?.Items?.find(f => f.id === selectedFeeStructureId) ?? null
               }
               onSelect={(f) => {
                 const id = f?.id?.toString() ?? "";
@@ -141,10 +139,12 @@ useEffect(() => {
               }}
               getLabel={(f) => {
                 const feeType = allFeeTypes?.Items?.find(t => t?.id === f?.feeTypeId);
-                return feeType?.name ?? "Unknown Fee Type";
+
+                return `${feeType?.name ?? ""} - ${f?.amount ?? ""}`;
               }}
               getValue={(f) => f?.id ?? ""}
             />
+
 
               <InputElement
                 label="Discount (%)"
