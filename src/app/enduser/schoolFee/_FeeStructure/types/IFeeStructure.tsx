@@ -1,5 +1,5 @@
 export interface IFeeStructure {
-  id?: string;
+  id: string;
   amount: number;
   classId: string;
   feeTypeId: string;

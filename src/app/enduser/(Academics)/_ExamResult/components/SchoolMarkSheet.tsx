@@ -1,10 +1,13 @@
 "use client";
-import { X } from "lucide-react";
+import { School, X } from "lucide-react";
 import { useGenerateMarkSheet } from "../hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
 import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 import { useRef, useEffect } from "react";
+import { useGetAllExams } from "../../Exam/hooks";
+import { useGetAllClass } from "../../Class/hooks";
+
 
 interface Props {
   studentId: string;
@@ -16,6 +19,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId);
   const { data: allSubject } = useGetAllSubjects();
   const { data: StudentData } = useGetStudentById(studentId);
+  const { data: allExam} = useGetAllExams();
+  const {data:allclass} = useGetAllClass();
 
   const storedUser = localStorage.getItem("userDetails");
   let schoolId = "";
@@ -30,7 +35,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
   const { data: SchoolData } = useGetSchoolById(schoolId);
   const modalRef = useRef<HTMLDivElement>(null);
-
+const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       onClose();
@@ -44,6 +49,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
     };
   }, []);
 
+ 
   const handlePrint = () => {
     const content = document.getElementById("marksheet")?.outerHTML;
     if (!content) return;
@@ -74,10 +80,10 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
+    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0  bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
       <div
         ref={modalRef}
-        className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-auto"
+        className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Print Marksheet</h2>{" "}
@@ -108,7 +114,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
                 <p className="text-sm">{SchoolData?.address}</p>
                 <p className="font-semibold mt-2 underline">
-                  SECOND TERMINAL EXAMINATION 2082
+                  {ExamName}
                 </p>
                 <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
               </div>
@@ -124,13 +130,13 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 {StudentData?.lastName}
               </p>
               <p>
-                <strong>Section:</strong> A
+                <strong>Section:</strong> {StudentData?.classSectionId}
               </p>
               <p className="flex">
-                <strong>Class:</strong> {StudentData?.classSectionId || 6}
+                <strong>Class:</strong>{allclass?.Items.find((c : any) => c.id === StudentData?.classId)?.name}
               </p>
               <p>
-                <strong>Roll No:</strong> 2
+                <strong>Roll No:</strong> 
               </p>
             </div>
 
