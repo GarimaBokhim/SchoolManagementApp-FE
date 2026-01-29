@@ -5,8 +5,6 @@ import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { InputElement } from "@/components/Input/InputElement";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 
 import { useAddSchoolAward } from "../hooks";
 import { ISchoolAward } from "../types/Ischoolaward";
@@ -19,7 +17,6 @@ interface props {
 }
 
 const AddschoolAward = ({ visible, onClose, form }: props) => {
-  const { data: allStudents } = useGetAllStudents();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   const {

@@ -7,7 +7,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
+import { Edit, Filter, Plus,  RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -15,15 +15,14 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import {  useFilterStudentAwardByDate, useRemoveStudentAward } from "../hooks";
 
-import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-import { IfilterStudentAward, Istudentaward } from "../types/Istudentaward";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import AddStudentAward from "./AddstudentAward";
-import StudentAwardCertificate from "./studentawardcertificate";
+import { useFilterEventsByDate, useRemoveEvent } from "../hooks";
+import { IEvents, IfilterEvents } from "../types/IEvents";
+import AddEventForm from "./AddEvents";
+import EditEventForm from "./EditEvents";
 
-const AllStudentAwardForm = () => {
+
+const AllEventsForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -45,41 +44,39 @@ const AllStudentAwardForm = () => {
   const [params, setParams] = useState("");
   const fullQuery = query + (params || "");
 
-  const { data, refetch, isLoading } = useFilterStudentAwardByDate(fullQuery);
-  const { data: allSchools } = useGetAllSchool();
-  const {data: allStudents} = useGetAllStudents();
+  const { data, refetch, isLoading } = useFilterEventsByDate(fullQuery);
+const [editModal, setEditModal] = useState(false);
+const [selectedEvent, setSelectedEvent] = useState<IEvents | null>(null);
+
+const editForm = useForm<IEvents>();
+
   const { menuStatus } = usePermissions();
-  const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
-  const [ShowAwardPrint, setShowAwardPrint] = useState(false);
-  const [AwardId, setAwardId] = useState<string | null>(null);
+  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus);
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-  const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
-  const deleteStudentAward = useRemoveStudentAward();
+  const deleteEvent = useRemoveEvent();
   
-  const form = useForm<IfilterStudentAward>({
+  const form = useForm<IfilterEvents>({
     defaultValues: {
-      studentId: "",
       startDate: "",
       endDate: "",
     },
   });
 
+
   const { handleError, clearError } = useErrorHandler();
   const formRef = useRef<DateRangeFilterRef>(null);
-const StudentAwardform = useForm<Istudentaward>()
+const Eventsform = useForm<IEvents>()
 
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
 
-  const onSubmit: SubmitHandler<IfilterStudentAward> = async (formData) => {
+  const onSubmit: SubmitHandler<IfilterEvents> = async (formData) => {
     clearError();
     try {
       const queryParams = [
-        formData.studentId
-          ? `studentId=${encodeURIComponent(formData.studentId)}`
-          : null,
+       
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -112,18 +109,17 @@ const StudentAwardform = useForm<Istudentaward>()
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteStudentAward.mutateAsync(id);
-      toast.success("Student award deleted successfully!");
+      await deleteEvent.mutateAsync(id);
+      toast.success("Event deleted successfully!");
       refetch();
     } catch {
-      toast.error("Error deleting Student award.");
+      toast.error("Error deleting Events.");
     }
   };
 
   const onClearClick = () => {
     refetch();
     setParams("");
-    setselectedSchoolId("");
     formRef.current?.handleClear();
     form.reset();
   };
@@ -134,9 +130,9 @@ const StudentAwardform = useForm<Istudentaward>()
 
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          {/* Header */}
+        
           <div className="flex justify-between p-4 items-center">
-            <h1 className="text-xl font-semibold">All Student Awards</h1>
+            <h1 className="text-xl font-semibold">All Events</h1>
             <div className="flex gap-2">
               <ButtonElement
                 type="button"
@@ -156,7 +152,6 @@ const StudentAwardform = useForm<Istudentaward>()
             </div>
           </div>
 
-          {/* Filter */}
           {openFilter && (
             <div className="p-4 border-t border-gray-200">
               <form
@@ -190,12 +185,17 @@ const StudentAwardform = useForm<Istudentaward>()
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-4 py-3">S.N</th>
-                  <th className="px-4 py-3">Student</th>
-                  <th className="px-4 py-3">School</th>
-                  <th className="px-4 py-3">Awarded By</th>
-                  <th className="px-4 py-3">Description</th>
-                  <th className="px-4 py-3">Awarded At</th>
+                  <th className="px-4 py-3 text-center">S.N</th>
+                  <th className="px-4 py-3 text-center">Title</th>
+                  <th className="px-4 py-3 text-center">Description</th>
+                  <th className="px-4 py-3 text-center">eventsType</th>
+                  <th className="px-4 py-3 text-center">eventsDate</th>
+                  <th className="px-4 py-3 text-center">participants</th>
+                  <th className="px-4 py-3 text-center">eventTime</th>
+                  <th className="px-4 py-3 text-center">venue</th>
+                  <th className="px-4 py-3 text-center">chiefGuest</th>
+                  <th className="px-4 py-3 text-center">organizer</th>
+                  <th className="px-4 py-3 text-center">mentor</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -208,36 +208,41 @@ const StudentAwardform = useForm<Istudentaward>()
                     </tr>
                     ) : data?.Items?.length ? (
                     data.Items.map((award, index) => (
-                        <tr key={award.Id} className="border-t">
-                        <td className="px-4 py-2">{index + 1}</td>
-                        <td className="px-4 py-2">{allStudents?.Items?.find(  (i) => i.id === award.studentId )?.firstName}</td>
-                        <td className="px-4 py-2"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
-                        <td className="px-4 py-2">{award.awardedBy}</td>
-                        <td className="px-4 py-2">{award.awardDescriptions}</td>
-                        <td className="px-4 py-2"> {new Date(award.awardedAt).toLocaleDateString()}</td>
-                         <td className="px-4 py-2  flex gap-2 items-center"> 
-                          {canDelete && award.Id && (
+                        <tr key={award.id} className="border-t">
+                        <td className="px-4 py-2 text-center">{index + 1}</td>
+                        <td className="px-4 py-2 text-center">{award.title}</td>
+                        <td className="px-4 py-2 text-center">{award.descriptions}</td>
+                        <td className="px-4 py-2 text-center">{award.eventsType}</td>
+                        <td className="px-4 py-2 text-center">{new Date(award.eventsDate).toLocaleDateString()}</td>
+                        <td className="px-4 py-2 text-center">{award.participants}</td>
+                        <td className="px-4 py-2 text-center">{award.eventTime}</td>
+                        <td className="px-4 py-2 text-center">{award.venue}</td>
+                        <td className="px-4 py-2 text-center">{award.chiefGuest}</td>
+                        <td className="px-4 py-2 text-center">{award.organizer}</td>
+                        <td className="px-4 py-2 text-center">{award.mentor}</td>
+                         <td className="px-4 py-2 text-center  flex gap-2 items-center"> 
+                          {canDelete && award.id && (
                         <DeleteButton
                           onConfirm={async () => {
-                            await deleteStudentAward.mutateAsync(award.Id);
-                            toast.success("School award deleted successfully!");
+                            await deleteEvent.mutateAsync(award.id);
+                            toast.success("Events deleted successfully!");
                           }}
                           headerText={<Trash />}
-                          content="Are you sure you want to delete this School Award?"
+                          content="Are you sure you want to delete this Events?"
                         />
                       )}
+                      {canEdit && (
                         <ButtonElement
-                        icon={<Printer size={14} />}
-                        text=""
-                        type="button"
-                        onClick={() => {
-                          setShowAwardPrint(true);
-                          setAwardId(
-                            data?.Items?.find((i) => i.Id === award.Id)?.Id || null
-                          );
-                        }}
-                        className="!text-xs"
-                      /></td>
+                          icon={<Edit size={14} />}
+                          text=""
+                          type="button"
+                          onClick={() => {
+                            setEditModal(true);
+                            setSelectedEvent(award);
+                          }}
+                        />
+                      )}
+                      </td>
                         </tr>
                     ))
                     ) : (
@@ -269,18 +274,18 @@ const StudentAwardform = useForm<Istudentaward>()
             />
           </div>
         )}
-         {ShowAwardPrint && (
-          <StudentAwardCertificate
-            visible={ShowAwardPrint}
-            onClose={() => setShowAwardPrint(false)}
-            awardId={AwardId || ""}
-          />
-        )}
+        
+        <AddEventForm form={Eventsform} visible={addModal} onClose={() => setAddModal(false)} />
+            <EditEventForm
+                form={editForm}
+                visible={editModal}
+                selectedEvent={selectedEvent}
+                onClose={() => setEditModal(false)}
+                />
 
-        <AddStudentAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );
 };
 
-export default AllStudentAwardForm;
+export default AllEventsForm;
