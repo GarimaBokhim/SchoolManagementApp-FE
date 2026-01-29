@@ -68,7 +68,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         address: StudentData?.address ?? "",
         enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
         parentId: StudentData?.parentId ?? "",
-        classSectionId: null,
+        classSectionId: StudentData?.classSectionId ?? undefined,
         classId: StudentData?.classId ?? "",
         provinceId: StudentData?.provinceId ?? 0,
         districtId: StudentData?.districtId ?? 0,
