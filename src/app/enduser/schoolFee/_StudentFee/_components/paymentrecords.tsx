@@ -11,7 +11,7 @@ import { useState } from "react";
 import PaymentReceiptPrint from "./printpaymentrecordindividually";
 
 interface PaymentRecordFormProps {
-  classid: string; // already determined from student
+  classid: string; 
   studentid: string;
   onClose?: () => void;
 }
@@ -96,7 +96,6 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
               required
             />
 
-            {/* Class ID is automatically set via hidden input */}
             <input type="hidden" {...form.register("classid")} />
 
             <InputElement
@@ -111,9 +110,12 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
               {...form.register("paymentMethod", { valueAsNumber: true })}
               className="h-[42px] px-3 border rounded-md"
             >
-              <option value={1}>Cash</option>
-              <option value={2}>Card</option>
+              <option value={0}>Cash</option>
+              <option value={1}>Credit Card</option>
+              <option value={2}>Debit Card</option>
               <option value={3}>Bank Transfer</option>
+              <option value={4}>Mobile Payment</option>
+              <option value={5}>Cheque</option>
             </select>
 
             <InputElement
