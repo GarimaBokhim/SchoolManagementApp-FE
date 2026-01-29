@@ -84,22 +84,13 @@ const AddClassForm = ({ form, onClose }: Props) => {
                 key={field.id}
                 className="flex gap-2 mb-2 items-end border-b border-gray-200 pb-2"
               >
-                <AppCombobox
-                  dropDownWidth="w-[15rem]"
-                  label="Subject"
-                  name={`subjects.${index}.id`}
+                <InputElement
+                  label="Subject Name"
                   form={form}
-                  dropdownPositionClass="absolute"
-                  value={field.id}
-                  options={allsubjects?.Items ?? []}
-                  selected={
-                    allsubjects?.Items?.find((e) => e.Id === field.id) || null
-                  }
-                  onSelect={(subject) =>
-                    form.setValue(`subjects.${index}.id`, subject?.Id ?? "")
-                  }
-                  getLabel={(e) => e?.name ?? ""}
-                  getValue={(e) => e?.Id ?? ""}
+                  name={`subjects.${index}.name`}
+                  placeholder="Enter Subject Name"
+                  required
+                  className="w-48"
                 />
                 <InputElement
                   label="Code"

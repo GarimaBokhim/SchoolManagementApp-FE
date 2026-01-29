@@ -14,7 +14,6 @@ const ClassEndPoints = {
 const queryKey = "Class";
 const filteredClassQuery = "FilteredClass";
 type ClassRequest = {
-  classId?: string;
   name: string;
   subjects?: classsubjects[];
 };
