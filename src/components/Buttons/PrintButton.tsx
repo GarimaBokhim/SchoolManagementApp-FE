@@ -5,9 +5,10 @@ import { Download, PrinterIcon } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
+  onClick?: () => void;
 }
 
-export const PrintButton = ({ children }: Props) => {
+export const PrintButton = ({ children, }: Props) => {
   const printRef = useRef<HTMLDivElement>(null);
   const [showContent, setShowContent] = useState(false);
 
