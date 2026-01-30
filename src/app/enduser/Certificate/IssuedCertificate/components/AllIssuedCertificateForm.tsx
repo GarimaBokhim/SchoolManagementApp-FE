@@ -31,6 +31,7 @@ import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import CollegeCertificate from "./CollegeCertificate";
 import SchoolCertificate from "./SchoolCertificate";
+import BlankCertificateForm from "./Blankcertificate";
 type Props = {
   onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
 };
@@ -106,6 +107,9 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
   }, [paginationParams, refetch]);
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  const BLANK_TEMPLATE_ID = "35dfb35d-367e-4783-b1b0-45557c2ed7a9";
+const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
+
   const onSubmit: SubmitHandler<IFilterIssuedCertificateByDate> = async (
     formData
   ) => {
@@ -158,6 +162,7 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
       toast.error("Error deleting user.");
     }
   };
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -366,23 +371,28 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
                 </tbody>
               </table>
             </div>
-            {showStudentPrint &&
-              selectedStudent &&
-              selectedExamId &&
-              templateId &&
-              (templateId === "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59" ? (
-                <SchoolCertificate
-                  studentId={selectedStudent}
-                  examId={selectedExamId}
-                  onClose={() => setShowStudentPrint(false)}
-                />
-              ) : (
-                <CollegeCertificate
-                  studentId={selectedStudent}
-                  examId={selectedExamId}
-                  onClose={() => setShowStudentPrint(false)}
-                />
-              ))}
+           {showStudentPrint && templateId && (
+  templateId === BLANK_TEMPLATE_ID ? (
+   <BlankCertificateForm 
+     onClose={() => setShowStudentPrint(false)}
+     studentId={selectedStudent ?? ""} 
+     examId={selectedExamId ?? ""}   
+     />
+  ) : templateId === SCHOOL_TEMPLATE_ID ? (
+    <SchoolCertificate
+      studentId={selectedStudent ?? ""}
+      examId={selectedExamId ?? ""}
+      onClose={() => setShowStudentPrint(false)}
+    />
+  ) : (
+    <CollegeCertificate
+      studentId={selectedStudent ?? ""}
+      examId={selectedExamId ?? ""}
+      onClose={() => setShowStudentPrint(false)}
+    />
+  )
+)}
+
             {showIssuedCertificate && selectedId && (
               <EditIssuedCertificate
                 IssuedCertificateId={selectedId}
