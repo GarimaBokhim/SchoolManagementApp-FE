@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IFilterStudentAttendanceByDate,
-  IAllAttendance,
 } from "../types/IStudentAttendance";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -15,15 +14,15 @@ import { Eye, Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterStudentAttendanceByDate } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudentAttendance from "../pages/Add";
 import { useGetAllStudents } from "../../Student/hooks";
 import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hooks";
-import { PrintButton } from "@/components/Buttons/PrintButton";
-import MonthlyAttendanceSheet from "./studentattendencedetail";
+import MonthlyAttendanceSheet from "./StudentAttendanceDetail";
+import { IClass } from "@/app/enduser/(Academics)/Class/types/IClass";
+import { useFilterClassByDate } from "@/app/enduser/(Academics)/Class/hooks";
 const AllStudentAttendanceForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -54,18 +53,18 @@ const AllStudentAttendanceForm = () => {
     },
   });
   const fullQuery = query + (params || "");
-const [selectedStudentAttendance, setSelectedStudentAttendance] =
-  useState<IAllAttendance | null>(null);
+const [selectedClassId, setSelectedClassId] =
+  useState<string >("");
 
 const [ViewModal, setViewModal] = useState(false);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
   const {
-    data: filteredStudentAttendance,
+    data: filteredClass,
     refetch,
     isLoading,
-  } = useFilterStudentAttendanceByDate(fullQuery);
+  } = useFilterClassByDate(fullQuery);
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -208,12 +207,9 @@ const [ViewModal, setViewModal] = useState(false);
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-center w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-center">Date</th>
-                  <th className="px-4 py-3 text-center">Student</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center">Academic Team</th>
-                  <th className="px-4 py-3 text-center">Action</th>
+                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                    <th className="px-4 py-3 ">Class Name</th>
+                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -223,45 +219,24 @@ const [ViewModal, setViewModal] = useState(false);
                       Loading StudentAttendances...
                     </td>
                   </tr>
-                ) : filteredStudentAttendance?.Items &&
-                  filteredStudentAttendance?.Items.length > 0 ? (
-                  filteredStudentAttendance?.Items.map(
-                    (StudentAttendance: IAllAttendance, index: number) => (
+                ) : filteredClass?.Items &&
+                  filteredClass?.Items.length > 0 ? (
+                  filteredClass?.Items.map(
+                    (Class: IClass, index: number) => (
                       <tr
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-1 px-4">{index + 1}</td>
-                        <td className="py-1 px-4">
-                          {new Date(StudentAttendance.attendanceDate).toISOString().split("T")[0]}
-                        </td>
-                        <td className="py-1 px-4">
-                          {
-                            allStudents?.Items.find(
-                              (i) => i.id === StudentAttendance.studentId
-                            )?.firstName
-                          }
-                        </td>
-                        <td className="py-1 px-4">
-                          {StudentAttendance.attendanceStatus === 0
-                            ? "Present"
-                            : "Absent"}
-                        </td>
-                        <td className="py-1 px-4">
-                          {
-                            allAcademicTeam?.Items.find(
-                              (i) => i.id === StudentAttendance.academicTeamId
-                            )?.fullName
-                          }
-                        </td>
+                        <td className="py-3 px-4 text-center">{index + 1}</td>
+                        <td className="py-3 px-4 text-center">{Class.name}</td>
                         <td className="py-1 px-4">
                           <ButtonElement
                             text=""
                             icon={<Eye size={14} />}
                             className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                             onClick={() => {
-                              setSelectedStudentAttendance(
-                                StudentAttendance
+                              setSelectedClassId(
+                                Class?.id??""
                               );
                               setViewModal(true);
                             }}
@@ -291,27 +266,27 @@ const [ViewModal, setViewModal] = useState(false);
         </div>
        
 
-        {filteredStudentAttendance?.Items &&
-          filteredStudentAttendance?.Items.length > 0 && (
+        {filteredClass?.Items &&
+          filteredClass?.Items.length > 0 && (
             <div className="mt-4">
               <Pagination
                 form={handleSubmit}
                 pagination={{
-                  currentPage: Array.isArray(filteredStudentAttendance)
+                  currentPage: Array.isArray(filteredClass)
                     ? 1
-                    : filteredStudentAttendance?.PageIndex ?? 1,
-                  firstPage: Array.isArray(filteredStudentAttendance)
+                    : filteredClass?.PageIndex ?? 1,
+                  firstPage: Array.isArray(filteredClass)
                     ? 1
-                    : filteredStudentAttendance?.FirstPage ?? 1,
-                  lastPage: Array.isArray(filteredStudentAttendance)
+                    : filteredClass?.FirstPage ?? 1,
+                  lastPage: Array.isArray(filteredClass)
                     ? 1
-                    : filteredStudentAttendance?.LastPage ?? 1,
-                  nextPage: Array.isArray(filteredStudentAttendance)
+                    : filteredClass?.LastPage ?? 1,
+                  nextPage: Array.isArray(filteredClass)
                     ? 1
-                    : filteredStudentAttendance?.NextPage ?? 1,
-                  previousPage: Array.isArray(filteredStudentAttendance)
+                    : filteredClass?.NextPage ?? 1,
+                  previousPage: Array.isArray(filteredClass)
                     ? 1
-                    : filteredStudentAttendance?.PreviousPage ?? 1,
+                    : filteredClass?.PreviousPage ?? 1,
                 }}
                 handleSearch={handleSearch}
               />
@@ -321,7 +296,7 @@ const [ViewModal, setViewModal] = useState(false);
           <MonthlyAttendanceSheet
             visible={ViewModal}
             onClose={() => setViewModal(false)}
-            studentAttendance={selectedStudentAttendance}
+            classId={selectedClassId}
           />
         )}
       </div>
