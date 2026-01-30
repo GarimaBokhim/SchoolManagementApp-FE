@@ -20,6 +20,8 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExam from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { PrintButton } from "@/components/Buttons/PrintButton";
+import PrintAdmitCard from "./printcard";
 const AllExamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -273,6 +275,7 @@ const AllExamForm = () => {
                           {canEdit && (
                             <EditButton button={buttonElement(Exam.id ?? "")} />
                           )}
+                          <PrintAdmitCard />
                         </div>
                       </td>
                     </tr>

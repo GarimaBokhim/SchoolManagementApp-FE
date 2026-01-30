@@ -7,6 +7,7 @@ export interface Istudentaward {
     certificateTemplateId: string;
     eventsId: string;
     contentHtml: string;
+    schoolId: string
 }
  
 export interface IfilterStudentAward {
