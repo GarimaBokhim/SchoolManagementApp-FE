@@ -4,12 +4,9 @@ export interface Istudentaward {
     awardedAt: string;
     awardedBy: string;
     awardDescriptions: string;
-    schoolId: string;
-    createdBy: string;
-    createdAt: string;
-    modifiedBy: string;
-    modifiedAt: string;
-    isActive: boolean;
+    certificateTemplateId: string;
+    eventsId: string;
+    contentHtml: string;
 }
  
 export interface IfilterStudentAward {

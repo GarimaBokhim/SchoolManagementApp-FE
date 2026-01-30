@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -9,7 +9,9 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { Istudentaward } from "../types/Istudentaward";
 import { useAddStudentAward } from "../hooks";
-
+import { useGetAllTemplate } from "../../../CertificateTemplate/hooks";
+import { useGetAllEvents } from "@/app/enduser/miscellaneous/Events/hooks";
+import TextEditor from "@/components/Input/TextEditor";
 
 interface props {
   form: UseFormReturn<Istudentaward>;
@@ -19,14 +21,15 @@ interface props {
 
 const AddStudentAward = ({ visible, onClose, form }: props) => {
   const { data: allStudents } = useGetAllStudents();
+  const { data: allTemplate } = useGetAllTemplate();
+  const { data: allEvents } = useGetAllEvents();
+
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  const {
-    handleSubmit,
-    reset,
-    setValue,
-  } = form;
-
+  const { handleSubmit, reset, setValue, watch } = form;
+  const details = watch("contentHtml");
   const addAwardMutation = useAddStudentAward();
 
   const onSubmit: SubmitHandler<Istudentaward> = async (formData) => {
@@ -46,8 +49,10 @@ const AddStudentAward = ({ visible, onClose, form }: props) => {
   return (
     <>
       <Toaster position="top-right" />
-     <div className="fixed inset-0 ml-12 md:ml-64 sm:ml-16 bg-white bg-opacity-30 z-50 flex items-center justify-center">
-        <div className="bg-white dark:bg-[#353535] p-6 rounded-xl w-full max-w-lg shadow-lg relative overflow-visible">
+
+      <div className="fixed inset-0 ml-12 md:ml-64 sm:ml-16 bg-white bg-opacity-30 z-50 overflow-auto">
+
+        <div className="bg-white dark:bg-[#353535] w-full h-full p-6 relative">
           <button
             className="absolute top-3 right-3 text-red-500 hover:text-red-700"
             onClick={onClose}
@@ -57,69 +62,106 @@ const AddStudentAward = ({ visible, onClose, form }: props) => {
 
           <h2 className="text-xl font-semibold mb-4">Add Student Award</h2>
 
-         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-  <div className="relative z-50">
-    <AppCombobox
-      label="Select Student"
-      name="studentId"
-      form={form}
-      value={selectedStudentId}
-      options={allStudents?.Items ?? []}
-      selected={
-        allStudents?.Items?.find((s) => s.id === selectedStudentId) || null
-      }
-      onSelect={(student) => {
-        const id = student?.id ?? "";
-        setSelectedStudentId(id);
-        setValue("studentId", id);
-      }}
-      getLabel={(s) => s?.firstName as string}
-      getValue={(s) => s?.id as string}
-    />
-  </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AppCombobox
+              value={selectedStudentId}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              label="Student"
+              name="studentId"
+              form={form}
+              required
+              options={allStudents?.Items}
+              selected={allStudents?.Items?.find(g => g.id === selectedStudentId) || null}
+              onSelect={(group) => setSelectedStudentId(group?.id || null)}
+              getLabel={(g) => g?.firstName ?? ""}
+              getValue={(g) => g?.id ?? ""}
+            />
 
-  <InputElement
-    label="Award Description"
-    name="awardDescriptions"
-    inputType="text"
-    form={form}
-    placeholder="Enter award details"
-  />
+            <InputElement
+              label="Award Description"
+              name="awardDescriptions"
+              inputType="text"
+              form={form}
+              placeholder="Enter award details"
+            />
 
-  <InputElement
-    label="Awarded Date"
-    name="awardedAt"
-    inputType="date"
-    form={form}
-  />
+            {/* Awarded Date */}
+            <InputElement
+              label="Awarded Date"
+              name="awardedAt"
+              inputType="date"
+              form={form}
+            />
 
-  <InputElement
-    label="Awarded By"
-    name="awardedBy"
-    inputType="text"
-    form={form}
-  />
- <div className="flex justify-center gap-4 mt-4">
+            {/* Awarded By */}
+            <InputElement
+              label="Awarded By"
+              name="awardedBy"
+              inputType="text"
+              form={form}
+            />
 
-    <ButtonElement 
-    type="submit" 
-    text="Add Award" 
-    className="!bg-emerald-600 hover:!bg-emerald-700" 
-    /> 
-  <ButtonElement 
-  type="button" 
-  text="Cancel" 
-  onClick={onClose} 
-  className="!bg-gray-500 hover:!bg-gray-600" 
-  /> 
-  </div>
-</form>
+            {/* Template ComboBox */}
+            <AppCombobox
+              value={selectedTemplateId}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              label="Template"
+              name="certificateTemplateId"
+              form={form}
+              required
+              options={allTemplate?.Items}
+              selected={allTemplate?.Items?.find(g => g.id === selectedTemplateId) || null}
+              onSelect={(group) => setSelectedTemplateId(group?.id || null)}
+              getLabel={(g) => g?.templateName ?? ""}
+              getValue={(g) => g?.id ?? ""}
+            />
 
+            {/* Events ComboBox */}
+            <AppCombobox
+              value={selectedEventId}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              label="Events"
+              name="eventsId"
+              form={form}
+              required
+              options={allEvents?.Items}
+              selected={allEvents?.Items?.find(g => g.id === selectedEventId) || null}
+              onSelect={(group) => setSelectedEventId(group?.id || null)}
+              getLabel={(g) => g?.title ?? ""}
+              getValue={(g) => g?.id ?? ""}
+            />
+            </div>
+
+            {/* Text Editor */}
+            <TextEditor
+              content={details}
+              onChange={(content) => setValue("contentHtml", content)}
+            />
+
+            {/* Buttons */}
+            <div className="flex justify-center gap-4 mt-4">
+              <ButtonElement
+                type="submit"
+                text="Add Award"
+                className="!bg-emerald-600 hover:!bg-emerald-700"
+              />
+              <ButtonElement
+                type="button"
+                text="Cancel"
+                onClick={onClose}
+                className="!bg-gray-500 hover:!bg-gray-600"
+              />
+            </div>
+
+          </form>
         </div>
       </div>
     </>
   );
 };
-
 
 export default AddStudentAward;
