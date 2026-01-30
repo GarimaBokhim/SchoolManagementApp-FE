@@ -3,6 +3,8 @@ import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import {
   IAllAttendance,
+  IAttendanceReport,
+  IFilterAttendance,
   IStudentAttendance,
   IStudentList,
 } from "../types/IStudentAttendance";
@@ -10,9 +12,11 @@ const StudentAttendanceEndPoints = {
   getAllStudentAttendances: "/api/Student/all-StudentAttendances",
   createStudentAttendances: "/api/Student/AddStudentAttendence",
   filterStudentAttendanceByDate: "/api/Student/FilterStudentsAttendance",
+  getAttendanceReport: "/api/Student/AttendanceReport",
 };
 
 const queryKey = "StudentAttendances";
+const attendanceReport ="attendanceReport"
 const filterStudentAttendanceQueryKey = "filteredStudentAttendance";
 type StudentAttendanceRequest = {
   id?: string;
@@ -52,7 +56,7 @@ export const useGetAllStudentAttendances = (params?: string) => {
     queryKey: [queryKey, params],
     queryFn: async () => {
       const url = params
-        ? `${StudentAttendanceEndPoints.getAllStudentAttendances}${params}`
+        ? `${StudentAttendanceEndPoints.getAllStudentAttendances}?${params}`
         : `${StudentAttendanceEndPoints.getAllStudentAttendances}`;
       const response = await api.get<IPaginationResponse<IStudentAttendance>>(
         url
@@ -77,6 +81,21 @@ export const useFilterStudentAttendanceByDate = (params?: string) => {
         ? `${StudentAttendanceEndPoints.filterStudentAttendanceByDate}${params}`
         : StudentAttendanceEndPoints.filterStudentAttendanceByDate;
       const response = await api.get<IPaginationResponse<IAllAttendance>>(url);
+      return response.data;
+    },
+    staleTime: 0,
+    retry: false,
+  });
+};
+
+export const useGetAttendanceReport = (params?: string) => {
+  return useQuery({
+    queryKey: [ attendanceReport,params, queryKey],
+    queryFn: async () => {
+      const url = params
+        ? `${StudentAttendanceEndPoints.getAttendanceReport}${params}`
+        : StudentAttendanceEndPoints.getAttendanceReport;
+      const response = await api.get<IAttendanceReport>(url);
       return response.data;
     },
     staleTime: 0,

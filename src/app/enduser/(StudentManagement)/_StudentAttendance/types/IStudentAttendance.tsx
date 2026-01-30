@@ -22,3 +22,24 @@ export interface IAllAttendance {
   academicTeamId: string;
   remarks: string;
 }
+
+export interface IFilterAttendance {
+  academicTeamId: string;
+  yearName: string;
+  classId: string
+  nameOfMonths: string
+}
+type AttendanceStatus = "P" | "A" | "L" | "H";
+export interface IAttendanceReport {
+  ClassId : string ;
+  AcademicTeamId: string;
+  Students : {
+    StudentId: string;
+    Attendance : {
+      [date: string]:{
+        Status: AttendanceStatus,
+        Review : string|null
+      }
+    }
+  }[]
+}
