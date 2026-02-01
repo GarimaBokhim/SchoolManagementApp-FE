@@ -32,17 +32,24 @@ const AddStudentAward = ({ visible, onClose, form }: props) => {
   const details = watch("contentHtml");
   const addAwardMutation = useAddStudentAward();
 
-  const onSubmit: SubmitHandler<Istudentaward> = async (formData) => {
-    try {
-      await addAwardMutation.mutateAsync(formData);
-      toast.success("Student award added successfully!");
-      reset();
-      setSelectedStudentId(null);
-      onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add student award.");
-    }
-  };
+ const onSubmit: SubmitHandler<Istudentaward> = async (formData) => {
+  try {
+    await addAwardMutation.mutateAsync(formData);
+
+    toast.success("Student award added successfully!", {
+      duration: 2000,
+    });
+
+    reset();
+    setSelectedStudentId(null);
+    onClose();
+  } catch (error: any) {
+    toast.error(error.message || "Failed to add student award.", {
+      duration: 2000,
+    });
+  }
+};
+
 
   if (!visible) return null;
 

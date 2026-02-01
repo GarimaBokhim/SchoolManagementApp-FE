@@ -3,11 +3,16 @@ export interface Istudentaward {
     studentId: string;
     awardedAt: string;
     awardedBy: string;
+    createdAt: string;
+    createdBy: string;
+    modifiedBy: string;
+    modifiedAt: string;
     awardDescriptions: string;
     certificateTemplateId: string;
     eventsId: string;
     contentHtml: string;
-    schoolId: string
+    schoolId: string;
+    isActive: boolean;
 }
  
 export interface IfilterStudentAward {

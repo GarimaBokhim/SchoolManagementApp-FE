@@ -56,7 +56,7 @@ const StudentAwardCertificate: React.FC<Props> = ({visible, awardId, onClose }) 
       <div className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[100vw] md:max-w-[100vw] lg:max-w-[75vw] xl:max-w-[100vw] h-full rounded-lg overflow-auto md:p-8 shadow-lg">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-            Print School Award
+            Print Student Award
           </h1>
           <button
             type="button"
