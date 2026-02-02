@@ -1,0 +1,46 @@
+"use client"
+import React from 'react';
+import { dashboardStats } from './data/mock_data';
+import StatsCard from './components/stats_card';
+import QuickActions from '@/app/enduser/dashboard/components/quickActions';
+import StudentDestinations from './components/student_destination';
+import UpcomingDeadlines from './components/upcomming_deadline';
+import PopularPrograms from './components/popular_programs';
+import StudentTable from './components/student_table';
+const Dashboard: React.FC = () => {
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Education Consultancy Dashboard
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          Manage student applications and track study abroad progress
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {dashboardStats.map((stat, index) => (
+          <StatsCard key={index} stat={stat} />
+        ))}
+      </div>
+
+      {/* Students Table */}
+      <StudentTable />
+
+      {/* Middle Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <PopularPrograms />
+        <UpcomingDeadlines />
+        <StudentDestinations />
+      </div>
+
+      {/* Quick Actions */}
+      <QuickActions />
+    </div>
+  );
+};
+
+export default Dashboard;
