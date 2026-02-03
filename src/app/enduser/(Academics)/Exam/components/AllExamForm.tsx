@@ -20,8 +20,8 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExam from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { PrintButton } from "@/components/Buttons/PrintButton";
 import PrintAdmitCard from "./printcard";
+import { useGetAllStudents } from "@/app/teacher/Students/Student/hooks";
 const AllExamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -77,6 +77,7 @@ const AllExamForm = () => {
   } = useFilterExamByDate(fullQuery);
   const { data: allExams } = useGetAllExams();
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
+ 
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -275,7 +276,7 @@ const AllExamForm = () => {
                           {canEdit && (
                             <EditButton button={buttonElement(Exam.id ?? "")} />
                           )}
-                          <PrintAdmitCard />
+                          <PrintAdmitCard exam={Exam} />
                         </div>
                       </td>
                     </tr>
