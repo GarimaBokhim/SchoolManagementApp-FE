@@ -1,12 +1,12 @@
 "use client"
 import React from 'react';
-import { dashboardStats } from './data/mock_data';
-import StatsCard from './components/stats_card';
+import { dashboardStats } from '../data/mock_data';
+import StatsCard from './stats_card';
 import QuickActions from '@/app/enduser/dashboard/components/quickActions';
-import StudentDestinations from './components/student_destination';
-import UpcomingDeadlines from './components/upcomming_deadline';
-import PopularPrograms from './components/popular_programs';
-import StudentTable from './components/student_table';
+import StudentDestinations from './student_destination';
+import UpcomingDeadlines from './upcomming_deadline';
+import PopularPrograms from './popular_programs';
+import StudentTable from './student_table';
 const Dashboard: React.FC = () => {
   return (
     <div className="p-6 space-y-6">

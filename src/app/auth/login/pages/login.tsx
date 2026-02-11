@@ -72,7 +72,7 @@ const LoginForm = () => {
       const roleToDashboardMap: Partial<Record<IUserRole, string>> = {
         superadmin: "/SuperAdmin/dashboard",
         developeruser: "/developer",
-        crm: "/crm",
+        
       };
       const storedUser = localStorage.getItem("userDetails");
 
@@ -92,6 +92,8 @@ const LoginForm = () => {
         ? "/admin/dashboard"
         : role === "demoexpiryrole"
         ? "/end-user/expired"
+        : role === "crm"
+        ? "/crm/dashboard"
         : "/enduser/dashboard";
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200);
     } catch (error: any) {
