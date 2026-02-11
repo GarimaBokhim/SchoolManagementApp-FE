@@ -32,11 +32,10 @@ const PrintAdmitCard = ({ exam }: PrintAdmitCardProps) => {
         onClick={handlePrint}
       />
 
-      {/* PRINT CONTENT */}
       <div className="hidden">
         <div ref={printRef}>
           {students.Items.map((student) => (
-            <div key={student.id} className="page-break">
+            <div key={student.id} className="m-2 page-break">
               <AdmitCard student={student} exam={exam} />
             </div>
           ))}
