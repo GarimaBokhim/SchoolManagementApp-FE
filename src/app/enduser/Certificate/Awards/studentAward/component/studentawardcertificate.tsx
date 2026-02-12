@@ -160,16 +160,14 @@ const StudentAwardCertificate: React.FC<Props> = ({
               </>
             )}
 
-            {/* OPEN TEMPLATE */}
             {templateId === "35dfb35d-367e-4783-b1b0-45557c2ed7a9" && (
               <p className="my-6 text-lg">
-                {awardData?.awardDescriptions}
+                {/* {awardData?.awardDescriptions} */}
               </p>
             )}
 
           </div>
 
-          {/* Footer */}
           <footer className="flex justify-between mt-56 text-center">
             <div className="w-1/3 font-semibold">Principal</div>
             <div className="w-1/3 font-semibold">School Seal</div>
@@ -177,7 +175,6 @@ const StudentAwardCertificate: React.FC<Props> = ({
           </footer>
         </div>
 
-        {/* Print Button */}
         <div className="flex justify-end mt-4">
           <button
             id="printBtn"
