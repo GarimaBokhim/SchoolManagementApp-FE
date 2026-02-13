@@ -1,4 +1,3 @@
-// src/pages/Students.tsx
 import React from 'react';
 import { Users, Plus, Search } from 'lucide-react';
 
