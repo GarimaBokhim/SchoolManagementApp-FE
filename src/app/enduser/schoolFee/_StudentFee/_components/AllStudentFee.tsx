@@ -18,7 +18,6 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudentFee from "../pages/Add";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
 import { Eye } from "lucide-react";
 import { CreditCard } from "lucide-react";
 import { X } from "lucide-react";
