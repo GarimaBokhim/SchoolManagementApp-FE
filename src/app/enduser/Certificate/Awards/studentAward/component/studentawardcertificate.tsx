@@ -131,7 +131,7 @@ const StudentAwardCertificate: React.FC<Props> = ({
           <div className="text-[16px] leading-relaxed text-center mt-6">
   {templateId === "35dfb35d-367e-4783-b1b0-45557c2ed7a9" ? (
     <p className="my-6 text-lg">
-      {awardData?.awardDescriptions}
+      {awardData?.contentHtml}
     </p>
   ) : (
     <>
