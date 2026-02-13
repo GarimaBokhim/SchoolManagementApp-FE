@@ -55,7 +55,7 @@ const AddStudentAward = ({ visible, onClose, form }: props) => {
 
   return (
     <>
-      <Toaster position="top-right" />
+      
 
       <div className="fixed inset-0 ml-12 md:ml-64 sm:ml-16 bg-white bg-opacity-30 z-50 overflow-auto">
 

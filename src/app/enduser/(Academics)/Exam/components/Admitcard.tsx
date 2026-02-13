@@ -13,7 +13,7 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
     return (
       <div
         ref={ref}
-        className="w-[820px] h-[280px] bg-white border border-gray-400  shadow-md rounded-md font-sans"
+        className="w-[780px] h-[280px] bg-white border border-gray-400  shadow-md rounded-md font-sans"
       >
         {/* HEADER */}
         <div className="relative h-[80px] bg-blue-900 text-white rounded-t-md">

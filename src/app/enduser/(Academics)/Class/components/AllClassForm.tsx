@@ -20,6 +20,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddClass from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { PrintIDCardButton } from "./idcardprint";
 type Props = {
   onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
 };
@@ -270,6 +271,9 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                                 button={buttonElement(Class.id ?? "")}
                               />
                             )}
+                            <PrintIDCardButton
+                              StudentId={Class.id ?? ""}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -294,6 +298,7 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                 onClose={() => setShowClass(false)}
               />
             )}
+
             <AddClass visible={addModal} onClose={() => setAddModal(false)} />
           </div>
         </div>
