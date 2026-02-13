@@ -75,16 +75,22 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
 
   role = storedUser?.role || "";
 
-  const withRolePrefix = (path: string) => {
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+ const withRolePrefix = (path: string) => {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
-    let prefix;
-    if (role === "superadmin") {
-      prefix = "SuperAdmin";
-    } else if (role === "admin") prefix = "Admin";
-    else prefix = "endUser";
-    return `/${prefix?.toLowerCase()}${cleanPath}`;
-  };
+  const lowerRole = role?.toLowerCase();
+
+  let prefix = "";
+
+  if (lowerRole === "superadmin") prefix = "superadmin";
+  else if (lowerRole === "admin") prefix = "admin";
+  else if (lowerRole === "crm") prefix = "crm";
+  else if (lowerRole === "enduser") prefix = "enduser";
+  else prefix = lowerRole;
+
+  return `/${prefix}${cleanPath}`;
+};
+
   const { data: menuStatus, refetch } = useGetMenuStatus(
     activeSubModule,
     activeRole
