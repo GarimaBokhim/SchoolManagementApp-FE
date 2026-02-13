@@ -129,44 +129,39 @@ const StudentAwardCertificate: React.FC<Props> = ({
 
           {/* Body */}
           <div className="text-[16px] leading-relaxed text-center mt-6">
+  {templateId === "35dfb35d-367e-4783-b1b0-45557c2ed7a9" ? (
+    <p className="my-6 text-lg">
+      {awardData?.awardDescriptions}
+    </p>
+  ) : (
+    <>
+      <p className="my-3">
+        This is to formally recognize{" "}
+        <strong><u>{studentName}</u></strong>, a diligent student of{" "}
+        <strong>{schoolName}</strong>, for outstanding achievement in{" "}
+        <strong>{awardData?.awardedBy}</strong>. The award is granted
+        on{" "}
+        <strong>
+          {new Date(awardData?.awardedAt || "").toLocaleDateString()}
+        </strong>{" "}
+        in appreciation of{" "}
+        <strong>{awardData?.awardDescriptions}</strong>.
+      </p>
 
-            {templateId === "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59" && (
-              <>
-                <p className="my-3">
-                  This is to formally recognize{" "}
-                  <strong><u>{studentName}</u></strong>, a diligent student of{" "}
-                  <strong>{schoolName}</strong>, for outstanding achievement in{" "}
-                  <strong>{awardData?.awardedBy}</strong>. The award is granted
-                  on{" "}
-                  <strong>
-                    {new Date(
-                      awardData?.awardedAt || ""
-                    ).toLocaleDateString()}
-                  </strong>{" "}
-                  in appreciation of{" "}
-                  <strong>{awardData?.awardDescriptions}</strong>.
-                </p>
+      <p className="my-3">
+        This award honors the exemplary dedication, effort, and
+        performance demonstrated by the student, serving as a
+        testament to their commitment to excellence.
+      </p>
 
-                <p className="my-3">
-                  This award honors the exemplary dedication, effort, and
-                  performance demonstrated by the student, serving as a
-                  testament to their commitment to excellence.
-                </p>
+      <p className="italic mt-3">
+        We extend our heartfelt congratulations and best wishes for
+        continued success in all future endeavors.
+      </p>
+    </>
+  )}
+</div>
 
-                <p className="italic mt-3">
-                  We extend our heartfelt congratulations and best wishes for
-                  continued success in all future endeavors.
-                </p>
-              </>
-            )}
-
-            {templateId === "35dfb35d-367e-4783-b1b0-45557c2ed7a9" && (
-              <p className="my-6 text-lg">
-                {/* {awardData?.awardDescriptions} */}
-              </p>
-            )}
-
-          </div>
 
           <footer className="flex justify-between mt-56 text-center">
             <div className="w-1/3 font-semibold">Principal</div>

@@ -35,7 +35,7 @@ const PrintAdmitCard = ({ exam }: PrintAdmitCardProps) => {
       <div className="hidden">
         <div ref={printRef}>
           {students.Items.map((student) => (
-            <div key={student.id} className="m-2 page-break">
+            <div key={student.id} className="m-4 page-break">
               <AdmitCard student={student} exam={exam} />
             </div>
           ))}
