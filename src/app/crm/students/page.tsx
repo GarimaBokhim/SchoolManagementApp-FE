@@ -4,7 +4,7 @@ import Students from "./components/students";
 
 export default function DashboardPageForAdmin() {
   return (
-    <LayoutWrapper title="Students">
+    <LayoutWrapper title="Applicants">
       <Students />
     </LayoutWrapper>
   );
