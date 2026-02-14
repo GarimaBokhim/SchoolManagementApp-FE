@@ -9,7 +9,14 @@ import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import {
+  Edit,
+  Filter,
+  GraduationCap,
+  Plus,
+  RotateCcw,
+  Trash,
+} from "lucide-react";
 import EditStudent from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
@@ -32,6 +39,16 @@ import ImportButtonForm from "@/components/Buttons/importbutton";
 import ExportButtonForm from "@/components/Buttons/exportbuttonform";
 import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
 import ExcelParentTable from "../../_Parent/components/Excelprint";
+import AddRegistration from "../../_Registration/pages/Add";
+const EnrollmentStatus = [
+  { id: 1, name: "Active" },
+  { id: 2, name: "Promoted" },
+  { id: 3, name: "Repeated" },
+  { id: 4, name: "Graduated" },
+  { id: 5, name: "Dropped" },
+  { id: 6, name: "Added" },
+  { id: 7, name: "Enrolled" },
+];
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -48,6 +65,9 @@ const AllStudentForm = () => {
     setPaginationParams(params);
   };
   const [showStudents, setShowStudents] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [selectedIdForRegistration, setSelectedIdForRegistration] =
+    useState<string>("");
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -56,7 +76,7 @@ const AllStudentForm = () => {
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
-    ""
+    "",
   );
   const fullQuery = query + (params || "");
 
@@ -75,7 +95,7 @@ const AllStudentForm = () => {
       endDate: "",
     },
   });
-const router = useRouter();
+  const router = useRouter();
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const { data: allClass } = useGetAllClass();
@@ -104,7 +124,7 @@ const router = useRouter();
         {
           loading: "Fetching data...",
           success: "Data fetched successfully!",
-        }
+        },
       );
     } catch (error) {
       const errorMsg = handleError(error);
@@ -158,29 +178,29 @@ const router = useRouter();
                 />
               )}
               <ExportButtonForm
-          file="/template/ledgerTemplate.xlsx"
-          data={
-            <AllPrintFormForParents
-              startDate={form.watch("startDate")}
-              endDate={form.watch("endDate")}
-            />
-          }
-          excelData={
-            <ExcelParentTable
-              startDate={form.watch("startDate")}
-              endDate={form.watch("endDate")}
-            />
-          }
-        />
-            <ImportButtonForm
-            handleExcelImport={async (file) => {
-              // await toast.promise(uploadLedger(file), {
-              //   loading: "Uploading...",
-              //   success: "Ledger uploaded successfully!",
-              //   error: "Upload failed! Please Check the format",
-              // });
-            }}
-          />
+                file="/template/ledgerTemplate.xlsx"
+                data={
+                  <AllPrintFormForParents
+                    startDate={form.watch("startDate")}
+                    endDate={form.watch("endDate")}
+                  />
+                }
+                excelData={
+                  <ExcelParentTable
+                    startDate={form.watch("startDate")}
+                    endDate={form.watch("endDate")}
+                  />
+                }
+              />
+              <ImportButtonForm
+                handleExcelImport={async (file) => {
+                  // await toast.promise(uploadLedger(file), {
+                  //   loading: "Uploading...",
+                  //   success: "Ledger uploaded successfully!",
+                  //   error: "Upload failed! Please Check the format",
+                  // });
+                }}
+              />
             </div>
           </div>
           {openFilter && (
@@ -206,7 +226,7 @@ const router = useRouter();
                     options={allStudent?.Items}
                     selected={
                       allStudent?.Items?.find(
-                        (g) => g.firstName === selectedStudentName
+                        (g) => g.firstName === selectedStudentName,
                       ) || null
                     }
                     onSelect={(group) => {
@@ -251,6 +271,9 @@ const router = useRouter();
                   <th className="px-4 py-3 text-left hidden lg:table-cell">
                     Class
                   </th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
+                    Enrollment Status
+                  </th>
                   <th className="px-4 py-3 text-left hidden xl:table-cell">
                     Address
                   </th>
@@ -294,7 +317,14 @@ const router = useRouter();
                         <td className="py-1 px-4 hidden lg:table-cell">
                           {
                             allClass?.Items?.find(
-                              (i) => i.id === student.classId
+                              (i) => i.id === student.classId,
+                            )?.name
+                          }
+                        </td>
+                        <td className="py-1 px-4 hidden lg:table-cell">
+                          {
+                            EnrollmentStatus?.find(
+                              (i) => i.id === student.enrollmentStatus,
                             )?.name
                           }
                         </td>
@@ -305,7 +335,11 @@ const router = useRouter();
                           {student.phoneNumber}
                         </td>
                         <td className="py-1 px-4 hidden md:table-cell">
-                          {new Date(student.dateOfBirth).toISOString().split("T")[0]}
+                          {
+                            new Date(student.dateOfBirth)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                         </td>
                         <td className="py-1 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
@@ -334,11 +368,26 @@ const router = useRouter();
                                 }
                               />
                             )}
-                            
+                            <EditButton
+                              button={
+                                <ButtonElement
+                                  icon={<GraduationCap size={14} />}
+                                  type="button"
+                                  text=""
+                                  onClick={() => {
+                                    setShowRegistration(true);
+                                    setSelectedIdForRegistration(
+                                      student.id ?? "",
+                                    );
+                                  }}
+                                  className="!text-xs !bg-blue-500"
+                                />
+                              }
+                            />
                           </div>
                         </td>
                       </tr>
-                    )
+                    ),
                   )
                 ) : (
                   <tr>
@@ -374,6 +423,13 @@ const router = useRouter();
             StudentId={selectedId}
             visible={showStudents}
             onClose={() => setShowStudents(false)}
+          />
+        )}
+        {showRegistration && selectedIdForRegistration && (
+          <AddRegistration
+            studentId={selectedIdForRegistration}
+            visible={showRegistration}
+            onClose={() => setShowRegistration(false)}
           />
         )}
         <AddStudent visible={addModal} onClose={() => setAddModal(false)} />

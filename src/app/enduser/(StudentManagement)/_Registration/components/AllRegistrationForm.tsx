@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { IFilterStudentAttendanceByDate } from "../types/IStudentAttendance";
+import { IRegistration, IFilterRegistrationByDate } from "../types/IRegistration";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
@@ -8,20 +8,28 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Eye, Filter, Plus, RotateCcw } from "lucide-react";
+import { EditButton } from "@/components/Buttons/EditButton";
+import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import EditRegistration from "../pages/Edit";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
+import {
+  useFilterRegistrationByDate,
+  useGetAllAcademicYear,
+  useRemoveRegistration,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddStudentAttendance from "../pages/Add";
+import AddRegistration from "../pages/Add";
+import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "../../Student/hooks";
-import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hooks";
-import MonthlyAttendanceSheet from "./StudentAttendanceDetail";
-import { IClass } from "@/app/enduser/(Academics)/Class/types/IClass";
-import { useFilterClassByDate } from "@/app/enduser/(Academics)/Class/hooks";
-const AllStudentAttendanceForm = () => {
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+
+
+
+const AllRegistrationForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -36,45 +44,59 @@ const AllStudentAttendanceForm = () => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  const { data: allStudent } = useGetAllStudents();
-  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
+  const { data: allAcademicYear } = useGetAllAcademicYear();
+  const {data: allStudents} = useGetAllStudents()
+  const {data: allClasses} = useGetAllClass()
+  const [showRegistrations, setShowRegistrations] = useState(false);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string | null>(null);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
-  const { canAdd } = useMenuPermissionData(menuStatus);
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const buttonElement = (id: string) => {
+    return (
+      <ButtonElement
+        icon={<Edit size={14} />}
+        type="button"
+        text=""
+        onClick={() => {
+          setShowRegistrations(true);
+          setSelectedId(id);
+        }}
+        className="!text-xs font-bold !bg-teal-500"
+      />
+    );
+  };
   const [params, setParams] = useState("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const form = useForm<IFilterStudentAttendanceByDate>({
+  const form = useForm<IFilterRegistrationByDate>({
     defaultValues: {
-      studentId: "",
+      academicYearId: "",
       startDate: "",
       endDate: "",
     },
   });
   const fullQuery = query + (params || "");
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
 
-  const [ViewModal, setViewModal] = useState(false);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
   const {
-    data: filteredClass,
+    data: filteredRegistration,
     refetch,
     isLoading,
-  } = useFilterClassByDate(fullQuery);
+  } = useFilterRegistrationByDate(fullQuery);
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
-  const onSubmit: SubmitHandler<IFilterStudentAttendanceByDate> = async (
-    formData,
-  ) => {
+  const onSubmit: SubmitHandler<IFilterRegistrationByDate> = async (formData) => {
     clearError();
     try {
       const queryParams = [
-        formData.studentId
-          ? `studentId=${encodeURIComponent(formData.studentId)}`
+        formData.academicYearId
+          ? `academicYearId=${encodeURIComponent(formData.academicYearId)}`
           : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
@@ -94,7 +116,7 @@ const AllStudentAttendanceForm = () => {
         {
           loading: "Fetching data...",
           success: "Data fetched successfully!",
-        },
+        }
       );
     } catch (error) {
       const errorMsg = handleError(error);
@@ -108,22 +130,32 @@ const AllStudentAttendanceForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  const { data: allStudents } = useGetAllStudents();
-  const { data: allAcademicTeam } = useGetAllAcademicTeams();
+  const deleteRegistration = useRemoveRegistration();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteRegistration.mutateAsync(id);
+      toast.success("User deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting user.");
+    }
+  };
   const onClearClick = () => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
-    setSelectedStudent("");
+    setSelectedAcademicYearId(null);
     form.reset();
   };
+ 
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All StudentAttendances</h1>
+            <h1 className=" text-xl font-semibold ">All Registrations</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
@@ -133,15 +165,18 @@ const AllStudentAttendanceForm = () => {
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
 
+
               {canAdd && (
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
-                  text="Add New StudentAttendance"
+                  text="Add New Registration"
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
               )}
+          
+
             </div>
           </div>
           {openFilter && (
@@ -158,27 +193,27 @@ const AllStudentAttendanceForm = () => {
                 />
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
-                    value={selectedStudent}
+                    value={selectedAcademicYearId}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Student"
-                    name="studentId"
+                    label="Academic Year"
+                    name="academicYearId"
                     form={form}
-                    options={allStudent?.Items}
+                    options={allAcademicYear?.Items}
                     selected={
-                      allStudent?.Items?.find(
-                        (g) => g.id === selectedStudent,
+                      allAcademicYear?.Items?.find(
+                        (g) => g.Id === selectedAcademicYearId
                       ) || null
                     }
                     onSelect={(group) => {
                       if (group) {
-                        setSelectedStudent(group.id || null);
+                        setSelectedAcademicYearId(group.Id || null);
                       } else {
-                        setSelectedStudent(null);
+                        setSelectedAcademicYearId(null);
                       }
                     }}
-                    getLabel={(g) => g?.firstName ?? ""}
-                    getValue={(g) => g?.id ?? ""}
+                    getLabel={(g) => g?.Name ?? ""}
+                    getValue={(g) => g?.Id ?? ""}
                   />
                 </div>
 
@@ -205,7 +240,9 @@ const AllStudentAttendanceForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 ">Class Name</th>
+                  <th className="px-4 py-3 ">Student Name</th>
+                  <th className="px-4 py-3 ">Class</th>
+                  <th className="px-4 py-3 ">Academic Year</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
@@ -213,84 +250,93 @@ const AllStudentAttendanceForm = () => {
                 {isLoading ? (
                   <tr>
                     <td colSpan={7} className="p-4 text-center text-gray-500">
-                      Loading StudentAttendances...
+                      Loading Registrations...
                     </td>
                   </tr>
-                ) : filteredClass?.Items && filteredClass?.Items.length > 0 ? (
-                  filteredClass?.Items.map((Class: IClass, index: number) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                    >
-                      <td className="py-3 px-4 text-center">{index + 1}</td>
-                      <td className="py-3 px-4 text-center">{Class.name}</td>
-                      <td className="py-1 px-4">
-                        <ButtonElement
-                          text=""
-                          icon={<Eye size={14} />}
-                          className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-                          onClick={() => {
-                            setSelectedClassId(Class?.id ?? "");
-                            setViewModal(true);
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))
+                ) : filteredRegistration?.Items &&
+                  filteredRegistration?.Items.length > 0 ? (
+                  filteredRegistration?.Items.map(
+                    (Registration: IRegistration, index: number) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      >
+                        <td className="py-1 px-4">{index + 1}</td>
+                        <td className="py-1 px-4">{allStudents?.Items.find((i)=>i.id=== Registration.studentId)?.firstName}</td>
+                        <td className="py-1 px-4">{allClasses?.Items.find((i)=>i.id=== Registration.classId)?.name}</td>
+                        <td className="py-1 px-4">{allAcademicYear?.Items.find((i)=>i.Id=== Registration.academicYearId)?.Name}</td>
+                        <td className="py-1 px-4">
+                          <div className="flex justify-center gap-2">
+                            {canDelete && (
+                              <DeleteButton
+                                onConfirm={() =>
+                                  handleDelete(Registration.id ? Registration.id : "")
+                                }
+                                headerText={<Trash />}
+                                content="Are you sure you want to delete this Registration?"
+                              />
+                            )}
+                            {canEdit && (
+                              <EditButton
+                                button={buttonElement(Registration.id ?? "")}
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
                     <td
                       colSpan={7}
                       className="p-4 text-center text-gray-500 italic"
                     >
-                      No StudentAttendances found.
+                      No Registrations found.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          <AddStudentAttendance
-            visible={addModal}
-            onClose={() => setAddModal(false)}
-          />
+          {showRegistrations && selectedId && (
+            <EditRegistration
+              RegistrationId={selectedId}
+              visible={showRegistrations}
+              onClose={() => setShowRegistrations(false)}
+            />
+          )}
+          <AddRegistration visible={addModal} onClose={() => setAddModal(false)} />
         </div>
 
-        {filteredClass?.Items && filteredClass?.Items.length > 0 && (
+        {filteredRegistration?.Items && filteredRegistration?.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={handleSubmit}
               pagination={{
-                currentPage: Array.isArray(filteredClass)
+                currentPage: Array.isArray(filteredRegistration)
                   ? 1
-                  : (filteredClass?.PageIndex ?? 1),
-                firstPage: Array.isArray(filteredClass)
+                  : filteredRegistration?.PageIndex ?? 1,
+                firstPage: Array.isArray(filteredRegistration)
                   ? 1
-                  : (filteredClass?.FirstPage ?? 1),
-                lastPage: Array.isArray(filteredClass)
+                  : filteredRegistration?.FirstPage ?? 1,
+                lastPage: Array.isArray(filteredRegistration)
                   ? 1
-                  : (filteredClass?.LastPage ?? 1),
-                nextPage: Array.isArray(filteredClass)
+                  : filteredRegistration?.LastPage ?? 1,
+                nextPage: Array.isArray(filteredRegistration)
                   ? 1
-                  : (filteredClass?.NextPage ?? 1),
-                previousPage: Array.isArray(filteredClass)
+                  : filteredRegistration?.NextPage ?? 1,
+                previousPage: Array.isArray(filteredRegistration)
                   ? 1
-                  : (filteredClass?.PreviousPage ?? 1),
+                  : filteredRegistration?.PreviousPage ?? 1,
               }}
               handleSearch={handleSearch}
             />
           </div>
-        )}
-        {ViewModal && (
-          <MonthlyAttendanceSheet
-            visible={ViewModal}
-            onClose={() => setViewModal(false)}
-            classId={selectedClassId}
-          />
         )}
       </div>
     </>
   );
 };
 
-export default AllStudentAttendanceForm;
+export default AllRegistrationForm;
