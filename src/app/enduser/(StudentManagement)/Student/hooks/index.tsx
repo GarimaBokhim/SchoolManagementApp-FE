@@ -32,6 +32,7 @@ type StudentRequest = {
   classSectionId?: string | "";
   provinceId: number;
   districtId: number;
+  enrollmentStatus?: number;
   wardNumber?: number | null;
   municipalityId: number | 0;
   vdcid: number | 0;
