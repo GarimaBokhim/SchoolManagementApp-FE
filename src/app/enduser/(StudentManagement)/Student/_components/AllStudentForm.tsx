@@ -32,6 +32,7 @@ import ImportButtonForm from "@/components/Buttons/importbutton";
 import ExportButtonForm from "@/components/Buttons/exportbuttonform";
 import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
 import ExcelParentTable from "../../_Parent/components/Excelprint";
+import { PrintIDCardButton } from "./idcardprint";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -334,6 +335,9 @@ const router = useRouter();
                                 }
                               />
                             )}
+                            <PrintIDCardButton
+                              StudentId={student.id ?? ""}
+                            />
                             
                           </div>
                         </td>
