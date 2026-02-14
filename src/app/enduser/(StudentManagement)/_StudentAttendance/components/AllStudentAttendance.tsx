@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-  IFilterStudentAttendanceByDate,
-} from "../types/IStudentAttendance";
+import { IFilterStudentAttendanceByDate } from "../types/IStudentAttendance";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
@@ -53,10 +51,9 @@ const AllStudentAttendanceForm = () => {
     },
   });
   const fullQuery = query + (params || "");
-const [selectedClassId, setSelectedClassId] =
-  useState<string >("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
 
-const [ViewModal, setViewModal] = useState(false);
+  const [ViewModal, setViewModal] = useState(false);
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
@@ -71,7 +68,7 @@ const [ViewModal, setViewModal] = useState(false);
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const onSubmit: SubmitHandler<IFilterStudentAttendanceByDate> = async (
-    formData
+    formData,
   ) => {
     clearError();
     try {
@@ -97,7 +94,7 @@ const [ViewModal, setViewModal] = useState(false);
         {
           loading: "Fetching data...",
           success: "Data fetched successfully!",
-        }
+        },
       );
     } catch (error) {
       const errorMsg = handleError(error);
@@ -170,7 +167,7 @@ const [ViewModal, setViewModal] = useState(false);
                     options={allStudent?.Items}
                     selected={
                       allStudent?.Items?.find(
-                        (g) => g.id === selectedStudent
+                        (g) => g.id === selectedStudent,
                       ) || null
                     }
                     onSelect={(group) => {
@@ -207,9 +204,9 @@ const [ViewModal, setViewModal] = useState(false);
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                    <th className="px-4 py-3 ">Class Name</th>
-                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 ">Class Name</th>
+                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -219,33 +216,27 @@ const [ViewModal, setViewModal] = useState(false);
                       Loading StudentAttendances...
                     </td>
                   </tr>
-                ) : filteredClass?.Items &&
-                  filteredClass?.Items.length > 0 ? (
-                  filteredClass?.Items.map(
-                    (Class: IClass, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                      >
-                        <td className="py-3 px-4 text-center">{index + 1}</td>
-                        <td className="py-3 px-4 text-center">{Class.name}</td>
-                        <td className="py-1 px-4">
-                          <ButtonElement
-                            text=""
-                            icon={<Eye size={14} />}
-                            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-                            onClick={() => {
-                              setSelectedClassId(
-                                Class?.id??""
-                              );
-                              setViewModal(true);
-                            }}
-                          />
-                        </td>
-
-                      </tr>
-                    )
-                  )
+                ) : filteredClass?.Items && filteredClass?.Items.length > 0 ? (
+                  filteredClass?.Items.map((Class: IClass, index: number) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                    >
+                      <td className="py-3 px-4 text-center">{index + 1}</td>
+                      <td className="py-3 px-4 text-center">{Class.name}</td>
+                      <td className="py-1 px-4">
+                        <ButtonElement
+                          text=""
+                          icon={<Eye size={14} />}
+                          className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                          onClick={() => {
+                            setSelectedClassId(Class?.id ?? "");
+                            setViewModal(true);
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td
@@ -264,35 +255,33 @@ const [ViewModal, setViewModal] = useState(false);
             onClose={() => setAddModal(false)}
           />
         </div>
-       
 
-        {filteredClass?.Items &&
-          filteredClass?.Items.length > 0 && (
-            <div className="mt-4">
-              <Pagination
-                form={handleSubmit}
-                pagination={{
-                  currentPage: Array.isArray(filteredClass)
-                    ? 1
-                    : filteredClass?.PageIndex ?? 1,
-                  firstPage: Array.isArray(filteredClass)
-                    ? 1
-                    : filteredClass?.FirstPage ?? 1,
-                  lastPage: Array.isArray(filteredClass)
-                    ? 1
-                    : filteredClass?.LastPage ?? 1,
-                  nextPage: Array.isArray(filteredClass)
-                    ? 1
-                    : filteredClass?.NextPage ?? 1,
-                  previousPage: Array.isArray(filteredClass)
-                    ? 1
-                    : filteredClass?.PreviousPage ?? 1,
-                }}
-                handleSearch={handleSearch}
-              />
-            </div>
-          )}
-           {ViewModal && (
+        {filteredClass?.Items && filteredClass?.Items.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              form={handleSubmit}
+              pagination={{
+                currentPage: Array.isArray(filteredClass)
+                  ? 1
+                  : (filteredClass?.PageIndex ?? 1),
+                firstPage: Array.isArray(filteredClass)
+                  ? 1
+                  : (filteredClass?.FirstPage ?? 1),
+                lastPage: Array.isArray(filteredClass)
+                  ? 1
+                  : (filteredClass?.LastPage ?? 1),
+                nextPage: Array.isArray(filteredClass)
+                  ? 1
+                  : (filteredClass?.NextPage ?? 1),
+                previousPage: Array.isArray(filteredClass)
+                  ? 1
+                  : (filteredClass?.PreviousPage ?? 1),
+              }}
+              handleSearch={handleSearch}
+            />
+          </div>
+        )}
+        {ViewModal && (
           <MonthlyAttendanceSheet
             visible={ViewModal}
             onClose={() => setViewModal(false)}
