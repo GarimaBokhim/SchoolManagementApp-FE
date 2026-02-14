@@ -17,7 +17,7 @@ const Students: React.FC = () => {
 
         <button className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
           <Plus className="h-5 w-5" />
-          <span>Add New Student</span>
+          <span>Add New Applicant</span>
         </button>
       </div>
 
