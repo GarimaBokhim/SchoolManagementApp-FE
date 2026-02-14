@@ -39,6 +39,7 @@ import ImportButtonForm from "@/components/Buttons/importbutton";
 import ExportButtonForm from "@/components/Buttons/exportbuttonform";
 import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
 import ExcelParentTable from "../../_Parent/components/Excelprint";
+import { PrintIDCardButton } from "./idcardprint";
 import AddRegistration from "../../_Registration/pages/Add";
 const EnrollmentStatus = [
   { id: 1, name: "Active" },
@@ -368,6 +369,10 @@ const AllStudentForm = () => {
                                 }
                               />
                             )}
+                            <PrintIDCardButton
+                              StudentId={student.id ?? ""}
+                            />
+                            
                             <EditButton
                               button={
                                 <ButtonElement

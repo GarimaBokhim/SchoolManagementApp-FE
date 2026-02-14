@@ -20,7 +20,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddClass from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { PrintIDCardButton } from "./idcardprint";
+import { PrintIDCardButton } from "../../../(StudentManagement)/Student/_components/idcardprint";
 type Props = {
   onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
 };
