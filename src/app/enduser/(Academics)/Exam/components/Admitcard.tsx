@@ -2,6 +2,8 @@
 import React, { forwardRef } from "react";
 import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 import { IExam } from "../types/IExams";
+import AllClass from "../../Class/pages/All";
+import { useGetAllClass } from "../../Class/hooks";
 
 type AdmitCardProps = {
   student: IStudent;
@@ -10,6 +12,7 @@ type AdmitCardProps = {
 
 const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
   ({ student, exam }, ref) => {
+    const {data:allClass} = useGetAllClass();
     return (
       <div
         ref={ref}
@@ -39,7 +42,7 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
             </div>
 
             <div className="flex gap-10">
-              <div><b>Class:</b> {student.classId}</div>
+              <div><b>Class:</b> {allClass?.Items?.find(item => item.id === student.classId)?.name ?? "-" }</div>
               <div><b>Roll No:</b>-
                {/* {student.rollno} */}
                </div>
