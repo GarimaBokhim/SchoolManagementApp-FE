@@ -18,38 +18,42 @@ const AllLeadsPage = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Replace this with your real API later
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        // Example API call:
-        // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`);
-        // const data = await res.json();
-        // setLeads(data);
+        setLoading(true);
 
-        // Temporary dummy data:
-        setLeads([
-          {
-            id: '1',
-            name: 'John Doe hello',
-            email: 'john@example.com',
-            phone: '1234567890',
-            source: 'website',
-            countryInterest: 'USA',
-            status: 'new',
-          },
-          {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            phone: '9876543210',
-            source: 'referral',
-            countryInterest: 'Canada',
-            status: 'qualified',
-          },
-        ]);
+        const startDate = '2081-01-22';
+        const endDate = '2082-11-22';
+
+        const res = await fetch(
+          `https://schoolapp.netraverselabs.com/api/Enrolments/FilterInquery?startDate=${startDate}&endDate=${endDate}`
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const data = await res.json();
+
+        console.log('API Response:', data);
+
+        // Adjust this depending on API structure
+        const apiArray = Array.isArray(data) ? data : data.data || [];
+
+        const formattedLeads: Lead[] = apiArray.map((item: any, index: number) => ({
+          id: item.id?.toString() || index.toString(),
+          name: item.name || item.fullName || item.studentName || 'N/A',
+          email: item.email || item.emailAddress || 'N/A',
+          phone: item.phone || item.mobile || 'N/A',
+          source: item.source || 'website',
+          countryInterest: item.countryInterest || item.country || 'N/A',
+          status: item.status || 'new',
+        }));
+
+        setLeads(formattedLeads);
       } catch (error) {
-        console.error('Failed to fetch leads');
+        console.error('Error fetching leads:', error);
       } finally {
         setLoading(false);
       }
@@ -69,7 +73,7 @@ const AllLeadsPage = () => {
       case 'lost':
         return 'bg-red-100 text-red-700';
       default:
-        return '';
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -87,7 +91,7 @@ const AllLeadsPage = () => {
         </div>
 
         <Link
-          href="/crm/leads/add"
+          href="/crm/applications/leads/add"
           className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
         >
           <Plus size={18} className="mr-2" />

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Students from "../components/allstudents";
 import AllApplicants from "../components/allapplicants";
-import AllLeadsPage from "../../Leads/components/Alllead";
+import AllLeadsPage from "../../leads/pages/Alllead";
+
 
 const AllStudent = () => {
   const exam = [
