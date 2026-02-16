@@ -29,14 +29,13 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
         {/* BODY */}
         <div className="flex h-[170px]">
           <div className="w-10 bg-blue-900 text-yellow-400 flex items-center justify-center">
-            <span className="rotate-[-90deg] text-xs font-bold">
-              EXAM ADMIT CARD
-            </span>
-          </div>
-
+          <span className="[writing-mode:vertical-lr] [text-orientation:mixed] text-xs font-bold tracking-wider">
+            EXAM ADMIT CARD
+          </span>
+        </div>
           <div className="flex-1 p-6 text-sm space-y-3 relative">
             <div>
-              <b>Student Name:</b> {student.firstName}
+              <b>Student Name:</b> {student.firstName} {student.lastName}
             </div>
 
             <div className="flex gap-10">
