@@ -342,8 +342,8 @@ const AllStudentForm = () => {
                               .split("T")[0]
                           }
                         </td>
-                        <td className="py-1 px-4 text-center">
-                          <div className="flex justify-center gap-2 flex-wrap">
+                        <td className="py-1 px-4 text-center align-middle whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>

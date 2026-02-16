@@ -34,7 +34,11 @@ const AllStudent = () => {
           </div>
         );
       default:
-        return <AllStudentForm />;
+        return (
+        <div className=" text-center">
+          <AllStudentForm />
+          </div>
+        );
     }
   };
 
