@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Students from "../components/allstudents";
 import AllApplicants from "../components/allapplicants";
-import AllLeadsPage from "../../leads/pages/Alllead";
+import AllLeadsPage from "../../components/AllLead";
 
 
 const AllStudent = () => {
@@ -13,7 +13,6 @@ const AllStudent = () => {
     { id: "student", label: "Student" },
   ];
 
-  // ✅ FIXED default tab
   const [activeReport, setActiveReport] = useState<string>("lead");
 
   const renderReport = () => {
