@@ -1,5 +1,4 @@
 "use client";
-import AllParent from "@/app/teacher/Students/Parent/pages/All";
 
 const AllLeads = () => {
   return (
