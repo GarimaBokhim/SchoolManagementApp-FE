@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { api } from '@/utils/instance';
-import useDropdown from '../hooks/useDropdown';
-import DropdownMenuButton from '../leads/pages/drop_down';
-import LeadActionsDropdown from '../leads/pages/lead_dropdown';
 import ConvertToApplicantModal from '../model/ConvertToApplicationModel';
+import useDropdown from '../hooks/useDropdown';
+import DropdownMenuButton from './common_componts/drop_down';
+import LeadActionsDropdown from './common_componts/lead_dropdown';
 
 interface Lead {
   id: string;
