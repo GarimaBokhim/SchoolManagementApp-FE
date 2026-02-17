@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { api } from '@/utils/instance';
 import useDropdown from '../hooks/useDropdown';
-import DropdownMenuButton from './drop_down';
-import LeadActionsDropdown from './lead_dropdown';
-import ConvertToApplicantModal from '../../model/ConvertToApplicationModel';
+import DropdownMenuButton from '../leads/pages/drop_down';
+import LeadActionsDropdown from '../leads/pages/lead_dropdown';
+import ConvertToApplicantModal from '../model/ConvertToApplicationModel';
 
 interface Lead {
   id: string;

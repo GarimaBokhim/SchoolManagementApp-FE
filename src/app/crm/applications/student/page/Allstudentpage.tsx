@@ -13,7 +13,6 @@ const AllStudent = () => {
     { id: "student", label: "Student" },
   ];
 
-  // ✅ FIXED default tab
   const [activeReport, setActiveReport] = useState<string>("lead");
 
   const renderReport = () => {
