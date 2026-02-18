@@ -403,8 +403,11 @@ const AllLeadsPage = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="p-4 sm:p-6 relative">
+        {/* Main Content - with conditional blur */}
+        <div className={`bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ${
+          isAddLeadModalOpen || showConvertModal ? 'blur-sm' : ''
+        }`}>
           {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -590,8 +593,18 @@ const AllLeadsPage = () => {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Convert to Applicant Modal */}
+        {/* Modals - Rendered outside the blurred container */}
+        {isAddLeadModalOpen && (
+          <AddLeadModal
+            isOpen={isAddLeadModalOpen}
+            onClose={() => setIsAddLeadModalOpen(false)}
+            onSuccess={refreshLeads}
+          />
+        )}
+
+        {showConvertModal && (
           <ConvertToApplicantModal
             isOpen={showConvertModal}
             onClose={() => setShowConvertModal(false)}
@@ -601,14 +614,7 @@ const AllLeadsPage = () => {
             onInputChange={handleConversionInputChange}
             onSubmit={handleConvertSubmit}
           />
-
-          {/* Add Lead Modal */}
-          <AddLeadModal
-            isOpen={isAddLeadModalOpen}
-            onClose={() => setIsAddLeadModalOpen(false)}
-            onSuccess={refreshLeads}
-          />
-        </div>
+        )}
       </div>
     </>
   );

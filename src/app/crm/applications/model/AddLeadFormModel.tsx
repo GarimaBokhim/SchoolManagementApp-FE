@@ -34,7 +34,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     gender: 1,
     contactNumber: '',
     permanentAddress: '',
-    educationLevel: 1,
+    educationLevel: 1, // Default to Plus Two/Intermediate
     completionYear: '',
     currentGpa: '',
     previousAcademicQualification: '',
@@ -131,9 +131,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
 
   return (
     <>
-      {/* Blurred Backdrop */}
+      {/* Semi-transparent backdrop without blur */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
         onClick={handleClose}
       />
       
@@ -281,12 +281,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                         required
                         className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                       >
-                        <option value={1}>High School</option>
+                        <option value={1}>Plus Two / Intermediate</option>
                         <option value={2}>Bachelor's Degree</option>
                         <option value={3}>Master's Degree</option>
-                        <option value={4}>PhD</option>
-                        <option value={5}>Diploma</option>
-                        <option value={6}>Other</option>
                       </select>
                     </div>
 

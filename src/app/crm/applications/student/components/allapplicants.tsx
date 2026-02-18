@@ -6,21 +6,24 @@ import { api } from "../../constants/api_constant";
 
 interface ApiApplicant {
   id?: string;
-  fullName?: string;  
+  fullName?: string;
   email?: string;
-  contactNumber?: string;  
+  contactNumber?: string;
   appliedProgram?: string;
   status?: "pending" | "approved" | "rejected";
+  passportNo?: string;
+  targetCountry?: string;
 }
 
 interface ApiResponse {
-  Items?: ApiApplicant[]; 
+  items?: ApiApplicant[];
   data?: ApiApplicant[];
-  TotalItems?: number;
-  PageIndex?: number;
+  totalItems?: number;
+  pageIndex?: number;
   pageSize?: number;
-  TotalPages?: number;
+  totalPages?: number;
 }
+
 interface Applicant {
   id: string;
   name: string;
@@ -28,6 +31,8 @@ interface Applicant {
   phone: string;
   appliedProgram: string;
   status: "pending" | "approved" | "rejected";
+  passportNo?: string;
+  targetCountry?: string;
 }
 
 const AllApplicants = () => {
@@ -35,88 +40,100 @@ const AllApplicants = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(10);
 
-  useEffect(() => {
-    const fetchApplicants = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchApplicants = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Try GET first (like your successful API call)
-        const response = await api.get<ApiResponse>("/api/Enrolments/FilterApplicants");
-        
-        console.log('API Response:', response.data); // Log to see actual structure
-
-        // Handle different possible response structures
-        let applicantsData: ApiApplicant[] = [];
-        
-        if (response.data?.Items && Array.isArray(response.data.Items)) {
-          // Structure like your first API
-          applicantsData = response.data.Items;
-        } else if (response.data?.data && Array.isArray(response.data.data)) {
-          // Structure with data property
-          applicantsData = response.data.data;
-        } else if (Array.isArray(response.data)) {
-          // Direct array
-          applicantsData = response.data;
-        } else {
-          throw new Error("Unexpected data format from server");
-        }
-
-        // Map the API response to your Applicant interface
-        const formattedApplicants: Applicant[] = applicantsData.map((item: any, index: number) => ({
-          id: item.id || index.toString(),
-          name: item.fullName || item.name || 'N/A',
-          email: item.email || 'N/A',
-          phone: item.contactNumber || item.phone || 'N/A',
-          appliedProgram: item.appliedProgram || item.program || 'N/A',
-          status: item.status || 'pending',
-        }));
-
-        setApplicants(formattedApplicants);
-      } catch (err: any) {
-        console.error("Fetch error:", err);
-        console.error("Error response:", err.response); // Log full error
-
-        if (err.response?.status === 403) {
-          setError("You don't have permission to view applicants.");
-        } else if (err.response?.status === 404) {
-          // If GET fails, try POST
-          try {
-            const postResponse = await api.post<ApiResponse>("/api/Enrolments/FilterApplicants", {});
-            console.log('POST Response:', postResponse.data);
-            
-            // Handle POST response similarly
-            // ... mapping logic here
-            
-          } catch (postErr: any) {
-            setError("Endpoint not found. Please check the API URL.");
-          }
-        } else if (err.response?.status === 500) {
-          setError("Server error. Please try again later.");
-        } else if (err.code === "ECONNABORTED") {
-          setError("Request timeout. Please check your connection.");
-        } else {
-          setError(err.response?.data?.message || "Failed to fetch applicants.");
-        }
-
-        setApplicants([]);
-      } finally {
-        setLoading(false);
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('pageIndex', currentPage.toString());
+      params.append('pageSize', pageSize.toString());
+      if (searchTerm) {
+        params.append('searchTerm', searchTerm);
       }
-    };
 
+      // Make GET request to FilterApplicants endpoint with query parameters
+      const response = await api.get<ApiResponse>(
+        `/api/Enrolments/FilterApplicants?${params.toString()}`
+      );
+      
+      console.log('API Response:', response.data);
+
+      // Handle different possible response structures
+      let applicantsData: ApiApplicant[] = [];
+      
+      if (response.data?.items && Array.isArray(response.data.items)) {
+        applicantsData = response.data.items;
+      } else if (response.data?.data && Array.isArray(response.data.data)) {
+        applicantsData = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        applicantsData = response.data;
+      }
+
+      // Map the API response to your Applicant interface
+      const formattedApplicants: Applicant[] = applicantsData.map((item: any, index: number) => ({
+        id: item.id || `temp-${index}`,
+        name: item.fullName || item.name || 'N/A',
+        email: item.email || 'N/A',
+        phone: item.contactNumber || item.phone || 'N/A',
+        appliedProgram: item.appliedProgram || item.program || item.targetCountry || 'N/A',
+        status: item.status || 'pending',
+        passportNo: item.passportNo,
+        targetCountry: item.targetCountry,
+      }));
+
+      setApplicants(formattedApplicants);
+      
+      // Set pagination if available
+      if (response.data?.totalPages) {
+        setTotalPages(response.data.totalPages);
+      }
+      
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      console.error("Error response:", err.response);
+
+      if (err.response?.status === 403) {
+        setError("You don't have permission to view applicants.");
+      } else if (err.response?.status === 400) {
+        setError("Invalid request parameters.");
+      } else if (err.response?.status === 404) {
+        setError("API endpoint not found. Please check the URL.");
+      } else if (err.response?.status === 500) {
+        setError("Server error. Please try again later.");
+      } else if (err.code === "ECONNABORTED") {
+        setError("Request timeout. Please check your connection.");
+      } else {
+        setError(err.response?.data?.message || "Failed to fetch applicants.");
+      }
+
+      setApplicants([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch applicants on component mount and when page changes
+  useEffect(() => {
     fetchApplicants();
-  }, []);
-  const filteredApplicants = applicants.filter((applicant) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      applicant.name?.toLowerCase().includes(searchLower) ||
-      applicant.email?.toLowerCase().includes(searchLower) ||
-      applicant.phone?.includes(searchTerm) ||
-      applicant.appliedProgram?.toLowerCase().includes(searchLower)
-    );
-  });
+  }, [currentPage]);
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== undefined) {
+        setCurrentPage(1); // Reset to first page on search
+        fetchApplicants();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -155,7 +172,7 @@ const AllApplicants = () => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
           type="search"
-          placeholder="Search applicants..."
+          placeholder="Search applicants by name, email, phone or program..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none dark:text-white"
@@ -172,45 +189,79 @@ const AllApplicants = () => {
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">Loading applicants...</div>
-        ) : filteredApplicants.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <p className="mt-2 text-gray-500">Loading applicants...</p>
+          </div>
+        ) : applicants.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             No applicants found.
           </div>
         ) : (
-          <table className="w-full text-left">
-            <thead className="bg-gray-100 dark:bg-gray-700 text-sm">
-              <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Program</th>
-                <th className="p-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApplicants.map((applicant) => (
-                <tr
-                  key={applicant.id}
-                  className="border-t dark:border-gray-700"
-                >
-                  <td className="p-4">{applicant.name}</td>
-                  <td className="p-4">{applicant.email}</td>
-                  <td className="p-4">{applicant.phone}</td>
-                  <td className="p-4">{applicant.appliedProgram}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusStyle(
-                        applicant.status
-                      )}`}
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-100 dark:bg-gray-700 text-sm">
+                  <tr>
+                    <th className="p-4">Name</th>
+                    <th className="p-4">Email</th>
+                    <th className="p-4">Phone</th>
+                    <th className="p-4">Program/Country</th>
+                    <th className="p-4">Passport No</th>
+                    <th className="p-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applicants.map((applicant) => (
+                    <tr
+                      key={applicant.id}
+                      className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                     >
-                      {applicant.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="p-4 font-medium">{applicant.name}</td>
+                      <td className="p-4">{applicant.email}</td>
+                      <td className="p-4">{applicant.phone}</td>
+                      <td className="p-4">{applicant.appliedProgram}</td>
+                      <td className="p-4">{applicant.passportNo || '-'}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full capitalize ${getStatusStyle(
+                            applicant.status
+                          )}`}
+                        >
+                          {applicant.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t dark:border-gray-700">
+                <div className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
