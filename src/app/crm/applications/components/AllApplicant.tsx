@@ -124,15 +124,10 @@ const ConvertToStudentModal = ({
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
-
-      {/* Modal */}
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
           <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md transform transition-all">
-
-            {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -144,8 +139,6 @@ const ConvertToStudentModal = ({
                 </button>
               </div>
             </div>
-
-            {/* Body */}
             <div className="p-6">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 Converting{' '}
@@ -154,9 +147,7 @@ const ConvertToStudentModal = ({
                 </span>{' '}
                 to a student. Please provide the additional information below.
               </p>
-
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* University Name */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     University Name <span className="text-red-500">*</span>
@@ -171,8 +162,6 @@ const ConvertToStudentModal = ({
                     className="w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
                   />
                 </div>
-
-                {/* Visa ID */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     Visa ID <span className="text-red-500">*</span>
@@ -187,8 +176,6 @@ const ConvertToStudentModal = ({
                     className="w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
                   />
                 </div>
-
-                {/* Buttons */}
                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
@@ -250,7 +237,6 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
     const menuWidth = 192;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
-
     setMenuStyle({
       position: 'fixed',
       right: window.innerWidth - rect.right,
@@ -271,9 +257,7 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
       if (
         menuRef.current && !menuRef.current.contains(e.target as Node) &&
         buttonRef.current && !buttonRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
+      ) setOpen(false);
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -299,7 +283,6 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
       >
         <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
       </button>
-
       {open && (
         <div
           ref={menuRef}
@@ -338,15 +321,7 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
 
 // ─── Filter Button ─────────────────────────────────────────────────────────────
 
-const FilterButton = ({
-  label,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}) => (
+const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
     className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition-all duration-150 whitespace-nowrap ${
@@ -377,20 +352,16 @@ const AllApplicants = () => {
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 
-  // ── Fetch Applicants ──
   const fetchApplicants = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = new URLSearchParams();
       params.append('pageIndex', currentPage.toString());
       params.append('pageSize', pageSize.toString());
       if (searchTerm) params.append('searchTerm', searchTerm);
 
-      const response = await api.get<ApiResponse>(
-        `/api/Enrolments/FilterApplicants?${params.toString()}`
-      );
+      const response = await api.get<ApiResponse>(`/api/Enrolments/FilterApplicants?${params.toString()}`);
 
       let raw: ApiApplicant[] = [];
       const d = response.data;
@@ -412,11 +383,9 @@ const AllApplicants = () => {
       }));
 
       setApplicants(formatted);
-
       const tp = d?.TotalPages || d?.totalPages;
       if (tp) setTotalPages(tp);
     } catch (err: any) {
-      console.error('Fetch error:', err);
       if (err.response?.status === 403) setError("You don't have permission to view applicants.");
       else if (err.response?.status === 400) setError('Invalid request parameters.');
       else if (err.response?.status === 404) setError('API endpoint not found.');
@@ -432,10 +401,7 @@ const AllApplicants = () => {
   useEffect(() => { fetchApplicants(); }, [currentPage]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentPage(1);
-      fetchApplicants();
-    }, 500);
+    const timer = setTimeout(() => { setCurrentPage(1); fetchApplicants(); }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -444,8 +410,9 @@ const AllApplicants = () => {
     toast.success(`Viewing details for ${applicant.name}`);
   };
 
-  const handleEdit = (applicant: Applicant) => {
-    toast.success(`Editing ${applicant.name}`);
+  // ✅ No API yet — just toast, do NOT remove from state
+  const handleEdit = (_applicant: Applicant) => {
+    toast('Editing applicant...', { icon: '✏️' });
   };
 
   const handleConvertClick = (applicant: Applicant) => {
@@ -453,13 +420,9 @@ const AllApplicants = () => {
     setShowConvertModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      setApplicants((prev) => prev.filter((a) => a.id !== id));
-      toast.success('Applicant deleted successfully!');
-    } catch {
-      toast.error('Error deleting applicant.');
-    }
+  // ✅ No API yet — just toast, do NOT remove from state
+  const handleDelete = (_id: string) => {
+    toast('Deleting applicant...', { icon: '🗑️' });
   };
 
   const handleFilterClick = (filter: string) => {
@@ -474,7 +437,6 @@ const AllApplicants = () => {
     toast.success('Filters cleared');
   };
 
-  // ── Render ──
   if (error && applicants.length === 0) {
     return (
       <div className="p-6">
@@ -489,7 +451,6 @@ const AllApplicants = () => {
   return (
     <>
       <Toaster position="top-right" />
-
       <div className="p-4 sm:p-6 relative">
         <div className={`bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ${
           showConvertModal ? 'blur-sm' : ''
@@ -508,24 +469,14 @@ const AllApplicants = () => {
             </div>
           </div>
 
-          {/* ── Filter Section — all in one row ── */}
+          {/* ── Filter Section ── */}
           {openFilter && (
             <div className="mb-4 mx-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 dark:bg-[#353535] dark:border-gray-700">
               <div className="flex flex-wrap items-center gap-2">
-                {/* Date Filter Buttons */}
                 {['Yesterday', '7 Days', '30 Days', 'This Month', 'Last Month', 'This Year'].map((label) => (
-                  <FilterButton
-                    key={label}
-                    label={label}
-                    isActive={activeFilter === label}
-                    onClick={() => handleFilterClick(label)}
-                  />
+                  <FilterButton key={label} label={label} isActive={activeFilter === label} onClick={() => handleFilterClick(label)} />
                 ))}
-
-                {/* Vertical Divider */}
                 <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-
-                {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
@@ -536,16 +487,12 @@ const AllApplicants = () => {
                     className="pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#00786f] focus:outline-none dark:text-white text-sm w-44 sm:w-52"
                   />
                 </div>
-
-                {/* Filter Action Button */}
                 <ButtonElement
                   icon={<Filter className="h-4 w-4" />}
                   text="Filter"
                   onClick={fetchApplicants}
                   className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
                 />
-
-                {/* Clear Button */}
                 <ButtonElement
                   icon={<RotateCcw className="h-4 w-4" />}
                   text="Clear"
@@ -649,7 +596,6 @@ const AllApplicants = () => {
           )}
         </div>
 
-        {/* ── Convert to Student Modal (rendered outside blurred container) ── */}
         {showConvertModal && (
           <ConvertToStudentModal
             isOpen={showConvertModal}

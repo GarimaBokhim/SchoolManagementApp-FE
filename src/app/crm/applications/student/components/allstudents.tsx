@@ -14,7 +14,7 @@ interface Student {
   name: string;
   email: string;
   phone: string;
-  passportNo: string;
+  visaId: string;  // Changed from passportNo to visaId
   targetCountry: string;
   status: string;
   appliedProgram: string;
@@ -28,7 +28,7 @@ interface ApiStudentItem {
   email?: string;
   contactNumber?: string;
   phone?: string;
-  passportNo?: string;
+  visaId?: string;  // Changed from passportNo to visaId
   targetCountry?: string;
   status?: string;
   appliedProgram?: string;
@@ -63,15 +63,7 @@ const getStatusStyle = (status: string) => {
 
 // ─── Filter Button ─────────────────────────────────────────────────────────────
 
-const FilterButton = ({
-  label,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}) => (
+const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
     className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition-all duration-150 whitespace-nowrap ${
@@ -106,7 +98,6 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
     const menuWidth = 176;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
-
     setMenuStyle({
       position: 'fixed',
       right: window.innerWidth - rect.right,
@@ -127,9 +118,7 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
       if (
         menuRef.current && !menuRef.current.contains(e.target as Node) &&
         buttonRef.current && !buttonRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
+      ) setOpen(false);
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -155,7 +144,6 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
       >
         <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
       </button>
-
       {open && (
         <div
           ref={menuRef}
@@ -201,20 +189,16 @@ const AllStudentsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
 
-  // ── Fetch Students ──
   const fetchStudents = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = new URLSearchParams();
       params.append('pageIndex', currentPage.toString());
       params.append('pageSize', pageSize.toString());
       if (searchTerm) params.append('searchTerm', searchTerm);
 
-      const response = await api.get<ApiResponse>(
-        `/api/Enrolments/FilterCRMStudents?${params.toString()}`
-      );
+      const response = await api.get<ApiResponse>(`/api/Enrolments/FilterCRMStudents?${params.toString()}`);
 
       let raw: ApiStudentItem[] = [];
       const d = response.data;
@@ -229,7 +213,7 @@ const AllStudentsPage = () => {
         name: item.fullName || item.name || 'N/A',
         email: item.email || 'N/A',
         phone: item.contactNumber || item.phone || 'N/A',
-        passportNo: item.passportNo || '-',
+        visaId: item.visaId || '-',  // Changed from passportNo to visaId
         targetCountry: item.targetCountry || 'N/A',
         status: item.status || 'pending',
         appliedProgram: item.appliedProgram || item.program || 'N/A',
@@ -239,7 +223,6 @@ const AllStudentsPage = () => {
       const tp = d?.TotalPages || d?.totalPages;
       if (tp) setTotalPages(tp);
     } catch (err: any) {
-      console.error('Fetch error:', err);
       if (err.response?.status === 403) setError("You don't have permission to view students.");
       else if (err.response?.status === 404) setError('API endpoint not found.');
       else if (err.response?.status === 500) setError('Server error. Please try again later.');
@@ -254,10 +237,7 @@ const AllStudentsPage = () => {
   useEffect(() => { fetchStudents(); }, [currentPage]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentPage(1);
-      fetchStudents();
-    }, 500);
+    const timer = setTimeout(() => { setCurrentPage(1); fetchStudents(); }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -266,17 +246,14 @@ const AllStudentsPage = () => {
     toast.success(`Viewing details for ${student.name}`);
   };
 
-  const handleEdit = (student: Student) => {
-    toast.success(`Editing ${student.name}`);
+  // ✅ No API yet — just toast, do NOT remove from state
+  const handleEdit = (_student: Student) => {
+    toast('Editing student...', { icon: '✏️' });
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      setStudents((prev) => prev.filter((s) => s.id !== id));
-      toast.success('Student deleted successfully!');
-    } catch {
-      toast.error('Error deleting student.');
-    }
+  // ✅ No API yet — just toast, do NOT remove from state
+  const handleDelete = (_id: string) => {
+    toast('Deleting student...', { icon: '🗑️' });
   };
 
   const handleFilterClick = (filter: string) => {
@@ -291,7 +268,6 @@ const AllStudentsPage = () => {
     toast.success('Filters cleared');
   };
 
-  // ── Render ──
   if (error && students.length === 0) {
     return (
       <div className="p-6">
@@ -306,7 +282,6 @@ const AllStudentsPage = () => {
   return (
     <>
       <Toaster position="top-right" />
-
       <div className="p-4 sm:p-6 relative">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
@@ -323,24 +298,14 @@ const AllStudentsPage = () => {
             </div>
           </div>
 
-          {/* ── Filter Section — all in one row ── */}
+          {/* ── Filter Section ── */}
           {openFilter && (
             <div className="mb-4 mx-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 dark:bg-[#353535] dark:border-gray-700">
               <div className="flex flex-wrap items-center gap-2">
-                {/* Date Filter Buttons */}
                 {['Yesterday', '7 Days', '30 Days', 'This Month', 'Last Month', 'This Year'].map((label) => (
-                  <FilterButton
-                    key={label}
-                    label={label}
-                    isActive={activeFilter === label}
-                    onClick={() => handleFilterClick(label)}
-                  />
+                  <FilterButton key={label} label={label} isActive={activeFilter === label} onClick={() => handleFilterClick(label)} />
                 ))}
-
-                {/* Vertical Divider */}
                 <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-
-                {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
@@ -351,16 +316,12 @@ const AllStudentsPage = () => {
                     className="pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#00786f] focus:outline-none dark:text-white text-sm w-44 sm:w-52"
                   />
                 </div>
-
-                {/* Filter Action Button */}
                 <ButtonElement
                   icon={<Filter className="h-4 w-4" />}
                   text="Filter"
                   onClick={fetchStudents}
                   className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
                 />
-
-                {/* Clear Button */}
                 <ButtonElement
                   icon={<RotateCcw className="h-4 w-4" />}
                   text="Clear"
@@ -387,7 +348,7 @@ const AllStudentsPage = () => {
                       <th className="px-4 py-3 text-left">Name</th>
                       <th className="px-4 py-3 text-left">Email</th>
                       <th className="px-4 py-3 text-left">Phone</th>
-                      <th className="px-4 py-3 text-left">Passport No</th>
+                      <th className="px-4 py-3 text-left">Visa ID</th> {/* Changed from Passport No to Visa ID */}
                       <th className="px-4 py-3 text-left">Target Country</th>
                       <th className="px-4 py-3 text-left">Program</th>
                       <th className="px-4 py-3 text-left">Status</th>
@@ -408,7 +369,7 @@ const AllStudentsPage = () => {
                           <td className="py-3 px-4 font-medium">{student.name}</td>
                           <td className="py-3 px-4">{student.email}</td>
                           <td className="py-3 px-4">{student.phone}</td>
-                          <td className="py-3 px-4">{student.passportNo}</td>
+                          <td className="py-3 px-4">{student.visaId}</td> {/* Changed from passportNo to visaId */}
                           <td className="py-3 px-4">{student.targetCountry}</td>
                           <td className="py-3 px-4">{student.appliedProgram}</td>
                           <td className="py-3 px-4">
