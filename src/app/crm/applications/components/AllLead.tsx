@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, Filter, RotateCcw, Edit, Trash, Search, Settings, LogOut, User, X } from 'lucide-react';
+import { Plus, Filter, RotateCcw, Edit, Trash, Search, Settings, LogOut, User, X, Eye, MoreVertical } from 'lucide-react';
 import { api } from '@/utils/instance';
 import ConvertToApplicantModal from '../model/ConvertToApplicationModel';
 import useDropdown from '../hooks/useDropdown';
@@ -16,17 +16,19 @@ import AddLeadModal from '../model/AddLeadFormModel';
 
 interface Lead {
   id: string;
+  userId: string;
   name: string;
   email: string;
   phone: string;
   source: string;
-  countryInterest?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'lost';
+  educationLevel: number;
+  completionYear: string;
 }
 
-// Define the API response interface for leads
+// Define the API response interface for leads - Updated based on new response
 interface ApiResponse {
   Items: Array<{
+    userId: string;
     fullName: string;
     email: string;
     dateOfBirth: string;
@@ -48,15 +50,15 @@ interface ApiResponse {
   LastPage: number;
 }
 
-// Interface for user profile search
+// Interface for user profile from the API response
 interface UserProfile {
   id: string;
   fullName: string;
   email: string;
-  contactNumber: string;
+  enrolmentType: number;
+  createdAt: string;
+  contactNumber?: string;
   source?: string;
-  status?: string;
-  countryInterest?: string;
 }
 
 interface UserProfileResponse {
@@ -65,6 +67,8 @@ interface UserProfileResponse {
   PageIndex: number;
   pageSize: number;
   TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
 }
 
 // Convert to Applicant payload interface
@@ -74,91 +78,210 @@ interface ConvertToApplicantPayload {
   targetCountry: string;
 }
 
-// User Profile Search Component - Real search input
-const UserProfileSearch = ({ onSearch, onSelectProfile }: { 
-  onSearch: (query: string) => void; 
-  onSelectProfile: (profile: UserProfile) => void;
-}) => {
+// Education Level mapping
+const getEducationLevelText = (level: number): string => {
+  switch(level) {
+    case 1: return 'Intermediate';
+    case 2: return 'Bachelor';
+    case 3: return 'Masters';
+    default: return 'Not Specified';
+  }
+};
+
+// User Profile Search Component - Shows all users on click
+const UserProfileSearch = ({ onProfileSelected }: { onProfileSelected: (profile: UserProfile) => void }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [showResults, setShowResults] = useState(false);
-  
-  // Debounce search to avoid too many API calls
+  const [hasFetchedAll, setHasFetchedAll] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Close results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch all users when search bar is focused
+  const fetchAllUsers = async () => {
+    if (hasFetchedAll) return;
+    
+    setIsSearching(true);
+    try {
+      // Call API with empty search to get all users
+      const response = await api.get<UserProfileResponse>(
+        `/api/Enrolments/GetAllUserProfile?search=`
+      );
+      
+      console.log('All users:', response.data);
+      
+      if (response.data?.Items) {
+        setSearchResults(response.data.Items);
+        setHasFetchedAll(true);
+      }
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to fetch users');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input change
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
+      if (hasFetchedAll) {
+        // If we have all users, just show them without filtering
+        return;
+      }
       return;
     }
 
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        await onSearch(searchQuery);
+        // Call the API with the search query
+        const response = await api.get<UserProfileResponse>(
+          `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(searchQuery)}`
+        );
+        
+        if (response.data?.Items) {
+          setSearchResults(response.data.Items);
+          setShowResults(true);
+        }
+      } catch (error: any) {
+        console.error('Search error:', error);
+        toast.error('Failed to search profiles');
       } finally {
         setIsSearching(false);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, onSearch]);
+  }, [searchQuery, hasFetchedAll]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleInputFocus = () => {
+    fetchAllUsers();
     setShowResults(true);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    if (!e.target.value.trim() && hasFetchedAll) {
+      // If input is empty and we have all users, show all
+      setShowResults(true);
+    }
+  };
+
   const handleSelectProfile = (profile: UserProfile) => {
-    onSelectProfile(profile);
+    onProfileSelected(profile);
     setSearchQuery('');
     setShowResults(false);
     setSearchResults([]);
+    setHasFetchedAll(false);
+  };
+
+  // Format enrolment type to readable text
+  const getEnrolmentTypeText = (type: number): string => {
+    switch(type) {
+      case 1: return 'Student';
+      case 2: return 'Partner';
+      default: return 'Other';
+    }
+  };
+
+  // Format date to readable format
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={searchRef}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
         <input
           type="text"
           value={searchQuery}
           onChange={handleInputChange}
-          onFocus={() => searchQuery.trim() && setShowResults(true)}
-          placeholder="Search profile"
-          className="w-full sm:w-80 pl-10 pr-10 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+          onFocus={handleInputFocus}
+          placeholder="Search users..."
+          className="w-full sm:w-64 pl-10 pr-10 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00786f] focus:border-transparent dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00786f]"></div>
           </div>
         )}
+        {searchQuery && !isSearching && (
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              fetchAllUsers();
+              setShowResults(true);
+            }}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
       
       {/* Search Results Dropdown */}
-      {showResults && searchResults.length > 0 && (
-        <div className="absolute top-full left-0 mt-2 w-full sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
-          {searchResults.map((profile) => (
-            <div
-              key={profile.id}
-              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b last:border-b-0"
-              onClick={() => handleSelectProfile(profile)}
-            >
-              <div className="font-medium text-gray-800 dark:text-white">
-                {profile.fullName}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {profile.email} • {profile.contactNumber}
-              </div>
+      {showResults && (
+        <div className="absolute top-full left-0 mt-2 w-full sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[100] max-h-96 overflow-y-auto">
+          {isSearching ? (
+            <div className="p-4 text-center text-gray-500">
+              Loading users...
             </div>
-          ))}
+          ) : searchResults.length > 0 ? (
+            searchResults.map((profile) => (
+              <div
+                key={profile.id}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b last:border-b-0 transition-colors"
+                onClick={() => handleSelectProfile(profile)}
+              >
+                <div className="font-medium text-gray-800 dark:text-white">
+                  {profile.fullName}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                  <div>{profile.email}</div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className={`px-2 py-0.5 rounded-full ${
+                      profile.enrolmentType === 1 
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    }`}>
+                      {getEnrolmentTypeText(profile.enrolmentType)}
+                    </span>
+                    <span>Joined: {formatDate(profile.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              {searchQuery ? `No profiles found matching "${searchQuery}"` : 'No users found'}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-// Filter button component with original #00786f color
+// Filter button component
 const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
   <button
     type="button"
@@ -188,15 +311,33 @@ const AllLeadsPage = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   
-  // Search states
-  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  // Create refs for each action menu
+  const actionMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Use the custom dropdown hook
   const { openMenuId, closeDropdown, toggleDropdown, isDropdownOpen } = useDropdown();
 
-  // Fetch leads function
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside all action menus
+      const isOutside = Object.keys(actionMenuRefs.current).every(key => {
+        const ref = actionMenuRefs.current[key];
+        return ref && !ref.contains(event.target as Node);
+      });
+      
+      if (isOutside) {
+        setOpenActionMenuId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch leads function - Updated to use new API response
   const fetchLeads = async () => {
     try {
       setLoading(true);
@@ -208,14 +349,15 @@ const AllLeadsPage = () => {
 
       const items = response.data.Items || [];
       
-      const formattedLeads: Lead[] = items.map((item: any, index: number) => ({
-        id: index.toString(),
+      const formattedLeads: Lead[] = items.map((item: any) => ({
+        id: item.userId || Math.random().toString(),
+        userId: item.userId,
         name: item.fullName || 'N/A',
         email: item.email || 'N/A',
         phone: item.contactNumber || 'N/A',
         source: item.source || 'website',
-        countryInterest: 'N/A',
-        status: 'new',
+        educationLevel: item.educationLevel || 0,
+        completionYear: item.completionYear || 'N/A',
       }));
 
       setLeads(formattedLeads);
@@ -232,50 +374,33 @@ const AllLeadsPage = () => {
     fetchLeads();
   }, []);
 
-  // Handle profile search
-  const handleProfileSearch = async (query: string) => {
-    try {
-      setSearchLoading(true);
-      
-      // Call the API with the search query
-      const response = await api.get<UserProfileResponse>(
-        `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(query)}`
-      );
-      
-      console.log('Search results:', response.data);
-      
-      if (response.data?.Items) {
-        setSearchResults(response.data.Items);
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error: any) {
-      console.error('Search error:', error);
-      toast.error('Failed to search profiles');
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
   // Handle selecting a profile from search results
-  const handleSelectProfile = (profile: UserProfile) => {
+  const handleProfileSelected = (profile: UserProfile) => {
     // Check if profile already exists in leads
     const existingLead = leads.find(lead => lead.email === profile.email);
     
     if (existingLead) {
       toast.success(`Profile ${profile.fullName} already exists in leads`);
       // Scroll to or highlight the existing lead
+      const element = document.getElementById(`lead-${existingLead.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('bg-yellow-100', 'dark:bg-yellow-900/30');
+        setTimeout(() => {
+          element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30');
+        }, 2000);
+      }
     } else {
       // Add to leads as a new lead
       const newLead: Lead = {
-        id: (leads.length + 1).toString(),
+        id: profile.id,
+        userId: profile.id,
         name: profile.fullName,
         email: profile.email,
-        phone: profile.contactNumber,
-        source: profile.source || 'search',
-        countryInterest: profile.countryInterest || 'N/A',
-        status: 'new',
+        phone: profile.contactNumber || 'N/A',
+        source: profile.source || 'profile-search',
+        educationLevel: 0,
+        completionYear: 'N/A',
       };
       
       setLeads(prev => [newLead, ...prev]);
@@ -287,30 +412,16 @@ const AllLeadsPage = () => {
     fetchLeads();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'contacted':
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'qualified':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-      case 'lost':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
   const handleConvertClick = (lead: Lead) => {
     setSelectedLead(lead);
     setConversionData({
-      userId: lead.id,
+      userId: lead.userId,
       passportNo: '',
       targetCountry: '',
     });
     setShowConvertModal(true);
-    closeDropdown(); // Close dropdown after selection
+    setOpenActionMenuId(null);
+    closeDropdown();
   };
 
   const handleConversionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -346,8 +457,10 @@ const AllLeadsPage = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      // Add your delete API call here
       toast.success('Lead deleted successfully!');
       setLeads(prev => prev.filter(lead => lead.id !== id));
+      setOpenActionMenuId(null);
     } catch {
       toast.error('Error deleting lead.');
     }
@@ -356,11 +469,13 @@ const AllLeadsPage = () => {
   const handleViewDetails = (lead: Lead) => {
     console.log('View details:', lead);
     toast.success(`Viewing details for ${lead.name}`);
+    setOpenActionMenuId(null);
   };
 
   const handleEdit = (lead: Lead) => {
     console.log('Edit:', lead);
     toast.success(`Editing ${lead.name}`);
+    setOpenActionMenuId(null);
   };
 
   const handleFilterClick = (filter: string) => {
@@ -374,19 +489,17 @@ const AllLeadsPage = () => {
     toast.success('Filters cleared');
   };
 
-  const buttonElement = (id: string) => {
-    return (
-      <ButtonElement
-        icon={<Edit size={14} />}
-        type="button"
-        text=""
-        onClick={() => {
-          const lead = leads.find(l => l.id === id);
-          if (lead) handleEdit(lead);
-        }}
-        className="!text-xs font-bold !bg-[#00786f] hover:!bg-[#00635a] text-white transition-all duration-150 hover:shadow-md hover:scale-105"
-      />
-    );
+  const toggleActionMenu = (id: string) => {
+    setOpenActionMenuId(openActionMenuId === id ? null : id);
+  };
+
+  // Function to set ref for each action menu
+  const setActionMenuRef = (id: string) => (el: HTMLDivElement | null) => {
+    if (el) {
+      actionMenuRefs.current[id] = el;
+    } else {
+      delete actionMenuRefs.current[id];
+    }
   };
 
   if (error) {
@@ -403,8 +516,11 @@ const AllLeadsPage = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="p-4 sm:p-6 relative">
+        {/* Main Content - with conditional blur */}
+        <div className={`bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ${
+          isAddLeadModalOpen || showConvertModal ? 'blur-sm' : ''
+        }`}>
           {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -469,13 +585,9 @@ const AllLeadsPage = () => {
 
                 {/* Search Bar and Action Buttons */}
                 <div className="flex items-center gap-2 lg:ml-auto">
-                  {/* Real Search Input Component - with updated placeholder */}
-                  <UserProfileSearch 
-                    onSearch={handleProfileSearch} 
-                    onSelectProfile={handleSelectProfile}
-                  />
+                  {/* Updated Search Component with shorter width */}
+                  <UserProfileSearch onProfileSelected={handleProfileSelected} />
 
-                  {/* Updated button label from "Apply Filter" to just "Filter" */}
                   <ButtonElement
                     type="button"
                     text="Filter"
@@ -496,7 +608,7 @@ const AllLeadsPage = () => {
           )}
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
@@ -505,12 +617,12 @@ const AllLeadsPage = () => {
                   <th className="px-4 py-3 text-left">Email</th>
                   <th className="px-4 py-3 text-left">Phone</th>
                   <th className="px-4 py-3 text-left">Source</th>
-                  <th className="px-4 py-3 text-left">Country</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-left">Education Level</th>
+                  <th className="px-4 py-3 text-left">Completion Year</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="overflow-y-visible">
                 {loading ? (
                   <tr>
                     <td colSpan={8} className="p-4 text-center text-gray-500">
@@ -521,58 +633,63 @@ const AllLeadsPage = () => {
                   leads.map((lead, index) => (
                     <tr
                       key={lead.id}
+                      id={`lead-${lead.id}`}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-1 px-4">{(index + 1).toString().padStart(2, '0')}</td>
-                      <td className="py-1 px-4 font-medium">{lead.name}</td>
-                      <td className="py-1 px-4">{lead.email}</td>
-                      <td className="py-1 px-4">{lead.phone}</td>
-                      <td className="py-1 px-4 capitalize">{lead.source}</td>
-                      <td className="py-1 px-4">{lead.countryInterest}</td>
-                      <td className="py-1 px-4">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                            lead.status
-                          )}`}
+                      <td className="py-3 px-4">{(index + 1).toString().padStart(2, '0')}</td>
+                      <td className="py-3 px-4 font-medium">{lead.name}</td>
+                      <td className="py-3 px-4">{lead.email}</td>
+                      <td className="py-3 px-4">{lead.phone}</td>
+                      <td className="py-3 px-4 capitalize">{lead.source}</td>
+                      <td className="py-3 px-4">{getEducationLevelText(lead.educationLevel)}</td>
+                      <td className="py-3 px-4">{lead.completionYear}</td>
+                      <td className="py-3 px-4">
+                        <div 
+                          className="relative flex justify-center" 
+                          ref={setActionMenuRef(lead.id)}
                         >
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td className="py-1 px-4">
-                        <div className="flex justify-center gap-2">
-                          <DeleteButton
-                            onConfirm={() => handleDelete(lead.id)}
-                            headerText={<Trash size={14} />}
-                            content="Are you sure you want to delete this lead?"
-                          />
-                          <EditButton
-                            button={buttonElement(lead.id)}
-                          />
+                          <button
+                            onClick={() => toggleActionMenu(lead.id)}
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                          >
+                            <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
+                          </button>
                           
-                          <div className="relative">
-                            <DropdownMenuButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleDropdown(lead.id);
-                              }}
-                              isOpen={isDropdownOpen(lead.id)}
-                            />
-                            
-                            {/* Modified LeadActionsDropdown to show only Convert option */}
-                            {isDropdownOpen(lead.id) && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                          {/* Action Menu Dropdown */}
+                          {openActionMenuId === lead.id && (
+                            <div className="absolute top-full right-0 mt-1 z-[100] min-w-[180px]">
+                              <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1">
                                 <button
-                                  onClick={() => {
-                                    handleConvertClick(lead);
-                                    closeDropdown();
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                  onClick={() => handleViewDetails(lead)}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                                 >
+                                  <Eye size={14} />
+                                  View Details
+                                </button>
+                                <button
+                                  onClick={() => handleEdit(lead)}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                                >
+                                  <Edit size={14} />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleConvertClick(lead)}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                                >
+                                  <User size={14} />
                                   Convert to Applicant
                                 </button>
+                                <button
+                                  onClick={() => handleDelete(lead.id)}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                                >
+                                  <Trash size={14} />
+                                  Delete
+                                </button>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -590,8 +707,18 @@ const AllLeadsPage = () => {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Convert to Applicant Modal */}
+        {/* Modals - Rendered outside the blurred container */}
+        {isAddLeadModalOpen && (
+          <AddLeadModal
+            isOpen={isAddLeadModalOpen}
+            onClose={() => setIsAddLeadModalOpen(false)}
+            onSuccess={refreshLeads}
+          />
+        )}
+
+        {showConvertModal && (
           <ConvertToApplicantModal
             isOpen={showConvertModal}
             onClose={() => setShowConvertModal(false)}
@@ -601,14 +728,7 @@ const AllLeadsPage = () => {
             onInputChange={handleConversionInputChange}
             onSubmit={handleConvertSubmit}
           />
-
-          {/* Add Lead Modal */}
-          <AddLeadModal
-            isOpen={isAddLeadModalOpen}
-            onClose={() => setIsAddLeadModalOpen(false)}
-            onSuccess={refreshLeads}
-          />
-        </div>
+        )}
       </div>
     </>
   );

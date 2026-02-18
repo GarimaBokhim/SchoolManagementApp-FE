@@ -8,9 +8,9 @@ interface ConvertToApplicantModalProps {
   selectedLead: {
     id: string;
     name: string;
+    userId: string;
   } | null;
   conversionData: {
-    userId: string;
     passportNo: string;
     targetCountry: string;
   };
@@ -68,23 +68,6 @@ const ConvertToApplicantModal = ({
               </p>
               
               <form onSubmit={onSubmit} className="space-y-5">
-                {/* User ID */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    User ID <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="userId"
-                      value={conversionData.userId}
-                      readOnly
-                      className="w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                    />
-                    <span className="absolute right-3 top-2.5 text-xs text-gray-400">Auto-filled</span>
-                  </div>
-                </div>
-
                 {/* Passport Number */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -149,7 +132,7 @@ const ConvertToApplicantModal = ({
                     ) : (
                       <>
                         <UserPlus size={18} className="mr-2" />
-                        Convert
+                        Convert to Applicant
                       </>
                     )}
                   </button>
