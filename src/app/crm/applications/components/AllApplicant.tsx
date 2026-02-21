@@ -13,7 +13,8 @@ import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/Fil
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
+import { Toast } from '@/components/Toast/toast';
 
 // ─── BS Date Helpers ───────────────────────────────────────────
 
@@ -377,9 +378,11 @@ const AllApplicantsPage = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
 
+  // ── Get all schools data ──
+  const { data: allSchools } = useGetAllSchool();
+
   // ── State ──
   const [applicants, setApplicants] = useState<Applicant[]>([]);
-  const [schools, setSchools] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConvertModal, setShowConvertModal] = useState(false);
@@ -421,24 +424,10 @@ const AllApplicantsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ── Fetch Schools ───────────────────────────────────────────────────────────
-
-const fetchSchools = async (): Promise<Record<string, string>> => {
-  try {
-    const response = await api.get<SchoolResponse>('/api/Schools?pageSize=10');
-
-    const schoolMap: Record<string, string> = {};
-    response.data.Items.forEach((school) => {
-      schoolMap[school.id] = school.name;
-    });
-
-    setSchools(schoolMap);
-    return schoolMap; // ✅ return it
-  } catch (error) {
-    console.error('Error fetching schools:', error);
-    return {};
-  }
-};
+  // ── Helper function to get school name ──
+  const getSchoolName = useCallback((schoolId: string) => {
+    return allSchools?.Items?.find((school: School) => school.id === schoolId)?.name || 'Unknown School';
+  }, [allSchools]);
 
   // ── Build query string ──
   const buildQueryString = () => {
@@ -447,57 +436,52 @@ const fetchSchools = async (): Promise<Record<string, string>> => {
   };
 
   // ── Fetch applicants ──
-const fetchApplicants = async (customParams?: string) => {
-  try {
-    setLoading(true);
-    setError(null);
+  const fetchApplicants = async (customParams?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    const queryString = customParams || buildQueryString();
-    const url = `/api/Enrolments/FilterApplicants${queryString}`;
+      const queryString = customParams || buildQueryString();
+      const url = `/api/Enrolments/FilterApplicants${queryString}`;
 
-    const response = await api.get<ApiResponse>(url);
-    const data = response.data;
-    const items = data.Items || [];
+      const response = await api.get<ApiResponse>(url);
+      const data = response.data;
+      const items = data.Items || [];
 
-    // ✅ ensure school map is ready
-    let schoolMap = schools;
+      const formattedApplicants: Applicant[] = items.map((item: any) => ({
+        id: item.id,
+        userId: item.userId,
+        passportNo: item.passportNo || '-',
+        targetCountry: item.targetCountry || '-',
+        isActive: item.isActive,
+        schoolId: item.schoolId,
+        schoolName: getSchoolName(item.schoolId), // Use the helper function
+        createdBy: item.createdBy,
+        createdAt: item.createdAt,
+        modifiedBy: item.modifiedBy,
+        modifiedAt: item.modifiedAt,
+      }));
 
-    if (Object.keys(schoolMap).length === 0) {
-      schoolMap = await fetchSchools();
+      setApplicants(formattedApplicants);
+      setTotalItems(data.TotalItems ?? 0);
+      setTotalPages(data.TotalPages ?? 1);
+      setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
+    } catch (error: any) {
+      const errorMsg = handleError(error);
+      setError(errorMsg);
+      Toast.error('Failed to fetch applicants');
+    } finally {
+      setLoading(false);
     }
-
-    const formattedApplicants: Applicant[] = items.map((item: any) => ({
-      id: item.id,
-      userId: item.userId,
-      passportNo: item.passportNo || '-',
-      targetCountry: item.targetCountry || '-',
-      isActive: item.isActive,
-      schoolId: item.schoolId,
-      schoolName: schoolMap[item.schoolId] || 'Unknown School', // ✅ FIXED
-      createdBy: item.createdBy,
-      createdAt: item.createdAt,
-      modifiedBy: item.modifiedBy,
-      modifiedAt: item.modifiedAt,
-    }));
-
-    setApplicants(formattedApplicants);
-    setTotalItems(data.TotalItems ?? 0);
-    setTotalPages(data.TotalPages ?? 1);
-    setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-  } catch (error: any) {
-    const errorMsg = handleError(error);
-    setError(errorMsg);
-    Toast.error('Failed to fetch applicants');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // ── Initial fetch ──
   useEffect(() => {
-    fetchApplicants();
+    if (allSchools) { // Only fetch applicants when schools data is available
+      fetchApplicants();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools]);
 
   // ── Handle filter submit ──
   const handleFilterSubmit = async (formData: FilterFormData) => {
@@ -608,6 +592,17 @@ const fetchApplicants = async (customParams?: string) => {
     // Add your edit logic here
     Toast.info(`Editing applicant`);
   };
+
+  // ── Loading state while schools are being fetched ──
+  if (!allSchools) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500 dark:text-gray-400">Loading schools data...</div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Error state ──
   if (error) {
