@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Students from "../components/allstudents";
-import AllLeadsPage from "../../components/AllLead";
-import AllApplicants from "../../components/AllApplicant";
+import AllApplicantsPage from "../../applicants/AllApplicantsPage";
+import AllLeadsPage from "../../leads/AllLeadsPage";
 
 
 const AllStudent = () => {
@@ -24,7 +24,7 @@ const AllStudent = () => {
         return <Students />;
 
       case "applicant":
-        return <AllApplicants />;
+        return <AllApplicantsPage />;
 
       default:
         return <AllLeadsPage />;
