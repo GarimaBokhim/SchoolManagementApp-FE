@@ -271,9 +271,7 @@ const AllClassForm = ({ onDataFromChild }: Props) => {
                                 button={buttonElement(Class.id ?? "")}
                               />
                             )}
-                            <PrintIDCardButton
-                              StudentId={Class.id ?? ""}
-                            />
+                            
                           </div>
                         </td>
                       </tr>

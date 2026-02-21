@@ -21,7 +21,7 @@ const Edit = ({ onClose }: Props) => {
 
   const form = useForm<IEvents>({
     defaultValues: {
-      Id: "",
+      id: "",
       title: "",
       descriptions: "",
       eventsType: "",

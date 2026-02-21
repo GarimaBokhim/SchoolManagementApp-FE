@@ -12,7 +12,7 @@ interface props {
 const Add = ({  onClose }: props) => {
   const form = useForm<IEvents>({
     defaultValues: {
-      Id: "",
+      id: "",
       title: "",
       descriptions: "",
       eventsType: "",
