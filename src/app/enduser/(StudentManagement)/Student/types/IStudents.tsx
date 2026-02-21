@@ -21,6 +21,7 @@ export interface IStudent {
   municipalityId: number | 0;
   vdcid: number | 0;
   wardNumber?: number | null;
+  imageUrl: string;
 }
 
 export interface IFilterStudentByDate {

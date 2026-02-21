@@ -40,14 +40,19 @@ const StudentIDCard = forwardRef<HTMLDivElement, Props>(
 
         <div className="flex h-[200px] px-6 py-4">
           <div className="w-[160px] flex flex-col items-center justify-center border-r pr-4">
-            <div className="w-[110px] h-[110px] rounded-full border-4 border-indigo-600 overflow-hidden shadow-md">
-              <img 
-              src={student.studentImg}
-              alt="Student Photo"
-              className="object-cover w-full h-full"
+          <div className="w-[110px] h-[110px] rounded-full border-4 border-indigo-600 overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
+            {student.imageUrl ? (
+              <img
+                src={encodeURI(student.imageUrl)} 
+                alt="Student Photo"
+                className="object-cover w-full h-full"
               />
-
-            </div>
+            ) : student.genderStatus === 0 ? (
+              <img src="../../../public/assets/male.jpg" alt="Male" className="w-12 h-12" />
+            ) : student.genderStatus === 1 ? (
+              <img src="../../../public/assets/female.jpg" alt="Female" className="w-12 h-12" />
+            ) : null}
+          </div>
 
             <p className="mt-3 text-xs font-semibold text-gray-500">
               Reg No: {student.registrationNumber}
