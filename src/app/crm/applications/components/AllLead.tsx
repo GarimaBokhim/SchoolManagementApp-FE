@@ -582,11 +582,7 @@ const AllLeadsPage = () => {
                     onFocus={() => fetchUsers("")}
                     getLabel={(profile) => profile?.fullName ?? ""}
                     getValue={(profile) => profile?.id ?? ""}
-                    renderOptionExtra={(profile) => (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {profile.email} • {profile.enrolmentType === 1 ? 'Student' : 'Partner'}
-                      </div>
-                    )}
+                    // Removed renderOptionExtra to show only the main label
                   />
                 </div>
 
