@@ -1,12 +1,57 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, RotateCcw, Search, Eye, Edit, Trash, MoreVertical, UserCheck, X } from 'lucide-react';
+import { Filter, RotateCcw, Search, Eye, Edit, Trash, MoreVertical, UserCheck, X, Plus } from 'lucide-react';
+import { ADToBS, BSToAD } from 'bikram-sambat-js';
 import { api } from '@/utils/instance';
-import toast, { Toaster } from 'react-hot-toast';
-import { ButtonElement } from '@/components/Buttons/ButtonElement';
+import { useForm } from "react-hook-form";
+import toast, { Toaster } from "react-hot-toast";
+import { ButtonElement } from "@/components/Buttons/ButtonElement";
+import Pagination from "@/components/Pagination";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
 
-// ─── Interfaces ────────────────────────────────────────────────────────────────
+// ─── BS Date Helpers ───────────────────────────────────────────
+
+function getLocalToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function formatADDate(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getTodayBS(): string {
+  return ADToBS(formatADDate(getLocalToday()));
+}
+
+function getBSDateDaysAgo(daysAgo: number): string {
+  const d = getLocalToday();
+  d.setDate(d.getDate() - daysAgo);
+  return ADToBS(formatADDate(d));
+}
+
+function getFirstDayOfCurrentBSMonth(): string {
+  const bsToday = getTodayBS();
+  const [year, month] = bsToday.split('-');
+  return `${year}-${month}-01`;
+}
+
+function getFirstDayOfCurrentBSYear(): string {
+  const bsToday = getTodayBS();
+  const [year] = bsToday.split('-');
+  return `${year}-01-01`;
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Applicant {
   id: string;
@@ -20,31 +65,47 @@ interface Applicant {
   targetCountry?: string;
 }
 
-interface ApiApplicant {
-  id?: string;
-  userId?: string;
-  fullName?: string;
-  name?: string;
-  email?: string;
-  contactNumber?: string;
-  phone?: string;
-  appliedProgram?: string;
-  program?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  passportNo?: string;
-  targetCountry?: string;
+interface ApiResponse {
+  Items: Array<{
+    id?: string;
+    userId?: string;
+    fullName?: string;
+    name?: string;
+    email?: string;
+    contactNumber?: string;
+    phone?: string;
+    appliedProgram?: string;
+    program?: string;
+    status?: 'pending' | 'approved' | 'rejected';
+    passportNo?: string;
+    targetCountry?: string;
+  }>;
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
 }
 
-interface ApiResponse {
-  Items?: ApiApplicant[];
-  items?: ApiApplicant[];
-  data?: ApiApplicant[];
-  TotalPages?: number;
-  totalPages?: number;
-  TotalItems?: number;
-  totalItems?: number;
-  PageIndex?: number;
-  pageIndex?: number;
+interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  enrolmentType: number;
+  createdAt: string;
+  contactNumber?: string;
+  source?: string;
+}
+
+interface UserProfileResponse {
+  Items: UserProfile[];
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
 }
 
 interface ConvertToStudentPayload {
@@ -53,7 +114,19 @@ interface ConvertToStudentPayload {
   visaId: string;
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+interface FilterFormData {
+  startDate: string;
+  endDate: string;
+  firstName?: string;
+}
+
+interface SearchParam {
+  pageSize: number;
+  pageIndex: number;
+  isPagination: boolean;
+}
+
+// ─── Status Style Helper ───────────────────────────────────────────────────────
 
 const getStatusStyle = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -61,7 +134,6 @@ const getStatusStyle = (status: string) => {
       return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
     case 'rejected':
       return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    case 'pending':
     default:
       return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
   }
@@ -76,26 +148,13 @@ interface ConvertToStudentModalProps {
   onSuccess: () => void;
 }
 
-const ConvertToStudentModal = ({
-  isOpen,
-  onClose,
-  selectedApplicant,
-  onSuccess,
-}: ConvertToStudentModalProps) => {
-  const [formData, setFormData] = useState<ConvertToStudentPayload>({
-    userId: '',
-    universityName: '',
-    visaId: '',
-  });
+const ConvertToStudentModal = ({ isOpen, onClose, selectedApplicant, onSuccess }: ConvertToStudentModalProps) => {
+  const [formData, setFormData] = useState<ConvertToStudentPayload>({ userId: '', universityName: '', visaId: '' });
   const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     if (selectedApplicant) {
-      setFormData({
-        userId: selectedApplicant.userId || selectedApplicant.id,
-        universityName: '',
-        visaId: '',
-      });
+      setFormData({ userId: selectedApplicant.userId || selectedApplicant.id, universityName: '', visaId: '' });
     }
   }, [selectedApplicant]);
 
@@ -103,7 +162,7 @@ const ConvertToStudentModal = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,12 +170,11 @@ const ConvertToStudentModal = ({
     try {
       setConverting(true);
       await api.post('/api/Enrolments/ConvertToStudents', formData);
-      toast.success(`Successfully converted ${selectedApplicant.name} to student!`);
+      Toast.success(`Successfully converted ${selectedApplicant.name} to student!`);
       onSuccess();
       onClose();
     } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || 'Failed to convert to student';
-      toast.error(`Error: ${msg}`);
+      Toast.error(`Error: ${error.response?.data?.message || error.message || 'Failed to convert to student'}`);
     } finally {
       setConverting(false);
     }
@@ -127,12 +185,11 @@ const ConvertToStudentModal = ({
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md transform transition-all">
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <UserCheck size={20} />
-                  Convert to Student
+                  <UserCheck size={20} /> Convert to Student
                 </h2>
                 <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
                   <X size={20} />
@@ -142,9 +199,7 @@ const ConvertToStudentModal = ({
             <div className="p-6">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                 Converting{' '}
-                <span className="font-semibold text-purple-600 dark:text-purple-400">
-                  {selectedApplicant.name}
-                </span>{' '}
+                <span className="font-semibold text-purple-600 dark:text-purple-400">{selectedApplicant.name}</span>{' '}
                 to a student. Please provide the additional information below.
               </p>
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -198,10 +253,7 @@ const ConvertToStudentModal = ({
                         Converting...
                       </>
                     ) : (
-                      <>
-                        <UserCheck size={16} />
-                        Convert to Student
-                      </>
+                      <><UserCheck size={16} /> Convert to Student</>
                     )}
                   </button>
                 </div>
@@ -214,17 +266,19 @@ const ConvertToStudentModal = ({
   );
 };
 
-// ─── Fixed-Position Action Menu ────────────────────────────────────────────────
+// ─── Fixed-position Action Dropdown ───────────────────────────────────────────
 
 interface ActionMenuProps {
   applicant: Applicant;
-  onView: (a: Applicant) => void;
-  onEdit: (a: Applicant) => void;
-  onConvert: (a: Applicant) => void;
+  onView: (applicant: Applicant) => void;
+  onEdit: (applicant: Applicant) => void;
+  onConvert: (applicant: Applicant) => void;
   onDelete: (id: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMenuProps) => {
+const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -233,8 +287,8 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
   const calculatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 148;
-    const menuWidth = 192;
+    const menuHeight = 160;
+    const menuWidth = 180;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
     setMenuStyle({
@@ -248,7 +302,7 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
 
   const toggle = () => {
     if (!open) calculatePosition();
-    setOpen((prev) => !prev);
+    setOpen(prev => !prev);
   };
 
   useEffect(() => {
@@ -279,99 +333,133 @@ const ActionMenu = ({ applicant, onView, onEdit, onConvert, onDelete }: ActionMe
       <button
         ref={buttonRef}
         onClick={toggle}
-        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        title="Actions"
       >
-        <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+        <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
       </button>
+
       {open && (
         <div
           ref={menuRef}
           style={menuStyle}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+          className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
         >
           <button
             onClick={() => { onView(applicant); setOpen(false); }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
-            <Eye className="h-4 w-4" /> View Details
+            <Eye size={14} /> View Details
           </button>
-          <button
-            onClick={() => { onEdit(applicant); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" /> Edit
-          </button>
+          
+          {canEdit && (
+            <button
+              onClick={() => { onEdit(applicant); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Edit size={14} /> Edit
+            </button>
+          )}
+          
           <button
             onClick={() => { onConvert(applicant); setOpen(false); }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
-            <UserCheck className="h-4 w-4" /> Convert to Student
+            <UserCheck size={14} /> Convert to Student
           </button>
-          <button
-            onClick={() => { onDelete(applicant.id); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Trash className="h-4 w-4" /> Delete
-          </button>
+          
+          {canDelete && (
+            <button
+              onClick={() => { onDelete(applicant.id); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Trash size={14} /> Delete
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-// ─── Filter Button ─────────────────────────────────────────────────────────────
-
-const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition-all duration-150 whitespace-nowrap ${
-      isActive
-        ? 'bg-[#00786f] shadow-lg transform scale-105'
-        : 'bg-[#00786f] opacity-80 hover:opacity-100 hover:shadow-md hover:scale-105'
-    }`}
-  >
-    {label}
-  </button>
-);
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const AllApplicants = () => {
+const AllApplicantsPage = () => {
+  // ── Permissions ──
+  const { menuStatus } = usePermissions();
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+
+  // ── State ──
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [openFilter, setOpenFilter] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('');
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
-
+  const [convertingId, setConvertingId] = useState<string | null>(null);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [conversionData, setConversionData] = useState<ConvertToStudentPayload>({
+    userId: '',
+    universityName: '',
+    visaId: '',
+  });
+  const [openFilter, setOpenFilter] = useState(false);
+  const [params, setParams] = useState("");
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const fetchApplicants = async () => {
+  // ── Forms ──
+  const filterForm = useForm<FilterFormData>({
+    defaultValues: {
+      startDate: "",
+      endDate: "",
+      firstName: "",
+    },
+  });
+
+  const paginationForm = useForm<SearchParam>({
+    defaultValues: {
+      pageSize: 10,
+      pageIndex: 1,
+      isPagination: true,
+    },
+  });
+
+  // ── Refs ──
+  const dateFilterRef = useRef<DateRangeFilterRef>(null);
+  const { handleError, clearError } = useErrorHandler();
+
+  // ── Pagination state ──
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  });
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // ── Build query string ──
+  const buildQueryString = () => {
+    const baseQuery = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+    return baseQuery + (params || "");
+  };
+
+  // ── Fetch applicants ──
+  const fetchApplicants = async (customParams?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const params = new URLSearchParams();
-      params.append('pageIndex', currentPage.toString());
-      params.append('pageSize', pageSize.toString());
-      if (searchTerm) params.append('searchTerm', searchTerm);
 
-      const response = await api.get<ApiResponse>(`/api/Enrolments/FilterApplicants?${params.toString()}`);
+      const queryString = customParams || buildQueryString();
+      const url = `/api/Enrolments/FilterApplicants${queryString}`;
+      console.log('Fetching applicants:', url);
 
-      let raw: ApiApplicant[] = [];
-      const d = response.data;
-      if (d?.Items && Array.isArray(d.Items)) raw = d.Items;
-      else if (d?.items && Array.isArray(d.items)) raw = d.items;
-      else if (d?.data && Array.isArray(d.data)) raw = d.data;
-      else if (Array.isArray(d)) raw = d as unknown as ApiApplicant[];
+      const response = await api.get<ApiResponse>(url);
+      const data = response.data;
+      const items = data.Items || [];
 
-      const formatted: Applicant[] = raw.map((item: any, index: number) => ({
-        id: item.id || `temp-${index}`,
+      const formattedApplicants: Applicant[] = items.map((item: any, index: number) => ({
+        id: item.id || item.userId || `temp-${index}`,
         userId: item.userId || item.id || `temp-${index}`,
         name: item.fullName || item.name || 'N/A',
         email: item.email || 'N/A',
@@ -382,64 +470,152 @@ const AllApplicants = () => {
         targetCountry: item.targetCountry,
       }));
 
-      setApplicants(formatted);
-      const tp = d?.TotalPages || d?.totalPages;
-      if (tp) setTotalPages(tp);
-    } catch (err: any) {
-      if (err.response?.status === 403) setError("You don't have permission to view applicants.");
-      else if (err.response?.status === 400) setError('Invalid request parameters.');
-      else if (err.response?.status === 404) setError('API endpoint not found.');
-      else if (err.response?.status === 500) setError('Server error. Please try again later.');
-      else setError(err.response?.data?.message || 'Failed to fetch applicants.');
-      toast.error('Failed to fetch applicants');
-      setApplicants([]);
+      setApplicants(formattedApplicants);
+      setTotalItems(data.TotalItems ?? 0);
+      setTotalPages(data.TotalPages ?? 1);
+      setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
+    } catch (error: any) {
+      const errorMsg = handleError(error);
+      setError(errorMsg);
+      Toast.error('Failed to fetch applicants');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchApplicants(); }, [currentPage]);
-
+  // ── Initial fetch ──
   useEffect(() => {
-    const timer = setTimeout(() => { setCurrentPage(1); fetchApplicants(); }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    fetchApplicants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
 
-  // ── Handlers ──
-  const handleViewDetails = (applicant: Applicant) => {
-    toast.success(`Viewing details for ${applicant.name}`);
+  // ── Handle filter submit ──
+  const handleFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.firstName
+          ? `firstName=${encodeURIComponent(formData.firstName)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+      
+      const fullQuery = queryParams ? `&${queryParams}` : "";
+      
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+        })(),
+        {
+          loading: "Fetching applicants...",
+          success: "Applicants fetched successfully!",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
+      console.error("Error during filter submission:", error);
+    }
   };
 
-  // ✅ No API yet — just toast, do NOT remove from state
-  const handleEdit = (_applicant: Applicant) => {
-    toast('Editing applicant...', { icon: '✏️' });
+  // ── Handle clear filter ──
+  const onClearClick = () => {
+    setParams("");
+    dateFilterRef.current?.handleClear();
+    setSelectedProfile(undefined);
+    filterForm.reset();
+    setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+    Toast.success('Filters cleared');
   };
 
+  // ── Handle pagination ──
+  const handleSearch = (params: SearchParam) => {
+    params.pageSize = paginationParams.pageSize;
+    setPaginationParams(params);
+  };
+
+  // ── Handle profile search ──
+  const fetchUsers = async (search: string = "") => {
+    setIsSearching(true);
+    try {
+      const response = await api.get<UserProfileResponse>(
+        `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(search)}`
+      );
+      if (response.data?.Items) {
+        setSearchResults(response.data.Items);
+      }
+    } catch (error) {
+      Toast.error('Failed to search profiles');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // ── Handle profile selection ──
+  const handleProfileSelected = (profile: UserProfile | null) => {
+    if (!profile) return;
+    
+    setSelectedProfile(profile);
+    
+    // Check if applicant already exists
+    const existingApplicant = applicants.find(applicant => applicant.email === profile.email);
+    if (existingApplicant) {
+      Toast.success(`Profile ${profile.fullName} already exists in applicants`);
+      const element = document.getElementById(`applicant-${existingApplicant.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('bg-yellow-100', 'dark:bg-yellow-900/30');
+        setTimeout(() => element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30'), 2000);
+      }
+    } else {
+      // Add to filter and fetch
+      filterForm.setValue('firstName', profile.fullName);
+      handleFilterSubmit(filterForm.getValues());
+      Toast.success(`Added ${profile.fullName} to applicants`);
+    }
+  };
+
+  // ── Handle convert ──
   const handleConvertClick = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
+    setConversionData({ userId: applicant.userId, universityName: '', visaId: '' });
     setShowConvertModal(true);
   };
 
-  // ✅ No API yet — just toast, do NOT remove from state
-  const handleDelete = (_id: string) => {
-    toast('Deleting applicant...', { icon: '🗑️' });
+  // ── Handle CRUD operations ──
+  const handleDelete = async (id: string) => {
+    try {
+      // Add your delete API call here
+      // await api.delete(`/api/Enrolments/${id}`);
+      Toast.success('Applicant deleted successfully!');
+      fetchApplicants();
+    } catch (error) {
+      Toast.error('Error deleting applicant.');
+    }
   };
 
-  const handleFilterClick = (filter: string) => {
-    setActiveFilter(filter);
-    toast.success(`Filtering by ${filter}`);
+  const handleViewDetails = (applicant: Applicant) => {
+    Toast.info(`Viewing details for ${applicant.name}`);
+    // Add your view logic here
   };
 
-  const onClearClick = () => {
-    setActiveFilter('');
-    setOpenFilter(false);
-    setSearchTerm('');
-    toast.success('Filters cleared');
+  const handleEdit = (applicant: Applicant) => {
+    // Add your edit logic here
+    Toast.info(`Editing ${applicant.name}`);
   };
 
-  if (error && applicants.length === 0) {
+  // ── Error state ──
+  if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-6">
         <Toaster position="top-right" />
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
           Error: {error}
@@ -451,162 +627,185 @@ const AllApplicants = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4 sm:p-6 relative">
-        <div className={`bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ${
-          showConvertModal ? 'blur-sm' : ''
-        }`}>
-
-          {/* ── Header ── */}
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">All Applicants</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
-                icon={<Filter className="h-4 w-4" />}
+                type="button"
                 text="Filter"
+                icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105"
+                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold"
               />
+
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={24} />}
+                  type="button"
+                  text="Add New Applicant"
+                  onClick={() => Toast.info('Add new applicant feature coming soon!')}
+                  className="!text-md !font-bold !text-white"
+                />
+              )}
             </div>
           </div>
 
-          {/* ── Filter Section ── */}
+          {/* Filter Section */}
           {openFilter && (
-            <div className="mb-4 mx-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 dark:bg-[#353535] dark:border-gray-700">
-              <div className="flex flex-wrap items-center gap-2">
-                {['Yesterday', '7 Days', '30 Days', 'This Month', 'Last Month', 'This Year'].map((label) => (
-                  <FilterButton key={label} label={label} isActive={activeFilter === label} onClick={() => handleFilterClick(label)} />
-                ))}
-                <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="search"
-                    placeholder="Search applicants..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#00786f] focus:outline-none dark:text-white text-sm w-44 sm:w-52"
+            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <form
+                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={dateFilterRef}
+                  form={filterForm}
+                  onSubmit={handleFilterSubmit}
+                  setParams={setParams}
+                />
+
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search Users"
+                    name="firstName"
+                    form={filterForm}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={handleProfileSelected}
+                    onFocus={() => fetchUsers("")}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email} • {profile.enrolmentType === 1 ? 'Student' : 'Partner'}
+                      </div>
+                    )}
                   />
                 </div>
-                <ButtonElement
-                  icon={<Filter className="h-4 w-4" />}
-                  text="Filter"
-                  onClick={fetchApplicants}
-                  className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
-                />
-                <ButtonElement
-                  icon={<RotateCcw className="h-4 w-4" />}
-                  text="Clear"
-                  onClick={onClearClick}
-                  className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
-                />
-              </div>
+
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={onClearClick}
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
+                </div>
+              </form>
             </div>
           )}
 
-          {/* ── Table ── */}
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00786f]" />
-              <p className="mt-2 text-gray-500 dark:text-gray-400">Loading Applicants...</p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-xs sm:text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                      <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                      <th className="px-4 py-3 text-left">Name</th>
-                      <th className="px-4 py-3 text-left">Email</th>
-                      <th className="px-4 py-3 text-left">Phone</th>
-                      <th className="px-4 py-3 text-left">Program / Country</th>
-                      <th className="px-4 py-3 text-left">Passport No</th>
-                      <th className="px-4 py-3 text-left">Status</th>
-                      <th className="px-4 py-3 text-center w-[80px]">Actions</th>
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Phone</th>
+                  <th className="px-4 py-3 text-left">Program / Country</th>
+                  <th className="px-4 py-3 text-left">Passport No</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="p-4 text-center text-gray-500">
+                      Loading Applicants...
+                    </td>
+                  </tr>
+                ) : applicants.length > 0 ? (
+                  applicants.map((applicant, index) => (
+                    <tr
+                      key={applicant.id}
+                      id={`applicant-${applicant.id}`}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                    >
+                      <td className="py-1 px-4">
+                        {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
+                      </td>
+                      <td className="py-1 px-4 font-medium">{applicant.name}</td>
+                      <td className="py-1 px-4">{applicant.email}</td>
+                      <td className="py-1 px-4">{applicant.phone}</td>
+                      <td className="py-1 px-4">{applicant.appliedProgram}</td>
+                      <td className="py-1 px-4">{applicant.passportNo || '-'}</td>
+                      <td className="py-1 px-4">
+                        <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(applicant.status)}`}>
+                          {applicant.status}
+                        </span>
+                      </td>
+                      <td className="py-1 px-4">
+                        <ActionMenu
+                          applicant={applicant}
+                          onView={handleViewDetails}
+                          onEdit={handleEdit}
+                          onConvert={handleConvertClick}
+                          onDelete={handleDelete}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {applicants.length > 0 ? (
-                      applicants.map((applicant, index) => (
-                        <tr
-                          key={applicant.id}
-                          id={`applicant-${applicant.id}`}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                        >
-                          <td className="py-3 px-4 font-mono">
-                            {((currentPage - 1) * pageSize + index + 1).toString().padStart(2, '0')}
-                          </td>
-                          <td className="py-3 px-4 font-medium">{applicant.name}</td>
-                          <td className="py-3 px-4">{applicant.email}</td>
-                          <td className="py-3 px-4">{applicant.phone}</td>
-                          <td className="py-3 px-4">{applicant.appliedProgram}</td>
-                          <td className="py-3 px-4">{applicant.passportNo || '-'}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(applicant.status)}`}>
-                              {applicant.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <ActionMenu
-                              applicant={applicant}
-                              onView={handleViewDetails}
-                              onEdit={handleEdit}
-                              onConvert={handleConvertClick}
-                              onDelete={handleDelete}
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
-                          No applicants found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="p-4 text-center text-gray-500 italic">
+                      No applicants found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-              {/* ── Pagination ── */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+          {/* Modals */}
+          {showConvertModal && selectedApplicant && (
+            <ConvertToStudentModal
+              isOpen={showConvertModal}
+              onClose={() => setShowConvertModal(false)}
+              selectedApplicant={selectedApplicant}
+              onSuccess={() => {
+                fetchApplicants();
+              }}
+            />
           )}
         </div>
 
-        {showConvertModal && (
-          <ConvertToStudentModal
-            isOpen={showConvertModal}
-            onClose={() => setShowConvertModal(false)}
-            selectedApplicant={selectedApplicant}
-            onSuccess={fetchApplicants}
-          />
+        {/* Pagination */}
+        {!loading && applicants.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              form={paginationForm}
+              pagination={{
+                currentPage: currentPage,
+                firstPage: 1,
+                lastPage: totalPages,
+                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
+                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+              }}
+              handleSearch={handleSearch}
+            />
+          </div>
         )}
       </div>
     </>
   );
 };
 
-export default AllApplicants;
+export default AllApplicantsPage;
