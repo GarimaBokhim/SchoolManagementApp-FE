@@ -17,7 +17,6 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
 
 // ─── BS Date Helpers ───────────────────────────────────────────
 
@@ -352,7 +351,7 @@ const AllLeadsPage = () => {
     } catch (error: any) {
       const errorMsg = handleError(error);
       setError(errorMsg);
-      Toast.error('Failed to fetch leads');
+      toast.error('Failed to fetch leads');
     } finally {
       setLoading(false);
     }
@@ -396,7 +395,7 @@ const AllLeadsPage = () => {
       );
     } catch (error) {
       const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      toast.error(errorMsg);
       console.error("Error during filter submission:", error);
     }
   };
@@ -408,7 +407,7 @@ const AllLeadsPage = () => {
     setSelectedProfile(undefined);
     filterForm.reset();
     setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
-    Toast.success('Filters cleared');
+    toast.success('Filters cleared');
   };
 
   // ── Handle pagination ──
@@ -428,7 +427,7 @@ const AllLeadsPage = () => {
         setSearchResults(response.data.Items);
       }
     } catch (error) {
-      Toast.error('Failed to search profiles');
+      toast.error('Failed to search profiles');
     } finally {
       setIsSearching(false);
     }
@@ -443,7 +442,7 @@ const AllLeadsPage = () => {
     // Check if lead already exists
     const existingLead = leads.find(lead => lead.email === profile.email);
     if (existingLead) {
-      Toast.success(`Profile ${profile.fullName} already exists in leads`);
+      toast.success(`Profile ${profile.fullName} already exists in leads`);
       const element = document.getElementById(`lead-${existingLead.id}`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -454,7 +453,7 @@ const AllLeadsPage = () => {
       // Add to filter and fetch
       filterForm.setValue('firstName', profile.fullName);
       handleFilterSubmit(filterForm.getValues());
-      Toast.success(`Added ${profile.fullName} to leads`);
+      toast.success(`Added ${profile.fullName} to leads`);
     }
   };
 
@@ -476,12 +475,12 @@ const AllLeadsPage = () => {
     try {
       setConvertingId(selectedLead.id);
       await api.post('/api/Enrolments/ConvertToApplicant', conversionData);
-      Toast.success(`Successfully converted ${selectedLead.name} to applicant!`);
+      toast.success(`Successfully converted ${selectedLead.name} to applicant!`);
       setShowConvertModal(false);
       fetchLeads(); // Refresh the list
     } catch (error: any) {
       const errorMsg = handleError(error);
-      Toast.error(`Error: ${errorMsg}`);
+      toast.error(`Error: ${errorMsg}`);
     } finally {
       setConvertingId(null);
     }
@@ -492,21 +491,18 @@ const AllLeadsPage = () => {
     try {
       // Add your delete API call here
       // await api.delete(`/api/Enrolments/${id}`);
-      Toast.success('Lead deleted successfully!');
+      toast.success('Lead deleted successfully!');
       fetchLeads();
     } catch (error) {
-      Toast.error('Error deleting lead.');
+      toast.error('Error deleting lead.');
     }
   };
 
-  const handleViewDetails = (lead: Lead) => {
-    Toast.info(`Viewing details for ${lead.name}`);
-    // Add your view logic here
-  };
-
-  const handleEdit = (lead: Lead) => {
-    // Add your edit logic here
-    Toast.info(`Editing ${lead.name}`);
+  // ── Handle successful lead creation ──
+  const handleLeadSuccess = () => {
+    fetchLeads(); // Refresh the leads list
+    setIsAddLeadModalOpen(false);
+    toast.success('Lead added successfully!');
   };
 
   // ── Error state ──
@@ -519,6 +515,15 @@ const AllLeadsPage = () => {
         </div>
       </div>
     );
+  }
+
+
+  function handleViewDetails(lead: Lead): void {
+    throw new Error('Function not implemented.');
+  }
+
+  function handleEdit(lead: Lead): void {
+    throw new Error('Function not implemented.');
   }
 
   return (
@@ -538,15 +543,14 @@ const AllLeadsPage = () => {
                 className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold"
               />
 
-              {canAdd && (
-                <ButtonElement
-                  icon={<Plus size={24} />}
-                  type="button"
-                  text="Add New Lead"
-                  onClick={() => setIsAddLeadModalOpen(true)}
-                  className="!text-md !font-bold !text-white"
-                />
-              )}
+              {/* Add New Lead Button - Always visible regardless of permissions */}
+              <ButtonElement
+                icon={<Plus size={20} />}
+                type="button"
+                text="Add New Lead"
+                onClick={() => setIsAddLeadModalOpen(true)}
+                className="!text-md !font-bold !bg-blue-600 hover:!bg-blue-700 !text-white"
+              />
             </div>
           </div>
 
@@ -591,14 +595,14 @@ const AllLeadsPage = () => {
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150 !text-white"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150 !text-white"
                   />
                 </div>
               </form>
@@ -668,16 +672,11 @@ const AllLeadsPage = () => {
           </div>
 
           {/* Modals */}
-          {isAddLeadModalOpen && (
-            <AddLeadModal
-              isOpen={isAddLeadModalOpen}
-              onClose={() => setIsAddLeadModalOpen(false)}
-              onSuccess={() => {
-                fetchLeads();
-                setIsAddLeadModalOpen(false);
-              }}
-            />
-          )}
+          <AddLeadModal
+            isOpen={isAddLeadModalOpen}
+            onClose={() => setIsAddLeadModalOpen(false)}
+            onSuccess={handleLeadSuccess}
+          />
           
           {showConvertModal && selectedLead && (
             <ConvertToApplicantModal
