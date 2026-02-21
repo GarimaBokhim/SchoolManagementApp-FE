@@ -14,8 +14,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-
-// ─── BS Date Helpers ───────────────────────────────────────────
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 
 function getLocalToday(): Date {
   const now = new Date();
@@ -238,9 +237,11 @@ const AllStudentsPage = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
 
+  // ── Get all schools data ──
+  const { data: allSchools } = useGetAllSchool();
+
   // ── State ──
   const [students, setStudents] = useState<Student[]>([]);
-  const [schools, setSchools] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openFilter, setOpenFilter] = useState(false);
@@ -280,20 +281,10 @@ const AllStudentsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ── Fetch Schools ───────────────────────────────────────────────────────────
-
-  const fetchSchools = async () => {
-    try {
-      const response = await api.get<SchoolResponse>('/api/Schools?pageSize=10');
-      const schoolMap: Record<string, string> = {};
-      response.data.Items.forEach(school => {
-        schoolMap[school.id] = school.name;
-      });
-      setSchools(schoolMap);
-    } catch (error) {
-      console.error('Error fetching schools:', error);
-    }
-  };
+  // ── Helper function to get school name ──
+  const getSchoolName = useCallback((schoolId: string) => {
+    return allSchools?.Items?.find((school: School) => school.id === schoolId)?.name || 'Unknown School';
+  }, [allSchools]);
 
   // ── Build query string ──
   const buildQueryString = () => {
@@ -315,11 +306,6 @@ const AllStudentsPage = () => {
       const data = response.data;
       const items = data.Items || [];
 
-      // Fetch schools if we don't have them
-      if (Object.keys(schools).length === 0) {
-        await fetchSchools();
-      }
-
       const formattedStudents: Student[] = items.map((item: any) => ({
         id: item.id,
         userId: item.userId,
@@ -327,7 +313,7 @@ const AllStudentsPage = () => {
         visaId: item.visaId || '-',
         isActive: item.isActive,
         schoolId: item.schoolId,
-        schoolName: schools[item.schoolId] || 'Unknown School',
+        schoolName: getSchoolName(item.schoolId), // Use the helper function
         createdBy: item.createdBy,
         createdAt: item.createdAt,
         modifiedBy: item.modifiedBy,
@@ -349,9 +335,11 @@ const AllStudentsPage = () => {
 
   // ── Initial fetch ──
   useEffect(() => {
-    fetchStudents();
+    if (allSchools) { // Only fetch students when schools data is available
+      fetchStudents();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools]);
 
   // ── Handle filter submit ──
   const handleFilterSubmit = async (formData: FilterFormData) => {
@@ -456,6 +444,17 @@ const AllStudentsPage = () => {
     // Add your edit logic here
     Toast.info(`Editing student`);
   };
+
+  // ── Loading state while schools are being fetched ──
+  if (!allSchools) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500 dark:text-gray-400">Loading schools data...</div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Error state ──
   if (error) {
