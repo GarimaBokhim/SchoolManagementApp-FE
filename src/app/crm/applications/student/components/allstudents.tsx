@@ -33,52 +33,39 @@ function getTodayBS(): string {
   return ADToBS(formatADDate(getLocalToday()));
 }
 
-function getBSDateDaysAgo(daysAgo: number): string {
-  const d = getLocalToday();
-  d.setDate(d.getDate() - daysAgo);
-  return ADToBS(formatADDate(d));
-}
-
-function getFirstDayOfCurrentBSMonth(): string {
-  const bsToday = getTodayBS();
-  const [year, month] = bsToday.split('-');
-  return `${year}-${month}-01`;
-}
-
-function getFirstDayOfCurrentBSYear(): string {
-  const bsToday = getTodayBS();
-  const [year] = bsToday.split('-');
-  return `${year}-01-01`;
-}
-
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+interface School {
+  id: string;
+  name: string;
+}
 
 interface Student {
   id: string;
   userId: string;
-  name: string;
-  email: string;
-  phone: string;
+  universityName: string;
   visaId: string;
-  targetCountry: string;
-  status: string;
-  appliedProgram: string;
+  isActive: boolean;
+  schoolId: string;
+  schoolName?: string;
+  createdBy: string;
+  createdAt: string;
+  modifiedBy: string;
+  modifiedAt: string;
 }
 
 interface ApiResponse {
   Items: Array<{
-    id?: string;
-    userId?: string;
-    fullName?: string;
-    name?: string;
-    email?: string;
-    contactNumber?: string;
-    phone?: string;
-    visaId?: string;
-    targetCountry?: string;
-    status?: string;
-    appliedProgram?: string;
-    program?: string;
+    id: string;
+    userId: string;
+    universityName: string;
+    visaId: string;
+    isActive: boolean;
+    schoolId: string;
+    createdBy: string;
+    createdAt: string;
+    modifiedBy: string;
+    modifiedAt: string;
   }>;
   TotalItems: number;
   PageIndex: number;
@@ -86,6 +73,14 @@ interface ApiResponse {
   TotalPages: number;
   FirstPage: number;
   LastPage: number;
+}
+
+interface SchoolResponse {
+  Items: Array<{
+    id: string;
+    name: string;
+  }>;
+  TotalItems: number;
 }
 
 interface UserProfile {
@@ -122,16 +117,10 @@ interface SearchParam {
 
 // ─── Status Style Helper ───────────────────────────────────────────────────────
 
-const getStatusStyle = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case 'approved':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    case 'rejected':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    case 'pending':
-    default:
-      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-  }
+const getStatusStyle = (isActive: boolean) => {
+  return isActive
+    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
 };
 
 // ─── Fixed-position Action Dropdown ───────────────────────────────────────────
@@ -251,6 +240,7 @@ const AllStudentsPage = () => {
 
   // ── State ──
   const [students, setStudents] = useState<Student[]>([]);
+  const [schools, setSchools] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openFilter, setOpenFilter] = useState(false);
@@ -290,6 +280,21 @@ const AllStudentsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ── Fetch Schools ───────────────────────────────────────────────────────────
+
+  const fetchSchools = async () => {
+    try {
+      const response = await api.get<SchoolResponse>('/api/Schools?pageSize=10');
+      const schoolMap: Record<string, string> = {};
+      response.data.Items.forEach(school => {
+        schoolMap[school.id] = school.name;
+      });
+      setSchools(schoolMap);
+    } catch (error) {
+      console.error('Error fetching schools:', error);
+    }
+  };
+
   // ── Build query string ──
   const buildQueryString = () => {
     const baseQuery = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -310,16 +315,23 @@ const AllStudentsPage = () => {
       const data = response.data;
       const items = data.Items || [];
 
-      const formattedStudents: Student[] = items.map((item: any, index: number) => ({
-        id: item.id || item.userId || `temp-${index}`,
-        userId: item.userId || item.id || `temp-${index}`,
-        name: item.fullName || item.name || 'N/A',
-        email: item.email || 'N/A',
-        phone: item.contactNumber || item.phone || 'N/A',
+      // Fetch schools if we don't have them
+      if (Object.keys(schools).length === 0) {
+        await fetchSchools();
+      }
+
+      const formattedStudents: Student[] = items.map((item: any) => ({
+        id: item.id,
+        userId: item.userId,
+        universityName: item.universityName || '-',
         visaId: item.visaId || '-',
-        targetCountry: item.targetCountry || 'N/A',
-        status: item.status || 'pending',
-        appliedProgram: item.appliedProgram || item.program || 'N/A',
+        isActive: item.isActive,
+        schoolId: item.schoolId,
+        schoolName: schools[item.schoolId] || 'Unknown School',
+        createdBy: item.createdBy,
+        createdAt: item.createdAt,
+        modifiedBy: item.modifiedBy,
+        modifiedAt: item.modifiedAt,
       }));
 
       setStudents(formattedStudents);
@@ -417,22 +429,10 @@ const AllStudentsPage = () => {
     
     setSelectedProfile(profile);
     
-    // Check if student already exists
-    const existingStudent = students.find(student => student.email === profile.email);
-    if (existingStudent) {
-      Toast.success(`Profile ${profile.fullName} already exists in students`);
-      const element = document.getElementById(`student-${existingStudent.id}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('bg-yellow-100', 'dark:bg-yellow-900/30');
-        setTimeout(() => element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30'), 2000);
-      }
-    } else {
-      // Add to filter and fetch
-      filterForm.setValue('firstName', profile.fullName);
-      handleFilterSubmit(filterForm.getValues());
-      Toast.success(`Added ${profile.fullName} to students`);
-    }
+    // Add to filter and fetch
+    filterForm.setValue('firstName', profile.fullName);
+    handleFilterSubmit(filterForm.getValues());
+    Toast.success(`Filtering by ${profile.fullName}`);
   };
 
   // ── Handle CRUD operations ──
@@ -448,13 +448,13 @@ const AllStudentsPage = () => {
   };
 
   const handleViewDetails = (student: Student) => {
-    Toast.info(`Viewing details for ${student.name}`);
+    Toast.info(`Viewing details for student`);
     // Add your view logic here
   };
 
   const handleEdit = (student: Student) => {
     // Add your edit logic here
-    Toast.info(`Editing ${student.name}`);
+    Toast.info(`Editing student`);
   };
 
   // ── Error state ──
@@ -553,26 +553,22 @@ const AllStudentsPage = () => {
             </div>
           )}
 
-          {/* Table */}
+          {/* Table - 4 columns as requested */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone</th>
                   <th className="px-4 py-3 text-left">Visa ID</th>
-                  <th className="px-4 py-3 text-left">Target Country</th>
-                  <th className="px-4 py-3 text-left">Program</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">University Name</th>
+                  <th className="px-4 py-3 text-left">School</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="p-4 text-center text-gray-500">
+                    <td colSpan={5} className="p-4 text-center text-gray-500">
                       Loading Students...
                     </td>
                   </tr>
@@ -586,17 +582,9 @@ const AllStudentsPage = () => {
                       <td className="py-1 px-4">
                         {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
                       </td>
-                      <td className="py-1 px-4 font-medium">{student.name}</td>
-                      <td className="py-1 px-4">{student.email}</td>
-                      <td className="py-1 px-4">{student.phone}</td>
-                      <td className="py-1 px-4">{student.visaId}</td>
-                      <td className="py-1 px-4">{student.targetCountry}</td>
-                      <td className="py-1 px-4">{student.appliedProgram}</td>
-                      <td className="py-1 px-4">
-                        <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(student.status)}`}>
-                          {student.status}
-                        </span>
-                      </td>
+                      <td className="py-1 px-4 font-medium">{student.visaId}</td>
+                      <td className="py-1 px-4">{student.universityName}</td>
+                      <td className="py-1 px-4">{student.schoolName}</td>
                       <td className="py-1 px-4">
                         <ActionMenu
                           student={student}
@@ -611,7 +599,7 @@ const AllStudentsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="p-4 text-center text-gray-500 italic">
+                    <td colSpan={5} className="p-4 text-center text-gray-500 italic">
                       No students found.
                     </td>
                   </tr>

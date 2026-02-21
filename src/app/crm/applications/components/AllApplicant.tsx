@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, RotateCcw, Search, Eye, Edit, Trash, MoreVertical, UserCheck, X, Plus } from 'lucide-react';
+import { Filter, RotateCcw, Eye, Edit, Trash, MoreVertical, UserCheck, X, Plus } from 'lucide-react';
 import { ADToBS, BSToAD } from 'bikram-sambat-js';
 import { api } from '@/utils/instance';
 import { useForm } from "react-hook-form";
@@ -33,52 +33,39 @@ function getTodayBS(): string {
   return ADToBS(formatADDate(getLocalToday()));
 }
 
-function getBSDateDaysAgo(daysAgo: number): string {
-  const d = getLocalToday();
-  d.setDate(d.getDate() - daysAgo);
-  return ADToBS(formatADDate(d));
-}
-
-function getFirstDayOfCurrentBSMonth(): string {
-  const bsToday = getTodayBS();
-  const [year, month] = bsToday.split('-');
-  return `${year}-${month}-01`;
-}
-
-function getFirstDayOfCurrentBSYear(): string {
-  const bsToday = getTodayBS();
-  const [year] = bsToday.split('-');
-  return `${year}-01-01`;
-}
-
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+interface School {
+  id: string;
+  name: string;
+}
 
 interface Applicant {
   id: string;
   userId: string;
-  name: string;
-  email: string;
-  phone: string;
-  appliedProgram: string;
-  status: 'pending' | 'approved' | 'rejected';
-  passportNo?: string;
-  targetCountry?: string;
+  passportNo: string;
+  targetCountry: string;
+  isActive: boolean;
+  schoolId: string;
+  schoolName?: string;
+  createdBy: string;
+  createdAt: string;
+  modifiedBy: string;
+  modifiedAt: string;
 }
 
 interface ApiResponse {
   Items: Array<{
-    id?: string;
-    userId?: string;
-    fullName?: string;
-    name?: string;
-    email?: string;
-    contactNumber?: string;
-    phone?: string;
-    appliedProgram?: string;
-    program?: string;
-    status?: 'pending' | 'approved' | 'rejected';
-    passportNo?: string;
-    targetCountry?: string;
+    id: string;
+    userId: string;
+    passportNo: string;
+    targetCountry: string;
+    isActive: boolean;
+    schoolId: string;
+    createdBy: string;
+    createdAt: string;
+    modifiedBy: string;
+    modifiedAt: string;
   }>;
   TotalItems: number;
   PageIndex: number;
@@ -86,6 +73,14 @@ interface ApiResponse {
   TotalPages: number;
   FirstPage: number;
   LastPage: number;
+}
+
+interface SchoolResponse {
+  Items: Array<{
+    id: string;
+    name: string;
+  }>;
+  TotalItems: number;
 }
 
 interface UserProfile {
@@ -128,15 +123,10 @@ interface SearchParam {
 
 // ─── Status Style Helper ───────────────────────────────────────────────────────
 
-const getStatusStyle = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case 'approved':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    case 'rejected':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    default:
-      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-  }
+const getStatusStyle = (isActive: boolean) => {
+  return isActive
+    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
 };
 
 // ─── Convert to Student Modal ──────────────────────────────────────────────────
@@ -170,7 +160,7 @@ const ConvertToStudentModal = ({ isOpen, onClose, selectedApplicant, onSuccess }
     try {
       setConverting(true);
       await api.post('/api/Enrolments/ConvertToStudents', formData);
-      Toast.success(`Successfully converted ${selectedApplicant.name} to student!`);
+      Toast.success(`Successfully converted to student!`);
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -198,9 +188,7 @@ const ConvertToStudentModal = ({ isOpen, onClose, selectedApplicant, onSuccess }
             </div>
             <div className="p-6">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                Converting{' '}
-                <span className="font-semibold text-purple-600 dark:text-purple-400">{selectedApplicant.name}</span>{' '}
-                to a student. Please provide the additional information below.
+                Converting applicant to a student. Please provide the additional information below.
               </p>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
@@ -391,16 +379,11 @@ const AllApplicantsPage = () => {
 
   // ── State ──
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [schools, setSchools] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [convertingId, setConvertingId] = useState<string | null>(null);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
-  const [conversionData, setConversionData] = useState<ConvertToStudentPayload>({
-    userId: '',
-    universityName: '',
-    visaId: '',
-  });
   const [openFilter, setOpenFilter] = useState(false);
   const [params, setParams] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
@@ -438,6 +421,25 @@ const AllApplicantsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ── Fetch Schools ───────────────────────────────────────────────────────────
+
+const fetchSchools = async (): Promise<Record<string, string>> => {
+  try {
+    const response = await api.get<SchoolResponse>('/api/Schools?pageSize=10');
+
+    const schoolMap: Record<string, string> = {};
+    response.data.Items.forEach((school) => {
+      schoolMap[school.id] = school.name;
+    });
+
+    setSchools(schoolMap);
+    return schoolMap; // ✅ return it
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    return {};
+  }
+};
+
   // ── Build query string ──
   const buildQueryString = () => {
     const baseQuery = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -445,43 +447,51 @@ const AllApplicantsPage = () => {
   };
 
   // ── Fetch applicants ──
-  const fetchApplicants = async (customParams?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+const fetchApplicants = async (customParams?: string) => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      const queryString = customParams || buildQueryString();
-      const url = `/api/Enrolments/FilterApplicants${queryString}`;
-      console.log('Fetching applicants:', url);
+    const queryString = customParams || buildQueryString();
+    const url = `/api/Enrolments/FilterApplicants${queryString}`;
 
-      const response = await api.get<ApiResponse>(url);
-      const data = response.data;
-      const items = data.Items || [];
+    const response = await api.get<ApiResponse>(url);
+    const data = response.data;
+    const items = data.Items || [];
 
-      const formattedApplicants: Applicant[] = items.map((item: any, index: number) => ({
-        id: item.id || item.userId || `temp-${index}`,
-        userId: item.userId || item.id || `temp-${index}`,
-        name: item.fullName || item.name || 'N/A',
-        email: item.email || 'N/A',
-        phone: item.contactNumber || item.phone || 'N/A',
-        appliedProgram: item.appliedProgram || item.program || item.targetCountry || 'N/A',
-        status: item.status || 'pending',
-        passportNo: item.passportNo,
-        targetCountry: item.targetCountry,
-      }));
+    // ✅ ensure school map is ready
+    let schoolMap = schools;
 
-      setApplicants(formattedApplicants);
-      setTotalItems(data.TotalItems ?? 0);
-      setTotalPages(data.TotalPages ?? 1);
-      setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-    } catch (error: any) {
-      const errorMsg = handleError(error);
-      setError(errorMsg);
-      Toast.error('Failed to fetch applicants');
-    } finally {
-      setLoading(false);
+    if (Object.keys(schoolMap).length === 0) {
+      schoolMap = await fetchSchools();
     }
-  };
+
+    const formattedApplicants: Applicant[] = items.map((item: any) => ({
+      id: item.id,
+      userId: item.userId,
+      passportNo: item.passportNo || '-',
+      targetCountry: item.targetCountry || '-',
+      isActive: item.isActive,
+      schoolId: item.schoolId,
+      schoolName: schoolMap[item.schoolId] || 'Unknown School', // ✅ FIXED
+      createdBy: item.createdBy,
+      createdAt: item.createdAt,
+      modifiedBy: item.modifiedBy,
+      modifiedAt: item.modifiedAt,
+    }));
+
+    setApplicants(formattedApplicants);
+    setTotalItems(data.TotalItems ?? 0);
+    setTotalPages(data.TotalPages ?? 1);
+    setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
+  } catch (error: any) {
+    const errorMsg = handleError(error);
+    setError(errorMsg);
+    Toast.error('Failed to fetch applicants');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ── Initial fetch ──
   useEffect(() => {
@@ -565,28 +575,15 @@ const AllApplicantsPage = () => {
     
     setSelectedProfile(profile);
     
-    // Check if applicant already exists
-    const existingApplicant = applicants.find(applicant => applicant.email === profile.email);
-    if (existingApplicant) {
-      Toast.success(`Profile ${profile.fullName} already exists in applicants`);
-      const element = document.getElementById(`applicant-${existingApplicant.id}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('bg-yellow-100', 'dark:bg-yellow-900/30');
-        setTimeout(() => element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30'), 2000);
-      }
-    } else {
-      // Add to filter and fetch
-      filterForm.setValue('firstName', profile.fullName);
-      handleFilterSubmit(filterForm.getValues());
-      Toast.success(`Added ${profile.fullName} to applicants`);
-    }
+    // Add to filter and fetch
+    filterForm.setValue('firstName', profile.fullName);
+    handleFilterSubmit(filterForm.getValues());
+    Toast.success(`Filtering by ${profile.fullName}`);
   };
 
   // ── Handle convert ──
   const handleConvertClick = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
-    setConversionData({ userId: applicant.userId, universityName: '', visaId: '' });
     setShowConvertModal(true);
   };
 
@@ -603,13 +600,13 @@ const AllApplicantsPage = () => {
   };
 
   const handleViewDetails = (applicant: Applicant) => {
-    Toast.info(`Viewing details for ${applicant.name}`);
+    Toast.info(`Viewing details for applicant`);
     // Add your view logic here
   };
 
   const handleEdit = (applicant: Applicant) => {
     // Add your edit logic here
-    Toast.info(`Editing ${applicant.name}`);
+    Toast.info(`Editing applicant`);
   };
 
   // ── Error state ──
@@ -708,25 +705,22 @@ const AllApplicantsPage = () => {
             </div>
           )}
 
-          {/* Table */}
+          {/* Table - 4 columns as requested */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone</th>
-                  <th className="px-4 py-3 text-left">Program / Country</th>
                   <th className="px-4 py-3 text-left">Passport No</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Target Country</th>
+                  <th className="px-4 py-3 text-left">School</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-4 text-center text-gray-500">
+                    <td colSpan={5} className="p-4 text-center text-gray-500">
                       Loading Applicants...
                     </td>
                   </tr>
@@ -740,16 +734,9 @@ const AllApplicantsPage = () => {
                       <td className="py-1 px-4">
                         {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
                       </td>
-                      <td className="py-1 px-4 font-medium">{applicant.name}</td>
-                      <td className="py-1 px-4">{applicant.email}</td>
-                      <td className="py-1 px-4">{applicant.phone}</td>
-                      <td className="py-1 px-4">{applicant.appliedProgram}</td>
-                      <td className="py-1 px-4">{applicant.passportNo || '-'}</td>
-                      <td className="py-1 px-4">
-                        <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(applicant.status)}`}>
-                          {applicant.status}
-                        </span>
-                      </td>
+                      <td className="py-1 px-4 font-medium">{applicant.passportNo}</td>
+                      <td className="py-1 px-4">{applicant.targetCountry}</td>
+                      <td className="py-1 px-4">{applicant.schoolName}</td>
                       <td className="py-1 px-4">
                         <ActionMenu
                           applicant={applicant}
@@ -765,7 +752,7 @@ const AllApplicantsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-4 text-center text-gray-500 italic">
+                    <td colSpan={5} className="p-4 text-center text-gray-500 italic">
                       No applicants found.
                     </td>
                   </tr>
