@@ -1,12 +1,57 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, RotateCcw, Search, Eye, Edit, Trash, MoreVertical } from 'lucide-react';
+import { Filter, RotateCcw, Eye, Edit, Trash, MoreVertical, Plus } from 'lucide-react';
+import { ADToBS, BSToAD } from 'bikram-sambat-js';
 import { api } from '@/utils/instance';
-import toast, { Toaster } from 'react-hot-toast';
-import { ButtonElement } from '@/components/Buttons/ButtonElement';
+import { useForm } from "react-hook-form";
+import toast, { Toaster } from "react-hot-toast";
+import { ButtonElement } from "@/components/Buttons/ButtonElement";
+import Pagination from "@/components/Pagination";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
 
-// ─── Interfaces ────────────────────────────────────────────────────────────────
+// ─── BS Date Helpers ───────────────────────────────────────────
+
+function getLocalToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function formatADDate(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getTodayBS(): string {
+  return ADToBS(formatADDate(getLocalToday()));
+}
+
+function getBSDateDaysAgo(daysAgo: number): string {
+  const d = getLocalToday();
+  d.setDate(d.getDate() - daysAgo);
+  return ADToBS(formatADDate(d));
+}
+
+function getFirstDayOfCurrentBSMonth(): string {
+  const bsToday = getTodayBS();
+  const [year, month] = bsToday.split('-');
+  return `${year}-${month}-01`;
+}
+
+function getFirstDayOfCurrentBSYear(): string {
+  const bsToday = getTodayBS();
+  const [year] = bsToday.split('-');
+  return `${year}-01-01`;
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Student {
   id: string;
@@ -14,40 +59,68 @@ interface Student {
   name: string;
   email: string;
   phone: string;
-  visaId: string;  // Changed from passportNo to visaId
+  visaId: string;
   targetCountry: string;
   status: string;
   appliedProgram: string;
 }
 
-interface ApiStudentItem {
-  id?: string;
-  userId?: string;
-  fullName?: string;
-  name?: string;
-  email?: string;
-  contactNumber?: string;
-  phone?: string;
-  visaId?: string;  // Changed from passportNo to visaId
-  targetCountry?: string;
-  status?: string;
-  appliedProgram?: string;
-  program?: string;
-}
-
 interface ApiResponse {
-  Items?: ApiStudentItem[];
-  items?: ApiStudentItem[];
-  data?: ApiStudentItem[];
-  TotalItems?: number;
-  totalItems?: number;
-  TotalPages?: number;
-  totalPages?: number;
-  PageIndex?: number;
-  pageIndex?: number;
+  Items: Array<{
+    id?: string;
+    userId?: string;
+    fullName?: string;
+    name?: string;
+    email?: string;
+    contactNumber?: string;
+    phone?: string;
+    visaId?: string;
+    targetCountry?: string;
+    status?: string;
+    appliedProgram?: string;
+    program?: string;
+  }>;
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  enrolmentType: number;
+  createdAt: string;
+  contactNumber?: string;
+  source?: string;
+}
+
+interface UserProfileResponse {
+  Items: UserProfile[];
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
+}
+
+interface FilterFormData {
+  startDate: string;
+  endDate: string;
+  firstName?: string;
+}
+
+interface SearchParam {
+  pageSize: number;
+  pageIndex: number;
+  isPagination: boolean;
+}
+
+// ─── Status Style Helper ───────────────────────────────────────────────────────
 
 const getStatusStyle = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -61,31 +134,18 @@ const getStatusStyle = (status: string) => {
   }
 };
 
-// ─── Filter Button ─────────────────────────────────────────────────────────────
-
-const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition-all duration-150 whitespace-nowrap ${
-      isActive
-        ? 'bg-[#00786f] shadow-lg transform scale-105'
-        : 'bg-[#00786f] opacity-80 hover:opacity-100 hover:shadow-md hover:scale-105'
-    }`}
-  >
-    {label}
-  </button>
-);
-
-// ─── Fixed-Position Action Menu ────────────────────────────────────────────────
+// ─── Fixed-position Action Dropdown ───────────────────────────────────────────
 
 interface ActionMenuProps {
   student: Student;
-  onView: (s: Student) => void;
-  onEdit: (s: Student) => void;
+  onView: (student: Student) => void;
+  onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
+const ActionMenu = ({ student, onView, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -109,7 +169,7 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
 
   const toggle = () => {
     if (!open) calculatePosition();
-    setOpen((prev) => !prev);
+    setOpen(prev => !prev);
   };
 
   useEffect(() => {
@@ -140,34 +200,42 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
       <button
         ref={buttonRef}
         onClick={toggle}
-        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        title="Actions"
       >
-        <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+        <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
       </button>
+
       {open && (
         <div
           ref={menuRef}
           style={menuStyle}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+          className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
         >
           <button
             onClick={() => { onView(student); setOpen(false); }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
-            <Eye className="h-4 w-4" /> View Details
+            <Eye size={14} /> View Details
           </button>
-          <button
-            onClick={() => { onEdit(student); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" /> Edit
-          </button>
-          <button
-            onClick={() => { onDelete(student.id); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Trash className="h-4 w-4" /> Delete
-          </button>
+          
+          {canEdit && (
+            <button
+              onClick={() => { onEdit(student); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Edit size={14} /> Edit
+            </button>
+          )}
+          
+          {canDelete && (
+            <button
+              onClick={() => { onDelete(student.id); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Trash size={14} /> Delete
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -177,100 +245,222 @@ const ActionMenu = ({ student, onView, onEdit, onDelete }: ActionMenuProps) => {
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const AllStudentsPage = () => {
+  // ── Permissions ──
+  const { menuStatus } = usePermissions();
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+
+  // ── State ──
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState('');
   const [openFilter, setOpenFilter] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('');
+  const [params, setParams] = useState("");
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
+  // ── Forms ──
+  const filterForm = useForm<FilterFormData>({
+    defaultValues: {
+      startDate: "",
+      endDate: "",
+      firstName: "",
+    },
+  });
+
+  const paginationForm = useForm<SearchParam>({
+    defaultValues: {
+      pageSize: 10,
+      pageIndex: 1,
+      isPagination: true,
+    },
+  });
+
+  // ── Refs ──
+  const dateFilterRef = useRef<DateRangeFilterRef>(null);
+  const { handleError, clearError } = useErrorHandler();
+
+  // ── Pagination state ──
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  });
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
 
-  const fetchStudents = async () => {
+  // ── Build query string ──
+  const buildQueryString = () => {
+    const baseQuery = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+    return baseQuery + (params || "");
+  };
+
+  // ── Fetch students ──
+  const fetchStudents = async (customParams?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const params = new URLSearchParams();
-      params.append('pageIndex', currentPage.toString());
-      params.append('pageSize', pageSize.toString());
-      if (searchTerm) params.append('searchTerm', searchTerm);
 
-      const response = await api.get<ApiResponse>(`/api/Enrolments/FilterCRMStudents?${params.toString()}`);
+      const queryString = customParams || buildQueryString();
+      const url = `/api/Enrolments/FilterCRMStudents${queryString}`;
+      console.log('Fetching students:', url);
 
-      let raw: ApiStudentItem[] = [];
-      const d = response.data;
-      if (d?.Items && Array.isArray(d.Items)) raw = d.Items;
-      else if (d?.items && Array.isArray(d.items)) raw = d.items;
-      else if (d?.data && Array.isArray(d.data)) raw = d.data;
-      else if (Array.isArray(d)) raw = d as unknown as ApiStudentItem[];
+      const response = await api.get<ApiResponse>(url);
+      const data = response.data;
+      const items = data.Items || [];
 
-      const formatted: Student[] = raw.map((item: any, index: number) => ({
+      const formattedStudents: Student[] = items.map((item: any, index: number) => ({
         id: item.id || item.userId || `temp-${index}`,
         userId: item.userId || item.id || `temp-${index}`,
         name: item.fullName || item.name || 'N/A',
         email: item.email || 'N/A',
         phone: item.contactNumber || item.phone || 'N/A',
-        visaId: item.visaId || '-',  // Changed from passportNo to visaId
+        visaId: item.visaId || '-',
         targetCountry: item.targetCountry || 'N/A',
         status: item.status || 'pending',
         appliedProgram: item.appliedProgram || item.program || 'N/A',
       }));
 
-      setStudents(formatted);
-      const tp = d?.TotalPages || d?.totalPages;
-      if (tp) setTotalPages(tp);
-    } catch (err: any) {
-      if (err.response?.status === 403) setError("You don't have permission to view students.");
-      else if (err.response?.status === 404) setError('API endpoint not found.');
-      else if (err.response?.status === 500) setError('Server error. Please try again later.');
-      else setError(err.response?.data?.message || 'Failed to fetch students.');
-      toast.error('Failed to fetch students');
-      setStudents([]);
+      setStudents(formattedStudents);
+      setTotalItems(data.TotalItems ?? 0);
+      setTotalPages(data.TotalPages ?? 1);
+      setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
+    } catch (error: any) {
+      const errorMsg = handleError(error);
+      setError(errorMsg);
+      Toast.error('Failed to fetch students');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchStudents(); }, [currentPage]);
-
+  // ── Initial fetch ──
   useEffect(() => {
-    const timer = setTimeout(() => { setCurrentPage(1); fetchStudents(); }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    fetchStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
 
-  // ── Handlers ──
-  const handleViewDetails = (student: Student) => {
-    toast.success(`Viewing details for ${student.name}`);
+  // ── Handle filter submit ──
+  const handleFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.firstName
+          ? `firstName=${encodeURIComponent(formData.firstName)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+      
+      const fullQuery = queryParams ? `&${queryParams}` : "";
+      
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+        })(),
+        {
+          loading: "Fetching students...",
+          success: "Students fetched successfully!",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
+      console.error("Error during filter submission:", error);
+    }
   };
 
-  // ✅ No API yet — just toast, do NOT remove from state
-  const handleEdit = (_student: Student) => {
-    toast('Editing student...', { icon: '✏️' });
-  };
-
-  // ✅ No API yet — just toast, do NOT remove from state
-  const handleDelete = (_id: string) => {
-    toast('Deleting student...', { icon: '🗑️' });
-  };
-
-  const handleFilterClick = (filter: string) => {
-    setActiveFilter(filter);
-    toast.success(`Filtering by ${filter}`);
-  };
-
+  // ── Handle clear filter ──
   const onClearClick = () => {
-    setActiveFilter('');
-    setOpenFilter(false);
-    setSearchTerm('');
-    toast.success('Filters cleared');
+    setParams("");
+    dateFilterRef.current?.handleClear();
+    setSelectedProfile(undefined);
+    filterForm.reset();
+    setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+    Toast.success('Filters cleared');
   };
 
-  if (error && students.length === 0) {
+  // ── Handle pagination ──
+  const handleSearch = (params: SearchParam) => {
+    params.pageSize = paginationParams.pageSize;
+    setPaginationParams(params);
+  };
+
+  // ── Handle profile search ──
+  const fetchUsers = async (search: string = "") => {
+    setIsSearching(true);
+    try {
+      const response = await api.get<UserProfileResponse>(
+        `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(search)}`
+      );
+      if (response.data?.Items) {
+        setSearchResults(response.data.Items);
+      }
+    } catch (error) {
+      Toast.error('Failed to search profiles');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // ── Handle profile selection ──
+  const handleProfileSelected = (profile: UserProfile | null) => {
+    if (!profile) return;
+    
+    setSelectedProfile(profile);
+    
+    // Check if student already exists
+    const existingStudent = students.find(student => student.email === profile.email);
+    if (existingStudent) {
+      Toast.success(`Profile ${profile.fullName} already exists in students`);
+      const element = document.getElementById(`student-${existingStudent.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('bg-yellow-100', 'dark:bg-yellow-900/30');
+        setTimeout(() => element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30'), 2000);
+      }
+    } else {
+      // Add to filter and fetch
+      filterForm.setValue('firstName', profile.fullName);
+      handleFilterSubmit(filterForm.getValues());
+      Toast.success(`Added ${profile.fullName} to students`);
+    }
+  };
+
+  // ── Handle CRUD operations ──
+  const handleDelete = async (id: string) => {
+    try {
+      // Add your delete API call here
+      // await api.delete(`/api/Enrolments/${id}`);
+      Toast.success('Student deleted successfully!');
+      fetchStudents();
+    } catch (error) {
+      Toast.error('Error deleting student.');
+    }
+  };
+
+  const handleViewDetails = (student: Student) => {
+    Toast.info(`Viewing details for ${student.name}`);
+    // Add your view logic here
+  };
+
+  const handleEdit = (student: Student) => {
+    // Add your edit logic here
+    Toast.info(`Editing ${student.name}`);
+  };
+
+  // ── Error state ──
+  if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-6">
         <Toaster position="top-right" />
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
           Error: {error}
@@ -282,149 +472,171 @@ const AllStudentsPage = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4 sm:p-6 relative">
+      <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
-          {/* ── Header ── */}
+          {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">All Students</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
-                icon={<Filter className="h-4 w-4" />}
+                type="button"
                 text="Filter"
+                icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105"
+                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold"
               />
+
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={24} />}
+                  type="button"
+                  text="Add New Student"
+                  onClick={() => Toast.info('Add new student feature coming soon!')}
+                  className="!text-md !font-bold !text-white"
+                />
+              )}
             </div>
           </div>
 
-          {/* ── Filter Section ── */}
+          {/* Filter Section */}
           {openFilter && (
-            <div className="mb-4 mx-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 dark:bg-[#353535] dark:border-gray-700">
-              <div className="flex flex-wrap items-center gap-2">
-                {['Yesterday', '7 Days', '30 Days', 'This Month', 'Last Month', 'This Year'].map((label) => (
-                  <FilterButton key={label} label={label} isActive={activeFilter === label} onClick={() => handleFilterClick(label)} />
-                ))}
-                <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="search"
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#00786f] focus:outline-none dark:text-white text-sm w-44 sm:w-52"
+            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <form
+                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={dateFilterRef}
+                  form={filterForm}
+                  onSubmit={handleFilterSubmit}
+                  setParams={setParams}
+                />
+
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search Users"
+                    name="firstName"
+                    form={filterForm}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={handleProfileSelected}
+                    onFocus={() => fetchUsers("")}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email} • {profile.enrolmentType === 1 ? 'Student' : 'Partner'}
+                      </div>
+                    )}
                   />
                 </div>
-                <ButtonElement
-                  icon={<Filter className="h-4 w-4" />}
-                  text="Filter"
-                  onClick={fetchStudents}
-                  className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
-                />
-                <ButtonElement
-                  icon={<RotateCcw className="h-4 w-4" />}
-                  text="Clear"
-                  onClick={onClearClick}
-                  className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
-                />
-              </div>
-            </div>
-          )}
 
-          {/* ── Table ── */}
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#00786f]" />
-              <p className="mt-2 text-gray-500 dark:text-gray-400">Loading Students...</p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-xs sm:text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                      <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                      <th className="px-4 py-3 text-left">Name</th>
-                      <th className="px-4 py-3 text-left">Email</th>
-                      <th className="px-4 py-3 text-left">Phone</th>
-                      <th className="px-4 py-3 text-left">Visa ID</th> {/* Changed from Passport No to Visa ID */}
-                      <th className="px-4 py-3 text-left">Target Country</th>
-                      <th className="px-4 py-3 text-left">Program</th>
-                      <th className="px-4 py-3 text-left">Status</th>
-                      <th className="px-4 py-3 text-center w-[80px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.length > 0 ? (
-                      students.map((student, index) => (
-                        <tr
-                          key={student.id}
-                          id={`student-${student.id}`}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                        >
-                          <td className="py-3 px-4 font-mono">
-                            {((currentPage - 1) * pageSize + index + 1).toString().padStart(2, '0')}
-                          </td>
-                          <td className="py-3 px-4 font-medium">{student.name}</td>
-                          <td className="py-3 px-4">{student.email}</td>
-                          <td className="py-3 px-4">{student.phone}</td>
-                          <td className="py-3 px-4">{student.visaId}</td> {/* Changed from passportNo to visaId */}
-                          <td className="py-3 px-4">{student.targetCountry}</td>
-                          <td className="py-3 px-4">{student.appliedProgram}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(student.status)}`}>
-                              {student.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <ActionMenu
-                              student={student}
-                              onView={handleViewDetails}
-                              onEdit={handleEdit}
-                              onDelete={handleDelete}
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={9} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
-                          No students found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* ── Pagination ── */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
-                    >
-                      Next
-                    </button>
-                  </div>
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={onClearClick}
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
                 </div>
-              )}
-            </>
+              </form>
+            </div>
           )}
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Phone</th>
+                  <th className="px-4 py-3 text-left">Visa ID</th>
+                  <th className="px-4 py-3 text-left">Target Country</th>
+                  <th className="px-4 py-3 text-left">Program</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="p-4 text-center text-gray-500">
+                      Loading Students...
+                    </td>
+                  </tr>
+                ) : students.length > 0 ? (
+                  students.map((student, index) => (
+                    <tr
+                      key={student.id}
+                      id={`student-${student.id}`}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                    >
+                      <td className="py-1 px-4">
+                        {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
+                      </td>
+                      <td className="py-1 px-4 font-medium">{student.name}</td>
+                      <td className="py-1 px-4">{student.email}</td>
+                      <td className="py-1 px-4">{student.phone}</td>
+                      <td className="py-1 px-4">{student.visaId}</td>
+                      <td className="py-1 px-4">{student.targetCountry}</td>
+                      <td className="py-1 px-4">{student.appliedProgram}</td>
+                      <td className="py-1 px-4">
+                        <span className={`px-2 py-1 text-xs rounded-full capitalize font-medium ${getStatusStyle(student.status)}`}>
+                          {student.status}
+                        </span>
+                      </td>
+                      <td className="py-1 px-4">
+                        <ActionMenu
+                          student={student}
+                          onView={handleViewDetails}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={9} className="p-4 text-center text-gray-500 italic">
+                      No students found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* Pagination */}
+        {!loading && students.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              form={paginationForm}
+              pagination={{
+                currentPage: currentPage,
+                firstPage: 1,
+                lastPage: totalPages,
+                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
+                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+              }}
+              handleSearch={handleSearch}
+            />
+          </div>
+        )}
       </div>
     </>
   );

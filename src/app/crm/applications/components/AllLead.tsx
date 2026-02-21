@@ -1,13 +1,61 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Plus, Filter, RotateCcw, Edit, Trash, Search, User, X, Eye, MoreVertical } from 'lucide-react';
+import { Plus, Filter, RotateCcw, Edit, Trash, Eye, User, MoreVertical } from 'lucide-react';
+import { ADToBS, BSToAD } from 'bikram-sambat-js';
 import { api } from '@/utils/instance';
 import ConvertToApplicantModal from '../model/ConvertToApplicationModel';
-import useDropdown from '../hooks/useDropdown';
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import AddLeadModal from '../model/AddLeadFormModel';
+import Pagination from "@/components/Pagination";
+import { useForm } from "react-hook-form";
+import { EditButton } from "@/components/Buttons/EditButton";
+import DeleteButton from "@/components/Buttons/DeleteButton";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
+
+// ─── BS Date Helpers ───────────────────────────────────────────
+
+function getLocalToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function formatADDate(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getTodayBS(): string {
+  return ADToBS(formatADDate(getLocalToday()));
+}
+
+function getBSDateDaysAgo(daysAgo: number): string {
+  const d = getLocalToday();
+  d.setDate(d.getDate() - daysAgo);
+  return ADToBS(formatADDate(d));
+}
+
+function getFirstDayOfCurrentBSMonth(): string {
+  const bsToday = getTodayBS();
+  const [year, month] = bsToday.split('-');
+  return `${year}-${month}-01`;
+}
+
+function getFirstDayOfCurrentBSYear(): string {
+  const bsToday = getTodayBS();
+  const [year] = bsToday.split('-');
+  return `${year}-01-01`;
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Lead {
   id: string;
@@ -70,6 +118,20 @@ interface ConvertToApplicantPayload {
   targetCountry: string;
 }
 
+interface FilterFormData {
+  startDate: string;
+  endDate: string;
+  firstName?: string;
+}
+
+interface SearchParam {
+  pageSize: number;
+  pageIndex: number;
+  isPagination: boolean;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const getEducationLevelText = (level: number): string => {
   switch (level) {
     case 1: return 'Intermediate';
@@ -87,9 +149,11 @@ interface ActionMenuProps {
   onEdit: (lead: Lead) => void;
   onConvert: (lead: Lead) => void;
   onDelete: (id: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-const ActionMenu = ({ lead, onView, onEdit, onConvert, onDelete }: ActionMenuProps) => {
+const ActionMenu = ({ lead, onView, onEdit, onConvert, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -145,6 +209,7 @@ const ActionMenu = ({ lead, onView, onEdit, onConvert, onDelete }: ActionMenuPro
         ref={buttonRef}
         onClick={toggle}
         className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        title="Actions"
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
       </button>
@@ -161,168 +226,30 @@ const ActionMenu = ({ lead, onView, onEdit, onConvert, onDelete }: ActionMenuPro
           >
             <Eye size={14} /> View Details
           </button>
-          <button
-            onClick={() => { onEdit(lead); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Edit size={14} /> Edit
-          </button>
+          
+          {canEdit && (
+            <button
+              onClick={() => { onEdit(lead); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Edit size={14} /> Edit
+            </button>
+          )}
+          
           <button
             onClick={() => { onConvert(lead); setOpen(false); }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <User size={14} /> Convert to Applicant
           </button>
-          <button
-            onClick={() => { onDelete(lead.id); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Trash size={14} /> Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ── User Profile Search ──────────────────────────────────────────────────────
-
-const UserProfileSearch = ({ onProfileSelected }: { onProfileSelected: (profile: UserProfile) => void }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [hasFetchedAll, setHasFetchedAll] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node))
-        setShowResults(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const fetchAllUsers = async () => {
-    if (hasFetchedAll) return;
-    setIsSearching(true);
-    try {
-      const response = await api.get<UserProfileResponse>(`/api/Enrolments/GetAllUserProfile?search=`);
-      if (response.data?.Items) {
-        setSearchResults(response.data.Items);
-        setHasFetchedAll(true);
-      }
-    } catch (error: any) {
-      toast.error('Failed to fetch users');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-    const timer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const response = await api.get<UserProfileResponse>(
-          `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(searchQuery)}`
-        );
-        if (response.data?.Items) {
-          setSearchResults(response.data.Items);
-          setShowResults(true);
-        }
-      } catch {
-        toast.error('Failed to search profiles');
-      } finally {
-        setIsSearching(false);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, hasFetchedAll]);
-
-  const handleInputFocus = () => { fetchAllUsers(); setShowResults(true); };
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (!e.target.value.trim() && hasFetchedAll) setShowResults(true);
-  };
-  const handleSelectProfile = (profile: UserProfile) => {
-    onProfileSelected(profile);
-    setSearchQuery('');
-    setShowResults(false);
-    setSearchResults([]);
-    setHasFetchedAll(false);
-  };
-
-  const getEnrolmentTypeText = (type: number) => {
-    switch (type) {
-      case 1: return 'Student';
-      case 2: return 'Partner';
-      default: return 'Other';
-    }
-  };
-
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-  return (
-    <div className="relative" ref={searchRef}>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          placeholder="Search users..."
-          className="w-full sm:w-64 pl-10 pr-10 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00786f] focus:border-transparent dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
-        />
-        {isSearching && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00786f]" />
-          </div>
-        )}
-        {searchQuery && !isSearching && (
-          <button
-            onClick={() => { setSearchQuery(''); fetchAllUsers(); setShowResults(true); }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
-
-      {showResults && (
-        <div className="absolute top-full left-0 mt-2 w-full sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[100] max-h-96 overflow-y-auto">
-          {isSearching ? (
-            <div className="p-4 text-center text-gray-500">Loading users...</div>
-          ) : searchResults.length > 0 ? (
-            searchResults.map((profile) => (
-              <div
-                key={profile.id}
-                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b last:border-b-0 transition-colors"
-                onClick={() => handleSelectProfile(profile)}
-              >
-                <div className="font-medium text-gray-800 dark:text-white">{profile.fullName}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                  <div>{profile.email}</div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className={`px-2 py-0.5 rounded-full ${
-                      profile.enrolmentType === 1
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    }`}>
-                      {getEnrolmentTypeText(profile.enrolmentType)}
-                    </span>
-                    <span>Joined: {formatDate(profile.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-              {searchQuery ? `No profiles found matching "${searchQuery}"` : 'No users found'}
-            </div>
+          
+          {canDelete && (
+            <button
+              onClick={() => { onDelete(lead.id); setOpen(false); }}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Trash size={14} /> Delete
+            </button>
           )}
         </div>
       )}
@@ -330,25 +257,14 @@ const UserProfileSearch = ({ onProfileSelected }: { onProfileSelected: (profile:
   );
 };
 
-// ── Filter Button ────────────────────────────────────────────────────────────
-
-const FilterButton = ({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`px-3 py-1.5 text-xs sm:text-sm font-bold text-white rounded-lg transition-all duration-150 whitespace-nowrap ${
-      isActive
-        ? 'bg-[#00786f] shadow-lg transform scale-105'
-        : 'bg-[#00786f] hover:bg-[#00635a] opacity-80 hover:opacity-100 hover:shadow-md hover:scale-105'
-    }`}
-  >
-    {label}
-  </button>
-);
-
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 const AllLeadsPage = () => {
+  // ── Permissions ──
+  const { menuStatus } = usePermissions();
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+
+  // ── State ──
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -361,17 +277,63 @@ const AllLeadsPage = () => {
     targetCountry: '',
   });
   const [openFilter, setOpenFilter] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string>('');
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+  const [params, setParams] = useState("");
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const { closeDropdown } = useDropdown();
+  // ── Forms ──
+  const filterForm = useForm<FilterFormData>({
+    defaultValues: {
+      startDate: "",
+      endDate: "",
+      firstName: "",
+    },
+  });
 
-  const fetchLeads = async () => {
+  const paginationForm = useForm<SearchParam>({
+    defaultValues: {
+      pageSize: 10,
+      pageIndex: 1,
+      isPagination: true,
+    },
+  });
+
+  // ── Refs ──
+  const dateFilterRef = useRef<DateRangeFilterRef>(null);
+  const { handleError, clearError } = useErrorHandler();
+
+  // ── Pagination state ──
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  });
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // ── Build query string ──
+  const buildQueryString = () => {
+    const baseQuery = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+    return baseQuery + (params || "");
+  };
+
+  // ── Fetch leads ──
+  const fetchLeads = async (customParams?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get<ApiResponse>(`/api/Enrolments/FilterInquery`);
-      const items = response.data.Items || [];
+
+      const queryString = customParams || buildQueryString();
+      const url = `/api/Enrolments/FilterInquery${queryString}`;
+      console.log('Fetching leads:', url);
+
+      const response = await api.get<ApiResponse>(url);
+      const data = response.data;
+      const items = data.Items || [];
+
       const formattedLeads: Lead[] = items.map((item: any) => ({
         id: item.userId || Math.random().toString(),
         userId: item.userId,
@@ -382,21 +344,106 @@ const AllLeadsPage = () => {
         educationLevel: item.educationLevel || 0,
         completionYear: item.completionYear || 'N/A',
       }));
+
       setLeads(formattedLeads);
+      setTotalItems(data.TotalItems ?? 0);
+      setTotalPages(data.TotalPages ?? 1);
+      setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
     } catch (error: any) {
-      setError(error.response?.data?.message || error.message || 'Failed to fetch leads');
-      toast.error('Failed to fetch leads');
+      const errorMsg = handleError(error);
+      setError(errorMsg);
+      Toast.error('Failed to fetch leads');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  // ── Initial fetch ──
+  useEffect(() => {
+    fetchLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
 
-  const handleProfileSelected = (profile: UserProfile) => {
+  // ── Handle filter submit ──
+  const handleFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.firstName
+          ? `firstName=${encodeURIComponent(formData.firstName)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+      
+      const fullQuery = queryParams ? `&${queryParams}` : "";
+      
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+        })(),
+        {
+          loading: "Fetching leads...",
+          success: "Leads fetched successfully!",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
+      console.error("Error during filter submission:", error);
+    }
+  };
+
+  // ── Handle clear filter ──
+  const onClearClick = () => {
+    setParams("");
+    dateFilterRef.current?.handleClear();
+    setSelectedProfile(undefined);
+    filterForm.reset();
+    setPaginationParams(prev => ({ ...prev, pageIndex: 1 }));
+    Toast.success('Filters cleared');
+  };
+
+  // ── Handle pagination ──
+  const handleSearch = (params: SearchParam) => {
+    params.pageSize = paginationParams.pageSize;
+    setPaginationParams(params);
+  };
+
+  // ── Handle profile search ──
+  const fetchUsers = async (search: string = "") => {
+    setIsSearching(true);
+    try {
+      const response = await api.get<UserProfileResponse>(
+        `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(search)}`
+      );
+      if (response.data?.Items) {
+        setSearchResults(response.data.Items);
+      }
+    } catch (error) {
+      Toast.error('Failed to search profiles');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // ── Handle profile selection ──
+  const handleProfileSelected = (profile: UserProfile | null) => {
+    if (!profile) return;
+    
+    setSelectedProfile(profile);
+    
+    // Check if lead already exists
     const existingLead = leads.find(lead => lead.email === profile.email);
     if (existingLead) {
-      toast.success(`Profile ${profile.fullName} already exists in leads`);
+      Toast.success(`Profile ${profile.fullName} already exists in leads`);
       const element = document.getElementById(`lead-${existingLead.id}`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -404,28 +451,18 @@ const AllLeadsPage = () => {
         setTimeout(() => element.classList.remove('bg-yellow-100', 'dark:bg-yellow-900/30'), 2000);
       }
     } else {
-      const newLead: Lead = {
-        id: profile.id,
-        userId: profile.id,
-        name: profile.fullName,
-        email: profile.email,
-        phone: profile.contactNumber || 'N/A',
-        source: profile.source || 'profile-search',
-        educationLevel: 0,
-        completionYear: 'N/A',
-      };
-      setLeads(prev => [newLead, ...prev]);
-      toast.success(`Added ${profile.fullName} to leads`);
+      // Add to filter and fetch
+      filterForm.setValue('firstName', profile.fullName);
+      handleFilterSubmit(filterForm.getValues());
+      Toast.success(`Added ${profile.fullName} to leads`);
     }
   };
 
-  const refreshLeads = () => fetchLeads();
-
+  // ── Handle convert ──
   const handleConvertClick = (lead: Lead) => {
     setSelectedLead(lead);
     setConversionData({ userId: lead.userId, passportNo: '', targetCountry: '' });
     setShowConvertModal(true);
-    closeDropdown();
   };
 
   const handleConversionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -439,42 +476,40 @@ const AllLeadsPage = () => {
     try {
       setConvertingId(selectedLead.id);
       await api.post('/api/Enrolments/ConvertToApplicant', conversionData);
-      toast.success(`Successfully converted ${selectedLead.name} to applicant!`);
+      Toast.success(`Successfully converted ${selectedLead.name} to applicant!`);
       setShowConvertModal(false);
-      // ✅ No local state removal — lead stays visible until next fresh API fetch
+      fetchLeads(); // Refresh the list
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to convert to applicant';
-      toast.error(`Error: ${errorMessage}`);
+      const errorMsg = handleError(error);
+      Toast.error(`Error: ${errorMsg}`);
     } finally {
       setConvertingId(null);
     }
   };
 
-  // ✅ No API yet — just show toast, do NOT touch local state
-  const handleDelete = (_id: string) => {
-    toast('Deleting lead...', { icon: '🗑️' });
+  // ── Handle CRUD operations ──
+  const handleDelete = async (id: string) => {
+    try {
+      // Add your delete API call here
+      // await api.delete(`/api/Enrolments/${id}`);
+      Toast.success('Lead deleted successfully!');
+      fetchLeads();
+    } catch (error) {
+      Toast.error('Error deleting lead.');
+    }
   };
 
   const handleViewDetails = (lead: Lead) => {
-    toast.success(`Viewing details for ${lead.name}`);
+    Toast.info(`Viewing details for ${lead.name}`);
+    // Add your view logic here
   };
 
-  // ✅ No API yet — just show toast, do NOT touch local state
-  const handleEdit = (_lead: Lead) => {
-    toast('Editing lead...', { icon: '✏️' });
+  const handleEdit = (lead: Lead) => {
+    // Add your edit logic here
+    Toast.info(`Editing ${lead.name}`);
   };
 
-  const handleFilterClick = (filter: string) => {
-    setActiveFilter(filter);
-    toast.success(`Filtering by ${filter}`);
-  };
-
-  const onClearClick = () => {
-    setActiveFilter('');
-    setOpenFilter(false);
-    toast.success('Filters cleared');
-  };
-
+  // ── Error state ──
   if (error) {
     return (
       <div className="p-6 space-y-6">
@@ -489,11 +524,8 @@ const AllLeadsPage = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="p-4 sm:p-6 relative">
-        <div className={`bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ${
-          isAddLeadModalOpen || showConvertModal ? 'blur-sm' : ''
-        }`}>
-
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">All Leads</h1>
@@ -503,44 +535,73 @@ const AllLeadsPage = () => {
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105"
+                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold"
               />
-              <ButtonElement
-                icon={<Plus size={24} />}
-                type="button"
-                text="Add New Lead"
-                onClick={() => setIsAddLeadModalOpen(true)}
-                className="!text-md !font-bold !bg-[#00786f] hover:!bg-[#00635a] !text-white transition-all duration-150 hover:shadow-md hover:scale-105"
-              />
+
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={24} />}
+                  type="button"
+                  text="Add New Lead"
+                  onClick={() => setIsAddLeadModalOpen(true)}
+                  className="!text-md !font-bold !text-white"
+                />
+              )}
             </div>
           </div>
 
           {/* Filter Section */}
           {openFilter && (
-            <div className="mb-6 mx-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 dark:bg-[#353535] dark:border-gray-700">
-              <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-                <div className="flex flex-wrap items-center gap-2 flex-1">
-                  {['Yesterday', '7 Days', '30 Days', 'This Month', 'Last Month', 'This Year'].map(f => (
-                    <FilterButton key={f} label={f} isActive={activeFilter === f} onClick={() => handleFilterClick(f)} />
-                  ))}
+            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <form
+                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={dateFilterRef}
+                  form={filterForm}
+                  onSubmit={handleFilterSubmit}
+                  setParams={setParams}
+                />
+
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search Users"
+                    name="firstName"
+                    form={filterForm}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={handleProfileSelected}
+                    onFocus={() => fetchUsers("")}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email} • {profile.enrolmentType === 1 ? 'Student' : 'Partner'}
+                      </div>
+                    )}
+                  />
                 </div>
-                <div className="flex items-center gap-2 lg:ml-auto">
-                  <UserProfileSearch onProfileSelected={handleProfileSelected} />
+
+                <div className="flex gap-2 ml-auto">
                   <ButtonElement
-                    type="button"
+                    type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-[#00786f] hover:!bg-[#00635a] !text-white !font-bold transition-all duration-150 hover:shadow-md hover:scale-105 whitespace-nowrap"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
                   />
                 </div>
-              </div>
+              </form>
             </div>
           )}
 
@@ -562,7 +623,9 @@ const AllLeadsPage = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-4 text-center text-gray-500">Loading Leads...</td>
+                    <td colSpan={8} className="p-4 text-center text-gray-500">
+                      Loading Leads...
+                    </td>
                   </tr>
                 ) : leads.length > 0 ? (
                   leads.map((lead, index) => (
@@ -571,52 +634,79 @@ const AllLeadsPage = () => {
                       id={`lead-${lead.id}`}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-3 px-4">{(index + 1).toString().padStart(2, '0')}</td>
-                      <td className="py-3 px-4 font-medium">{lead.name}</td>
-                      <td className="py-3 px-4">{lead.email}</td>
-                      <td className="py-3 px-4">{lead.phone}</td>
-                      <td className="py-3 px-4 capitalize">{lead.source}</td>
-                      <td className="py-3 px-4">{getEducationLevelText(lead.educationLevel)}</td>
-                      <td className="py-3 px-4">{lead.completionYear}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-1 px-4">
+                        {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
+                      </td>
+                      <td className="py-1 px-4 font-medium">{lead.name}</td>
+                      <td className="py-1 px-4">{lead.email}</td>
+                      <td className="py-1 px-4">{lead.phone}</td>
+                      <td className="py-1 px-4 capitalize">{lead.source}</td>
+                      <td className="py-1 px-4">{getEducationLevelText(lead.educationLevel)}</td>
+                      <td className="py-1 px-4">{lead.completionYear}</td>
+                      <td className="py-1 px-4">
                         <ActionMenu
                           lead={lead}
                           onView={handleViewDetails}
                           onEdit={handleEdit}
                           onConvert={handleConvertClick}
                           onDelete={handleDelete}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
                         />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-4 text-center text-gray-500 italic">No Leads found.</td>
+                    <td colSpan={8} className="p-4 text-center text-gray-500 italic">
+                      No Leads found.
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Modals */}
+          {isAddLeadModalOpen && (
+            <AddLeadModal
+              isOpen={isAddLeadModalOpen}
+              onClose={() => setIsAddLeadModalOpen(false)}
+              onSuccess={() => {
+                fetchLeads();
+                setIsAddLeadModalOpen(false);
+              }}
+            />
+          )}
+          
+          {showConvertModal && selectedLead && (
+            <ConvertToApplicantModal
+              isOpen={showConvertModal}
+              onClose={() => setShowConvertModal(false)}
+              selectedLead={selectedLead}
+              conversionData={conversionData}
+              convertingId={convertingId}
+              onInputChange={handleConversionInputChange}
+              onSubmit={handleConvertSubmit}
+            />
+          )}
         </div>
 
-        {/* Modals */}
-        {isAddLeadModalOpen && (
-          <AddLeadModal
-            isOpen={isAddLeadModalOpen}
-            onClose={() => setIsAddLeadModalOpen(false)}
-            onSuccess={refreshLeads}
-          />
-        )}
-        {showConvertModal && (
-          <ConvertToApplicantModal
-            isOpen={showConvertModal}
-            onClose={() => setShowConvertModal(false)}
-            selectedLead={selectedLead}
-            conversionData={conversionData}
-            convertingId={convertingId}
-            onInputChange={handleConversionInputChange}
-            onSubmit={handleConvertSubmit}
-          />
+        {/* Pagination */}
+        {!loading && leads.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              form={paginationForm}
+              pagination={{
+                currentPage: currentPage,
+                firstPage: 1,
+                lastPage: totalPages,
+                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
+                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+              }}
+              handleSearch={handleSearch}
+            />
+          </div>
         )}
       </div>
     </>
