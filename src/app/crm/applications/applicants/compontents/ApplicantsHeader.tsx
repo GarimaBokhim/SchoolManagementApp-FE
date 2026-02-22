@@ -28,7 +28,7 @@ export const ApplicantsHeader = ({ onToggleFilter, canAdd = true }: ApplicantsHe
             type="button"
             text="Add New Applicant"
             onClick={() => Toast.info('Add new applicant feature coming soon!')}
-            className="!text-md !font-bold !text-white"
+            className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold !text-md"
           />
         )}
       </div>
