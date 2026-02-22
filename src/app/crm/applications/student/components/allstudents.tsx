@@ -45,6 +45,7 @@ interface Student {
   userId: string;
   fullName: string;
   email: string;
+  enrolmentType: number;
   universityName: string;
   visaId: string;
   isActive: boolean;
@@ -110,6 +111,28 @@ interface SearchParam {
   pageIndex: number;
   isPagination: boolean;
 }
+
+// ─── Enrolment Badge ──────────────────────────────────────────────────────────
+const ENROLMENT_TYPE_LABELS: Record<number, string> = {
+  1: 'Lead',
+  2: 'Applicant',
+  3: 'Student',
+};
+
+const EnrolmentBadge = ({ type }: { type?: number }) => {
+  if (!type) return <span>-</span>;
+  const label = ENROLMENT_TYPE_LABELS[type] ?? 'Unknown';
+  const colorMap: Record<number, string> = {
+    1: 'bg-yellow-100 text-yellow-700 border border-yellow-300',
+    2: 'bg-blue-100 text-blue-700 border border-blue-300',
+    3: 'bg-green-100 text-green-700 border border-green-300',
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colorMap[type] ?? 'bg-gray-100 text-gray-600'}`}>
+      {label}
+    </span>
+  );
+};
 
 // ─── Fixed-position Action Dropdown ───────────────────────────────────────────
 interface ActionMenuProps {
@@ -190,12 +213,12 @@ const ActionMenu = ({ student, onView, onEdit, onDelete, canEdit = true, canDele
           style={menuStyle}
           className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 animate-in fade-in zoom-in-95 duration-100"
         >
-         <button
-  onClick={() => { onView(student); setOpen(false); }}
-  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
->
-  View Details
-</button>
+          <button
+            onClick={() => { onView(student); setOpen(false); }}
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            View Details
+          </button>
 
           {canEdit && (
             <button
@@ -262,12 +285,6 @@ const AllStudentsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const getSchoolName = (schoolId: string) => {
-    if (!allSchools?.Items) return 'Unknown School';
-    const school = allSchools.Items.find((s: School) => s.id === schoolId);
-    return school?.name || 'Unknown School';
-  };
-
   // ── Fetch students ──
   useEffect(() => {
     if (!allSchools) return;
@@ -297,11 +314,11 @@ const AllStudentsPage = () => {
           userId: item.userId,
           fullName: item.fullName || '-',
           email: item.email || '-',
+          enrolmentType: item.enrolmentType,
           universityName: item.universityName || '-',
           visaId: item.visaId || '-',
           isActive: item.isActive,
           schoolId: item.schoolId,
-          schoolName: getSchoolName(item.schoolId),
           createdBy: item.createdBy,
           createdAt: item.createdAt,
           modifiedBy: item.modifiedBy,
@@ -534,16 +551,17 @@ const AllStudentsPage = () => {
                 <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Full Name</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Enrolment Type</th>
                   <th className="px-4 py-3 text-left">Visa ID</th>
                   <th className="px-4 py-3 text-left">University Name</th>
-                  <th className="px-4 py-3 text-left">School</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center">
+                    <td colSpan={7} className="p-8 text-center">
                       <div className="flex justify-center items-center gap-2">
                         <div className="w-5 h-5 border-2 border-gray-300 border-t-emerald-600 rounded-full animate-spin"></div>
                         <span className="text-gray-500 dark:text-gray-400">Loading students...</span>
@@ -560,9 +578,12 @@ const AllStudentsPage = () => {
                         {((currentPage - 1) * paginationParams.pageSize + index + 1).toString().padStart(2, '0')}
                       </td>
                       <td className="py-2 px-4 font-medium">{student.fullName}</td>
+                      <td className="py-2 px-4">{student.email}</td>
+                      <td className="py-2 px-4">
+                        <EnrolmentBadge type={student.enrolmentType} />
+                      </td>
                       <td className="py-2 px-4">{student.visaId}</td>
                       <td className="py-2 px-4">{student.universityName}</td>
-                      <td className="py-2 px-4">{student.schoolName}</td>
                       <td className="py-2 px-4">
                         <ActionMenu
                           student={student}
@@ -577,7 +598,7 @@ const AllStudentsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
                       No students found.
                     </td>
                   </tr>
