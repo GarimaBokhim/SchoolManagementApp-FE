@@ -11,6 +11,10 @@ export interface Applicant {
   isActive: boolean;
   schoolId: string;
   schoolName?: string;
+  // New profile fields
+  fullName?: string;
+  email?: string;
+  enrolmentType?: number;
   createdBy: string;
   createdAt: string;
   modifiedBy: string;
