@@ -234,6 +234,7 @@ const AllTemplateForm = ({ onDataFromChild }: Props) => {
                   <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                     <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                     <th className="px-4 py-3 text-left">Template Name</th>
+                    <th className="px-4 py-3 text-left">Template Subject</th>
                     <th className="px-4 py-3 text-left">Template Type</th>
                     <th className="px-4 py-3 text-left">Template Html Path</th>
                     <th className="px-4 py-3 text-left">Template Version</th>
@@ -255,11 +256,12 @@ const AllTemplateForm = ({ onDataFromChild }: Props) => {
                           key={index}
                           className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                         >
-                          <td className="py-3 px-4">{index + 1}</td>
-                          <td className="py-3 px-4">{Template.templateName}</td>
-                          <td className="py-3 px-4">{Template.templateType}</td>
-                          <td className="py-3 px-4">{Template.htmlTemplate}</td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 text-center">{index + 1}</td>
+                          <td className="py-3 px-4 text-center">{Template.templateName}</td>
+                          <td className="py-3 px-4 text-center">{Template.templateSubject}</td>
+                          <td className="py-3 px-4 text-center">{Template.templateType}</td>
+                          <td className="py-3 px-4 text-center">{Template.htmlTemplate}</td>
+                          <td className="py-3 px-4 text-center">
                             {Template.templateVersion}
                           </td>
                           <td className="py-3 px-4">

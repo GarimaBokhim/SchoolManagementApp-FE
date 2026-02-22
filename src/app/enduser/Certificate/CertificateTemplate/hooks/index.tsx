@@ -18,6 +18,7 @@ type TemplateRequest = {
   templateName: string;
   templateType: string;
   htmlTemplate: string;
+  templateSubject: string;
   templateVersion: string;
 };
 

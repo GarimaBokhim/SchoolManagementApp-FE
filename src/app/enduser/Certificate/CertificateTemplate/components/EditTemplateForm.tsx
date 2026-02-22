@@ -28,6 +28,7 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
         templateName: TemplateData?.templateName ?? "",
         templateType: TemplateData?.templateType ?? "",
         htmlTemplate: TemplateData?.htmlTemplate ?? "",
+        templateSubject: TemplateData?.templateSubject ?? "",
         templateVersion: TemplateData?.templateVersion ?? "",
       });
     }
@@ -86,6 +87,13 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
                 placeholder="Enter Template Name"
                 required
               />
+              <InputElement
+                label="Template Subject"
+                form={form}
+                name="templateSubject"
+                placeholder="Enter Template Subject"
+                required
+                />
               <InputElement
                 label="Template Type"
                 form={form}
