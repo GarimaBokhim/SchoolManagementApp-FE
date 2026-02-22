@@ -2,6 +2,7 @@ export interface ITemplate {
   id?: string;
   templateName: string;
   templateType: string;
+  templateSubject: string;
   htmlTemplate: string;
   templateVersion: string;
 }

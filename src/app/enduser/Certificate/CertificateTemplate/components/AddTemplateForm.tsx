@@ -57,6 +57,13 @@ const AddTemplateForm = ({ form, onClose }: Props) => {
                 required
               />
               <InputElement
+                label="Template Subject"
+                form={form}
+                name="templateSubject"
+                placeholder="Enter Template Subject"
+                required
+                />
+              <InputElement
                 label="Template Type"
                 form={form}
                 name="templateType"
