@@ -1,6 +1,6 @@
 "use client";
 
-import { Lead } from '../../types';
+import { Lead } from '../../types/ILeads';
 import { getEducationLevelText } from '../../utils/helpers';
 import { ActionMenu } from './ActionMenu';
 

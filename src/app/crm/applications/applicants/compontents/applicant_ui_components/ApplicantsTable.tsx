@@ -1,6 +1,6 @@
 "use client";
 
-import { Applicant } from '../../types';
+import { Applicant } from '../../types/IApplicants';
 import { ActionMenu } from './ActionMenu';
 
 // Map enum values to labels

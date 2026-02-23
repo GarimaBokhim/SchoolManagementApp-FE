@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
-import { Lead, ApiResponse } from '../types';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import toast from 'react-hot-toast';
+import { ApiResponse, Lead } from '../types/ILeads';
 
 // ✅ Helper to fetch enrolmentType for a single userId
 const fetchEnrolmentType = async (userId: string): Promise<number> => {

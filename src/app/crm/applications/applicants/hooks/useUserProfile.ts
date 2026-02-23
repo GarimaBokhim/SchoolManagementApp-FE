@@ -1,5 +1,6 @@
 import { api } from '@/utils/instance';
-import { UserProfile } from '../types';
+import { UserProfile } from '../types/IApplicants';
+
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {

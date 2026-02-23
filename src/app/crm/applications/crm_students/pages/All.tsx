@@ -1,6 +1,6 @@
 "use client";
 
-import AllCrmStudentsForm from "../components/AllCrmStuden";
+import AllCrmStudentsForm from "../components/AllCrmStudenForm";
 
 const AllCrmStudents = () => {
   return (

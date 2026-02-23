@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Edit, Trash, Eye, User, MoreVertical } from 'lucide-react';
-import { Lead } from '../../types';
+import { Lead } from '../../types/ILeads';
+
 
 
 interface ActionMenuProps {

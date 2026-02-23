@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
-import { Applicant, ApiResponse, School } from '../types';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import { Toast } from '@/components/Toast/toast';
 import { fetchUserProfile } from './useUserProfile';
+import { ApiResponse, Applicant, School } from '../types/IApplicants';
 
 export const useApplicants = (allSchools?: { Items: School[] }) => {
   const [applicants, setApplicants] = useState<Applicant[]>([]);

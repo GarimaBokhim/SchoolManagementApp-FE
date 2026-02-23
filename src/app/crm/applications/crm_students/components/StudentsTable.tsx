@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Eye, Edit, Trash, MoreVertical } from 'lucide-react';
+import { Edit, Trash, MoreVertical } from 'lucide-react';
 import { Student } from '../type/studnets';
 
 interface ActionMenuProps {
   student: Student;
-  onView: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
   canEdit?: boolean;
@@ -15,7 +14,6 @@ interface ActionMenuProps {
 
 const ActionMenu = ({
   student,
-  onView,
   onEdit,
   onDelete,
   canEdit = true,
@@ -29,7 +27,7 @@ const ActionMenu = ({
   const calculatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 110;
+    const menuHeight = 80;
     const menuWidth = 176;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
@@ -90,13 +88,6 @@ const ActionMenu = ({
           style={menuStyle}
           className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
         >
-          <button
-            onClick={() => { onView(student); setOpen(false); }}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Eye size={14} /> View Details
-          </button>
-
           {canEdit && (
             <button
               onClick={() => { onEdit(student); setOpen(false); }}
@@ -125,7 +116,6 @@ interface StudentsTableProps {
   loading: boolean;
   currentPage: number;
   pageSize: number;
-  onView: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
   canEdit?: boolean;
@@ -137,7 +127,6 @@ export const StudentsTable = ({
   loading,
   currentPage,
   pageSize,
-  onView,
   onEdit,
   onDelete,
   canEdit,
@@ -178,7 +167,6 @@ export const StudentsTable = ({
                 <td className="py-1 px-4">
                   <ActionMenu
                     student={student}
-                    onView={onView}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     canEdit={canEdit}

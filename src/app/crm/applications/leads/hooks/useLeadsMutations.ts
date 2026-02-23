@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { api } from '@/utils/instance';
-import { ConvertToApplicantPayload, Lead } from '../types';
+
 import toast from 'react-hot-toast';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
+import { ConvertToApplicantPayload, Lead } from '../types/ILeads';
 
 export const useLeadMutations = (refetchLeads: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);

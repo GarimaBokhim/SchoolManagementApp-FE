@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FilterFormData, UserProfile, UserProfileResponse } from '../types';
 import { api } from '@/utils/instance';
 import { Toast } from '@/components/Toast/toast';
 import toast from 'react-hot-toast';
+import { FilterFormData, UserProfile, UserProfileResponse } from '../types/IApplicants';
 
 export const useApplicantFilters = (
   setParams: (params: string) => void,

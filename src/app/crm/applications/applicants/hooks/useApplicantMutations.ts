@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { api } from '@/utils/instance';
-import { ConvertToStudentPayload, Applicant } from '../types';
 import { Toast } from '@/components/Toast/toast';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
+import { Applicant, ConvertToStudentPayload } from '../types/IApplicants';
 
 export const useApplicantMutations = (refetchApplicants: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);

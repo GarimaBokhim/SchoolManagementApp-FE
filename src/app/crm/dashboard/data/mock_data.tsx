@@ -8,6 +8,7 @@ export const dashboardStats = [
   {
     label: 'Total Students',
     value: '1,248',
+    
     change: '+18%',
     icon: Users,
     color: 'from-blue-600 to-cyan-500',

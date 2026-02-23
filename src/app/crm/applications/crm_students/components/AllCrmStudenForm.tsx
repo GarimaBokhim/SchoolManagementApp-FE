@@ -2,8 +2,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, RotateCcw, Eye, Edit, Trash, MoreVertical, Plus } from 'lucide-react';
-import { ADToBS } from 'bikram-sambat-js';
+import { Filter, RotateCcw, Edit, Trash, MoreVertical, Plus } from 'lucide-react';
 import { api } from '@/utils/instance';
 import { useForm } from "react-hook-form";
 import { Toaster } from "react-hot-toast";
@@ -16,7 +15,7 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-import { ViewStudentDetailModal } from '../../student/components/ViewStudentDetailModel';
+
 
 function getLocalToday(): Date {
   const now = new Date();
@@ -28,10 +27,6 @@ function formatADDate(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
-}
-
-function getTodayBS(): string {
-  return ADToBS(formatADDate(getLocalToday()));
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -137,14 +132,13 @@ const EnrolmentBadge = ({ type }: { type?: number }) => {
 // ─── Fixed-position Action Dropdown ───────────────────────────────────────────
 interface ActionMenuProps {
   student: Student;
-  onView: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (userId: string) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
 
-const ActionMenu = ({ student, onView, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+const ActionMenu = ({ student, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -153,7 +147,7 @@ const ActionMenu = ({ student, onView, onEdit, onDelete, canEdit = true, canDele
   const calculatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 110;
+    const menuHeight = 80;
     const menuWidth = 176;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
@@ -213,13 +207,6 @@ const ActionMenu = ({ student, onView, onEdit, onDelete, canEdit = true, canDele
           style={menuStyle}
           className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 animate-in fade-in zoom-in-95 duration-100"
         >
-          <button
-            onClick={() => { onView(student); setOpen(false); }}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            View Details
-          </button>
-
           {canEdit && (
             <button
               onClick={() => { onEdit(student); setOpen(false); }}
@@ -263,8 +250,6 @@ const AllCrmStudentsForm = () => {
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedStudentUserId, setSelectedStudentUserId] = useState<string | null>(null);
 
   const filterForm = useForm<FilterFormData>({
     defaultValues: { startDate: "", endDate: "", firstName: "" },
@@ -421,11 +406,6 @@ const AllCrmStudentsForm = () => {
     } catch {
       Toast.error('Error deleting student.');
     }
-  };
-
-  const handleViewDetails = (student: Student) => {
-    setSelectedStudentUserId(student.userId);
-    setIsDetailModalOpen(true);
   };
 
   const handleEdit = (student: Student) => {
@@ -587,7 +567,6 @@ const AllCrmStudentsForm = () => {
                       <td className="py-2 px-4">
                         <ActionMenu
                           student={student}
-                          onView={handleViewDetails}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
                           canEdit={canEdit}
@@ -625,16 +604,6 @@ const AllCrmStudentsForm = () => {
           </div>
         )}
       </div>
-
-      {/* Student Detail Modal */}
-      <ViewStudentDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedStudentUserId(null);
-        }}
-        studentUserId={selectedStudentUserId}
-      />
     </>
   );
 };
