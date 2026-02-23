@@ -1,11 +1,10 @@
 "use client";
-
-import AllApplicantsForm from "../../applicants/compontents/AllApplicantForm";
+import AllLeadsForm from "../components/AllLeadForm";
 
 const AllLeads = () => {
   return (
     <div className="dark:bg-[#2a2b2e]  w-[98%]">
-      <AllApplicantsForm />
+      <AllLeadsForm />
     </div>
   );
 };

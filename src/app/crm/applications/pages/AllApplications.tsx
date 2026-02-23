@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Students from "../student/components/allstudents";
 import AllApplicantsPage from "../applicants/AllApplicantsPage";
-import AllLeadsPage from "../components/AllLead";
 import AllApplicants from "../applicants/pages/All";
+import AllLeads from "../leads/pages/AllLeads";
+
 
 
 const AllApplications = () => {
@@ -19,7 +20,7 @@ const AllApplications = () => {
   const renderReport = () => {
     switch (activeReport) {
       case "lead":
-        return <AllLeadsPage />;
+        return <AllLeads />;
 
       case "student":
         return <Students />;
@@ -28,7 +29,7 @@ const AllApplications = () => {
         return <AllApplicants />;
 
       default:
-        return <AllLeadsPage />;
+        return <AllLeads />;
     }
   };
 

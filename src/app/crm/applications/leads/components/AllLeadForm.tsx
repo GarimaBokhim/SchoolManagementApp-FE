@@ -11,12 +11,12 @@ import { ConvertToApplicantPayload, Lead, SearchParam } from '../types';
 import { useLeads } from '../hooks/useLeads';
 import { useLeadFilters } from '../hooks/useLeadFilters';
 import { useLeadMutations } from '../hooks/useLeadsMutations';
-import { LeadsHeader } from './LeadsHeader';
-import { LeadsFilter } from './LeadsFilter';
-import { LeadsTable } from './LeadsTable';
 import AddLeadModal from '../../model/AddLeadFormModel';
 import ConvertToApplicantModal from '../../model/ConvertToApplicationModel';
 import { LeadDetailModal } from './LeadDetailModel';
+import { LeadsHeader } from './lead_ui_components/LeadsHeader';
+import { LeadsFilter } from './lead_ui_components/LeadsFilter';
+import { LeadsTable } from './lead_ui_components/LeadsTable';
 
 
 

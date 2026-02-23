@@ -1,7 +1,7 @@
 "use client";
 
-import { Lead } from '../types';
-import { getEducationLevelText } from '../utils/helpers';
+import { Lead } from '../../types';
+import { getEducationLevelText } from '../../utils/helpers';
 import { ActionMenu } from './ActionMenu';
 
 interface LeadsTableProps {
