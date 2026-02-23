@@ -8,18 +8,17 @@ import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks';
 import Pagination from '@/components/Pagination';
 import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
+import { useApplicants } from '../hooks/useApplicants';
+import { useApplicantFilters } from '../hooks/useApplicantFilters';
+import { useApplicantMutations } from '../hooks/useApplicantMutations';
+import { Applicant, SearchParam } from '../types';
+import { ConvertToStudentModal } from './ConvertToStudentModel';
+import { ApplicantDetailModal } from '../model/ApplicantDetailModel';
+import { ApplicantsFilter } from './applicant_ui_components/ApplicantsFilter';
+import { ApplicantsHeader } from './applicant_ui_components/ApplicantsHeader';
+import { ApplicantsTable } from './applicant_ui_components/ApplicantsTable';
 
-import { useApplicants } from './hooks/useApplicants';
-import { useApplicantMutations } from './hooks/useApplicantMutations';
-import { useApplicantFilters } from './hooks/useApplicantFilters';
-import { Applicant, SearchParam } from './types';
-import { ApplicantsHeader } from './compontents/ApplicantsHeader';
-import { ApplicantsFilter } from './compontents/ApplicantsFilter';
-import { ApplicantsTable } from './compontents/ApplicantsTable';
-import { ConvertToStudentModal } from './compontents/ConvertToStudentModel';
-import { ApplicantDetailModal } from './model/ApplicantDetailModel';
-
-const AllApplicantsPage = () => {
+const AllApplicantsForm = () => {
   // ── Permissions ──
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
@@ -192,4 +191,4 @@ const AllApplicantsPage = () => {
   );
 };
 
-export default AllApplicantsPage;
+export default AllApplicantsForm;

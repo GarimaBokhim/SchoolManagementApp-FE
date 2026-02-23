@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from 'react-hook-form';
-import { FilterFormData, UserProfile } from '../types';
+import { FilterFormData, UserProfile } from '../../types';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import { ButtonElement } from '@/components/Buttons/ButtonElement';

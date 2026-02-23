@@ -6,19 +6,21 @@ import { Toaster } from 'react-hot-toast';
 import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import Pagination from '@/components/Pagination';
-import AddLeadModal from '../model/AddLeadFormModel';
-import ConvertToApplicantModal from '../model/ConvertToApplicationModel';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { LeadsHeader } from './components/LeadsHeader';
-import { useLeads } from './hooks/useLeads';
-import { useLeadFilters } from './hooks/useLeadFilters';
-import { useLeadMutations } from './hooks/useLeadsMutations';
-import { ConvertToApplicantPayload, Lead, SearchParam } from './types';
-import { LeadsFilter } from './components/LeadsFilter';
-import { LeadsTable } from './components/LeadsTable';
-import { LeadDetailModal } from './components/LeadDetailModel';
+import { ConvertToApplicantPayload, Lead, SearchParam } from '../types';
+import { useLeads } from '../hooks/useLeads';
+import { useLeadFilters } from '../hooks/useLeadFilters';
+import { useLeadMutations } from '../hooks/useLeadsMutations';
+import { LeadsHeader } from './LeadsHeader';
+import { LeadsFilter } from './LeadsFilter';
+import { LeadsTable } from './LeadsTable';
+import AddLeadModal from '../../model/AddLeadFormModel';
+import ConvertToApplicantModal from '../../model/ConvertToApplicationModel';
+import { LeadDetailModal } from './LeadDetailModel';
 
-const AllLeadsPage = () => {
+
+
+const AllLeadsForm = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
 
@@ -211,4 +213,4 @@ const AllLeadsPage = () => {
   );
 };
 
-export default AllLeadsPage;
+export default AllLeadsForm;

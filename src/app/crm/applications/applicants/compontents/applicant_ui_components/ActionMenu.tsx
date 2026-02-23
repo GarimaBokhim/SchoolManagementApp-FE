@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Edit, Trash, Eye, MoreVertical, UserCheck } from 'lucide-react';
-import { Applicant } from '../types';
+import { Applicant } from '../../types';
+
 
 interface ActionMenuProps {
   applicant: Applicant;
