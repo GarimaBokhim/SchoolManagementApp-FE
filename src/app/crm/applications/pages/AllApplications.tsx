@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Students from "../student/components/allstudents";
-import AllApplicantsPage from "../applicants/AllApplicantsPage";
 import AllApplicants from "../applicants/pages/All";
 import AllLeads from "../leads/pages/AllLeads";
-
+import AllCrmStudents from "../crm_students/pages/All";
 
 
 const AllApplications = () => {
@@ -23,7 +21,7 @@ const AllApplications = () => {
         return <AllLeads />;
 
       case "student":
-        return <Students />;
+        return <AllCrmStudents />;
 
       case "applicant":
         return <AllApplicants />;

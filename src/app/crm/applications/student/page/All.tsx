@@ -1,11 +1,11 @@
 "use client";
 
-import AllStudent from "./Allstudentpage";
+import AllStudentForm from "@/app/enduser/(StudentManagement)/Student/_components/AllStudentForm";
 
 const AllStudents = () => {
   return (
     <div className="dark:bg-[#2a2b2e]  w-[98%]">
-      <AllStudent />
+      <AllStudentForm />
     </div>
   );
 };
