@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
+import React, { useState } from "react";
+import {  SubmitHandler, UseFormReturn } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { InputElement } from "@/components/Input/InputElement";
@@ -17,12 +17,9 @@ interface props {
 }
 
 const AddschoolAward = ({ visible, onClose, form }: props) => {
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-
   const {
     handleSubmit,
     reset,
-    setValue,
   } = form;
 
   const addAwardMutation = useAddSchoolAward();
@@ -32,8 +29,8 @@ const AddschoolAward = ({ visible, onClose, form }: props) => {
       await addAwardMutation.mutateAsync(formData);
       toast.success("Student award added successfully!");
       reset();
-      setSelectedStudentId(null);
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || "Failed to add student award.");
     }

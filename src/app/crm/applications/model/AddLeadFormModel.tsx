@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
@@ -267,8 +268,8 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                   className={inputClass}
                 >
                   <option value={1}>Plus Two / Intermediate</option>
-                  <option value={2}>Bachelor's Degree</option>
-                  <option value={3}>Master's Degree</option>
+                  <option value={2}>{`Bachelor's Degree`}</option>
+                  <option value={3}>{`Master's Degree`}</option>
                 </select>
               </div>
 

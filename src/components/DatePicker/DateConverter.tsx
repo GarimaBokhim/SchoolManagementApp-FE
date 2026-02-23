@@ -12,6 +12,7 @@ const DateConverter = ({ date }: Props) => {
 
   useEffect(() => {
     if (!date || date.trim() === "") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConvertedDate("");
       return;
     }

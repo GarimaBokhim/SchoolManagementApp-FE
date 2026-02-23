@@ -1,5 +1,5 @@
 "use client";
-import { School, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useGenerateMarkSheet } from "../hooks";
 import { useGetAllSubjects } from "../../Subject/hooks";
 import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
@@ -7,7 +7,8 @@ import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 import { useRef, useEffect } from "react";
 import { useGetAllExams } from "../../Exam/hooks";
 import { useGetAllClass } from "../../Class/hooks";
-
+import { IClass } from "../../Class/types/IClass";
+import { IExam } from "../../Exam/types/IExams";
 
 interface Props {
   studentId: string;
@@ -19,8 +20,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId);
   const { data: allSubject } = useGetAllSubjects();
   const { data: StudentData } = useGetStudentById(studentId);
-  const { data: allExam} = useGetAllExams();
-  const {data:allclass} = useGetAllClass();
+  const { data: allExam } = useGetAllExams();
+  const { data: allclass } = useGetAllClass();
 
   const storedUser = localStorage.getItem("userDetails");
   let schoolId = "";
@@ -35,7 +36,9 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
   const { data: SchoolData } = useGetSchoolById(schoolId);
   const modalRef = useRef<HTMLDivElement>(null);
-const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
+  const ExamName = allExam?.Items.find(
+    (exam: IExam) => exam.id === examId,
+  )?.name;
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       onClose();
@@ -49,7 +52,6 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
     };
   }, []);
 
- 
   const handlePrint = () => {
     const content = document.getElementById("marksheet")?.outerHTML;
     if (!content) return;
@@ -98,31 +100,25 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
         >
           <div className="border-4 border-sky-500 p-3 sm:p-5">
             <header className="pb-4 mb-2 relative">
-            <div className="flex items-start justify-center w-full">
-          
-              {StudentData?.studentImg && (
-                <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
-                  <img
-                    src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
-                    alt="Student Image"
-                    className="w-full h-full object-cover"
-                  />
+              <div className="flex items-start justify-center w-full">
+                {StudentData?.studentImg && (
+                  <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                    <img
+                      src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                      alt="Student Image"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
+                  <p className="text-sm">{SchoolData?.address}</p>
+                  <p className="font-semibold mt-2 underline">{ExamName}</p>
+                  <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
                 </div>
-              )}
-
-              <div className="text-center">
-                <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
-                <p className="text-sm">{SchoolData?.address}</p>
-                <p className="font-semibold mt-2 underline">
-                  {ExamName}
-                </p>
-                <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
               </div>
-            </div>
-          </header>
-
-
-
+            </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
               <p className="flex">
@@ -133,10 +129,15 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
                 <strong>Section:</strong> {StudentData?.classSectionId}
               </p>
               <p className="flex">
-                <strong>Class:</strong>{allclass?.Items.find((c : any) => c.id === StudentData?.classId)?.name}
+                <strong>Class:</strong>
+                {
+                  allclass?.Items.find(
+                    (c: IClass) => c.id === StudentData?.classId,
+                  )?.name
+                }
               </p>
               <p>
-                <strong>Roll No:</strong> 
+                <strong>Roll No:</strong>
               </p>
             </div>
 
@@ -223,18 +224,12 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
               </table>
 
               <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
-                <p className=" inline-block px-2">
-                  OBT.MARKS :
-                </p>
+                <p className=" inline-block px-2">OBT.MARKS :</p>
                 <strong>{data?.totalObtainedMarks}</strong>
                 <div>
-                  <p className=" inline-block px-2">
-                  GPA :
-                </p>
-                  <strong>
-                    {data?.GPA}
-                  </strong>
-                 <strong>({data?.grade})</strong>
+                  <p className=" inline-block px-2">GPA :</p>
+                  <strong>{data?.GPA}</strong>
+                  <strong>({data?.grade})</strong>
                 </div>
               </div>
             </div>
@@ -244,13 +239,13 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
                 <strong>Remarks:</strong> {data?.remarks}
               </p>
               <p className="flex">
-                <strong>DATE OF ISSUE:</strong>{"date of issue yaha"}
+                <strong>DATE OF ISSUE:</strong>
+                {"date of issue yaha"}
               </p>
               <p className="flex justify-end gap-4">
                 <strong>Total Running Days:</strong>
                 <strong>Total Absent Days</strong>
                 <strong> Total Present Days</strong>
-
               </p>
             </div>
 

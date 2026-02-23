@@ -74,6 +74,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         districtId: StudentData?.districtId ?? 0,
         wardNumber: StudentData?.wardNumber ?? 0,
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
       setSelectedParenId(StudentData.parentId);

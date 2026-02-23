@@ -32,9 +32,6 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { PrintButton } from "@/components/Buttons/PrintButton";
-import { useRouter } from "next/navigation";
-import AllPrintFormForStudents from "./PrintFormForStudentFee";
 import ImportButtonForm from "@/components/Buttons/importbutton";
 import ExportButtonForm from "@/components/Buttons/exportbuttonform";
 import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
@@ -96,7 +93,6 @@ const AllStudentForm = () => {
       endDate: "",
     },
   });
-  const router = useRouter();
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const { data: allClass } = useGetAllClass();
@@ -369,10 +365,8 @@ const AllStudentForm = () => {
                                 }
                               />
                             )}
-                            <PrintIDCardButton
-                              StudentId={student.id ?? ""}
-                            />
-                            
+                            <PrintIDCardButton StudentId={student.id ?? ""} />
+
                             <EditButton
                               button={
                                 <ButtonElement

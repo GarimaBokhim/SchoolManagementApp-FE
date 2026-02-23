@@ -1,5 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
-import { IStudent } from "../types/IStudents";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useFilterStudentByDate } from "../hooks";
 

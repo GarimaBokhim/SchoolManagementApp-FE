@@ -88,7 +88,7 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
         setDetail(null);
         const response = await api.get<LeadDetail>(`/api/Enrolments/Inquiry/${userId}`);
         setDetail(response.data);
-      } catch (err: any) {
+      } catch (err) {
         setError('Failed to load lead details.');
       } finally {
         setLoading(false);

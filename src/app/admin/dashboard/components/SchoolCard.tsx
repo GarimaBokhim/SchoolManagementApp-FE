@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 import { IInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/types/IInstitution";
 import { LocateIcon, Mail, Phone } from "lucide-react";

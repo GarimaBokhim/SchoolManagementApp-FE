@@ -9,8 +9,7 @@ import { IFeeType } from "../types/IFeeType";
 import { useAddFeeType } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
+
 type Props = {
   form: UseFormReturn<IFeeType>;
   onClose: () => void;

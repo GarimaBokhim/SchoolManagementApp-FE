@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
@@ -247,8 +248,8 @@ const AddLeadPage = () => {
                   className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
                   <option value={1}>High School</option>
-                  <option value={2}>Bachelor's Degree</option>
-                  <option value={3}>Master's Degree</option>
+                  <option value={2}>{`Bachelor's Degree`}</option>
+                  <option value={3}>{`Master's Degree`}</option>
                   <option value={4}>PhD</option>
                   <option value={5}>Diploma</option>
                   <option value={6}>Other</option>

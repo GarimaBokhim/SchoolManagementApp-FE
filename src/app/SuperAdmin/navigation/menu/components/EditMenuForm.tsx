@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { IMenu } from "../types/IMenu";

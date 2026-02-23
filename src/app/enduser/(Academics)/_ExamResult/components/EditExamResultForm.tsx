@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
@@ -31,7 +32,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null
+    null,
   );
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>();
   useEffect(() => {
@@ -66,7 +67,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     setSelectedStudentId(ExamResultData.studentId);
 
     replace(ExamResultData.marksObtained ?? []);
-  }, [ExamResultData]);
+  }, [ExamResultData, reset, replace]);
 
   const handleClose = () => {
     reset();
@@ -85,7 +86,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
         {
           loading: "Updating Exam Result...",
           success: "Successfully Updated Exam Result",
-        }
+        },
       );
 
       handleClose();
@@ -97,21 +98,21 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
   return (
     <div
-  className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
              bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
->
-  <div
-    className="bg-[#FBFBFB] dark:bg-[#27272a]
+    >
+      <div
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
                w-full h-full max-w-[90vw] max-h-full rounded-lg
                overflow-auto p-10 shadow-lg"
-  >
+      >
         <fieldset>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Edit Exam Result
             </h1>
             <button
-              type="button" 
+              type="button"
               onClick={handleClose}
               className="text-red-400 text-2xl hover:text-red-500"
             >
@@ -188,7 +189,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                       options={allSubject ?? []}
                       selected={
                         allSubject?.find(
-                          (subj) => subj.id === selectedSubjectIds[index]
+                          (subj) => subj.id === selectedSubjectIds[index],
                         ) || null
                       }
                       onSelect={(subject) => {
@@ -244,7 +245,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   })
                 }
               />
-
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
