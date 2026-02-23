@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FilterFormData, UserProfile, UserProfileResponse } from '../types';
+import { FilterFormData, Lead, UserProfile, UserProfileResponse } from '../types';
 import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 
 export const useLeadFilters = (
   setParams: (params: string) => void,
-  setPaginationParams: (updater: (prev: any) => any) => void
+  setPaginationParams: (updater: (prev: any) => any) => void,
+  setSingleLead: (lead: Lead | null) => void  // ✅ new
 ) => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
@@ -64,17 +65,44 @@ export const useLeadFilters = (
     }
   };
 
-  // ✅ Fixed: now actually triggers the filter after selecting a profile
-  const handleProfileSelected = (profile: UserProfile | null) => {
+  // ✅ On profile select: build a single Lead from UserProfile and display it directly
+  const handleProfileSelected = async (profile: UserProfile | null) => {
     if (!profile) return;
     setSelectedProfile(profile);
     filterForm.setValue('firstName', profile.fullName);
-    handleFilterSubmit(filterForm.getValues());
+
+    try {
+      // Fetch enrolmentType for the selected user
+      let enrolmentType = profile.enrolmentType ?? 0;
+      try {
+        const res = await api.get(`/api/Enrolments/UserProfile/${profile.id}`);
+        enrolmentType = res.data?.enrolmentType ?? enrolmentType;
+      } catch {
+        // fallback to profile.enrolmentType
+      }
+
+      const singleLead: Lead = {
+        id: profile.id,
+        userId: profile.id,
+        name: profile.fullName || 'N/A',
+        email: profile.email || 'N/A',
+        phone: profile.contactNumber || 'N/A',
+        source: profile.source || 'website',
+        educationLevel: 0,
+        completionYear: 'N/A',
+        enrolmentType,
+      };
+
+      setSingleLead(singleLead); // ✅ directly inject into table
+    } catch (error) {
+      toast.error('Failed to load user details');
+    }
   };
 
   const onClearClick = () => {
     setParams("");
     setSelectedProfile(undefined);
+    setSingleLead(null); // ✅ clear single lead override
     filterForm.reset();
     setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
     toast.success('Filters cleared');

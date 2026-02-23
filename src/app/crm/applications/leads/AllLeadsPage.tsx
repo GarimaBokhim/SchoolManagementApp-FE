@@ -24,6 +24,9 @@ const AllLeadsPage = () => {
 
   const dateFilterRef = useRef<DateRangeFilterRef>(null);
 
+  // ✅ Single lead override: when a user is picked from search, show only this lead
+  const [singleLead, setSingleLead] = useState<Lead | null>(null);
+
   const paginationForm = useForm<SearchParam>({
     defaultValues: {
       pageSize: 10,
@@ -57,7 +60,7 @@ const AllLeadsPage = () => {
     fetchUsers,
     handleProfileSelected,
     onClearClick,
-  } = useLeadFilters(setParams, setPaginationParams);
+  } = useLeadFilters(setParams, setPaginationParams, setSingleLead); // ✅ pass setSingleLead
 
   const { convertingId, handleDelete, handleConvert } = useLeadMutations(fetchLeads);
 
@@ -116,6 +119,9 @@ const AllLeadsPage = () => {
     setSelectedUserId(null);
   };
 
+  // ✅ If a single lead is selected from search, show only that; otherwise show full list
+  const displayedLeads = singleLead ? [singleLead] : leads;
+
   if (error) {
     return (
       <div className="p-6 space-y-6">
@@ -153,8 +159,9 @@ const AllLeadsPage = () => {
             />
           )}
 
+          {/* ✅ Pass displayedLeads instead of leads */}
           <LeadsTable
-            leads={leads}
+            leads={displayedLeads}
             loading={loading}
             currentPage={currentPage}
             pageSize={paginationParams.pageSize}
@@ -191,7 +198,8 @@ const AllLeadsPage = () => {
           />
         </div>
 
-        {!loading && leads.length > 0 && (
+        {/* ✅ Hide pagination when a single lead is displayed */}
+        {!loading && !singleLead && leads.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
