@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { X } from "lucide-react";
-import { useGenerateCertificateByStudent } from "../hooks";
 
 interface Props {
   studentId: string;
@@ -9,11 +8,7 @@ interface Props {
   examId: string;
 }
 
-const BlankCertificateForm: React.FC<Props> = ({studentId, examId, onClose }) => {
-      const { data: certificateData } = useGenerateCertificateByStudent(
-        studentId,
-        examId
-      );
+const BlankCertificateForm: React.FC<Props> = ({ onClose }) => {
   const handlePrint = () => {
     const content = document.getElementById("certificate")?.outerHTML;
     if (!content) return;

@@ -54,46 +54,44 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
   const navigate = useRouter();
   const [activeRole, setActiveRole] = useState<string | undefined>("");
   const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
-    ""
+    "",
   );
   let role = "";
-  const [storedUser, setStoredUser] = useState<any>(null);
+  const [storedUser, setStoredUser] = useState<any>(() => {
+    if (typeof window === "undefined") return null;
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("userDetails");
-      if (user) {
-        try {
-          const parsed = JSON.parse(user);
-          setStoredUser(parsed);
-        } catch (err) {
-          console.error("Failed to parse user details:", err);
-        }
-      }
+    const user = localStorage.getItem("userDetails");
+    if (!user) return null;
+
+    try {
+      return JSON.parse(user);
+    } catch (err) {
+      console.error("Failed to parse user details:", err);
+      return null;
     }
-  }, []);
+  });
 
   role = storedUser?.role || "";
 
- const withRolePrefix = (path: string) => {
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const withRolePrefix = (path: string) => {
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
-  const lowerRole = role?.toLowerCase();
+    const lowerRole = role?.toLowerCase();
 
-  let prefix = "";
+    let prefix = "";
 
-  if (lowerRole === "superadmin") prefix = "superadmin";
-  else if (lowerRole === "admin") prefix = "admin";
-  else if (lowerRole === "crm") prefix = "crm";
-  else if (lowerRole === "enduser") prefix = "enduser";
-  else prefix = lowerRole;
+    if (lowerRole === "superadmin") prefix = "superadmin";
+    else if (lowerRole === "admin") prefix = "admin";
+    else if (lowerRole === "crm") prefix = "crm";
+    else if (lowerRole === "enduser") prefix = "enduser";
+    else prefix = lowerRole;
 
-  return `/${prefix}${cleanPath}`;
-};
+    return `/${prefix}${cleanPath}`;
+  };
 
   const { data: menuStatus, refetch } = useGetMenuStatus(
     activeSubModule,
-    activeRole
+    activeRole,
   );
   useEffect(() => {
     if (role === "superadmin" || role === "developeruser") {
@@ -220,7 +218,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
 
   const handleSelectSubModule = (
     id: string | undefined,
-    role: string | undefined
+    role: string | undefined,
   ) => {
     setActiveSubModule(id);
     setActiveRole(role);
@@ -263,7 +261,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
             const hasSubItems = item.subItems.length > 0;
             const isOpenSection = activeSection === item.key;
             const hasActiveChild = item.subItems.some(
-              (child) => pathAfterFirst === child.targetUrl
+              (child) => pathAfterFirst === child.targetUrl,
             );
             const active = pathAfterFirst === item.url;
 
@@ -355,7 +353,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                           onClick={() =>
                             handleSelectSubModule(
                               subItem.subModulesId!,
-                              subItem.role
+                              subItem.role,
                             )
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors

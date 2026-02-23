@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "./index.css"
 import {  Editor, EditorContent } from '@tiptap/react'  
 

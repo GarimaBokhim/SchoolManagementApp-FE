@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/Portal.tsx
 import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';

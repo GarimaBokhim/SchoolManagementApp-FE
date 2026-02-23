@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from "react";
 import { useGetPartiesDetails } from "../hooks/index";
 import Pagination from "@/components/Pagination";

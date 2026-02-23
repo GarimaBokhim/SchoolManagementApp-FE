@@ -28,6 +28,7 @@ const AddHistoryForm = ({ form, onClose }: Props) => {
   useEffect(() => {
     if (selectedSchoolItem) {
       console.log(selectedSchoolItem);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrevItemStatus(selectedSchoolItem.itemStatus);
     }
   }, [selectedSchoolItem]);

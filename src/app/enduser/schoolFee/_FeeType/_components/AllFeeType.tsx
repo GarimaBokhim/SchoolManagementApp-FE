@@ -60,20 +60,6 @@ const AllFeeTypeForm = () => {
       endDate: "",
     },
   });
-  const months = [
-    { id: 1, name: "Baisakh" },
-    { id: 2, name: "Jestha" },
-    { id: 3, name: "Ashadh" },
-    { id: 4, name: "Shrawan" },
-    { id: 5, name: "Bhadra" },
-    { id: 6, name: "Ashwin" },
-    { id: 7, name: "Kartik" },
-    { id: 8, name: "Mangsir" },
-    { id: 9, name: "Poush" },
-    { id: 10, name: "Magh" },
-    { id: 11, name: "Falgun" },
-    { id: 12, name: "Chaitra" },
-  ];
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const onSubmit: SubmitHandler<IFilterFeeType> = async (formData) => {

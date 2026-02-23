@@ -77,7 +77,7 @@ export const ViewStudentDetailModal = ({
           `/api/Enrolments/CRMStudents/${studentUserId}`
         );
         setDetail(response.data);
-      } catch (err: any) {
+      } catch (err) {
         setError("Failed to load student details.");
       } finally {
         setLoading(false);

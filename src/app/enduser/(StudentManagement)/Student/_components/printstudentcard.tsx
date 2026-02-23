@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import React, { forwardRef, useEffect, useState } from "react";
 import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";

@@ -7,12 +7,12 @@ import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks';
 import Pagination from '@/components/Pagination';
-import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
+import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 
 import { useApplicants } from './hooks/useApplicants';
 import { useApplicantMutations } from './hooks/useApplicantMutations';
 import { useApplicantFilters } from './hooks/useApplicantFilters';
-import { Applicant, ConvertToStudentPayload, SearchParam } from './types';
+import { Applicant, SearchParam } from './types';
 import { ApplicantsHeader } from './compontents/ApplicantsHeader';
 import { ApplicantsFilter } from './compontents/ApplicantsFilter';
 import { ApplicantsTable } from './compontents/ApplicantsTable';
@@ -38,7 +38,6 @@ const AllApplicantsPage = () => {
     setPaginationParams,
     totalPages,
     currentPage,
-    params,
     setParams,
     fetchApplicants,
   } = useApplicants(allSchools);
@@ -59,9 +58,7 @@ const AllApplicantsPage = () => {
 
   // ── Mutations ──
   const {
-    convertingId,
     handleDelete,
-    handleConvert,
     handleEdit,
   } = useApplicantMutations(fetchApplicants);
 

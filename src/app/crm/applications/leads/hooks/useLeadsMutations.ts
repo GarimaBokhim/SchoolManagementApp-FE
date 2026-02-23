@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { api } from '@/utils/instance';
 import { ConvertToApplicantPayload, Lead } from '../types';

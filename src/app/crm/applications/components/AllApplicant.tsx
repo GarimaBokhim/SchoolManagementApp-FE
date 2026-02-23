@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -164,6 +165,7 @@ const ConvertToStudentModal = ({ isOpen, onClose, selectedApplicant, onSuccess }
       Toast.success(`Successfully converted to student!`);
       onSuccess();
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       Toast.error(`Error: ${error.response?.data?.message || error.message || 'Failed to convert to student'}`);
     } finally {

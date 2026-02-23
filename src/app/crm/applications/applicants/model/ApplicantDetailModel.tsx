@@ -67,6 +67,7 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
         setDetail(null);
         const response = await api.get<ApplicantDetail>(`/api/Enrolments/Applicants/${applicantId}`);
         setDetail(response.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError('Failed to load applicant details.');
       } finally {

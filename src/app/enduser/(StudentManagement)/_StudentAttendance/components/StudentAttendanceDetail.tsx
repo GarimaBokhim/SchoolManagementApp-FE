@@ -32,7 +32,7 @@ const MonthList = [
   { name: "Chaitra", value: 12 },
 ];
 const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
-  if (!visible) return null;
+  
   const form = useForm<IFilterAttendance>({
     defaultValues: {
       academicTeamId: "",
@@ -60,6 +60,7 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
     setSelectedMonth(0);
     setSelectedYear("");
   };
+  if (!visible) return null;
   const onSubmit: SubmitHandler<IFilterAttendance> = async (formData) => {
     clearError();
     try {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
 import { Lead, ApiResponse } from '../types';
