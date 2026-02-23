@@ -7,16 +7,18 @@ import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import Pagination from '@/components/Pagination';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { ConvertToApplicantPayload, Lead, SearchParam } from '../types';
+
 import { useLeads } from '../hooks/useLeads';
 import { useLeadFilters } from '../hooks/useLeadFilters';
 import { useLeadMutations } from '../hooks/useLeadsMutations';
-import AddLeadModal from '../../model/AddLeadFormModel';
-import ConvertToApplicantModal from '../../model/ConvertToApplicationModel';
 import { LeadDetailModal } from './LeadDetailModel';
 import { LeadsHeader } from './lead_ui_components/LeadsHeader';
 import { LeadsFilter } from './lead_ui_components/LeadsFilter';
 import { LeadsTable } from './lead_ui_components/LeadsTable';
+import ConvertToApplicantModal from '../pages/Convert';
+import AddLeadModal from '../pages/Add';
+import { ConvertToApplicantPayload, Lead, SearchParam } from '../types/ILeads';
+
 
 
 

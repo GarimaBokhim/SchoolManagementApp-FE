@@ -1,3 +1,5 @@
+// src/app/crm/applications/leads/types/ILeads.tsx
+
 export interface Lead {
   id: string;
   userId: string;
@@ -7,7 +9,13 @@ export interface Lead {
   source: string;
   educationLevel: number;
   completionYear: string;
-  enrolmentType: number; // ✅ added
+  enrolmentType: number;
+}
+
+export interface SelectedLead {
+  id: string;
+  name: string;
+  userId: string;
 }
 
 export interface ApiResponse {
@@ -25,7 +33,7 @@ export interface ApiResponse {
     previousAcademicQualification: string;
     source: string;
     feedBackOrSuggestion: string;
-    enrolmentType?: number; // ✅ added (optional in case backend doesn't return it)
+    enrolmentType?: number;
   }>;
   TotalItems: number;
   PageIndex: number;
@@ -61,6 +69,11 @@ export interface ConvertToApplicantPayload {
   targetCountry: string;
 }
 
+export interface ConvertToApplicantData {
+  passportNo: string;
+  targetCountry: string;
+}
+
 export interface FilterFormData {
   startDate: string;
   endDate: string;
@@ -71,4 +84,25 @@ export interface SearchParam {
   pageSize: number;
   pageIndex: number;
   isPagination: boolean;
+}
+
+// ── Convert modal props ──
+export interface ConvertToApplicantFormProps {
+  selectedLead: SelectedLead;
+  conversionData?: ConvertToApplicantData;
+  convertingId?: string | null;
+  onInputChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onSubmit?: (e: React.FormEvent) => void;
+  onClose: () => void;
+}
+
+export interface ConvertToApplicantModalProps {
+  isOpen: boolean;
+  onClose?: () => void;
+  selectedLead: SelectedLead | null;
+  onSuccess?: () => void;
+  conversionData?: ConvertToApplicantData;
+  convertingId?: string | null;
+  onInputChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onSubmit?: (e: React.FormEvent) => void;
 }

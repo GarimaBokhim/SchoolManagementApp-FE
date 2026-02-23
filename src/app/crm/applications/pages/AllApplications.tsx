@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AllApplicants from "../applicants/pages/All";
-import AllLeads from "../leads/pages/AllLeads";
+import AllLeads from "../leads/pages/All";
 import AllCrmStudents from "../crm_students/pages/All";
 
 
