@@ -308,13 +308,7 @@ const AllApplicantsForm = () => {
                             onClick={() => handleConvertClick(applicant)}
                             className="!text-xs font-bold !bg-purple-500"
                           />
-                          {canDelete && (
-                            <DeleteButton
-                              onConfirm={() => handleDelete(applicant.id)}
-                              headerText={<Trash />}
-                              content="Are you sure you want to delete this Applicant?"
-                            />
-                          )}
+                          
                           {canEdit && (
                             <EditButton button={buttonElement(applicant)} />
                           )}

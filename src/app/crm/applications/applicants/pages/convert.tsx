@@ -1,26 +1,21 @@
-// src/app/crm/applications/applicants/pages/ConvertToStudent.tsx
 'use client';
 
-import { useForm } from "react-hook-form";
 import { UserCheck, X } from 'lucide-react';
-import { ConvertToStudentData, ConvertToStudentModalProps } from "../types/IApplicants";
-import ConvertToStudentForm from "../compontents/ConvertApplicantForm";
+import {
+  ConvertToStudentData,
+  ConvertToStudentModalProps,
+} from '../types/IApplicants';
+import ConvertToStudentForm from '../compontents/ConvertToStudentForm';
 
-const ConvertToStudentModal = ({ 
-  isOpen, 
-  onClose, 
+const ConvertToStudentModal = ({
+  isOpen,
+  onClose,
   selectedApplicant,
   conversionData,
   convertingId,
   onInputChange,
-  onSubmit
+  onSubmit,
 }: ConvertToStudentModalProps) => {
-  const form = useForm<ConvertToStudentData>({
-    defaultValues: {
-      universityName: "",
-      visaId: "",
-    },
-  });
 
   const handleOnClose = () => {
     if (onClose) onClose();
@@ -47,6 +42,7 @@ const ConvertToStudentModal = ({
             <UserCheck size={20} className="text-purple-600" />
             Convert to Student
           </h1>
+
           <button
             type="button"
             onClick={handleOnClose}
@@ -57,13 +53,11 @@ const ConvertToStudentModal = ({
         </div>
 
         <ConvertToStudentForm
-          form={form}
           selectedApplicant={selectedApplicant}
           conversionData={conversionData}
           convertingId={convertingId}
           onInputChange={onInputChange}
           onSubmit={onSubmit}
-          onClose={handleOnClose}
         />
       </div>
     </div>
