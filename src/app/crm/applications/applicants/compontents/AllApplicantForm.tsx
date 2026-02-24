@@ -116,7 +116,7 @@ const AllApplicantsForm = () => {
     setPaginationParams(params);
   };
 
-  // ✅ Action handlers
+  // Action handlers
   const handleViewClick = (applicant: Applicant) => {
     setSelectedApplicantId(applicant.userId ?? applicant.id);
     setShowDetailModal(true);
