@@ -236,7 +236,6 @@ const AllTemplateForm = ({ onDataFromChild }: Props) => {
                     <th className="px-4 py-3 text-left">Template Name</th>
                     <th className="px-4 py-3 text-left">Template Subject</th>
                     <th className="px-4 py-3 text-left">Template Type</th>
-                    <th className="px-4 py-3 text-left">Template Html Path</th>
                     <th className="px-4 py-3 text-left">Template Version</th>
                     <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                   </tr>
@@ -260,7 +259,6 @@ const AllTemplateForm = ({ onDataFromChild }: Props) => {
                           <td className="py-3 px-4 text-center">{Template.templateName}</td>
                           <td className="py-3 px-4 text-center">{Template.templateSubject}</td>
                           <td className="py-3 px-4 text-center">{Template.templateType}</td>
-                          <td className="py-3 px-4 text-center">{Template.htmlTemplate}</td>
                           <td className="py-3 px-4 text-center">
                             {Template.templateVersion}
                           </td>

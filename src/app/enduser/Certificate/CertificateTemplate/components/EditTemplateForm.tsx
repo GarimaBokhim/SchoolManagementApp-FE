@@ -9,12 +9,15 @@ import { ITemplate } from "../types/ITemplate";
 import { useEditTemplate, useGetTemplateById } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+import TextEditor from "@/components/Input/TextEditor";
 type Props = {
   form: UseFormReturn<ITemplate>;
   onClose: () => void;
   TemplateId: string;
 };
 const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
+     const { setValue, watch } = form;
+   const details = watch("htmlTemplate");
   const editTemplate = useEditTemplate();
   const { handleError, clearError } = useErrorHandler();
   const { data: TemplateData } = useGetTemplateById(TemplateId);
@@ -101,13 +104,7 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
                 placeholder="Enter Template Type"
                 required
               />
-              <InputElement
-                label="html Template"
-                form={form}
-                name="htmlTemplate"
-                placeholder="Enter Html Template"
-                required
-              />
+              
               <InputElement
                 label="Template Version"
                 form={form}
@@ -116,6 +113,10 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
                 required
               />
             </div>
+            <TextEditor
+              content={details}
+              onChange={(content) => setValue("htmlTemplate", content)}
+            />
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />
             </div>

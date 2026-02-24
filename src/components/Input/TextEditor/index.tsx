@@ -33,7 +33,7 @@ interface RichTextEditorProps {
   onChange: (content: string) => void;
 }
 
-const TextEditor = ({ content, onChange }: RichTextEditorProps) => {
+const TextEditor = ({  onChange }: RichTextEditorProps) => {
 
 
   const editor = useEditor({

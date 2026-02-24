@@ -144,13 +144,11 @@ const AddStudentAward = ({ visible, onClose, form }: props) => {
             />
             </div>
 
-            {/* Text Editor */}
             <TextEditor
               content={details}
               onChange={(content) => setValue("contentHtml", content)}
             />
 
-            {/* Buttons */}
             <div className="flex justify-center gap-4 mt-4">
               <ButtonElement
                 type="submit"
