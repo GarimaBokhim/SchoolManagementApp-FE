@@ -1,11 +1,12 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
-import AllAcademicPrograms from "./pages/all";
+import AllAcademicsProgram from "./page/All";
+
 
 
 export default function DashboardPageForAdmin() {
   return (
     <LayoutWrapper title="Academic Programs">
-      <AllAcademicPrograms />
+      <AllAcademicsProgram />
     </LayoutWrapper>
   );
 }

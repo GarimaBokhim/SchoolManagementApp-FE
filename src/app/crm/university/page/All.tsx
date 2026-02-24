@@ -6,7 +6,7 @@ import AllIntake from "../intake/pages/All";
 import AllRequirements from "../requirements/All";
 
 
-const AllAcademicPrograms = () => {
+const AllAcademicsProgram = () => {
   const tabs = [
     { id: "university", label: "University", color: "gray" },
     { id: "course", label: "Course", color: "gray" },
@@ -80,4 +80,4 @@ const AllAcademicPrograms = () => {
   );
 };
 
-export default AllAcademicPrograms;
+export default AllAcademicsProgram;
