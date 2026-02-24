@@ -42,7 +42,7 @@ export const StudentDetailModal = ({ isOpen, onClose, studentId }: StudentDetail
         setLoading(true);
         setError(null);
         setDetail(null);
-        const response = await api.get<StudentDetail>(`/api/Enrolments/Students/${studentId}`);
+        const response = await api.get<StudentDetail>(`/api/Enrolments/CRMStudents/${studentId}`);
         setDetail(response.data);
       } catch {
         setError('Failed to load student details.');

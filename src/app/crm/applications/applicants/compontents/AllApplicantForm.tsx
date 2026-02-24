@@ -7,8 +7,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Eye, Filter, Plus, RotateCcw, UserCheck } from "lucide-react";
+import { Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -20,13 +19,17 @@ import { useApplicants } from "../hooks/useApplicants";
 import { useApplicantMutations } from "../hooks/useApplicantMutations";
 import { ApplicantDetailModal } from "../model/ApplicantDetailModel";
 import ConvertToStudentModal from "../pages/convert";
+
 import {
   Applicant,
+  ConvertToStudentData,
+  ConvertToStudentPayload,
   FilterFormData,
   SearchParam,
   SelectedApplicant,
   UserProfile,
 } from "../types/IApplicants";
+import { ActionMenu } from "./applicant_ui_components/ActionMenu";
 
 const AllApplicantsForm = () => {
   const { menuStatus } = usePermissions();
@@ -37,7 +40,7 @@ const AllApplicantsForm = () => {
   const {
     applicants,
     loading,
-    isFetching,   // ← new: subtle overlay during filter/page changes
+    isFetching,
     error,
     paginationParams,
     setPaginationParams,
@@ -47,14 +50,20 @@ const AllApplicantsForm = () => {
     fetchApplicants,
   } = useApplicants(allSchools);
 
-  const { handleDelete } = useApplicantMutations(fetchApplicants);
+  const { handleDelete, handleConvert, convertingId } = useApplicantMutations(fetchApplicants);
 
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
   const [, setLocalParams] = useState("");
 
+  // Modal states
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<SelectedApplicant | null>(null);
+
+  const [conversionData, setConversionData] = useState<ConvertToStudentData>({
+    universityName: "",
+    visaId: "",
+  });
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
@@ -107,25 +116,63 @@ const AllApplicantsForm = () => {
     setPaginationParams(params);
   };
 
-  const handleConvertClick = (applicant: Applicant) => {
-    setSelectedApplicant({ ...applicant, name: applicant.fullName ?? "" });
-    setShowConvertModal(true);
-  };
-
+  // ✅ Action handlers
   const handleViewClick = (applicant: Applicant) => {
     setSelectedApplicantId(applicant.userId ?? applicant.id);
     setShowDetailModal(true);
   };
 
-  const buttonElement = (applicant: Applicant) => (
-    <ButtonElement
-      icon={<Edit size={14} />}
-      type="button"
-      text=""
-      onClick={() => handleViewClick(applicant)}
-      className="!text-xs font-bold !bg-teal-500"
-    />
-  );
+  const handleEditClick = (applicant: Applicant) => {
+    Toast.info("Edit feature coming soon!");
+    // Implement your edit logic here
+    console.log("Edit applicant:", applicant);
+  };
+
+  const handleConvertClick = (applicant: Applicant) => {
+    setConversionData({ universityName: "", visaId: "" });
+    setSelectedApplicant({ 
+      ...applicant, 
+      name: applicant.fullName ?? "",
+      userId: applicant.userId ?? applicant.id // Ensure userId is set
+    });
+    setShowConvertModal(true);
+  };
+
+  const handleDeleteClick = async (id: string) => {
+    // Find the applicant by id to pass to handleDelete
+    const applicant = applicants.find(a => a.id === id || a.userId === id);
+    if (applicant) {
+      await handleDelete(applicant);
+    }
+  };
+
+  // Conversion form handlers
+  const handleConversionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setConversionData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleConvertSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedApplicant) return;
+    const payload: ConvertToStudentPayload = {
+      userId: selectedApplicant.userId,
+      universityName: conversionData.universityName,
+      visaId: conversionData.visaId,
+    };
+    const success = await handleConvert(selectedApplicant as unknown as Applicant, payload);
+    if (success) {
+      setShowConvertModal(false);
+      setConversionData({ universityName: "", visaId: "" });
+    }
+  };
+
+  const handleCloseConvertModal = () => {
+    if (convertingId) return;
+    setShowConvertModal(false);
+    setConversionData({ universityName: "", visaId: "" });
+    setSelectedApplicant(null);
+  };
 
   if (!allSchools) {
     return (
@@ -167,7 +214,7 @@ const AllApplicantsForm = () => {
                   icon={<Plus size={24} />}
                   type="button"
                   text="Add New Applicant"
-                  onClick={() => {}}
+                  onClick={() => Toast.info("Add new applicant feature coming soon!")}
                   className="!text-md !font-bold"
                 />
               )}
@@ -175,7 +222,7 @@ const AllApplicantsForm = () => {
           </div>
 
           {openFilter && (
-            <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -228,7 +275,6 @@ const AllApplicantsForm = () => {
             </div>
           )}
 
-          {/* Table wrapper — old data stays visible while isFetching, overlaid with a spinner */}
           <div className="overflow-x-auto relative">
             {isFetching && (
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-black/30 flex items-center justify-center backdrop-blur-[1px]">
@@ -249,12 +295,11 @@ const AllApplicantsForm = () => {
                   <th className="px-4 py-3 text-left">Target Country</th>
                   <th className="px-4 py-3 text-left">School</th>
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-center w-[200px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  // Only shown on the very first load before any data exists
                   <tr>
                     <td colSpan={8} className="p-4 text-center text-gray-500">
                       Loading Applicants...
@@ -286,25 +331,16 @@ const AllApplicantsForm = () => {
                         </span>
                       </td>
                       <td className="py-1 px-4">
-                        <div className="flex justify-center gap-2">
-                          <ButtonElement
-                            icon={<Eye size={14} />}
-                            type="button"
-                            text=""
-                            onClick={() => handleViewClick(applicant)}
-                            className="!text-xs font-bold !bg-blue-500"
-                          />
-                          <ButtonElement
-                            icon={<UserCheck size={14} />}
-                            type="button"
-                            text=""
-                            onClick={() => handleConvertClick(applicant)}
-                            className="!text-xs font-bold !bg-purple-500"
-                          />
-                          {canEdit && (
-                            <EditButton button={buttonElement(applicant)} />
-                          )}
-                        </div>
+                        {/* ✅ Use ActionMenu component */}
+                        <ActionMenu
+                          applicant={applicant}
+                          onView={handleViewClick}
+                          onEdit={handleEditClick}
+                          onConvert={handleConvertClick}
+                          onDelete={handleDeleteClick}
+                          canEdit={canEdit}
+                          canDelete={true} // You can add a canDelete permission if needed
+                        />
                       </td>
                     </tr>
                   ))
@@ -319,12 +355,18 @@ const AllApplicantsForm = () => {
             </table>
           </div>
 
-          <ConvertToStudentModal
-            isOpen={showConvertModal}
-            onClose={() => setShowConvertModal(false)}
-            selectedApplicant={selectedApplicant}
-            onSuccess={fetchApplicants}
-          />
+          {showConvertModal && selectedApplicant && (
+            <ConvertToStudentModal
+              isOpen={showConvertModal}
+              onClose={handleCloseConvertModal}
+              selectedApplicant={selectedApplicant}
+              conversionData={conversionData}
+              convertingId={convertingId}
+              onInputChange={handleConversionInputChange}
+              onSubmit={handleConvertSubmit}
+              onSuccess={fetchApplicants}
+            />
+          )}
 
           <ApplicantDetailModal
             isOpen={showDetailModal}
