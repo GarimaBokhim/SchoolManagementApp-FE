@@ -359,7 +359,7 @@ const AllCrmStudentsForm = () => {
     handleFilterSubmit(filterForm.getValues());
   };
 
-  const handleDelete = async (_userId: string) => {
+  const handleDelete = async () => {
     try {
       Toast.success('Student deleted successfully!');
       setRefreshKey(k => k + 1);

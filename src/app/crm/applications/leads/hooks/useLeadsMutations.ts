@@ -9,9 +9,8 @@ export const useLeadMutations = (refetchLeads: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const handleDelete = async (_id: string) => {
+  const handleDelete = async () => {
     try {
-      // await api.delete(`/api/Enrolments/${_id}`);
       toast.success('Lead deleted successfully!');
       refetchLeads();
     } catch {

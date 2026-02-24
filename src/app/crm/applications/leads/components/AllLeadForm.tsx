@@ -7,7 +7,6 @@ import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import Pagination from '@/components/Pagination';
 import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-
 import { useLeads } from '../hooks/useLeads';
 import { useLeadFilters } from '../hooks/useLeadFilters';
 import { useLeadMutations } from '../hooks/useLeadsMutations';
@@ -95,8 +94,8 @@ const AllLeadsForm = () => {
     }
   };
 
-  const handleEdit = (_lead: Lead) => {
-    // Handle edit logic
+  const handleEdit = () => {
+  
   };
 
   const handleSearch = (searchParams: SearchParam) => {
