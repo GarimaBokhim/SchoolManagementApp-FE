@@ -123,7 +123,7 @@ const StudentAwardCertificate: React.FC<Props> = ({
           {/* Title */}
           <div className="flex justify-center mb-6">
             <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl">
-              CERTIFICATE OF MERIT
+              {alltemplate?.Items.find((template) => template.id === templateId)?.templateSubject}
             </h1>
           </div>
 
