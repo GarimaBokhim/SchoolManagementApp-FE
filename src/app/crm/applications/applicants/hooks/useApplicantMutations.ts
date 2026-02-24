@@ -8,13 +8,12 @@ export const useApplicantMutations = (refetchApplicants: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (_id: string) => {
     try {
-      // Add your delete API call here
-      // await api.delete(`/api/Enrolments/${id}`);
+      // await api.delete(`/api/Enrolments/${_id}`);
       Toast.success('Applicant deleted successfully!');
       refetchApplicants();
-    } catch (error) {
+    } catch {
       Toast.error('Error deleting applicant.');
     }
   };
@@ -26,7 +25,7 @@ export const useApplicantMutations = (refetchApplicants: () => void) => {
       Toast.success(`Successfully converted to student!`);
       refetchApplicants();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = handleError(error);
       Toast.error(`Error: ${errorMsg}`);
       return false;
@@ -35,13 +34,11 @@ export const useApplicantMutations = (refetchApplicants: () => void) => {
     }
   };
 
-  const handleViewDetails = (applicant: Applicant) => {
+  const handleViewDetails = (_applicant: Applicant) => {
     Toast.info(`Viewing details for applicant`);
-    // Add your view logic here
   };
 
-  const handleEdit = (applicant: Applicant) => {
-    // Add your edit logic here
+  const handleEdit = (_applicant: Applicant) => {
     Toast.info(`Editing applicant`);
   };
 

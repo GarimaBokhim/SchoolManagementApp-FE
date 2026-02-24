@@ -20,20 +20,16 @@ import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { useApplicants } from "../hooks/useApplicants";
 import { useApplicantMutations } from "../hooks/useApplicantMutations";
 import { ApplicantDetailModal } from "../model/ApplicantDetailModel";
-import { api } from "@/utils/instance";
 import ConvertToStudentModal from "../pages/convert";
 import { Applicant, FilterFormData, SearchParam, SelectedApplicant, UserProfile } from "../types/IApplicants";
 
 
 const AllApplicantsForm = () => {
-  // ── Permissions ──
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
 
-  // ── Schools data ──
   const { data: allSchools } = useGetAllSchool();
 
-  // ── Applicants data ──
   const {
     applicants,
     loading,
@@ -46,25 +42,18 @@ const AllApplicantsForm = () => {
     fetchApplicants,
   } = useApplicants(allSchools);
 
-  // ── Mutations ──
-  const { handleDelete, handleConvert } = useApplicantMutations(fetchApplicants);
+  const { handleDelete } = useApplicantMutations(fetchApplicants);
 
-  // ── Filter state ──
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
-  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [params, setLocalParams] = useState("");
+  const [, setLocalParams] = useState("");
 
-  // ── Convert modal state ──
   const [showConvertModal, setShowConvertModal] = useState(false);
-  const [selectedApplicant, setSelectedApplicant] = useState<SelectedApplicant | null>(null); // ← fixed type
+  const [selectedApplicant, setSelectedApplicant] = useState<SelectedApplicant | null>(null);
 
-  // ── Detail modal state ──
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
 
-  // ── Filter form ──
   const form = useForm<FilterFormData>({
     defaultValues: {
       firstName: "",
@@ -73,7 +62,6 @@ const AllApplicantsForm = () => {
     },
   });
 
-  // ── Pagination form ──
   const paginationForm = useForm<SearchParam>({
     defaultValues: {
       pageSize: 10,
@@ -87,22 +75,15 @@ const AllApplicantsForm = () => {
 
   useEffect(() => {
     fetchApplicants();
-  }, [paginationParams]);
+  }, [paginationParams, fetchApplicants]);
 
-  // ── Filter submit ──
   const onSubmit: SubmitHandler<FilterFormData> = async (formData) => {
     clearError();
     try {
       const queryParams = [
-        formData.firstName
-          ? `firstName=${encodeURIComponent(formData.firstName)}`
-          : null,
-        formData.startDate
-          ? `startDate=${encodeURIComponent(formData.startDate)}`
-          : null,
-        formData.endDate
-          ? `endDate=${encodeURIComponent(formData.endDate)}`
-          : null,
+        formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
+        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
       ]
         .filter(Boolean)
         .join("&");
@@ -111,7 +92,7 @@ const AllApplicantsForm = () => {
         (async () => {
           setParams(fullQuery);
           setLocalParams(fullQuery);
-          setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+          setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
         })(),
         {
           loading: "Fetching applicants...",
@@ -125,44 +106,24 @@ const AllApplicantsForm = () => {
     }
   };
 
-  // ── Search user profiles for combobox ──
-  const fetchUsers = async (search: string = "") => {
-    setIsSearching(true);
-    try {
-      const response = await api.get(
-        `/api/Enrolments/GetAllUserProfile?search=${encodeURIComponent(search)}`
-      );
-      if (response.data?.Items) {
-        setSearchResults(response.data.Items);
-      }
-    } catch {
-      Toast.error("Failed to search profiles");
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // ── Clear filter ──
   const onClearClick = () => {
     setParams("");
     setLocalParams("");
     setSelectedProfile(undefined);
     formRef.current?.handleClear();
     form.reset();
-    setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
   };
 
-  // ── Handlers ──
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
 
-  // ── Map Applicant → SelectedApplicant before opening modal ──
   const handleConvertClick = (applicant: Applicant) => {
     setSelectedApplicant({
       ...applicant,
-      name: applicant.fullName ?? "", // ← map fullName to required name field
+      name: applicant.fullName ?? "",
     });
     setShowConvertModal(true);
   };
@@ -172,7 +133,6 @@ const AllApplicantsForm = () => {
     setShowDetailModal(true);
   };
 
-  // ── Edit button per row ──
   const buttonElement = (applicant: Applicant) => {
     return (
       <ButtonElement
@@ -185,7 +145,6 @@ const AllApplicantsForm = () => {
     );
   };
 
-  // ── Loading/Error states ──
   if (!allSchools) {
     return (
       <div className="p-6 flex justify-center items-center h-64">
@@ -211,7 +170,6 @@ const AllApplicantsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
-          {/* ── Header ── */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold">All Applicants</h1>
             <div className="flex items-center space-x-3">
@@ -234,7 +192,6 @@ const AllApplicantsForm = () => {
             </div>
           </div>
 
-          {/* ── Filter Panel ── */}
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -255,7 +212,7 @@ const AllApplicantsForm = () => {
                     label="Applicant Name"
                     name="firstName"
                     form={form}
-                    options={searchResults}
+                    options={[]}
                     selected={selectedProfile || null}
                     onSelect={(profile) => {
                       if (profile) {
@@ -289,7 +246,6 @@ const AllApplicantsForm = () => {
             </div>
           )}
 
-          {/* ── Table ── */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
@@ -338,7 +294,6 @@ const AllApplicantsForm = () => {
                       </td>
                       <td className="py-1 px-4">
                         <div className="flex justify-center gap-2">
-                          {/* View Detail */}
                           <ButtonElement
                             icon={<Eye size={14} />}
                             type="button"
@@ -346,7 +301,6 @@ const AllApplicantsForm = () => {
                             onClick={() => handleViewClick(applicant)}
                             className="!text-xs font-bold !bg-blue-500"
                           />
-                          {/* Convert to Student */}
                           <ButtonElement
                             icon={<UserCheck size={14} />}
                             type="button"
@@ -379,7 +333,6 @@ const AllApplicantsForm = () => {
             </table>
           </div>
 
-          {/* ── Convert Modal ── */}
           <ConvertToStudentModal
             isOpen={showConvertModal}
             onClose={() => setShowConvertModal(false)}
@@ -387,7 +340,6 @@ const AllApplicantsForm = () => {
             onSuccess={fetchApplicants}
           />
 
-          {/* ── Detail Modal ── */}
           <ApplicantDetailModal
             isOpen={showDetailModal}
             onClose={() => {
@@ -398,7 +350,6 @@ const AllApplicantsForm = () => {
           />
         </div>
 
-        {/* ── Pagination ── */}
         {!loading && applicants.length > 0 && (
           <div className="mt-4">
             <Pagination

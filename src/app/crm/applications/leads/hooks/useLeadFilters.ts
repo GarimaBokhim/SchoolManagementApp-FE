@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
-import { FilterFormData, UserProfile, UserProfileResponse } from '../types/ILeads';
+import { FilterFormData, UserProfile, UserProfileResponse, SearchParam } from '../types/ILeads';
 
 export const useLeadFilters = (
   setParams: (params: string) => void,
-  setPaginationParams: (updater: (prev: any) => any) => void
+  setPaginationParams: (updater: (prev: SearchParam) => SearchParam) => void
 ) => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
@@ -37,15 +36,15 @@ export const useLeadFilters = (
       await toast.promise(
         (async () => {
           setParams(fullQuery);
-          setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+          setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
         })(),
         {
           loading: "Fetching leads...",
           success: "Leads fetched successfully!",
         }
       );
-    } catch (error) {
-      console.error("Error during filter submission:", error);
+    } catch {
+      console.error("Error during filter submission");
     }
   };
 
@@ -58,14 +57,13 @@ export const useLeadFilters = (
       if (response.data?.Items) {
         setSearchResults(response.data.Items);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to search profiles');
     } finally {
       setIsSearching(false);
     }
   };
 
-  // ✅ Fixed: now actually triggers the filter after selecting a profile
   const handleProfileSelected = (profile: UserProfile | null) => {
     if (!profile) return;
     setSelectedProfile(profile);
@@ -77,7 +75,7 @@ export const useLeadFilters = (
     setParams("");
     setSelectedProfile(undefined);
     filterForm.reset();
-    setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
     toast.success('Filters cleared');
   };
 

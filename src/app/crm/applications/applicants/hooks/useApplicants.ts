@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
@@ -50,7 +49,6 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
         const data = response.data;
         const items = data.Items || [];
 
-        // Fetch all user profiles in parallel
         const profiles = await Promise.all(
           items.map((item) => fetchUserProfile(item.userId))
         );
@@ -69,7 +67,6 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
             createdAt: item.createdAt,
             modifiedBy: item.modifiedBy,
             modifiedAt: item.modifiedAt,
-            // Profile fields
             fullName: profile?.fullName ?? '-',
             email: profile?.email ?? '-',
             enrolmentType: profile?.enrolmentType,
@@ -80,7 +77,7 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
         setTotalItems(data.TotalItems ?? 0);
         setTotalPages(data.TotalPages ?? 1);
         setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-      } catch (error: any) {
+      } catch (error: unknown) {
         const errorMsg = handleError(error);
         setError(errorMsg);
         Toast.error('Failed to fetch applicants');
@@ -95,7 +92,7 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
     if (allSchools) {
       fetchApplicants();
     }
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools]);
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools, fetchApplicants]);
 
   return {
     applicants,

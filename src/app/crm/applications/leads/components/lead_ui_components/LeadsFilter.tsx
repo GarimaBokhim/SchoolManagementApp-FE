@@ -13,7 +13,6 @@ interface LeadsFilterProps {
   dateFilterRef: React.RefObject<DateRangeFilterRef | null>;
   selectedProfile?: UserProfile;
   searchResults: UserProfile[];
-  isSearching: boolean;
   onFilterSubmit: (data: FilterFormData) => void;
   onProfileSelected: (profile: UserProfile | null) => void;
   onFetchUsers: (search: string) => void;
@@ -27,7 +26,6 @@ export const LeadsFilter = ({
   dateFilterRef,
   selectedProfile,
   searchResults,
-  isSearching,
   onFilterSubmit,
   onProfileSelected,
   onFetchUsers,

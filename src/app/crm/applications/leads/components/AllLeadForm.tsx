@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import Pagination from '@/components/Pagination';
-import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
+import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 
 import { useLeads } from '../hooks/useLeads';
 import { useLeadFilters } from '../hooks/useLeadFilters';
@@ -19,12 +19,9 @@ import ConvertToApplicantModal from '../pages/Convert';
 import AddLeadModal from '../pages/Add';
 import { ConvertToApplicantPayload, Lead, SearchParam } from '../types/ILeads';
 
-
-
-
 const AllLeadsForm = () => {
   const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+  const { canEdit, canDelete } = useMenuPermissionData(menuStatus);
 
   const dateFilterRef = useRef<DateRangeFilterRef>(null);
 
@@ -44,7 +41,6 @@ const AllLeadsForm = () => {
     setPaginationParams,
     totalPages,
     currentPage,
-    params,
     setParams,
     fetchLeads,
   } = useLeads();
@@ -54,9 +50,7 @@ const AllLeadsForm = () => {
     setOpenFilter,
     filterForm,
     selectedProfile,
-    setSelectedProfile,
     searchResults,
-    isSearching,
     handleFilterSubmit,
     fetchUsers,
     handleProfileSelected,
@@ -101,13 +95,13 @@ const AllLeadsForm = () => {
     }
   };
 
-  const handleEdit = (lead: Lead) => {
+  const handleEdit = (_lead: Lead) => {
     // Handle edit logic
   };
 
-  const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
+  const handleSearch = (searchParams: SearchParam) => {
+    searchParams.pageSize = paginationParams.pageSize;
+    setPaginationParams(searchParams);
   };
 
   const handleLeadSuccess = () => {
@@ -148,7 +142,6 @@ const AllLeadsForm = () => {
               dateFilterRef={dateFilterRef}
               selectedProfile={selectedProfile}
               searchResults={searchResults}
-              isSearching={isSearching}
               onFilterSubmit={handleFilterSubmit}
               onProfileSelected={handleProfileSelected}
               onFetchUsers={fetchUsers}

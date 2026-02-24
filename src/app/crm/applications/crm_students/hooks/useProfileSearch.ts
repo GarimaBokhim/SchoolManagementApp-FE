@@ -17,7 +17,7 @@ export const useProfileSearch = () => {
       if (response.data?.Items) {
         setSearchResults(response.data.Items);
       }
-    } catch (error) {
+    } catch {
       Toast.error('Failed to search profiles');
     } finally {
       setIsSearching(false);
@@ -29,7 +29,6 @@ export const useProfileSearch = () => {
     callback?: (profile: UserProfile) => void
   ) => {
     if (!profile) return;
-    
     setSelectedProfile(profile);
     if (callback) {
       callback(profile);

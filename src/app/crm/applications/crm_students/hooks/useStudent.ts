@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
 import { Toast } from '@/components/Toast/toast';
@@ -70,8 +69,8 @@ export const useStudents = (allSchools: AllSchoolsData | undefined) => {
       setStudents(formatted);
       setTotalPages(data.TotalPages ?? 1);
       setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-    } catch (error: any) {
-      const errorMsg = handleError(error);
+    } catch (err: unknown) {
+      const errorMsg = handleError(err);
       setError(errorMsg);
       Toast.error('Failed to fetch students');
     } finally {
@@ -83,7 +82,7 @@ export const useStudents = (allSchools: AllSchoolsData | undefined) => {
     if (allSchools) {
       fetchStudents();
     }
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools]);
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools, fetchStudents]);
 
   return {
     students,

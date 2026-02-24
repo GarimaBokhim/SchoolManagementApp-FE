@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { api } from '@/utils/instance';
-
 import toast from 'react-hot-toast';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import { ConvertToApplicantPayload, Lead } from '../types/ILeads';
@@ -10,13 +9,12 @@ export const useLeadMutations = (refetchLeads: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (_id: string) => {
     try {
-      // Add your delete API call here
-      // await api.delete(`/api/Enrolments/${id}`);
+      // await api.delete(`/api/Enrolments/${_id}`);
       toast.success('Lead deleted successfully!');
       refetchLeads();
-    } catch (error) {
+    } catch {
       toast.error('Error deleting lead.');
     }
   };

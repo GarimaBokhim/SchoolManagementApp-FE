@@ -1,5 +1,3 @@
-// src/app/crm/applications/applicants/types/IApplicants.tsx
-
 export interface School {
   id: string;
   name: string;
@@ -22,10 +20,9 @@ export interface Applicant {
   modifiedAt: string;
 }
 
-// ── Used when passing an Applicant into the Convert modal ──
 export interface SelectedApplicant {
   id: string;
-  name: string;       // mapped from Applicant.fullName
+  name: string;
   userId: string;
   fullName?: string;
 }
@@ -102,15 +99,12 @@ export interface SearchParam {
   isPagination: boolean;
 }
 
-// ── Convert modal props ──
 export interface ConvertToStudentFormProps {
-  form: any;
   selectedApplicant: SelectedApplicant;
   conversionData?: ConvertToStudentData;
   convertingId?: string | null;
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit?: (e: React.FormEvent) => void;
-  onClose: () => void;
 }
 
 export interface ConvertToStudentModalProps {

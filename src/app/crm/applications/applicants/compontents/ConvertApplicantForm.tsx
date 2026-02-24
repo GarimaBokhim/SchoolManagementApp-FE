@@ -1,17 +1,14 @@
-// src/app/crm/applications/applicants/components/ConvertToStudentForm.tsx
 'use client';
 
 import { UserCheck } from 'lucide-react';
 import { ConvertToStudentFormProps } from '../types/IApplicants';
 
 const ConvertToStudentForm = ({
-  form,
   selectedApplicant,
   conversionData,
   convertingId,
   onInputChange,
   onSubmit,
-  onClose
 }: ConvertToStudentFormProps) => {
   const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
     bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
@@ -29,7 +26,6 @@ const ConvertToStudentForm = ({
 
       <form onSubmit={onSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-          {/* University Name */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               University Name <span className="text-red-500">*</span>
@@ -37,7 +33,7 @@ const ConvertToStudentForm = ({
             <input
               type="text"
               name="universityName"
-              value={conversionData?.universityName ?? ""}  // ← safe
+              value={conversionData?.universityName ?? ""}
               onChange={onInputChange}
               required
               placeholder="e.g., Harvard University"
@@ -45,7 +41,6 @@ const ConvertToStudentForm = ({
             />
           </div>
 
-          {/* Visa ID */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Visa ID <span className="text-red-500">*</span>
@@ -53,7 +48,7 @@ const ConvertToStudentForm = ({
             <input
               type="text"
               name="visaId"
-              value={conversionData?.visaId ?? ""}          // ← safe
+              value={conversionData?.visaId ?? ""}
               onChange={onInputChange}
               required
               placeholder="e.g., V-123456"
@@ -62,7 +57,6 @@ const ConvertToStudentForm = ({
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-center mt-6">
           <button
             type="submit"

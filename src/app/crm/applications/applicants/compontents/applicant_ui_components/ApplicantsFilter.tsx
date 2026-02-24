@@ -1,7 +1,6 @@
 "use client";
 
 import { UseFormReturn } from 'react-hook-form';
-
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import { ButtonElement } from '@/components/Buttons/ButtonElement';
@@ -14,7 +13,6 @@ interface ApplicantsFilterProps {
   dateFilterRef: React.RefObject<DateRangeFilterRef>;
   selectedProfile?: UserProfile;
   searchResults: UserProfile[];
-  isSearching: boolean;
   onFilterSubmit: (data: FilterFormData) => void;
   onProfileSelected: (profile: UserProfile | null) => void;
   onFetchUsers: (search: string) => void;
@@ -22,18 +20,17 @@ interface ApplicantsFilterProps {
   setParams: (params: string) => void;
 }
 
-export const ApplicantsFilter = ({ 
+export const ApplicantsFilter = ({
   openFilter,
   filterForm,
   dateFilterRef,
   selectedProfile,
   searchResults,
-  isSearching,
   onFilterSubmit,
   onProfileSelected,
   onFetchUsers,
   onClear,
-  setParams
+  setParams,
 }: ApplicantsFilterProps) => {
   if (!openFilter) return null;
 

@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/instance';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import toast from 'react-hot-toast';
 import { ApiResponse, Lead } from '../types/ILeads';
 
-// ✅ Helper to fetch enrolmentType for a single userId
 const fetchEnrolmentType = async (userId: string): Promise<number> => {
   try {
     const response = await api.get(`/api/Enrolments/UserProfile/${userId}`);
@@ -48,12 +46,19 @@ export const useLeads = () => {
       const data = response.data;
       const items = data.Items || [];
 
-      // ✅ Fetch enrolmentType for all leads in parallel
       const enrolmentTypes = await Promise.all(
-        items.map((item: any) => fetchEnrolmentType(item.userId))
+        items.map((item: { userId: string }) => fetchEnrolmentType(item.userId))
       );
 
-      const formattedLeads: Lead[] = items.map((item: any, index: number) => ({
+      const formattedLeads: Lead[] = items.map((item: {
+        userId: string;
+        fullName?: string;
+        email?: string;
+        contactNumber?: string;
+        source?: string;
+        educationLevel?: number;
+        completionYear?: string;
+      }, index: number) => ({
         id: item.userId || Math.random().toString(),
         userId: item.userId,
         name: item.fullName || 'N/A',
@@ -62,14 +67,14 @@ export const useLeads = () => {
         source: item.source || 'website',
         educationLevel: item.educationLevel || 0,
         completionYear: item.completionYear || 'N/A',
-        enrolmentType: enrolmentTypes[index], // ✅ attached here
+        enrolmentType: enrolmentTypes[index],
       }));
 
       setLeads(formattedLeads);
       setTotalItems(data.TotalItems ?? 0);
       setTotalPages(data.TotalPages ?? 1);
       setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = handleError(error);
       setError(errorMsg);
       toast.error('Failed to fetch leads');
@@ -80,7 +85,7 @@ export const useLeads = () => {
 
   useEffect(() => {
     fetchLeads();
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params]);
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, fetchLeads]);
 
   return {
     leads,

@@ -13,7 +13,6 @@ interface StudentsFilterProps {
   dateFilterRef: React.RefObject<DateRangeFilterRef | null>;
   selectedProfile: UserProfile | undefined;
   searchResults: UserProfile[];
-  isSearching: boolean;
   onFilterSubmit: (data: FilterFormData) => void;
   onProfileSelected: (profile: UserProfile | null) => void;
   onFetchUsers: (search: string) => void;
@@ -27,7 +26,6 @@ export const StudentsFilter = ({
   dateFilterRef,
   selectedProfile,
   searchResults,
-  isSearching,
   onFilterSubmit,
   onProfileSelected,
   onFetchUsers,
@@ -48,7 +46,6 @@ export const StudentsFilter = ({
           onSubmit={onFilterSubmit}
           setParams={setParams}
         />
-
         <div className="flex-1 min-w-[240px]">
           <AppCombobox
             value={selectedProfile?.fullName || ''}
@@ -70,21 +67,9 @@ export const StudentsFilter = ({
             )}
           />
         </div>
-
         <div className="flex gap-2 ml-auto">
-          <ButtonElement
-            type="submit"
-            text="Filter"
-            icon={<Filter size={14} />}
-            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-          />
-          <ButtonElement
-            type="button"
-            text="Clear"
-            icon={<RotateCcw size={14} />}
-            onClick={onClear}
-            className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
-          />
+          <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} className="!bg-emerald-600 hover:!bg-emerald-700" />
+          <ButtonElement type="button" text="Clear" icon={<RotateCcw size={14} />} onClick={onClear} className="!bg-gray-500 hover:!bg-gray-600" />
         </div>
       </form>
     </div>
