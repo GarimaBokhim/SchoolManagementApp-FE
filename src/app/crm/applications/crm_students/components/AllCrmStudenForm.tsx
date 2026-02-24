@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState } from 'react';
-import { Filter, RotateCcw, Edit, Trash, MoreVertical, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Filter, RotateCcw, Plus } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -15,6 +15,10 @@ import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { SearchParam, Student } from '../type/IStudents';
 import { useStudents } from '../hooks/useStudent';
 import { useStudentFilters } from '../hooks/useStudentFilter';
+import { useStudentMutations } from '../hooks/useStudentMutations';
+// ✅ FIX: Import the correct shared ActionMenu instead of using the inline one
+import { ActionMenu } from '../components/ActionMenu';
+import { StudentDetailModal } from '../model/StudentDetailModel';
 
 const ENROLMENT_TYPE_LABELS: Record<number, string> = {
   1: 'Lead',
@@ -36,110 +40,6 @@ const EnrolmentBadge = ({ type }: { type?: number }) => {
     </span>
   );
 };
-
-interface ActionMenuProps {
-  student: Student;
-  onEdit: (student: Student) => void;
-  onDelete: (userId: string) => void;
-  canEdit?: boolean;
-  canDelete?: boolean;
-}
-
-const ActionMenu = ({ student, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
-  const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const calculatePosition = useCallback(() => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 80;
-    const menuWidth = 176;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpward = spaceBelow < menuHeight + 8;
-    setMenuStyle({
-      position: 'fixed',
-      right: window.innerWidth - rect.right,
-      top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
-      width: menuWidth,
-      zIndex: 9999,
-    });
-  }, []);
-
-  const toggle = () => {
-    if (!open) calculatePosition();
-    setOpen(prev => !prev);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        buttonRef.current && !buttonRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const updatePosition = () => calculatePosition();
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [open, calculatePosition]);
-
-  return (
-    <div className="flex justify-center">
-      <button
-        ref={buttonRef}
-        onClick={toggle}
-        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-      >
-        <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
-      </button>
-      {open && (
-        <div
-          ref={menuRef}
-          style={menuStyle}
-          className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
-        >
-          {canEdit && (
-            <button
-              onClick={() => { onEdit(student); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit size={14} className="text-amber-500" /> Edit
-            </button>
-          )}
-          {canDelete && (
-            <button
-              onClick={() => {
-                if (window.confirm('Are you sure you want to delete this student?')) {
-                  onDelete(student.userId);
-                }
-                setOpen(false);
-              }}
-              className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Trash size={14} /> Delete
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 const AllCrmStudentsForm = () => {
   const { menuStatus } = usePermissions();
@@ -172,6 +72,12 @@ const AllCrmStudentsForm = () => {
     onClearClick,
   } = useStudentFilters(setParams, setPaginationParams);
 
+  // ✅ FIX: Use the real mutations hook so delete actually calls the API
+  const { handleDelete, handleEdit } = useStudentMutations(fetchStudents);
+
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
   const paginationForm = useForm<SearchParam>({
     defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
   });
@@ -184,18 +90,9 @@ const AllCrmStudentsForm = () => {
     });
   };
 
-  const handleDelete = async (userId: string) => {
-    try {
-      // TODO: wire up your actual delete API call here using userId
-      Toast.success('Student deleted successfully!');
-      fetchStudents();
-    } catch {
-      Toast.error('Error deleting student.');
-    }
-  };
-
-  const handleEdit = (student: Student) => {
-    Toast.info(`Editing student: ${student.universityName}`);
+  const handleView = (student: Student) => {
+    setSelectedStudentId(student.userId);
+    setShowDetailModal(true);
   };
 
   const handleAddNew = () => {
@@ -306,7 +203,6 @@ const AllCrmStudentsForm = () => {
             </div>
           )}
 
-          {/* Table wrapper — old data stays visible while isFetching */}
           <div className="overflow-x-auto relative">
             {isFetching && (
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-black/30 flex items-center justify-center backdrop-blur-[1px]">
@@ -355,8 +251,10 @@ const AllCrmStudentsForm = () => {
                       <td className="py-2 px-4">{student.visaId}</td>
                       <td className="py-2 px-4">{student.universityName}</td>
                       <td className="py-2 px-4">
+                        {/* ✅ FIX: Use shared ActionMenu with all required props including onView */}
                         <ActionMenu
                           student={student}
+                          onView={handleView}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
                           canEdit={canEdit}
@@ -376,6 +274,15 @@ const AllCrmStudentsForm = () => {
             </table>
           </div>
         </div>
+
+        <StudentDetailModal
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedStudentId(null);
+          }}
+          studentId={selectedStudentId}
+        />
 
         {!loading && students.length > 0 && (
           <div className="mt-4">

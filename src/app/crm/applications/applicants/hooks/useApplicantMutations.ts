@@ -8,7 +8,7 @@ export const useApplicantMutations = (refetchApplicants: () => void) => {
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const { handleError } = useErrorHandler();
 
-  const handleDelete = async () => {
+  const handleDelete = async (applicant: Applicant) => {
     try {
       // await api.delete(`/api/Enrolments/${_id}`);
       Toast.success('Applicant deleted successfully!');

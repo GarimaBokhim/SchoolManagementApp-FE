@@ -17,7 +17,6 @@ interface LeadsTableProps {
   canDelete?: boolean;
 }
 
-// ✅ Helper to display enrolment type as a colored badge
 const getEnrolmentTypeBadge = (type: number) => {
   switch (type) {
     case 1:
@@ -71,7 +70,7 @@ export const LeadsTable = ({
             <th className="px-4 py-3 text-left">Source</th>
             <th className="px-4 py-3 text-left">Education Level</th>
             <th className="px-4 py-3 text-left">Completion Year</th>
-            <th className="px-4 py-3 text-left">Enrollment Type</th> {/* ✅ new column */}
+            <th className="px-4 py-3 text-left">Enrollment Type</th>
             <th className="px-4 py-3 text-center w-[80px]">Actions</th>
           </tr>
         </thead>
