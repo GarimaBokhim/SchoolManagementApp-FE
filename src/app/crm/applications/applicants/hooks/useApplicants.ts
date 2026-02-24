@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/utils/instance';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import { Toast } from '@/components/Toast/toast';
@@ -7,7 +7,13 @@ import { ApiResponse, Applicant, School } from '../types/IApplicants';
 
 export const useApplicants = (allSchools?: { Items: School[] }) => {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+
+  // `loading` = true only on the very first fetch (no data yet)
   const [loading, setLoading] = useState(true);
+
+  // `isFetching` = true on every subsequent fetch (old data stays visible underneath)
+  const [isFetching, setIsFetching] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -18,6 +24,9 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [params, setParams] = useState('');
+
+  const hasLoadedOnce = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const { handleError } = useErrorHandler();
 
@@ -38,14 +47,28 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
 
   const fetchApplicants = useCallback(
     async (customParams?: string) => {
-      try {
-        setLoading(true);
-        setError(null);
+      // Cancel any previous in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
 
+      // First load → full loading state; subsequent → subtle isFetching only
+      if (!hasLoadedOnce.current) {
+        setLoading(true);
+      } else {
+        setIsFetching(true);
+      }
+
+      setError(null);
+
+      try {
         const queryString = customParams || buildQueryString();
         const url = `/api/Enrolments/FilterApplicants${queryString}`;
 
-        const response = await api.get<ApiResponse>(url);
+        const response = await api.get<ApiResponse>(url, {
+          signal: abortControllerRef.current.signal,
+        });
         const data = response.data;
         const items = data.Items || [];
 
@@ -77,12 +100,22 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
         setTotalItems(data.TotalItems ?? 0);
         setTotalPages(data.TotalPages ?? 1);
         setCurrentPage(data.PageIndex ?? paginationParams.pageIndex);
-      } catch (error: unknown) {
-        const errorMsg = handleError(error);
+
+        hasLoadedOnce.current = true;
+      } catch (err: unknown) {
+        // Ignore intentional cancellations
+        if (
+          (err as { name?: string })?.name === 'AbortError' ||
+          (err as { code?: string })?.code === 'ERR_CANCELED'
+        ) {
+          return;
+        }
+        const errorMsg = handleError(err);
         setError(errorMsg);
         Toast.error('Failed to fetch applicants');
       } finally {
         setLoading(false);
+        setIsFetching(false);
       }
     },
     [buildQueryString, getSchoolName, handleError, paginationParams.pageIndex]
@@ -92,11 +125,14 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
     if (allSchools) {
       fetchApplicants();
     }
-  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools, fetchApplicants]);
+    // fetchApplicants intentionally omitted — raw deps below are the real triggers
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools]);
 
   return {
     applicants,
-    loading,
+    loading,      // true only on initial load — use for full skeleton/spinner
+    isFetching,   // true on filter/page changes — use for subtle overlay
     error,
     paginationParams,
     setPaginationParams,

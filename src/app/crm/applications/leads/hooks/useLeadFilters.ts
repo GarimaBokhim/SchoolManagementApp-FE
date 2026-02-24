@@ -15,40 +15,27 @@ export const useLeadFilters = (
 
   const filterForm = useForm<FilterFormData>({
     defaultValues: {
-      startDate: "",
-      endDate: "",
-      firstName: "",
+      startDate: '',
+      endDate: '',
+      firstName: '',
     },
   });
 
-  const handleFilterSubmit = async (formData: FilterFormData) => {
-    try {
-      const queryParams = [
-        formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
-        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+  const handleFilterSubmit = (formData: FilterFormData) => {
+    const queryParams = [
+      formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
+      formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+      formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join('&');
 
-      const fullQuery = queryParams ? `&${queryParams}` : "";
-
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery);
-          setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
-        })(),
-        {
-          loading: "Fetching leads...",
-          success: "Leads fetched successfully!",
-        }
-      );
-    } catch {
-      console.error("Error during filter submission");
-    }
+    const fullQuery = queryParams ? `&${queryParams}` : '';
+    setParams(fullQuery);
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
   };
 
-  const fetchUsers = async (search: string = "") => {
+  const fetchUsers = async (search: string = '') => {
     setIsSearching(true);
     try {
       const response = await api.get<UserProfileResponse>(
@@ -72,7 +59,7 @@ export const useLeadFilters = (
   };
 
   const onClearClick = () => {
-    setParams("");
+    setParams('');
     setSelectedProfile(undefined);
     filterForm.reset();
     setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));

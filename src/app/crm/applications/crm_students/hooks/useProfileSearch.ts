@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { api } from '@/utils/instance';
 import { Toast } from '@/components/Toast/toast';
-import { UserProfile, UserProfileResponse } from '../type/studnets';
+import { UserProfile, UserProfileResponse } from '../type/IStudents';
 
 export const useProfileSearch = () => {
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);

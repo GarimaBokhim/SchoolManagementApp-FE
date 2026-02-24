@@ -1,6 +1,9 @@
 export interface Student {
   id: string;
   userId: string;
+  fullName: string;       // added
+  email: string;          // added
+  enrolmentType: number;  // added
   universityName: string;
   visaId: string;
   isActive: boolean;
@@ -52,6 +55,9 @@ export interface ApiResponse {
   Items: Array<{
     id: string;
     userId: string;
+    fullName: string;       // added so the API response maps correctly
+    email: string;          // added
+    enrolmentType: number;  // added
     universityName: string;
     visaId: string;
     isActive: boolean;

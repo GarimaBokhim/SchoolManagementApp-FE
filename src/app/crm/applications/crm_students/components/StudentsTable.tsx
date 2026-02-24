@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Edit, Trash, MoreVertical } from 'lucide-react';
-import { Student } from '../type/studnets';
+import { Student } from '../type/IStudents';
 
 interface ActionMenuProps {
   student: Student;

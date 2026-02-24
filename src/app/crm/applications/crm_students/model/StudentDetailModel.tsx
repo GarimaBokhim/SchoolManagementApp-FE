@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/utils/instance';
 import { X } from 'lucide-react';
-import { StudentDetail } from '../type/studnets';
+import { StudentDetail } from '../type/IStudents';
 
 interface StudentDetailModalProps {
   isOpen: boolean;

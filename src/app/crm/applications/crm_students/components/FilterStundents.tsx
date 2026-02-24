@@ -5,7 +5,7 @@ import { Filter, RotateCcw } from 'lucide-react';
 import { ButtonElement } from '@/components/Buttons/ButtonElement';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { FilterFormData, UserProfile } from '../type/studnets';
+import { FilterFormData, UserProfile } from '../type/IStudents';
 
 interface FilterSectionProps {
   open: boolean;

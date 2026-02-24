@@ -1,38 +1,43 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
 import React from "react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Eye, Filter, Plus, RotateCcw, Trash, UserCheck } from "lucide-react";
+import { Edit, Eye, Filter, Plus, RotateCcw, UserCheck } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { useApplicants } from "../hooks/useApplicants";
 import { useApplicantMutations } from "../hooks/useApplicantMutations";
 import { ApplicantDetailModal } from "../model/ApplicantDetailModel";
 import ConvertToStudentModal from "../pages/convert";
-import { Applicant, FilterFormData, SearchParam, SelectedApplicant, UserProfile } from "../types/IApplicants";
-
+import {
+  Applicant,
+  FilterFormData,
+  SearchParam,
+  SelectedApplicant,
+  UserProfile,
+} from "../types/IApplicants";
 
 const AllApplicantsForm = () => {
   const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+  const { canEdit, canAdd } = useMenuPermissionData(menuStatus);
 
   const { data: allSchools } = useGetAllSchool();
 
   const {
     applicants,
     loading,
+    isFetching,   // ← new: subtle overlay during filter/page changes
     error,
     paginationParams,
     setPaginationParams,
@@ -71,39 +76,21 @@ const AllApplicantsForm = () => {
   });
 
   const formRef = useRef<DateRangeFilterRef>(null);
-  const { handleError, clearError } = useErrorHandler();
+  const { clearError } = useErrorHandler();
 
-  useEffect(() => {
-    fetchApplicants();
-  }, [paginationParams, fetchApplicants]);
-
-  const onSubmit: SubmitHandler<FilterFormData> = async (formData) => {
+  const onSubmit: SubmitHandler<FilterFormData> = (formData) => {
     clearError();
-    try {
-      const queryParams = [
-        formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
-        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery);
-          setLocalParams(fullQuery);
-          setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
-        })(),
-        {
-          loading: "Fetching applicants...",
-          success: "Applicants fetched successfully!",
-        }
-      );
-    } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
-    }
+    const queryParams = [
+      formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
+      formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+      formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join("&");
+    const fullQuery = queryParams ? `&${queryParams}` : "";
+    setParams(fullQuery);
+    setLocalParams(fullQuery);
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
   };
 
   const onClearClick = () => {
@@ -121,10 +108,7 @@ const AllApplicantsForm = () => {
   };
 
   const handleConvertClick = (applicant: Applicant) => {
-    setSelectedApplicant({
-      ...applicant,
-      name: applicant.fullName ?? "",
-    });
+    setSelectedApplicant({ ...applicant, name: applicant.fullName ?? "" });
     setShowConvertModal(true);
   };
 
@@ -133,17 +117,15 @@ const AllApplicantsForm = () => {
     setShowDetailModal(true);
   };
 
-  const buttonElement = (applicant: Applicant) => {
-    return (
-      <ButtonElement
-        icon={<Edit size={14} />}
-        type="button"
-        text=""
-        onClick={() => handleViewClick(applicant)}
-        className="!text-xs font-bold !bg-teal-500"
-      />
-    );
-  };
+  const buttonElement = (applicant: Applicant) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => handleViewClick(applicant)}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  );
 
   if (!allSchools) {
     return (
@@ -246,8 +228,18 @@ const AllApplicantsForm = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-xs sm:text-sm">
+          {/* Table wrapper — old data stays visible while isFetching, overlaid with a spinner */}
+          <div className="overflow-x-auto relative">
+            {isFetching && (
+              <div className="absolute inset-0 z-10 bg-white/50 dark:bg-black/30 flex items-center justify-center backdrop-blur-[1px]">
+                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            <table
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
+                isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+              }`}
+            >
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
@@ -262,6 +254,7 @@ const AllApplicantsForm = () => {
               </thead>
               <tbody>
                 {loading ? (
+                  // Only shown on the very first load before any data exists
                   <tr>
                     <td colSpan={8} className="p-4 text-center text-gray-500">
                       Loading Applicants...
@@ -308,7 +301,6 @@ const AllApplicantsForm = () => {
                             onClick={() => handleConvertClick(applicant)}
                             className="!text-xs font-bold !bg-purple-500"
                           />
-                          
                           {canEdit && (
                             <EditButton button={buttonElement(applicant)} />
                           )}

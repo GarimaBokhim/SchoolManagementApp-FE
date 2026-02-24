@@ -5,7 +5,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { ButtonElement } from '@/components/Buttons/ButtonElement';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { FilterFormData, UserProfile } from '../type/studnets';
+import { FilterFormData, UserProfile } from '../type/IStudents';
 
 interface StudentsFilterProps {
   openFilter: boolean;
