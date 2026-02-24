@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { Filter, RotateCcw } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
-import { ButtonElement } from '@/components/Buttons/ButtonElement';
-import { AppCombobox } from '@/components/Input/ComboBox';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { FilterFormData, UserProfile } from '../type/IStudents';
+import { AppCombobox } from '@/components/Input/ComboBox';
+import { ButtonElement } from '@/components/Buttons/ButtonElement';
+import { Filter, RotateCcw } from 'lucide-react';
+import { FilterFormData, UserProfile } from '../../types/IApplicants';
 
-interface StudentsFilterProps {
+interface ApplicantsFilterProps {
   openFilter: boolean;
   filterForm: UseFormReturn<FilterFormData>;
-  dateFilterRef: React.RefObject<DateRangeFilterRef | null>;
-  selectedProfile: UserProfile | undefined;
+  dateFilterRef: React.RefObject<DateRangeFilterRef>;
+  selectedProfile?: UserProfile;
   searchResults: UserProfile[];
   onFilterSubmit: (data: FilterFormData) => void;
   onProfileSelected: (profile: UserProfile | null) => void;
@@ -20,7 +20,7 @@ interface StudentsFilterProps {
   setParams: (params: string) => void;
 }
 
-export const StudentsFilter = ({
+export const ApplicantsFilter = ({
   openFilter,
   filterForm,
   dateFilterRef,
@@ -31,7 +31,7 @@ export const StudentsFilter = ({
   onFetchUsers,
   onClear,
   setParams,
-}: StudentsFilterProps) => {
+}: ApplicantsFilterProps) => {
   if (!openFilter) return null;
 
   return (
@@ -46,9 +46,10 @@ export const StudentsFilter = ({
           onSubmit={onFilterSubmit}
           setParams={setParams}
         />
+
         <div className="flex-1 min-w-[240px]">
           <AppCombobox
-            value={selectedProfile?.fullName || ''}
+            value={selectedProfile?.fullName || ""}
             dropDownWidth="w-full"
             dropdownPositionClass="absolute"
             label="Search Users"
@@ -57,9 +58,9 @@ export const StudentsFilter = ({
             options={searchResults}
             selected={selectedProfile}
             onSelect={onProfileSelected}
-            onFocus={() => onFetchUsers('')}
-            getLabel={(profile) => profile?.fullName ?? ''}
-            getValue={(profile) => profile?.id ?? ''}
+            onFocus={() => onFetchUsers("")}
+            getLabel={(profile) => profile?.fullName ?? ""}
+            getValue={(profile) => profile?.id ?? ""}
             renderOptionExtra={(profile) => (
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {profile.email} • {profile.enrolmentType === 1 ? 'Student' : 'Partner'}
@@ -67,9 +68,21 @@ export const StudentsFilter = ({
             )}
           />
         </div>
+
         <div className="flex gap-2 ml-auto">
-          <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} className="!bg-emerald-600 hover:!bg-emerald-700" />
-          <ButtonElement type="button" text="Clear" icon={<RotateCcw size={14} />} onClick={onClear} className="!bg-gray-500 hover:!bg-gray-600" />
+          <ButtonElement
+            type="submit"
+            text="Filter"
+            icon={<Filter size={14} />}
+            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150 !text-white"
+          />
+          <ButtonElement
+            type="button"
+            text="Clear"
+            icon={<RotateCcw size={14} />}
+            onClick={onClear}
+            className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150 !text-white"
+          />
         </div>
       </form>
     </div>

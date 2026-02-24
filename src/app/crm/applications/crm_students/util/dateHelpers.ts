@@ -1,4 +1,4 @@
-import { ADToBS, BSToAD } from 'bikram-sambat-js';
+import { ADToBS } from 'bikram-sambat-js';
 
 export function getLocalToday(): Date {
   const now = new Date();

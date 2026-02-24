@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FilterFormData, UserProfile, UserProfileResponse } from '../types';
 import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
+import { FilterFormData, UserProfile, UserProfileResponse, SearchParam } from '../types/ILeads';
 
 export const useLeadFilters = (
   setParams: (params: string) => void,
-  setPaginationParams: (updater: (prev: any) => any) => void
+  setPaginationParams: (updater: (prev: SearchParam) => SearchParam) => void
 ) => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
@@ -16,40 +15,27 @@ export const useLeadFilters = (
 
   const filterForm = useForm<FilterFormData>({
     defaultValues: {
-      startDate: "",
-      endDate: "",
-      firstName: "",
+      startDate: '',
+      endDate: '',
+      firstName: '',
     },
   });
 
-  const handleFilterSubmit = async (formData: FilterFormData) => {
-    try {
-      const queryParams = [
-        formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
-        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+  const handleFilterSubmit = (formData: FilterFormData) => {
+    const queryParams = [
+      formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
+      formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+      formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join('&');
 
-      const fullQuery = queryParams ? `&${queryParams}` : "";
-
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery);
-          setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
-        })(),
-        {
-          loading: "Fetching leads...",
-          success: "Leads fetched successfully!",
-        }
-      );
-    } catch (error) {
-      console.error("Error during filter submission:", error);
-    }
+    const fullQuery = queryParams ? `&${queryParams}` : '';
+    setParams(fullQuery);
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
   };
 
-  const fetchUsers = async (search: string = "") => {
+  const fetchUsers = async (search: string = '') => {
     setIsSearching(true);
     try {
       const response = await api.get<UserProfileResponse>(
@@ -58,14 +44,13 @@ export const useLeadFilters = (
       if (response.data?.Items) {
         setSearchResults(response.data.Items);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to search profiles');
     } finally {
       setIsSearching(false);
     }
   };
 
-  // ✅ Fixed: now actually triggers the filter after selecting a profile
   const handleProfileSelected = (profile: UserProfile | null) => {
     if (!profile) return;
     setSelectedProfile(profile);
@@ -74,10 +59,10 @@ export const useLeadFilters = (
   };
 
   const onClearClick = () => {
-    setParams("");
+    setParams('');
     setSelectedProfile(undefined);
     filterForm.reset();
-    setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
     toast.success('Filters cleared');
   };
 

@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FilterFormData, UserProfile, UserProfileResponse } from '../types';
 import { api } from '@/utils/instance';
 import { Toast } from '@/components/Toast/toast';
-import toast from 'react-hot-toast';
+import { FilterFormData, UserProfile, UserProfileResponse, SearchParam } from '../types/IApplicants';
 
 export const useApplicantFilters = (
   setParams: (params: string) => void,
-  setPaginationParams: (updater: (prev: any) => any) => void
+  setPaginationParams: (updater: (prev: SearchParam) => SearchParam) => void
 ) => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | undefined>(undefined);
@@ -17,41 +15,32 @@ export const useApplicantFilters = (
 
   const filterForm = useForm<FilterFormData>({
     defaultValues: {
-      startDate: "",
-      endDate: "",
-      firstName: "",
+      startDate: '',
+      endDate: '',
+      firstName: '',
     },
   });
 
-  const handleFilterSubmit = async (formData: FilterFormData) => {
-    try {
-      const queryParams = [
-        formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
-        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-      ]
-        .filter(Boolean)
-        .join("&");
+  // Plain synchronous function — React 18 batches these two setState calls
+  // automatically inside event handlers, so only one re-fetch fires.
+  // The AbortController in useApplicants cancels any stale request if they
+  // happen to fire separately (e.g. from programmatic calls outside handlers).
+  const handleFilterSubmit = (formData: FilterFormData) => {
+    const queryParams = [
+      formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
+      formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+      formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join('&');
 
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+    const fullQuery = queryParams ? `&${queryParams}` : '';
 
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery);
-          setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
-        })(),
-        {
-          loading: "Fetching applicants...",
-          success: "Applicants fetched successfully!",
-        }
-      );
-    } catch (error) {
-      console.error("Error during filter submission:", error);
-      Toast.error("Failed to apply filters");
-    }
+    setParams(fullQuery);
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
   };
 
-  const fetchUsers = async (search: string = "") => {
+  const fetchUsers = async (search: string = '') => {
     setIsSearching(true);
     try {
       const response = await api.get<UserProfileResponse>(
@@ -60,7 +49,7 @@ export const useApplicantFilters = (
       if (response.data?.Items) {
         setSearchResults(response.data.Items);
       }
-    } catch (error) {
+    } catch {
       Toast.error('Failed to search profiles');
     } finally {
       setIsSearching(false);
@@ -72,14 +61,13 @@ export const useApplicantFilters = (
     setSelectedProfile(profile);
     filterForm.setValue('firstName', profile.fullName);
     handleFilterSubmit(filterForm.getValues());
-    Toast.success(`Filtering by ${profile.fullName}`);
   };
 
   const onClearClick = () => {
-    setParams("");
+    setParams('');
     setSelectedProfile(undefined);
     filterForm.reset();
-    setPaginationParams((prev: any) => ({ ...prev, pageIndex: 1 }));
+    setPaginationParams((prev: SearchParam) => ({ ...prev, pageIndex: 1 }));
     Toast.success('Filters cleared');
   };
 

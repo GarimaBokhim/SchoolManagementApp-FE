@@ -20,7 +20,7 @@ const EditUser = ({ visible, onClose, userId, currentPageIndex }: Props) => {
       userName: userData?.userName ?? "",
       email: userData?.email ?? "",
       password: userData?.password ?? "",
-      rolesIds: userData?.rolesIds ?? [""],
+      rolesId: userData?.rolesId ?? [""],
       institutionId: userData?.institutionId ?? "",
       schoolIds: userData?.schoolIds ?? [""],
     },

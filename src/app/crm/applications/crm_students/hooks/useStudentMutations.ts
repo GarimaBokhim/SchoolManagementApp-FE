@@ -1,6 +1,5 @@
 import { api } from '@/utils/instance';
 import { Toast } from '@/components/Toast/toast';
-import { Student } from '../type/studnets';
 
 export const useStudentMutations = (fetchStudents: () => void) => {
   const handleDelete = async (id: string) => {
@@ -13,8 +12,7 @@ export const useStudentMutations = (fetchStudents: () => void) => {
     }
   };
 
-  const handleEdit = (student: Student) => {
-    // Wire up your edit modal/logic here
+  const handleEdit = () => {
     Toast.info(`Editing student`);
   };
 

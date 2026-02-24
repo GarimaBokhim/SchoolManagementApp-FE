@@ -67,8 +67,7 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
         setDetail(null);
         const response = await api.get<ApplicantDetail>(`/api/Enrolments/Applicants/${applicantId}`);
         setDetail(response.data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
+      } catch {
         setError('Failed to load applicant details.');
       } finally {
         setLoading(false);
@@ -88,12 +87,10 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                  bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
       onClick={onClose}
     >
-      {/* Modal */}
       <div
         className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Applicant Details</h2>
           <button
@@ -104,23 +101,19 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
           </button>
         </div>
 
-        {/* Body */}
         <div className="overflow-y-auto px-6 py-4 flex-1">
           {loading && (
             <div className="flex justify-center items-center h-40">
               <div className="text-gray-500 dark:text-gray-400 text-sm">Loading details...</div>
             </div>
           )}
-
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
-
           {detail && !loading && (
             <div>
-              {/* Avatar + name + badges */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-700 dark:text-yellow-400 font-bold text-lg shrink-0">
                   {detail.fullName?.charAt(0).toUpperCase() || '?'}
@@ -143,7 +136,6 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                   </div>
                 </div>
               </div>
-
               <DetailRow label="Email" value={detail.email} />
               <DetailRow label="Passport No" value={detail.passportNo} />
               <DetailRow label="Target Country" value={detail.targetCountry} />
@@ -153,7 +145,6 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
           <button
             onClick={onClose}

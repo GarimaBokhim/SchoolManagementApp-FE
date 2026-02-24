@@ -88,7 +88,7 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
         setDetail(null);
         const response = await api.get<LeadDetail>(`/api/Enrolments/Inquiry/${userId}`);
         setDetail(response.data);
-      } catch (err) {
+      } catch {
         setError('Failed to load lead details.');
       } finally {
         setLoading(false);
@@ -108,12 +108,10 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
                  bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
       onClick={onClose}
     >
-      {/* Modal */}
       <div
         className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Lead Details</h2>
           <button
@@ -124,23 +122,19 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
           </button>
         </div>
 
-        {/* Body */}
         <div className="overflow-y-auto px-6 py-4 flex-1">
           {loading && (
             <div className="flex justify-center items-center h-40">
               <div className="text-gray-500 dark:text-gray-400 text-sm">Loading details...</div>
             </div>
           )}
-
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
-
           {detail && !loading && (
             <div>
-              {/* Name + badge at top */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-lg shrink-0">
                   {detail.fullName?.charAt(0).toUpperCase() || '?'}
@@ -154,8 +148,6 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
                   )}
                 </div>
               </div>
-
-              {/* Details */}
               <DetailRow label="Email" value={detail.email} />
               <DetailRow label="Contact Number" value={detail.contactNumber} />
               <DetailRow label="Date of Birth" value={formatDate(detail.dateOfBirth)} />
@@ -164,17 +156,13 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
               <DetailRow label="Education Level" value={getEducationLevelText(detail.educationLevel)} />
               <DetailRow label="Completion Year" value={detail.completionYear} />
               <DetailRow label="Current GPA" value={detail.currentGpa} />
-              <DetailRow
-                label="Previous Qualification"
-                value={detail.previousAcademicQualification}
-              />
+              <DetailRow label="Previous Qualification" value={detail.previousAcademicQualification} />
               <DetailRow label="Source" value={<span className="capitalize">{detail.source}</span>} />
               <DetailRow label="Feedback / Suggestion" value={detail.feedBackOrSuggestion} />
             </div>
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
           <button
             onClick={onClose}

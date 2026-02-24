@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Eye, Edit, Trash, MoreVertical } from 'lucide-react';
-import { Student } from '../type/IStudents';
+import { Edit, Trash, Eye, User, MoreVertical } from 'lucide-react';
+import { Lead } from '../../types/ILeads';
+
+
 
 interface ActionMenuProps {
-  student: Student;
-  onView: (student: Student) => void;
-  onEdit: (student: Student) => void;
+  lead: Lead;
+  onView: (lead: Lead) => void;
+  onEdit: (lead: Lead) => void;
+  onConvert: (lead: Lead) => void;
   onDelete: (id: string) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
 
 export const ActionMenu = ({ 
-  student, 
+  lead, 
   onView, 
   onEdit, 
+  onConvert, 
   onDelete, 
   canEdit = true, 
   canDelete = true 
@@ -29,8 +33,8 @@ export const ActionMenu = ({
   const calculatePosition = useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 110;
-    const menuWidth = 176;
+    const menuHeight = 160;
+    const menuWidth = 180;
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
     setMenuStyle({
@@ -88,7 +92,7 @@ export const ActionMenu = ({
           className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
         >
           <button
-            onClick={() => { onView(student); setOpen(false); }}
+            onClick={() => { onView(lead); setOpen(false); }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <Eye size={14} /> View Details
@@ -96,16 +100,23 @@ export const ActionMenu = ({
           
           {canEdit && (
             <button
-              onClick={() => { onEdit(student); setOpen(false); }}
+              onClick={() => { onEdit(lead); setOpen(false); }}
               className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
               <Edit size={14} /> Edit
             </button>
           )}
           
+          <button
+            onClick={() => { onConvert(lead); setOpen(false); }}
+            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+          >
+            <User size={14} /> Convert to Applicant
+          </button>
+          
           {canDelete && (
             <button
-              onClick={() => { onDelete(student.id); setOpen(false); }}
+              onClick={() => { onDelete(lead.id); setOpen(false); }}
               className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
               <Trash size={14} /> Delete

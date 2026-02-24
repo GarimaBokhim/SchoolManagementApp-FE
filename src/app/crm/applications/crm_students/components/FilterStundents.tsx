@@ -5,8 +5,7 @@ import { Filter, RotateCcw } from 'lucide-react';
 import { ButtonElement } from '@/components/Buttons/ButtonElement';
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { FilterFormData, UserProfile } from '../type/studnets';
-
+import { FilterFormData, UserProfile } from '../type/IStudents';
 
 interface FilterSectionProps {
   open: boolean;
@@ -14,7 +13,6 @@ interface FilterSectionProps {
   dateFilterRef: React.RefObject<DateRangeFilterRef>;
   selectedProfile?: UserProfile;
   searchResults: UserProfile[];
-  isSearching: boolean;
   onSubmit: (data: FilterFormData) => void;
   onClear: () => void;
   onProfileSelect: (profile: UserProfile | null) => void;
@@ -28,7 +26,6 @@ export const FilterSection = ({
   dateFilterRef,
   selectedProfile,
   searchResults,
-  isSearching,
   onSubmit,
   onClear,
   onProfileSelect,
@@ -49,7 +46,6 @@ export const FilterSection = ({
           onSubmit={onSubmit}
           setParams={setParams}
         />
-
         <div className="flex-1 min-w-[240px]">
           <AppCombobox
             value={selectedProfile?.fullName || ""}
@@ -71,21 +67,9 @@ export const FilterSection = ({
             )}
           />
         </div>
-
         <div className="flex gap-2 ml-auto">
-          <ButtonElement
-            type="submit"
-            text="Filter"
-            icon={<Filter size={14} />}
-            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-          />
-          <ButtonElement
-            type="button"
-            text="Clear"
-            icon={<RotateCcw size={14} />}
-            onClick={onClear}
-            className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
-          />
+          <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} className="!bg-emerald-600 hover:!bg-emerald-700" />
+          <ButtonElement type="button" text="Clear" icon={<RotateCcw size={14} />} onClick={onClear} className="!bg-gray-500 hover:!bg-gray-600" />
         </div>
       </form>
     </div>
