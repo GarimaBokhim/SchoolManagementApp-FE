@@ -145,7 +145,7 @@ const AllCourseForm = () => {
 
         {/* Header */}
         <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Explore Courses</h1>
+   
           <div className="flex items-center space-x-3">
             <ButtonElement
               type="button"
