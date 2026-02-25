@@ -1,150 +1,61 @@
+// src/app/crm/university/univer-sity/components/AllUniversityForm.tsx
 "use client";
 
 import { useState } from "react";
-import { GraduationCap, Search, MapPin, ChevronDown, Filter, RotateCcw, Award, Building2 } from "lucide-react";
+import { GraduationCap, Search, MapPin, ChevronDown, Filter, RotateCcw, Award, Globe, ExternalLink } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
+import { useGetAllUniversities } from "../hooks";
+import { IUniversity } from "../types/IUniversity";
 
-// Static university data
-const STATIC_UNIVERSITIES = [
-  {
-    id: "uni1",
-    name: "Stanford University",
-    country: "United States",
-    location: "Stanford, California",
-    globalRanking: 3,
-    description: "Private research university known for innovation and entrepreneurship",
-    programs: 150,
-    students: 17000,
-  },
-  {
-    id: "uni2",
-    name: "Harvard University",
-    country: "United States",
-    location: "Cambridge, Massachusetts",
-    globalRanking: 1,
-    description: "Ivy League research university, oldest institution of higher learning in the US",
-    programs: 200,
-    students: 21000,
-  },
-  {
-    id: "uni3",
-    name: "MIT",
-    country: "United States",
-    location: "Cambridge, Massachusetts",
-    globalRanking: 2,
-    description: "World leader in science, engineering, and technology education",
-    programs: 120,
-    students: 11500,
-  },
-  {
-    id: "uni4",
-    name: "University of Oxford",
-    country: "United Kingdom",
-    location: "Oxford, England",
-    globalRanking: 4,
-    description: "Oldest university in the English-speaking world",
-    programs: 180,
-    students: 24000,
-  },
-  {
-    id: "uni5",
-    name: "University of Melbourne",
-    country: "Australia",
-    location: "Melbourne, Victoria",
-    globalRanking: 33,
-    description: "Australia's leading research university",
-    programs: 140,
-    students: 50000,
-  },
-  {
-    id: "uni6",
-    name: "University of Toronto",
-    country: "Canada",
-    location: "Toronto, Ontario",
-    globalRanking: 18,
-    description: "Canada's top research university",
-    programs: 160,
-    students: 60000,
-  },
-  {
-    id: "uni7",
-    name: "University of Cambridge",
-    country: "United Kingdom",
-    location: "Cambridge, England",
-    globalRanking: 5,
-    description: "World-renowned collegiate research university",
-    programs: 170,
-    students: 20000,
-  },
-  {
-    id: "uni8",
-    name: "Columbia University",
-    country: "United States",
-    location: "New York City, New York",
-    globalRanking: 7,
-    description: "Ivy League university in the heart of NYC",
-    programs: 140,
-    students: 30000,
-  },
-  {
-    id: "uni9",
-    name: "ETH Zurich",
-    country: "Switzerland",
-    location: "Zurich",
-    globalRanking: 8,
-    description: "Leading STEM university in continental Europe",
-    programs: 100,
-    students: 22000,
-  },
-];
 
 interface FilterFormData {
   search: string;
   country: string;
 }
 
+// Helper functions remain the same
+const generateLocation = (university: IUniversity): string => {
+  return university.country || "Location not specified";
+};
+
+const generateDescription = (university: IUniversity): string => {
+  if (university.descriptions && university.descriptions !== "str") {
+    return university.descriptions;
+  }
+  return `${university.name} is a university in ${university.country} with global ranking #${university.globalRanking}.`;
+};
+
 const AllUniversityForm = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filteredUniversities, setFilteredUniversities] = useState(STATIC_UNIVERSITIES);
   const pageSize = 9;
 
   const form = useForm<FilterFormData>({
     defaultValues: { search: "", country: "" },
   });
 
-  // Get unique countries
-  const uniqueCountries = [...new Set(STATIC_UNIVERSITIES.map(u => u.country))];
+  // Simple API call - no params needed
+  const { data, isLoading, error } = useGetAllUniversities();
 
+  // Get unique countries from the data for filter dropdown
+  const uniqueCountries = data?.Items 
+    ? [...new Set(data.Items.map(u => u.country))].filter(Boolean)
+    : [];
+
+  // Filter UI is kept but doesn't affect the API call
   const onFilterSubmit = (data: FilterFormData) => {
-    let filtered = [...STATIC_UNIVERSITIES];
-
-    if (data.search) {
-      const searchLower = data.search.toLowerCase();
-      filtered = filtered.filter(uni => 
-        uni.name.toLowerCase().includes(searchLower) ||
-        uni.location.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (data.country) {
-      filtered = filtered.filter(uni => uni.country === data.country);
-    }
-
-    setFilteredUniversities(filtered);
-    setCurrentPage(1);
+    console.log("Filter UI clicked - filters:", data);
+    // Currently just logs, doesn't affect API
+    // You can implement client-side filtering here if needed
   };
 
   const handleClearFilters = () => {
     form.reset({ search: "", country: "" });
-    setFilteredUniversities(STATIC_UNIVERSITIES);
-    setCurrentPage(1);
   };
 
   const handleViewDetails = (universityId: string) => {
-    // Static UI - no action needed
     console.log("View details clicked for university:", universityId);
   };
 
@@ -152,11 +63,48 @@ const AllUniversityForm = () => {
     defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
   });
 
-  // Pagination logic
+  // Handle 401 Unauthorized error
+  if (error) {
+    const isAuthError = (error as any)?.response?.status === 401;
+    
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden p-8">
+          <div className="text-center py-16">
+            <GraduationCap size={64} className="mx-auto text-red-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+              {isAuthError ? "Authentication Required" : "Error loading universities"}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {isAuthError 
+                ? "Please log in to view universities." 
+                : "Please try again later."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden p-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const universities = data?.Items || [];
+  const totalItems = data?.TotalItems || 0;
+  const totalPages = data?.TotalPages || 1;
+
+  // Client-side pagination
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedUniversities = filteredUniversities.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(filteredUniversities.length / pageSize);
+  const paginatedUniversities = universities.slice(startIndex, startIndex + pageSize);
 
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
@@ -168,7 +116,6 @@ const AllUniversityForm = () => {
 
         {/* Header */}
         <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">All Universities</h1>
           <div className="flex items-center space-x-3">
             <ButtonElement
               type="button"
@@ -180,7 +127,7 @@ const AllUniversityForm = () => {
           </div>
         </div>
 
-        {/* Filter Panel */}
+        {/* Filter Panel - UI only, no API integration */}
         {openFilter && (
           <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
             <form
@@ -242,19 +189,19 @@ const AllUniversityForm = () => {
 
         {/* Results count */}
         <div className="px-4 pb-3 text-sm text-gray-500 dark:text-gray-400">
-          Showing {filteredUniversities.length} {filteredUniversities.length === 1 ? 'university' : 'universities'}
+          Showing {universities.length} of {totalItems} {totalItems === 1 ? 'university' : 'universities'}
         </div>
 
         {/* Cards Grid */}
         <div className="px-4 pb-4">
-          {filteredUniversities.length > 0 ? (
+          {universities.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedUniversities.map((university) => (
+              {paginatedUniversities.map((university: IUniversity) => (
                 <div
                   key={university.id}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                 >
-                  <div className="p-5">
+                  <div className="p-5 flex flex-col h-full">
                     {/* University Name with Icon */}
                     <div className="flex items-start gap-2 mb-3">
                       <GraduationCap size={20} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -268,35 +215,52 @@ const AllUniversityForm = () => {
                       <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                         <MapPin size={16} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                         <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
-                          {university.location}
+                          {generateLocation(university)}
                         </p>
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {university.description}
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-grow">
+                      {generateDescription(university)}
                     </p>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 gap-2 mb-4">
                       <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
                         <Award size={14} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1" />
-                        <p className="text-xs font-medium text-gray-900 dark:text-white">Rank #{university.globalRanking}</p>
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">
+                          Rank #{university.globalRanking || 'N/A'}
+                        </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-                        <GraduationCap size={14} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1" />
-                        <p className="text-xs font-medium text-gray-900 dark:text-white">{university.programs}+ Programs</p>
+                        <Globe size={14} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1" />
+                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                          {university.country || 'N/A'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Single action button */}
-                    <div className="flex gap-2">
+                    {/* Website and Actions */}
+                    <div className="space-y-2">
+                      {university.website && university.website !== "str" && (
+                        <a 
+                          href={university.website.startsWith('http') ? university.website : `https://${university.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
+                        >
+                          <ExternalLink size={12} />
+                          <span className="truncate">{university.website}</span>
+                        </a>
+                      )}
+                      
+                      {/* Action button */}
                       <ButtonElement
                         icon={<Search size={14} />}
                         text="View Details"
                         onClick={() => handleViewDetails(university.id)}
-                        className="w-full !bg-blue-500 hover:!bg-blue-600 !text-white !text-xs !py-2"
+                        className="w-full !bg-blue-500 hover:!bg-blue-600 !text-white !text-xs !py-2 mt-2"
                       />
                     </div>
                   </div>
@@ -322,12 +286,12 @@ const AllUniversityForm = () => {
       </div>
 
       {/* Pagination */}
-      {filteredUniversities.length > 0 && totalPages > 1 && (
+      {universities.length > 0 && totalPages > 1 && (
         <div className="mt-4">
           <Pagination
             form={paginationForm}
             pagination={{
-              currentPage,
+              currentPage: currentPage,
               firstPage: 1,
               lastPage: totalPages,
               nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,

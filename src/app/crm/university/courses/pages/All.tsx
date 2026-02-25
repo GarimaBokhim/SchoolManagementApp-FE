@@ -1,127 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, MapPin, ChevronDown, GraduationCap, Award, Eye, Send, Filter, RotateCcw, Building2 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import Pagination from "@/components/Pagination";
 import { useForm } from "react-hook-form";
+import { api } from "../../api/api_helper";
 
-// Static data
-const STATIC_COURSES = [
-  {
-    id: "1",
-    title: "Bachelor of Computer Science",
-    studyLevel: 1,
-    tuationFee: 15000,
-    currency: "usd",
-    universityId: "uni1",
-    universityName: "Stanford University",
-    country: "United States",
-    hasScholarship: true,
-  },
-  {
-    id: "2",
-    title: "Master of Business Administration",
-    studyLevel: 2,
-    tuationFee: 25000,
-    currency: "usd",
-    universityId: "uni2",
-    universityName: "Harvard University",
-    country: "United States",
-    hasScholarship: false,
-  },
-  {
-    id: "3",
-    title: "PhD in Artificial Intelligence",
-    studyLevel: 3,
-    tuationFee: 18000,
-    currency: "usd",
-    universityId: "uni3",
-    universityName: "MIT",
-    country: "United States",
-    hasScholarship: true,
-  },
-  {
-    id: "4",
-    title: "Bachelor of Business Administration",
-    studyLevel: 1,
-    tuationFee: 12000,
-    currency: "gbp",
-    universityId: "uni4",
-    universityName: "University of Oxford",
-    country: "United Kingdom",
-    hasScholarship: false,
-  },
-  {
-    id: "5",
-    title: "Master of Data Science",
-    studyLevel: 2,
-    tuationFee: 22000,
-    currency: "aud",
-    universityId: "uni5",
-    universityName: "University of Melbourne",
-    country: "Australia",
-    hasScholarship: true,
-  },
-  {
-    id: "6",
-    title: "Bachelor of Engineering",
-    studyLevel: 1,
-    tuationFee: 14000,
-    currency: "cad",
-    universityId: "uni6",
-    universityName: "University of Toronto",
-    country: "Canada",
-    hasScholarship: false,
-  },
-  {
-    id: "7",
-    title: "Master of Finance",
-    studyLevel: 2,
-    tuationFee: 20000,
-    currency: "usd",
-    universityId: "uni2",
-    universityName: "Harvard University",
-    country: "United States",
-    hasScholarship: true,
-  },
-  {
-    id: "8",
-    title: "Bachelor of Psychology",
-    studyLevel: 1,
-    tuationFee: 11000,
-    currency: "gbp",
-    universityId: "uni7",
-    universityName: "University of Cambridge",
-    country: "United Kingdom",
-    hasScholarship: false,
-  },
-  {
-    id: "9",
-    title: "Master of International Relations",
-    studyLevel: 2,
-    tuationFee: 19000,
-    currency: "usd",
-    universityId: "uni8",
-    universityName: "Columbia University",
-    country: "United States",
-    hasScholarship: true,
-  },
-];
+interface Course {
+  id: string;
+  title: string;
+  studyLevel: number;
+  tuationFee: number;
+  currency: string;
+  universityId: string;
+  isActive: boolean;
+  schoolId: string;
+  createdBy: string;
+  createdAt: string;
+  modifiedBy: string;
+  modifiedAt: string;
+}
 
-const STATIC_UNIVERSITIES = [
-  { id: "uni1", name: "Stanford University", country: "United States" },
-  { id: "uni2", name: "Harvard University", country: "United States" },
-  { id: "uni3", name: "MIT", country: "United States" },
-  { id: "uni4", name: "University of Oxford", country: "United Kingdom" },
-  { id: "uni5", name: "University of Melbourne", country: "Australia" },
-  { id: "uni6", name: "University of Toronto", country: "Canada" },
-  { id: "uni7", name: "University of Cambridge", country: "United Kingdom" },
-  { id: "uni8", name: "Columbia University", country: "United States" },
-  { id: "uni9", name: "ETH Zurich", country: "Switzerland" },
-  { id: "uni10", name: "National University of Singapore", country: "Singapore" },
-];
+interface FilterCourseResponse {
+  Items: Course[];       
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
+}
+
+interface FilterFormData {
+  search: string;
+  university: string;
+  location: string;
+}
+
+// University name mapping (you can expand this)
+const UNIVERSITY_NAMES: Record<string, string> = {
+  "e4c485ed-1292-4287-bb38-64d4f5b1d405": "University Name",
+  // Add more as you discover them
+};
 
 const STUDY_LEVEL_LABELS: Record<number, string> = {
   1: "Bachelor's Degree",
@@ -133,18 +54,11 @@ const STUDY_LEVEL_LABELS: Record<number, string> = {
   7: "English Language",
 };
 
-interface FilterFormData {
-  search: string;
-  university: string;
-  location: string;
-}
-
 const AllCourseForm = () => {
   const [openFilter, setOpenFilter] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filteredCourses, setFilteredCourses] = useState(STATIC_COURSES);
-  const pageSize = 9;
-
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const form = useForm<FilterFormData>({
     defaultValues: {
       search: "",
@@ -153,36 +67,37 @@ const AllCourseForm = () => {
     },
   });
 
-  // Get unique locations from universities
-  const uniqueLocations = [...new Set(STATIC_UNIVERSITIES.map(u => u.country))];
-
-  const onFilterSubmit = (data: FilterFormData) => {
-    let filtered = [...STATIC_COURSES];
-
-    if (data.search) {
-      const searchLower = data.search.toLowerCase();
-      filtered = filtered.filter(course => 
-        course.title.toLowerCase().includes(searchLower) ||
-        course.universityName.toLowerCase().includes(searchLower)
+  // Simple API call to fetch all courses
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get<FilterCourseResponse>(
+        'api/AcademicPrograms/FilterCourse'
       );
-    }
 
-    if (data.university) {
-      filtered = filtered.filter(course => course.universityName === data.university);
+      if (response.data) {
+        setCourses(response.data.Items ?? []);  // Fixed: PascalCase Items
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      Toast.error("Failed to load courses");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (data.location) {
-      filtered = filtered.filter(course => course.country === data.location);
-    }
+  // Initial fetch
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
-    setFilteredCourses(filtered);
-    setCurrentPage(1);
+  // Filter UI functions (UI only)
+  const onFilterSubmit = (data: FilterFormData) => {
+    Toast.info("Filter feature coming soon");
   };
 
   const handleClearFilters = () => {
     form.reset({ search: "", university: "", location: "" });
-    setFilteredCourses(STATIC_COURSES);
-    setCurrentPage(1);
   };
 
   const handleViewDetails = (courseId: string) => {
@@ -193,19 +108,36 @@ const AllCourseForm = () => {
     Toast.success(`Application started!`);
   };
 
-  const paginationForm = useForm({
-    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
-  });
-
-  // Pagination logic
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedCourses = filteredCourses.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(filteredCourses.length / pageSize);
-
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
     dark:text-white text-sm appearance-none`;
+
+  // Format currency
+  const formatCurrency = (amount: number, currency: string) => {
+    const currencyMap: Record<string, string> = {
+      'sg': 'SGD',
+      'usd': 'USD',
+      'eur': 'EUR',
+      'gbp': 'GBP'
+    };
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyMap[currency.toLowerCase()] || 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading courses...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6">
@@ -213,7 +145,7 @@ const AllCourseForm = () => {
 
         {/* Header */}
         <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Explore Courses</h1>
+   
           <div className="flex items-center space-x-3">
             <ButtonElement
               type="button"
@@ -225,7 +157,7 @@ const AllCourseForm = () => {
           </div>
         </div>
 
-        {/* Filter panel */}
+        {/* Filter panel - UI only */}
         {openFilter && (
           <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
             <form
@@ -259,9 +191,7 @@ const AllCourseForm = () => {
                     className={inputClass}
                   >
                     <option value="">All Universities</option>
-                    {STATIC_UNIVERSITIES.map((uni) => (
-                      <option key={uni.id} value={uni.name}>{uni.name}</option>
-                    ))}
+                    <option value="e4c485ed-1292-4287-bb38-64d4f5b1d405">University 1</option>
                   </select>
                   <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -279,9 +209,7 @@ const AllCourseForm = () => {
                     className={inputClass}
                   >
                     <option value="">All Locations</option>
-                    {uniqueLocations.map((loc, index) => (
-                      <option key={index} value={loc}>{loc}</option>
-                    ))}
+                    <option value="USA">United States</option>
                   </select>
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
@@ -310,20 +238,20 @@ const AllCourseForm = () => {
 
         {/* Results count */}
         <div className="px-4 pb-3 text-sm text-gray-500 dark:text-gray-400">
-          Showing {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'}
+          Showing {courses.length} {courses.length === 1 ? 'course' : 'courses'}
         </div>
 
-        {/* Cards Grid */}
+        {/* Cards Grid - Dynamic from API */}
         <div className="px-4 pb-4">
-          {filteredCourses.length > 0 ? (
+          {courses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedCourses.map((course) => (
+              {courses.map((course) => (
                 <div
                   key={course.id}
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
                 >
                   <div className="p-5">
-                    {/* Course Title with Graduation Hat Icon */}
+                    {/* Course Title */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-2 flex-1">
                         <GraduationCap size={18} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
@@ -331,28 +259,26 @@ const AllCourseForm = () => {
                           {course.title}
                         </h3>
                       </div>
-                      {course.hasScholarship && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-800 ml-2 whitespace-nowrap">
-                          <Award size={12} className="mr-1" />
-                          Scholarship
-                        </span>
-                      )}
                     </div>
 
-                    {/* Highlighted University Name with Building Icon */}
+                    {/* University Name */}
                     <div className="mb-3">
                       <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                         <Building2 size={16} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                         <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
-                          {course.universityName}
+                          {UNIVERSITY_NAMES[course.universityId] || "University"}
                         </p>
                       </div>
                     </div>
 
-                    {/* Location Only (No Fee) */}
-                    <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 dark:text-gray-500">
-                      <MapPin size={14} className="text-gray-400" />
-                      <span>{course.country}</span>
+                    {/* Fee and Study Level */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(course.tuationFee, course.currency)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {STUDY_LEVEL_LABELS[course.studyLevel] || `Level ${course.studyLevel}`}
+                      </div>
                     </div>
 
                     {/* Action buttons */}
@@ -391,23 +317,6 @@ const AllCourseForm = () => {
           )}
         </div>
       </div>
-
-      {/* Pagination */}
-      {filteredCourses.length > 0 && totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination
-            form={paginationForm}
-            pagination={{
-              currentPage,
-              firstPage: 1,
-              lastPage: totalPages,
-              nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-              previousPage: currentPage > 1 ? currentPage - 1 : 1,
-            }}
-            handleSearch={(params) => setCurrentPage(params.pageIndex)}
-          />
-        </div>
-      )}
     </div>
   );
 };

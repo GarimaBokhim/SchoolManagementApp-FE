@@ -1,8 +1,7 @@
-// src/api/university/index.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IUniversity } from "../types/IUniversity";
+import { IUniversity } from "./IUniversity";
 
 export const UniversityEndPoints = {
   getAllUniversities: "/api/AcademicPrograms/FilterUniversity",
@@ -10,6 +9,19 @@ export const UniversityEndPoints = {
 };
 
 export const queryKey = "Universities";
+
+export type UniversityRequest = {
+  name: string;
+  address: string;
+  email: string;
+  phoneNumber: string;
+  establishedDate: Date;
+  provinceId: number;
+  districtId: number;
+  municipalityId: number | 0;
+  wardNumber?: number | null;
+  universityImg: File;
+};
 
 export const useAddUniversity = () => {
   const queryClient = useQueryClient();
@@ -34,15 +46,31 @@ export const useAddUniversity = () => {
   });
 };
 
-// Simplified hook - just call the base URL without any params
-export const useGetAllUniversities = () => {
+// Updated to accept an object parameter
+export const useGetAllUniversities = (params?: Record<string, any>) => {
   return useQuery({
-    queryKey: [queryKey],
+    queryKey: [queryKey, params],
     queryFn: async () => {
-      // Just call the base endpoint without any parameters
-      const response = await api.get<IPaginationResponse<IUniversity>>(
-        UniversityEndPoints.getAllUniversities
-      );
+      let url = UniversityEndPoints.getAllUniversities;
+      
+      // Build query string from params object
+      if (params && Object.keys(params).length > 0) {
+        const queryParams = new URLSearchParams();
+        
+        // Add all params to query string
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            queryParams.append(key, value.toString());
+          }
+        });
+        
+        const queryString = queryParams.toString();
+        if (queryString) {
+          url = `${url}?${queryString}`;
+        }
+      }
+      
+      const response = await api.get<IPaginationResponse<IUniversity>>(url);
       
       // Handle the response structure from your API
       return response.data ?? {
