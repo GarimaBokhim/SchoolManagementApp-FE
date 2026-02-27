@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Filter, Plus, Trash, Edit, BookOpen } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Filter, Plus, Trash, Edit, BookOpen, MoreVertical } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { EditButton } from "@/components/Buttons/EditButton";
 import { api } from "@/utils/instance";
 import AddRequirementsModal from "../pages/Add";
-import { useCourses } from "../../courses/hooks/useCourses";
-
 
 interface RequirementItem {
   id: string;
@@ -31,18 +28,14 @@ interface ApiResponse {
   TotalItems: number;
 }
 
-const formatDate = (dateStr: string): string => {
-  if (!dateStr || dateStr.startsWith("0001")) return "N/A";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-};
+interface Course {
+  id: string;
+  title: string;
+}
+
+interface CourseApiResponse {
+  Items: Course[];
+}
 
 const AllRequirementsForm = () => {
   const { menuStatus } = usePermissions();
@@ -54,30 +47,72 @@ const AllRequirementsForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtered, setFiltered] = useState<RequirementItem[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [courseMap, setCourseMap] = useState<Record<string, string>>({});
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // ← Pull courses list so we can resolve courseId → title
-  const { courses } = useCourses();
+  // Fetch Courses
+  const fetchCourses = async () => {
+    try {
+      const res = await api.get<CourseApiResponse>("api/AcademicPrograms/FilterCourse");
+      const items = res.data?.Items ?? [];
+      const map: Record<string, string> = {};
 
-  const getCourseName = (courseId: string) =>
-    courses.find((c) => c.id === courseId)?.title ?? courseId;
+      items.forEach((c) => {
+        map[String(c.id)] = c.title;
+      });
 
-  const fetchRequirements = useCallback(async () => {
-    setLoading(true);
+      setCourseMap(map);
+    } catch {
+      toast.error("Failed to load courses.");
+    }
+  };
+
+  // Fetch Requirements
+  const fetchRequirements = async () => {
     try {
       const res = await api.get<ApiResponse>("api/AcademicPrograms/FilterRequirements");
       const items = res.data?.Items ?? [];
       setRequirements(items);
-     
+      setFiltered(items);
     } catch {
       toast.error("Failed to load requirements.");
-    } finally {
-      setLoading(false);
     }
+  };
+
+  // Load courses first, then requirements
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await fetchCourses();
+      await fetchRequirements();
+      setLoading(false);
+    };
+
+    loadData();
   }, []);
 
-  useEffect(() => { fetchRequirements(); }, [fetchRequirements]);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
- 
+  const handleFilter = () => {
+    const lower = searchTerm.toLowerCase();
+    setFiltered(
+      lower
+        ? requirements.filter((r) =>
+            r.descriptions.toLowerCase().includes(lower)
+          )
+        : requirements
+    );
+  };
 
   const handleClear = () => {
     setSearchTerm("");
@@ -100,7 +135,7 @@ const AllRequirementsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
-          {/* ── Header ── */}
+          {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold">All Requirements</h1>
             <div className="flex flex-wrap gap-2 justify-end">
@@ -123,12 +158,12 @@ const AllRequirementsForm = () => {
             </div>
           </div>
 
-          {/* ── Filter Panel ── */}
+          {/* Filter Panel */}
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-4 mx-4">
-              <div className="flex flex-col lg:flex-row lg:flex-wrap gap-4">
+              <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 min-w-[240px]">
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block mb-1.5 text-sm font-medium">
                     Search Description
                   </label>
                   <input
@@ -136,17 +171,15 @@ const AllRequirementsForm = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by description..."
-                    className="w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600
-                               bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
-                               focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                    className="w-full px-4 py-2.5 border rounded-lg"
                   />
                 </div>
-                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto items-end">
+                <div className="flex gap-2 items-end">
                   <ButtonElement
                     type="button"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    
+                    onClick={handleFilter}
                     className="!bg-emerald-600 hover:!bg-emerald-700"
                   />
                   <ButtonElement
@@ -160,16 +193,15 @@ const AllRequirementsForm = () => {
             </div>
           )}
 
-          {/* ── Table ── */}
-          <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
-            <table className="min-w-full text-xs sm:text-sm">
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
+                <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                   <th className="px-4 py-3 text-left">S.N</th>
                   <th className="px-4 py-3 text-left">Description</th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">Course</th> {/* ← label updated */}
+                  <th className="px-4 py-3 text-left hidden md:table-cell">Course Name</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Status</th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">Created At</th>
                   {(canEdit || canDelete) && (
                     <th className="px-4 py-3 text-center">Actions</th>
                   )}
@@ -178,61 +210,55 @@ const AllRequirementsForm = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                    <td colSpan={5} className="p-4 text-center">
                       Loading requirements...
                     </td>
                   </tr>
                 ) : filtered.length ? (
                   filtered.map((req, index) => (
-                    <tr
-                      key={req.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                    >
+                    <tr key={req.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="py-2 px-4">{index + 1}</td>
                       <td className="py-2 px-4">
                         <div className="flex items-center gap-2">
-                          <BookOpen size={14} className="text-emerald-500 flex-shrink-0" />
-                          <span className="line-clamp-2">{req.descriptions}</span>
+                          <BookOpen size={14} className="text-emerald-500" />
+                          <span>{req.descriptions}</span>
                         </div>
                       </td>
-                      {/* ← Now shows course title instead of raw UUID */}
-                      <td className="py-2 px-4 hidden md:table-cell text-sm text-gray-700 dark:text-gray-300">
-                        {getCourseName(req.courseId)}
+                      <td className="py-2 px-4 hidden md:table-cell">
+                        {courseMap[req.courseId] ?? "Unknown Course"}
                       </td>
                       <td className="py-2 px-4 hidden lg:table-cell">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${req.isActive
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800"
-                          }`}>
-                          {req.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="py-2 px-4 hidden lg:table-cell text-gray-500 dark:text-gray-400">
-                        {formatDate(req.createdAt)}
+                        {req.isActive ? "Active" : "Inactive"}
                       </td>
                       {(canEdit || canDelete) && (
-                        <td className="py-2 px-4 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() => handleDelete(req.id)}
-                                headerText={<Trash size={14} />}
-                                content="Are you sure you want to delete this requirement?"
-                              />
-                            )}
-                            {canEdit && (
-                              <EditButton
-                                button={
-                                  <ButtonElement
-                                    icon={<Edit size={14} />}
+                        <td className="py-2 px-4 text-center">
+                          <div className="relative" ref={openMenuId === req.id ? menuRef : null}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenMenuId(openMenuId === req.id ? null : req.id)
+                              }
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+
+                            {openMenuId === req.id && (
+                              <div className="absolute right-0 top-8 w-36 bg-white border rounded shadow">
+                                {canEdit && (
+                                  <button
                                     type="button"
-                                    text=""
-                                    onClick={() => toast("Edit coming soon")}
-                                    className="!text-xs !bg-teal-500"
-                                  />
-                                }
-                              />
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      toast("Edit coming soon");
+                                    }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+                                  >
+                                    <Edit size={14} />
+                                    Edit
+                                  </button>
+                                )}
+                               
+                              </div>
                             )}
                           </div>
                         </td>
@@ -241,7 +267,7 @@ const AllRequirementsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                    <td colSpan={5} className="p-4 text-center italic">
                       No requirements found.
                     </td>
                   </tr>
@@ -249,7 +275,6 @@ const AllRequirementsForm = () => {
               </tbody>
             </table>
           </div>
-
         </div>
       </div>
 

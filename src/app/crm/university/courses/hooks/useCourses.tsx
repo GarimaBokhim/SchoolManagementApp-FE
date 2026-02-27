@@ -1,6 +1,7 @@
+// hooks/useCourses.ts (updated version without pagination)
 import { useState, useEffect, useCallback } from "react";
 import { Toast } from "@/components/Toast/toast";
-import { ApiResponse, Course, FilterParams, University } from "../types/ICourses";
+import { Course, University } from "../types/ICourses";
 import { api } from "@/utils/instance";
 
 interface UseCoursesReturn {
@@ -8,71 +9,58 @@ interface UseCoursesReturn {
   universities: University[];
   loading: boolean;
   error: string | null;
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-  setPage: (page: number) => void;
-  setPageSize: (size: number) => void;
-  filters: FilterParams;
-  setFilters: (filters: FilterParams) => void;
   refreshData: () => Promise<void>;
 }
 
-export const useCourses = (initialPageSize: number = 9): UseCoursesReturn => {
+export const useCourses = (): UseCoursesReturn => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
-  const [filters, setFilters] = useState<FilterParams>({
-    pageIndex: 1,
-    pageSize: initialPageSize,
-  });
 
   // Fetch universities
   const fetchUniversities = useCallback(async () => {
     try {
-      const response = await api.get<ApiResponse<University>>('/AcademicPrograms/FilterUniversity', {
+      const response = await api.get('/api/AcademicPrograms/FilterUniversity', {
         params: {
           pageIndex: 1,
-          pageSize: 100, // Get all universities
+          pageSize: 1000, // Get all universities
         }
       });
-      setUniversities(response.data.items || []);
+      // Handle different response structures
+      const universitiesData = response.data?.items || response.data || [];
+      setUniversities(universitiesData);
     } catch (err: any) {
       console.error('Error fetching universities:', err);
-      // Don't show error toast here as it might be a secondary failure
     }
   }, []);
 
-  // Fetch courses
-  const fetchCourses = useCallback(async () => {
+  // Fetch all courses without pagination
+  const fetchAllCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const params: any = {
-        pageIndex: currentPage,
-        pageSize: pageSize,
-      };
-
-      // Add filters if they exist
-      if (filters.searchTerm) {
-        params.searchTerm = filters.searchTerm;
+      // Fetch all courses by requesting a large page size
+      const response = await api.get('/api/AcademicPrograms/FilterCourse', {
+        params: {
+          pageIndex: 1,
+          pageSize: 1000, // Get all courses
+        }
+      });
+      
+      // Handle different response structures
+      let coursesData = [];
+      if (response.data?.items) {
+        coursesData = response.data.items;
+      } else if (Array.isArray(response.data)) {
+        coursesData = response.data;
+      } else {
+        coursesData = response.data || [];
       }
-      if (filters.universityId) {
-        params.universityId = filters.universityId;
-      }
-      if (filters.country) {
-        params.country = filters.country;
-      }
-
-      const response = await api.get<ApiResponse<Course>>('/AcademicPrograms/FilterCourse', { params });
       
       // Enrich courses with university data
-      const enrichedCourses = response.data.items.map((course: Course) => {
+      const enrichedCourses = coursesData.map((course: Course) => {
         const university = universities.find(u => u.id === course.universityId);
         return {
           ...course,
@@ -82,7 +70,6 @@ export const useCourses = (initialPageSize: number = 9): UseCoursesReturn => {
       });
 
       setCourses(enrichedCourses);
-      setTotalPages(response.data.totalPages || 1);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch courses';
       setError(errorMessage);
@@ -90,28 +77,23 @@ export const useCourses = (initialPageSize: number = 9): UseCoursesReturn => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, filters, universities]);
+  }, [universities]);
 
   // Initial load
   useEffect(() => {
     fetchUniversities();
   }, [fetchUniversities]);
 
-  // Fetch courses when dependencies change
+  // Fetch courses when universities are loaded
   useEffect(() => {
     if (universities.length > 0) {
-      fetchCourses();
+      fetchAllCourses();
     }
-  }, [currentPage, pageSize, filters, universities, fetchCourses]);
-
-  const setPage = (page: number) => {
-    setCurrentPage(page);
-    setFilters(prev => ({ ...prev, pageIndex: page }));
-  };
+  }, [universities, fetchAllCourses]);
 
   const refreshData = async () => {
     await fetchUniversities();
-    await fetchCourses();
+    await fetchAllCourses();
   };
 
   return {
@@ -119,13 +101,6 @@ export const useCourses = (initialPageSize: number = 9): UseCoursesReturn => {
     universities,
     loading,
     error,
-    totalPages,
-    currentPage,
-    pageSize,
-    setPage,
-    setPageSize,
-    filters,
-    setFilters,
     refreshData,
   };
 };
