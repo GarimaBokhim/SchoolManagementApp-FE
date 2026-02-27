@@ -30,6 +30,8 @@ import {
   School2Icon,
   Notebook,
   GiftIcon,
+  NotepadTextDashedIcon,
+  School2,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -186,6 +188,8 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Report: SheetIcon,
     Account: Calculator,
     Setup: Settings,
+    Applications: NotepadTextDashedIcon,
+    "Academic Program": School,
   };
 
   const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999);
@@ -421,7 +425,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       </div>
       {isOpen && (
         <div className="p-4 border-t border-gray-200 hidden md:block">
-          <p className="text-xs text-gray-500">© 2025 MyApp</p>
+          <p className="text-xs text-gray-500">© 2025 SchoolManagement System</p>
         </div>
       )}
     </div>
