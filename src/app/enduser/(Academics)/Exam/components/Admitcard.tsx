@@ -1,9 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { forwardRef } from "react";
 import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 import { IExam } from "../types/IExams";
-import AllClass from "../../Class/pages/All";
 import { useGetAllClass } from "../../Class/hooks";
+import { useGetAllSchool, useGetSchoolByInstitutionId } from "@/app/admin/Setup/School/hooks";
 
 type AdmitCardProps = {
   student: IStudent;
@@ -11,8 +12,15 @@ type AdmitCardProps = {
 };
 
 const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
-  ({ student, exam }, ref) => {
+  ({ student, exam  }, ref) => {
+    const InstitutionId = typeof window !== "undefined"
+    ? localStorage.getItem("institutionId")
+    : null;
     const {data:allClass} = useGetAllClass();
+    const { data: schoolDetail } =useGetAllSchool();
+    
+    
+
     return (
       <div
         ref={ref}
@@ -22,10 +30,16 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
         <div className="relative h-[80px] bg-blue-900 text-white rounded-t-md">
           <div className="text-center pt-4">
             <h1 className="text-xl font-extrabold text-yellow-400">
-              Saraswati Higher Secondary School
+              {schoolDetail?.Items.find(i => i.id === InstitutionId)?.name ?? "School Name"}
+              
             </h1>
-            <p className="text-xs">Birtamode-4, Jhapa</p>
-            <p className="text-xs">Phone No. 023-544722</p>
+            
+            <p className="text-xs">
+              {schoolDetail?.Items.find(i => i.id === InstitutionId)?.address ?? "Address"}
+            </p>
+            <p className="text-xs">
+              Phone No. {schoolDetail?.Items.find(i => i.id === InstitutionId)?.contactNumber ?? "-"}
+            </p>
           </div>
         </div>
 
