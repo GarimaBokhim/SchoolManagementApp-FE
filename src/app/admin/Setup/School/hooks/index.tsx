@@ -12,11 +12,13 @@ const SchoolEndPoints = {
   createSchool: "/api/SetupControllers/AddSchool",
   getSchoolById: "/api/SetupControllers/School",
   getSchoolByInstitutionId: "/api/SetupControllers/GetSchool",
+  getSchoolDetailsByInstitutionId:"/api/SetupControllers/GetSchoolDetails",
   removeSchool: "/api/SetupControllers/DeleteSchool",
   updateSchool: "/api/SetupControllers/UpdateSchool",
   filterSchoolByDate: "/api/SetupControllers/FilterSchoolByDate",
   GetSchoolDetails: "/api/SetupControllers/GetSchoolDetails",
   fiscalYear: "/api/Settings/all-FiscalYear",
+ 
 };
 
 const queryKey = "school";
@@ -45,12 +47,26 @@ type SchoolRequest = {
   Users: ISchoolUser[];
 };
 
-export const useGetSchoolByInstitutionId = (institutionId: string) => {
+export const useGetSchoolByInstitutionId = (InstitutionId: string) => {
+  return useQuery({
+    queryKey: [queryKey + InstitutionId],
+    queryFn: async () => {
+      const response = await api.get<ISchool[]>(
+        `${SchoolEndPoints.getSchoolByInstitutionId}/${InstitutionId}`
+      );
+      return response.data;
+    },
+    enabled: !!InstitutionId,
+    staleTime: 0,
+    retry: false,
+  });
+};
+export const getSchoolDetailsByInstitutionId = (institutionId: string) => {
   return useQuery({
     queryKey: [queryKey + institutionId],
     queryFn: async () => {
       const response = await api.get<ISchool[]>(
-        `${SchoolEndPoints.getSchoolByInstitutionId}/${institutionId}`
+        `${SchoolEndPoints.getSchoolDetailsByInstitutionId}/${institutionId}`
       );
       return response.data;
     },
