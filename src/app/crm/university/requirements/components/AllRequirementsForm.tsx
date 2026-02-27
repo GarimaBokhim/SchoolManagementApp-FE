@@ -11,6 +11,7 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { EditButton } from "@/components/Buttons/EditButton";
 import { api } from "@/utils/instance";
 import AddRequirementsModal from "../pages/Add";
+import { useCourses } from "../../courses/hooks/useCourses";
 
 
 interface RequirementItem {
@@ -54,13 +55,19 @@ const AllRequirementsForm = () => {
   const [filtered, setFiltered] = useState<RequirementItem[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // ← Pull courses list so we can resolve courseId → title
+  const { courses } = useCourses();
+
+  const getCourseName = (courseId: string) =>
+    courses.find((c) => c.id === courseId)?.title ?? courseId;
+
   const fetchRequirements = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<ApiResponse>("api/AcademicPrograms/FilterRequirements");
       const items = res.data?.Items ?? [];
       setRequirements(items);
-      setFiltered(items);
+     
     } catch {
       toast.error("Failed to load requirements.");
     } finally {
@@ -70,14 +77,7 @@ const AllRequirementsForm = () => {
 
   useEffect(() => { fetchRequirements(); }, [fetchRequirements]);
 
-  const handleFilter = () => {
-    const lower = searchTerm.toLowerCase();
-    setFiltered(
-      lower
-        ? requirements.filter((r) => r.descriptions.toLowerCase().includes(lower))
-        : requirements
-    );
-  };
+ 
 
   const handleClear = () => {
     setSearchTerm("");
@@ -146,7 +146,7 @@ const AllRequirementsForm = () => {
                     type="button"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    onClick={handleFilter}
+                    
                     className="!bg-emerald-600 hover:!bg-emerald-700"
                   />
                   <ButtonElement
@@ -167,7 +167,7 @@ const AllRequirementsForm = () => {
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left">S.N</th>
                   <th className="px-4 py-3 text-left">Description</th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">Course ID</th>
+                  <th className="px-4 py-3 text-left hidden md:table-cell">Course</th> {/* ← label updated */}
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Status</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Created At</th>
                   {(canEdit || canDelete) && (
@@ -195,8 +195,9 @@ const AllRequirementsForm = () => {
                           <span className="line-clamp-2">{req.descriptions}</span>
                         </div>
                       </td>
-                      <td className="py-2 px-4 hidden md:table-cell font-mono text-xs text-gray-400 dark:text-gray-500">
-                        {req.courseId}
+                      {/* ← Now shows course title instead of raw UUID */}
+                      <td className="py-2 px-4 hidden md:table-cell text-sm text-gray-700 dark:text-gray-300">
+                        {getCourseName(req.courseId)}
                       </td>
                       <td className="py-2 px-4 hidden lg:table-cell">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium

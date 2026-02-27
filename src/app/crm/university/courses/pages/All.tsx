@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Search, MapPin, ChevronDown, GraduationCap, Eye, Send, Filter, RotateCcw, Building2, Plus } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
@@ -9,6 +9,9 @@ import { api } from "../../api/api_helper";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddCourseModal from "./Add";
+import { useGetAllUniversities } from "../../univer-sity/hooks";
+import { IUniversity } from "../../univer-sity/types/IUniversity";
+
 
 interface Course {
   id: string;
@@ -25,12 +28,6 @@ interface Course {
   modifiedAt: string;
 }
 
-interface University {
-  id: string;
-  name: string;
-  country?: string;
-}
-
 interface FilterCourseResponse {
   Items: Course[];
   TotalItems: number;
@@ -39,11 +36,6 @@ interface FilterCourseResponse {
   TotalPages: number;
   FirstPage: number;
   LastPage: number;
-}
-
-interface UniversityResponse {
-  items: University[];
-  totalPages: number;
 }
 
 interface FilterFormData {
@@ -68,31 +60,21 @@ const AllCourseForm = () => {
 
   const [openFilter, setOpenFilter] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const { data: universitiesData, isLoading: loadingUniversities } = useGetAllUniversities();
+  const universities: IUniversity[] = universitiesData?.Items ?? universitiesData?.items ?? [];
 
   const form = useForm<FilterFormData>({
     defaultValues: { search: "", university: "", location: "" },
   });
 
-  const fetchUniversities = useCallback(async () => {
-    try {
-      const response = await api.get<UniversityResponse>(
-        'api/AcademicPrograms/FilterUniversity',
-        { params: { pageIndex: 1, pageSize: 100 } }
-      );
-      setUniversities(response.data.items ?? []);
-    } catch (error) {
-      console.error("Error fetching universities:", error);
-    }
-  }, []);
-
-  const fetchCourses = useCallback(async () => {
-    setLoading(true);
+  const fetchCourses = async () => {
+    setLoadingCourses(true);
     try {
       const response = await api.get<FilterCourseResponse>(
-        'api/AcademicPrograms/FilterCourse'
+        "api/AcademicPrograms/FilterCourse"
       );
       if (response.data) {
         setCourses(response.data.Items ?? []);
@@ -101,21 +83,18 @@ const AllCourseForm = () => {
       console.error("Error fetching courses:", error);
       Toast.error("Failed to load courses");
     } finally {
-      setLoading(false);
+      setLoadingCourses(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchUniversities();
-    fetchCourses();
-  }, [fetchUniversities, fetchCourses]);
-
-  // Helper to resolve university name from id
-  const getUniversityName = (universityId: string) => {
-    return universities.find((u) => u.id === universityId)?.name ?? "University";
   };
 
-  const onFilterSubmit = (data: FilterFormData) => {
+  useState(() => {
+    fetchCourses();
+  });
+
+  const getUniversityName = (universityId: string) =>
+    universities.find((u: IUniversity) => u.id === universityId)?.name ?? "University";
+
+  const onFilterSubmit = (_data: FilterFormData) => {
     Toast.info("Filter feature coming soon");
   };
 
@@ -123,13 +102,8 @@ const AllCourseForm = () => {
     form.reset({ search: "", university: "", location: "" });
   };
 
-  const handleViewDetails = (courseId: string) => {
-    Toast.info(`Viewing course details`);
-  };
-
-  const handleApplyNow = (courseId: string) => {
-    Toast.success(`Application started!`);
-  };
+  const handleViewDetails = (_courseId: string) => Toast.info("Viewing course details");
+  const handleApplyNow = (_courseId: string) => Toast.success("Application started!");
 
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
@@ -137,15 +111,17 @@ const AllCourseForm = () => {
 
   const formatCurrency = (amount: number, currency: string) => {
     const currencyMap: Record<string, string> = {
-      'sg': 'SGD', 'usd': 'USD', 'eur': 'EUR', 'gbp': 'GBP'
+      sg: "SGD", usd: "USD", eur: "EUR", gbp: "GBP",
     };
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currencyMap[currency.toLowerCase()] || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyMap[currency.toLowerCase()] || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  const loading = loadingCourses || loadingUniversities;
 
   if (loading) {
     return (
@@ -185,7 +161,7 @@ const AllCourseForm = () => {
             </div>
           </div>
 
-          {/* Filter panel */}
+          {/* Filter Panel */}
           {openFilter && (
             <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
@@ -210,7 +186,7 @@ const AllCourseForm = () => {
                   <div className="relative">
                     <select {...form.register("university")} className={inputClass}>
                       <option value="">All Universities</option>
-                      {universities.map((u) => (
+                      {universities.map((u: IUniversity) => (
                         <option key={u.id} value={u.id}>{u.name}</option>
                       ))}
                     </select>
@@ -249,11 +225,6 @@ const AllCourseForm = () => {
               </form>
             </div>
           )}
-
-          {/* Results count */}
-          <div className="px-4 pb-3 text-sm text-gray-500 dark:text-gray-400">
-            Showing {courses.length} {courses.length === 1 ? 'course' : 'courses'}
-          </div>
 
           {/* Cards Grid */}
           <div className="px-4 pb-4">

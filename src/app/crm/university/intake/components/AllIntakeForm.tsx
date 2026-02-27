@@ -204,10 +204,7 @@ const AllIntakeForm = () => {
             </div>
           )}
 
-          {/* Results count */}
-          <div className="px-4 pb-3 text-sm text-gray-500 dark:text-gray-400">
-            {isLoading ? "Loading intakes..." : `Showing ${intakes.length} ${intakes.length === 1 ? "intake" : "intakes"}`}
-          </div>
+          
 
           {/* Error state */}
           {error && (
