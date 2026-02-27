@@ -1,27 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import AllApplicants from "../applicants/pages/All";
-import AllCrmStudents from "../crm_students/pages/All";
-import AllLeads from "../Leads/pages/All";
+import AllCrmStudents from "../../applications/crm_students/pages/All";
+import AllLeads from "../../applications/Leads/pages/All";
 
 
-const AllApplications = () => {
+
+const Allvisitors = () => {
   const exam = [
-    { id: "applicant", label: "Applicant" },
-    { id: "student", label: "Student" },
+    { id: "lead", label: "Lead" },
+    { id: "profile", label: "profile" },
   ];
 
   const [activeReport, setActiveReport] = useState<string>("lead");
 
   const renderReport = () => {
     switch (activeReport) {
-      case "student":
+      case "lead":
+        return <AllLeads />;
+
+      case "profile":
         return <AllCrmStudents />;
 
-      case "applicant":
-        return <AllApplicants />;
-
+   
       default:
         return <AllLeads />;
     }
@@ -59,4 +60,4 @@ const AllApplications = () => {
   );
 };
 
-export default AllApplications;
+export default Allvisitors;
