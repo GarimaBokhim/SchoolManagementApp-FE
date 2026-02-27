@@ -23,7 +23,7 @@ const AllApplications = () => {
         return <AllApplicants />;
 
       default:
-        return <AllLeads />;
+        return <AllApplicants />;
     }
   };
 
