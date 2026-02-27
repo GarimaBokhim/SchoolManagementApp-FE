@@ -1,19 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Save } from 'lucide-react';
 import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 
-interface UniversityFormData {
-  name: string;
-  country: string;
-  descriptions: string;
-  website: string;
-  globalRanking: number;
+const MONTH_OPTIONS = [
+  { value: 1, label: "January" },
+  { value: 2, label: "February" },
+  { value: 3, label: "March" },
+  { value: 4, label: "April" },
+  { value: 5, label: "May" },
+  { value: 6, label: "June" },
+  { value: 7, label: "July" },
+  { value: 8, label: "August" },
+  { value: 9, label: "September" },
+  { value: 10, label: "October" },
+  { value: 11, label: "November" },
+  { value: 12, label: "December" },
+];
+
+interface Course {
+  id: string;
+  title: string;
 }
 
-interface AddUniversityModalProps {
+interface CourseApiResponse {
+  Items: Course[];
+}
+
+interface IntakeFormData {
+  month: number;
+  deadline: string;
+  isOpen: boolean;
+  courseId: string;
+}
+
+interface AddIntakeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -26,24 +49,40 @@ const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:bo
 
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`;
 
-const defaultFormData: UniversityFormData = {
-  name: '',
-  country: '',
-  descriptions: '',
-  website: '',
-  globalRanking: 0,
+const defaultFormData: IntakeFormData = {
+  month: 1,
+  deadline: '',
+  isOpen: true,
+  courseId: '',
 };
 
-const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState<UniversityFormData>(defaultFormData);
+const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState<IntakeFormData>(defaultFormData);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const fetchCourses = useCallback(async () => {
+    try {
+      const res = await api.get<CourseApiResponse>('api/AcademicPrograms/FilterCourse');
+      setCourses(res.data?.Items ?? []);
+    } catch {
+      // silently fail — dropdown will be empty
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) fetchCourses();
+  }, [isOpen, fetchCourses]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'globalRanking' ? Number(value) : value,
+      [name]:
+        name === 'month' ? Number(value)
+        : type === 'checkbox' ? (e.target as HTMLInputElement).checked
+        : value,
     }));
     setError(null);
   };
@@ -53,8 +92,14 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
     setIsSubmitting(true);
     setError(null);
     try {
-      await api.post('/api/AcademicPrograms/AddUniversity', formData);
-      toast.success('University added successfully!');
+      const payload = {
+        ...formData,
+        deadline: formData.deadline
+          ? new Date(formData.deadline).toISOString()
+          : new Date().toISOString(),
+      };
+      await api.post('/api/AcademicPrograms/AddIntake', payload);
+      toast.success('Intake added successfully!');
       setFormData(defaultFormData);
       if (onSuccess) onSuccess();
       onClose();
@@ -67,13 +112,13 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
       if (axiosErr.response) {
         const msg = axiosErr.response.data?.message || axiosErr.response.data?.title || 'Server error occurred';
         setError(`Error ${axiosErr.response.status}: ${msg}`);
-        toast.error(`Failed to add university: ${msg}`);
+        toast.error(`Failed to add intake: ${msg}`);
       } else if (axiosErr.request) {
         setError('No response from server. Please check your connection.');
         toast.error('No response from server.');
       } else {
         setError(axiosErr.message ?? 'An unexpected error occurred');
-        toast.error('Failed to add university. Please try again.');
+        toast.error('Failed to add intake. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -107,7 +152,7 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add New University
+              Add New Intake
             </h1>
             <button type="button" onClick={handleClose} className="text-red-400 text-2xl hover:text-red-500">
               <X strokeWidth={3} />
@@ -122,72 +167,71 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
 
           <form onSubmit={handleSubmit}>
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              University Information
+              Intake Information
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
+              {/* Course */}
               <div className="flex flex-col gap-1 lg:col-span-2">
-                <label className={labelClass}>University Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
+                <label className={labelClass}>Course <span className="text-red-500">*</span></label>
+                <select
+                  name="courseId"
+                  value={formData.courseId}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Harvard University"
                   className={inputClass}
-                />
+                >
+                  <option value="">Select a course</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
               </div>
 
+              {/* Month */}
               <div className="flex flex-col gap-1">
-                <label className={labelClass}>Country <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
+                <label className={labelClass}>Intake Month <span className="text-red-500">*</span></label>
+                <select
+                  name="month"
+                  value={formData.month}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. United States"
                   className={inputClass}
-                />
+                >
+                  {MONTH_OPTIONS.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
               </div>
 
+              {/* Deadline */}
               <div className="flex flex-col gap-1">
-                <label className={labelClass}>Website</label>
+                <label className={labelClass}>Deadline <span className="text-red-500">*</span></label>
                 <input
-                  type="text"
-                  name="website"
-                  value={formData.website}
+                  type="date"
+                  name="deadline"
+                  value={formData.deadline}
                   onChange={handleChange}
-                  placeholder="e.g. https://harvard.edu"
+                  required
                   className={inputClass}
                 />
               </div>
 
+              {/* Is Open */}
               <div className="flex flex-col gap-1">
-                <label className={labelClass}>Global Ranking</label>
-                <input
-                  type="number"
-                  name="globalRanking"
-                  value={formData.globalRanking}
-                  onChange={handleChange}
-                  min={0}
-                  placeholder="e.g. 1"
+                <label className={labelClass}>Status <span className="text-red-500">*</span></label>
+                <select
+                  name="isOpen"
+                  value={formData.isOpen ? 'true' : 'false'}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, isOpen: e.target.value === 'true' }))
+                  }
                   className={inputClass}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1 lg:col-span-3">
-                <label className={labelClass}>Description</label>
-                <textarea
-                  name="descriptions"
-                  value={formData.descriptions}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="Enter a brief description of the university..."
-                  className={`${inputClass} resize-none`}
-                />
+                >
+                  <option value="true">Open</option>
+                  <option value="false">Closed</option>
+                </select>
               </div>
 
             </div>
@@ -201,7 +245,7 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
                            disabled:bg-green-300 disabled:cursor-not-allowed"
               >
                 <Save size={18} />
-                {isSubmitting ? 'Saving...' : 'Save University'}
+                {isSubmitting ? 'Saving...' : 'Save Intake'}
               </button>
             </div>
           </form>
@@ -211,4 +255,4 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose
   );
 };
 
-export default AddUniversityModal;
+export default AddIntakeModal;
