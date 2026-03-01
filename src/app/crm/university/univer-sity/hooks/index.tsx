@@ -34,17 +34,14 @@ export const useAddUniversity = () => {
   });
 };
 
-// Simplified hook - just call the base URL without any params
 export const useGetAllUniversities = () => {
   return useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
-      // Just call the base endpoint without any parameters
       const response = await api.get<IPaginationResponse<IUniversity>>(
         UniversityEndPoints.getAllUniversities
       );
       
-      // Handle the response structure from your API
       return response.data ?? {
         Items: [],
         TotalItems: 0,

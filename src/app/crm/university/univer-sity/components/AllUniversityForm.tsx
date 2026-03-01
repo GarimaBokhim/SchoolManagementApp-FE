@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/crm/university/univer-sity/components/AllUniversityForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -112,7 +111,6 @@ const AllUniversityForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
-          {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <div className="flex items-center space-x-3">
               <ButtonElement
@@ -134,7 +132,6 @@ const AllUniversityForm = () => {
             </div>
           </div>
 
-          {/* Filter Panel */}
           {openFilter && (
             <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
@@ -153,7 +150,6 @@ const AllUniversityForm = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   </div>
                 </div>
-
                 <div className="flex-1 min-w-[200px] flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
                   <div className="relative">
@@ -186,9 +182,6 @@ const AllUniversityForm = () => {
               </form>
             </div>
           )}
-
-
-          {/* Cards Grid - completely unchanged */}
           <div className="px-4 pb-4">
             {universities.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
