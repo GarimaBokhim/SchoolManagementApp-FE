@@ -4,7 +4,7 @@ import React, { forwardRef } from "react";
 import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 import { IExam } from "../types/IExams";
 import { useGetAllClass } from "../../Class/hooks";
-import { useGetAllSchool, useGetSchoolByInstitutionId } from "@/app/admin/Setup/School/hooks";
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 
 type AdmitCardProps = {
   student: IStudent;

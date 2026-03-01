@@ -25,7 +25,7 @@ export const useLogin = () => {
       queryClient.refetchQueries({ queryKey: ["user"] });
     },
     onError: (error: Error) => {
-      console.error("Error adding module:", error);
+      console.error("Error while logging in:", error);
     },
   });
 };
