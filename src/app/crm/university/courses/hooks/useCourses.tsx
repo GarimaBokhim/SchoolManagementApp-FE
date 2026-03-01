@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // hooks/useCourses.ts (updated version without pagination)
 import { useState, useEffect, useCallback } from "react";
 import { Toast } from "@/components/Toast/toast";
