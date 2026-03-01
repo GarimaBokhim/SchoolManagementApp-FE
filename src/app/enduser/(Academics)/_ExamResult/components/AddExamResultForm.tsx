@@ -124,7 +124,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                   setSelectedStudentId(id);
                   form.setValue("studentId", id);
                 }}
-                getLabel={(s) => s?.firstName ?? ""}
+                getLabel={(s) => `${s?.firstName ?? ""} ${s?.lastName ?? ""}`.trim()}
                 getValue={(s) => s?.id ?? ""}
                 renderOptionExtra={(s) => (
                   <div>
