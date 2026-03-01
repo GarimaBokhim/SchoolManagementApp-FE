@@ -276,7 +276,7 @@ const AllExamForm = () => {
                           {canEdit && (
                             <EditButton button={buttonElement(Exam.id ?? "")} />
                           )}
-                          <PrintAdmitCard exam={Exam} />
+                          <PrintAdmitCard />
                         </div>
                       </td>
                     </tr>
