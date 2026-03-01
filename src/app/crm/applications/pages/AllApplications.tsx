@@ -3,7 +3,6 @@
 import { useState } from "react";
 import AllApplicants from "../applicants/pages/All";
 import AllCrmStudents from "../crm_students/pages/All";
-import AllLeads from "../Leads/pages/All";
 
 
 const AllApplications = () => {

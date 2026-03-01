@@ -4,12 +4,12 @@ import exportIcon from "../../../public/assets/excel.png";
 import { ButtonElement } from "./ButtonElement";
 
 interface Props {
-  children: ReactNode;
+  data: ReactNode;
   fileName?: string;
 }
 
 export const ExportExcelButton = ({
-  children,
+  data,
   fileName = "export.xlsx",
 }: Props) => {
   const tableRef = useRef<HTMLDivElement>(null);
@@ -40,7 +40,7 @@ export const ExportExcelButton = ({
           visibility: "hidden",
         }}
       >
-        <div ref={tableRef}>{children}</div>
+        <div ref={tableRef}>{data}</div>
       </div>
 
       <ButtonElement

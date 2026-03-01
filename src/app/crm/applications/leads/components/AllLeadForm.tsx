@@ -7,16 +7,16 @@ import { usePermissions } from '@/context/auth/PermissionContext';
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
 import Pagination from '@/components/Pagination';
 import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { useLeads } from '../hooks/useLeads';
-import { useLeadFilters } from '../hooks/useLeadFilters';
-import { useLeadMutations } from '../hooks/useLeadsMutations';
-import { LeadDetailModal } from './LeadDetailModel';
-import { LeadsHeader } from './lead_ui_components/LeadsHeader';
-import { LeadsFilter } from './lead_ui_components/LeadsFilter';
-import { LeadsTable } from './lead_ui_components/LeadsTable';
-import ConvertToApplicantModal from '../pages/Convert';
-import AddLeadModal from '../pages/Add';
-import { ConvertToApplicantPayload, Lead, SearchParam } from '../types/ILeads';
+import { useLeads } from '/Users/elixir/WorkProjects/WorkSpace/SchoolManagement/src/app/crm/applications/leads/hooks/useLeads';
+import { useLeadFilters } from '/Users/elixir/WorkProjects/WorkSpace/SchoolManagement/src/app/crm/applications/leads/hooks/useLeadFilters';
+import { useLeadMutations } from '/Users/elixir/WorkProjects/WorkSpace/SchoolManagement/src/app/crm/applications/leads/hooks/useLeadsMutations';
+import {LeadDetailModal}  from '@/app/crm/applications/leads/components/LeadDetailModel';
+import { LeadsHeader } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsHeader';
+import { LeadsFilter } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsFilter';
+import { LeadsTable } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsTable';
+import ConvertToApplicantModal from '@/app/crm/applications/leads/pages/Convert';
+import AddLeadModal from '@/app/crm/applications/leads/pages/Add';
+import { Lead,ConvertToApplicantPayload ,SearchParam} from '@/app/crm/applications/leads/types/ILeads';
 
 const AllLeadsForm = () => {
   const { menuStatus } = usePermissions();

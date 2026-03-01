@@ -61,7 +61,7 @@ export const useGetSchoolByInstitutionId = (InstitutionId: string) => {
     retry: false,
   });
 };
-export const getSchoolDetailsByInstitutionId = (institutionId: string) => {
+export const useGetSchoolDetailsByInstitutionId = (institutionId: string) => {
   return useQuery({
     queryKey: [queryKey + institutionId],
     queryFn: async () => {

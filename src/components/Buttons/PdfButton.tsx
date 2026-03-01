@@ -3,10 +3,10 @@ import { ReactNode, useRef } from "react";
 import pdfIcon from "../../../public/assets/pdf.png";
 import { ButtonElement } from "./ButtonElement";
 interface Props {
-  children: ReactNode;
+  data: ReactNode;
 }
 
-export const PdfButton = ({ children }: Props) => {
+export const PdfButton = ({ data }: Props) => {
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = () => {
     if (!printRef.current) return;
@@ -66,7 +66,7 @@ export const PdfButton = ({ children }: Props) => {
   return (
     <div className="mx">
       <div style={{ display: "none" }}>
-        <div ref={printRef}>{children}</div>
+        <div ref={printRef}>{data}</div>
       </div>
       <div className="tooltip">
         <ButtonElement
