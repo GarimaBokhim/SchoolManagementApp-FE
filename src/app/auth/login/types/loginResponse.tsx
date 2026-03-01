@@ -30,11 +30,10 @@ export interface ILoginResponse {
 }
 
 export interface ILoginType {
-  email: string;
-  password: string;
-  Email?: string;
-  Password?: string;
+  email: string | null;
+  password: string | null;
   token?: string;
+  refreshToken?: string;
 }
 
 export interface ITokenPayload {
