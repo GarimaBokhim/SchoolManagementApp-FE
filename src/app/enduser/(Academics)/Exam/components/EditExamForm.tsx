@@ -33,6 +33,7 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
       isfinalExam: ExamData?.isfinalExam ?? true,
       classId: ExamData?.classId ?? "",
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedClass(ExamData?.classId);
   }
 }, [ExamData]);

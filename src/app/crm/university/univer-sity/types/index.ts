@@ -47,7 +47,7 @@ export const useAddUniversity = () => {
 };
 
 // Updated to accept an object parameter
-export const useGetAllUniversities = (params?: Record<string, any>) => {
+export const useGetAllUniversities = (params?: string) => {
   return useQuery({
     queryKey: [queryKey, params],
     queryFn: async () => {
@@ -71,7 +71,7 @@ export const useGetAllUniversities = (params?: Record<string, any>) => {
       }
       
       const response = await api.get<IPaginationResponse<IUniversity>>(url);
-      
+      ``
       // Handle the response structure from your API
       return response.data ?? {
         Items: [],

@@ -1,28 +1,32 @@
-"use client";
+'use client'
 
-import { useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Toaster } from 'react-hot-toast';
-import { usePermissions } from '@/context/auth/PermissionContext';
-import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData';
-import Pagination from '@/components/Pagination';
-import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent';
-import { useLeads } from '../hooks/useLeads';
-import { useLeadFilters } from '../hooks/useLeadFilters';
-import { useLeadMutations } from '../hooks/useLeadsMutations';
-import { LeadDetailModal } from './LeadDetailModel';
-import { LeadsHeader } from './lead_ui_components/LeadsHeader';
-import { LeadsFilter } from './lead_ui_components/LeadsFilter';
-import { LeadsTable } from './lead_ui_components/LeadsTable';
-import ConvertToApplicantModal from '../pages/Convert';
-import AddLeadModal from '../pages/Add';
-import { ConvertToApplicantPayload, Lead, SearchParam } from '../types/ILeads';
+import { useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { Toaster } from 'react-hot-toast'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import Pagination from '@/components/Pagination'
+import { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
+import { useLeads } from '@/app/crm/applications/leads/hooks/useLeads'
+import { useLeadFilters } from '@/app/crm/applications/leads/hooks/useLeadFilters'
+import { useLeadMutations } from '@/app/crm/applications/leads/hooks/useLeadsMutations'
+import { LeadDetailModal } from '@/app/crm/applications/leads/components/LeadDetailModel'
+import { LeadsHeader } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsHeader'
+import { LeadsFilter } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsFilter'
+import { LeadsTable } from '@/app/crm/applications/leads/components/lead_ui_components/LeadsTable'
+import ConvertToApplicantModal from '@/app/crm/applications/leads/pages/Convert'
+import AddLeadModal from '@/app/crm/applications/leads/pages/Add'
+import {
+  Lead,
+  ConvertToApplicantPayload,
+  SearchParam,
+} from '@/app/crm/applications/leads/types/ILeads'
 
 const AllLeadsForm = () => {
-  const { menuStatus } = usePermissions();
-  const { canEdit, canDelete } = useMenuPermissionData(menuStatus);
+  const { menuStatus } = usePermissions()
+  const { canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
-  const dateFilterRef = useRef<DateRangeFilterRef>(null);
+  const dateFilterRef = useRef<DateRangeFilterRef>(null)
 
   const paginationForm = useForm<SearchParam>({
     defaultValues: {
@@ -30,7 +34,7 @@ const AllLeadsForm = () => {
       pageIndex: 1,
       isPagination: true,
     },
-  });
+  })
 
   const {
     leads,
@@ -42,7 +46,7 @@ const AllLeadsForm = () => {
     currentPage,
     setParams,
     fetchLeads,
-  } = useLeads();
+  } = useLeads()
 
   const {
     openFilter,
@@ -54,64 +58,70 @@ const AllLeadsForm = () => {
     fetchUsers,
     handleProfileSelected,
     onClearClick,
-  } = useLeadFilters(setParams, setPaginationParams);
+  } = useLeadFilters(setParams, setPaginationParams)
 
-  const { convertingId, handleDelete, handleConvert } = useLeadMutations(fetchLeads);
+  const { convertingId, handleDelete, handleConvert } =
+    useLeadMutations(fetchLeads)
 
-  const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
-  const [showConvertModal, setShowConvertModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [conversionData, setConversionData] = useState<ConvertToApplicantPayload>({
-    userId: '',
-    passportNo: '',
-    targetCountry: '',
-  });
+  const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false)
+  const [showConvertModal, setShowConvertModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [conversionData, setConversionData] =
+    useState<ConvertToApplicantPayload>({
+      userId: '',
+      passportNo: '',
+      targetCountry: '',
+    })
 
   const handleConvertClick = (lead: Lead) => {
-    setSelectedLead(lead);
-    setConversionData({ userId: lead.userId, passportNo: '', targetCountry: '' });
-    setShowConvertModal(true);
-  };
+    setSelectedLead(lead)
+    setConversionData({
+      userId: lead.userId,
+      passportNo: '',
+      targetCountry: '',
+    })
+    setShowConvertModal(true)
+  }
 
   const handleViewDetails = (lead: Lead) => {
-    setSelectedUserId(lead.userId);
-    setShowDetailModal(true);
-  };
+    setSelectedUserId(lead.userId)
+    setShowDetailModal(true)
+  }
 
-  const handleConversionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setConversionData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleConversionInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target
+    setConversionData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleConvertSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedLead) return;
-    const success = await handleConvert(selectedLead, conversionData);
+    e.preventDefault()
+    if (!selectedLead) return
+    const success = await handleConvert(selectedLead, conversionData)
     if (success) {
-      setShowConvertModal(false);
+      setShowConvertModal(false)
     }
-  };
+  }
 
-  const handleEdit = () => {
-  
-  };
+  const handleEdit = () => {}
 
   const handleSearch = (searchParams: SearchParam) => {
-    searchParams.pageSize = paginationParams.pageSize;
-    setPaginationParams(searchParams);
-  };
+    searchParams.pageSize = paginationParams.pageSize
+    setPaginationParams(searchParams)
+  }
 
   const handleLeadSuccess = () => {
-    fetchLeads();
-    setIsAddLeadModalOpen(false);
-  };
+    fetchLeads()
+    setIsAddLeadModalOpen(false)
+  }
 
   const handleCloseDetailModal = () => {
-    setShowDetailModal(false);
-    setSelectedUserId(null);
-  };
+    setShowDetailModal(false)
+    setSelectedUserId(null)
+  }
 
   if (error) {
     return (
@@ -121,7 +131,7 @@ const AllLeadsForm = () => {
           Error: {error}
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -195,7 +205,8 @@ const AllLeadsForm = () => {
                 currentPage: currentPage,
                 firstPage: 1,
                 lastPage: totalPages,
-                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
+                nextPage:
+                  currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
               handleSearch={handleSearch}
@@ -204,7 +215,7 @@ const AllLeadsForm = () => {
         )}
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllLeadsForm;
+export default AllLeadsForm
