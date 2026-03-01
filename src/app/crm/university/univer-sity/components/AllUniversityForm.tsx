@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/crm/university/univer-sity/components/AllUniversityForm.tsx
 "use client";
 

@@ -108,6 +108,7 @@ const AllIntakeForm = () => {
       if (month) params.month = month;
       const response = await api.get<ApiResponse>("api/AcademicPrograms/FilterIntake", { params });
       setIntakes(response.data?.Items ?? []);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err?.response?.data?.message ?? err?.message ?? "Something went wrong.");
       setIntakes([]);
