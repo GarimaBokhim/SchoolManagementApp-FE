@@ -10,6 +10,7 @@ const StudentEndPoints = {
   getStudentsById: "/api/Student/StudentsBy",
   filterStudentByDate: "/api/Student/FilterStudents",
   getStudentsByClass: "/api/Student/GetStudentByClass",
+  uploadstudents: "/api/Student/upload-students",
 };
 
 const queryKey = "Students";
@@ -175,6 +176,27 @@ export const useGetStudentByClass = (ClassId: string) => {
     },
     enabled: !!ClassId,
     staleTime: 0,
+    retry: false,
+  });
+};
+
+export const useUploadStudents = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, File>({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("formFile", file);
+      const response = await api.post(StudentEndPoints.uploadstudents, formData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [filterQueryKey],
+      });
+    },
     retry: false,
   });
 };

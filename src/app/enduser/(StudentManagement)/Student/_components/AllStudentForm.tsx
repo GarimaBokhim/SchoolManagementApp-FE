@@ -25,6 +25,7 @@ import {
   useFilterStudentByDate,
   useGetAllStudents,
   useRemoveStudent,
+  useUploadStudents,
 } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -96,6 +97,7 @@ const AllStudentForm = () => {
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
   const { data: allClass } = useGetAllClass();
+    const { mutateAsync: uploadstudent } = useUploadStudents();
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError();
     try {
@@ -185,19 +187,19 @@ const AllStudentForm = () => {
                 excelData={
                   <ExcelParentTable
                     startDate={form.watch("startDate")}
-                    endDate={form.watch("endDate")}
+                    endDate={form.watch("endDate")} 
                   />
                 }
               />
               <ImportButtonForm
-                handleExcelImport={async (file) => {
-                  // await toast.promise(uploadstudents(file), {
-                  //   loading: "Uploading...",
-                  //   success: "Ledger uploaded successfully!",
-                  //   error: "Upload failed! Please Check the format",
-                  // });
-                }}
-              />
+              handleExcelImport={async (file) => {
+                await toast.promise(uploadstudent(file), {
+                  loading: "Uploading...",
+                  success: "Item uploaded successfully!",
+                  error: "Upload failed! Please Check the format",
+                });
+              }}
+            />
             </div>
           </div>
           {openFilter && (
