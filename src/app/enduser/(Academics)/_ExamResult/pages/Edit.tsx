@@ -1,26 +1,26 @@
-import { useForm } from "react-hook-form";
-import { IExamResult } from "../types/IExamResults";
-import EditExamResultForm from "../components/EditExamResultForm";
-import { useGetExamResultById } from "../hooks";
+import { useForm } from 'react-hook-form'
+import { IExamResult } from '../types/IExamResults'
+import EditExamResultForm from '../components/EditExamResultForm'
+import { useGetExamResultById } from '../hooks'
 
 interface Props {
-  visible: boolean;
-  onClose: () => void;
-  ExamResultId: string;
+  visible: boolean
+  onClose: () => void
+  ExamResultId: string
 }
 
 const EditExamResult = ({ visible, onClose, ExamResultId }: Props) => {
-  const { data: ExamResultData } = useGetExamResultById(ExamResultId);
+  const { data: ExamResultData } = useGetExamResultById(ExamResultId)
 
   const form = useForm<IExamResult>({
     defaultValues: {
-      examId: ExamResultData?.examId ?? "",
-      studentId: ExamResultData?.studentId ?? "",
-      remarks: ExamResultData?.remarks ?? "",
+      examId: ExamResultData?.examId ?? '',
+      studentId: ExamResultData?.studentId ?? '',
+      remarks: ExamResultData?.remarks ?? '',
     },
-  });
+  })
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <EditExamResultForm
@@ -28,7 +28,7 @@ const EditExamResult = ({ visible, onClose, ExamResultId }: Props) => {
       onClose={onClose}
       ExamResultId={ExamResultId}
     />
-  );
-};
+  )
+}
 
-export default EditExamResult;
+export default EditExamResult

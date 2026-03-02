@@ -1,55 +1,58 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+import { IPaginationResponse } from '@/types/IPaginationResponse'
 import {
   IAllAttendance,
   IAttendanceReport,
+  IAttendencecount,
   IFilterAttendance,
   IStudentAttendance,
   IStudentList,
-} from "../types/IStudentAttendance";
+} from '../types/IStudentAttendance'
+import { get } from 'http'
 const StudentAttendanceEndPoints = {
-  getAllStudentAttendances: "/api/Student/all-StudentAttendances",
-  createStudentAttendances: "/api/Student/AddStudentAttendence",
-  filterStudentAttendanceByDate: "/api/Student/FilterStudentsAttendance",
-  getAttendanceReport: "/api/Student/AttendanceReport",
-};
+  getAllStudentAttendances: '/api/Student/all-StudentAttendances',
+  createStudentAttendances: '/api/Student/AddStudentAttendence',
+  filterStudentAttendanceByDate: '/api/Student/FilterStudentsAttendance',
+  getAttendanceReport: '/api/Student/AttendanceReport',
+  getAttendanceCount: '/api/Student/AttendanceCount',
+}
 
-const queryKey = "StudentAttendances";
-const attendanceReport ="attendanceReport"
-const filterStudentAttendanceQueryKey = "filteredStudentAttendance";
+const queryKey = 'StudentAttendances'
+const attendanceReport = 'attendanceReport'
+const filterStudentAttendanceQueryKey = 'filteredStudentAttendance'
 type StudentAttendanceRequest = {
-  id?: string;
-  academicTeamId: string;
-  attendanceDate: Date;
-  studentAttendances: IStudentList[];
-};
+  id?: string
+  academicTeamId: string
+  attendanceDate: Date
+  studentAttendances: IStudentList[]
+}
 
 export const useAddStudentAttendance = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<IStudentAttendance, Error, StudentAttendanceRequest>({
     mutationFn: async (
       data: StudentAttendanceRequest
     ): Promise<IStudentAttendance> => {
-      console.log("Add StudentAttendance", data);
+      console.log('Add StudentAttendance', data)
       const response = await api.post(
         StudentAttendanceEndPoints.createStudentAttendances,
         data
-      );
+      )
 
-      return response.data;
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
       queryClient.invalidateQueries({
         queryKey: [filterStudentAttendanceQueryKey],
-      });
+      })
     },
     onError: (error) => {
-      console.error("Error adding StudentAttendance:", error);
+      console.error('Error adding StudentAttendance:', error)
     },
-  });
-};
+  })
+}
 
 export const useGetAllStudentAttendances = (params?: string) => {
   return useQuery({
@@ -57,10 +60,9 @@ export const useGetAllStudentAttendances = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${StudentAttendanceEndPoints.getAllStudentAttendances}?${params}`
-        : `${StudentAttendanceEndPoints.getAllStudentAttendances}`;
-      const response = await api.get<IPaginationResponse<IStudentAttendance>>(
-        url
-      );
+        : `${StudentAttendanceEndPoints.getAllStudentAttendances}`
+      const response =
+        await api.get<IPaginationResponse<IStudentAttendance>>(url)
       return (
         response.data ?? {
           data: [],
@@ -68,10 +70,10 @@ export const useGetAllStudentAttendances = (params?: string) => {
           isPagination: 1,
           pageSize: 10,
         }
-      );
+      )
     },
-  });
-};
+  })
+}
 
 export const useFilterStudentAttendanceByDate = (params?: string) => {
   return useQuery({
@@ -79,26 +81,44 @@ export const useFilterStudentAttendanceByDate = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${StudentAttendanceEndPoints.filterStudentAttendanceByDate}${params}`
-        : StudentAttendanceEndPoints.filterStudentAttendanceByDate;
-      const response = await api.get<IPaginationResponse<IAllAttendance>>(url);
-      return response.data;
+        : StudentAttendanceEndPoints.filterStudentAttendanceByDate
+      const response = await api.get<IPaginationResponse<IAllAttendance>>(url)
+      return response.data
     },
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 
 export const useGetAttendanceReport = (params?: string) => {
   return useQuery({
-    queryKey: [ attendanceReport,params, queryKey],
+    queryKey: [attendanceReport, params, queryKey],
     queryFn: async () => {
       const url = params
         ? `${StudentAttendanceEndPoints.getAttendanceReport}${params}`
-        : StudentAttendanceEndPoints.getAttendanceReport;
-      const response = await api.get<IAttendanceReport>(url);
-      return response.data;
+        : StudentAttendanceEndPoints.getAttendanceReport
+      const response = await api.get<IAttendanceReport>(url)
+      return response.data
     },
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
+
+export const useGetAttendenceCount = (studentId: string) => {
+  return useQuery({
+    queryKey: [queryKey, studentId],
+    queryFn: async (): Promise<IAttendencecount> => {
+      if (!studentId) {
+        throw new Error('Id is required to get a AttendenceCount')
+      }
+      const response = await api.get<IAttendencecount>(
+        `${StudentAttendanceEndPoints.getAttendanceCount}?studentId=${studentId}`
+      )
+      return response.data
+    },
+    enabled: !!studentId,
+    staleTime: 0,
+    retry: false,
+  })
+}
