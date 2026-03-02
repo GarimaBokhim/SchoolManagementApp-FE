@@ -21,10 +21,6 @@ export const useApplicantFilters = (
     },
   });
 
-  // Plain synchronous function — React 18 batches these two setState calls
-  // automatically inside event handlers, so only one re-fetch fires.
-  // The AbortController in useApplicants cancels any stale request if they
-  // happen to fire separately (e.g. from programmatic calls outside handlers).
   const handleFilterSubmit = (formData: FilterFormData) => {
     const queryParams = [
       formData.firstName ? `firstName=${encodeURIComponent(formData.firstName)}` : null,
