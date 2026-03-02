@@ -1,62 +1,64 @@
-"use client";
-import { X } from "lucide-react";
-import { useGenerateMarkSheet } from "../hooks";
-import { useGetAllSubjects } from "../../Subject/hooks";
-import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
-import { useRef, useEffect } from "react";
-import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllClass } from "../../Class/hooks";
-import { IClass } from "../../Class/types/IClass";
-import { IExam } from "../../Exam/types/IExams";
+'use client'
+import { X } from 'lucide-react'
+import { useGenerateMarkSheet } from '../hooks'
+import { useGetAllSubjects } from '../../Subject/hooks'
+import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
+import { useRef, useEffect } from 'react'
+import { useGetAllExams } from '../../Exam/hooks'
+import { useGetAllClass } from '../../Class/hooks'
+import { IClass } from '../../Class/types/IClass'
+import { IExam } from '../../Exam/types/IExams'
+import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
 
 interface Props {
-  studentId: string;
-  examId: string;
-  onClose: () => void;
+  studentId: string
+  examId: string
+  onClose: () => void
 }
 
 const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
-  const { data } = useGenerateMarkSheet(studentId, examId);
-  const { data: allSubject } = useGetAllSubjects();
-  const { data: StudentData } = useGetStudentById(studentId);
-  const { data: allExam } = useGetAllExams();
-  const { data: allclass } = useGetAllClass();
+  const { data } = useGenerateMarkSheet(studentId, examId)
+  const { data: allSubject } = useGetAllSubjects()
+  const { data: StudentData } = useGetStudentById(studentId)
+  const { data: allExam } = useGetAllExams()
+  const { data: allclass } = useGetAllClass()
+  const { data: allattendencecount } = useGetAttendenceCount(studentId)
 
-  const storedUser = localStorage.getItem("userDetails");
-  let schoolId = "";
+  const storedUser = localStorage.getItem('userDetails')
+  let schoolId = ''
   if (storedUser) {
     try {
-      const parsedUser = JSON.parse(storedUser);
-      schoolId = parsedUser.schoolId;
+      const parsedUser = JSON.parse(storedUser)
+      schoolId = parsedUser.schoolId
     } catch (error) {
-      console.error("Failed to parse user details:", error);
+      console.error('Failed to parse user details:', error)
     }
   }
 
-  const { data: SchoolData } = useGetSchoolById(schoolId);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const { data: SchoolData } = useGetSchoolById(schoolId)
+  const modalRef = useRef<HTMLDivElement>(null)
   const ExamName = allExam?.Items.find(
-    (exam: IExam) => exam.id === examId,
-  )?.name;
+    (exam: IExam) => exam.id === examId
+  )?.name
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handlePrint = () => {
-    const content = document.getElementById("marksheet")?.outerHTML;
-    if (!content) return;
+    const content = document.getElementById('marksheet')?.outerHTML
+    if (!content) return
 
-    const printWindow = window.open("", "", "width=900,height=1000");
+    const printWindow = window.open('', '', 'width=900,height=1000')
     printWindow?.document.write(`
   <html>
     <head>
@@ -75,11 +77,11 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
     </head>
     <body>${content}</body>
   </html>
-`);
-    printWindow?.document.close();
-    printWindow?.focus();
-    printWindow?.print();
-  };
+`)
+    printWindow?.document.close()
+    printWindow?.focus()
+    printWindow?.print()
+  }
 
   return (
     <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0  bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
@@ -88,15 +90,15 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
         className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Print Marksheet</h2>{" "}
+          <h2 className="text-xl font-semibold">Print Marksheet</h2>{' '}
           <button onClick={onClose} className="text-red-500 text-xl">
-            <X />{" "}
-          </button>{" "}
+            <X />{' '}
+          </button>{' '}
         </div>
         <div
           id="marksheet"
           className="bg-white shadow-2xl mx-auto border-2 text-sky-600 p-4 sm:p-6"
-          style={{ backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}
+          style={{ backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}
         >
           <div className="border-4 border-sky-500 p-3 sm:p-5">
             <header className="pb-4 mb-2 relative">
@@ -122,7 +124,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
               <p className="flex">
-                <strong>Name:</strong> {StudentData?.firstName}{" "}
+                <strong>Name:</strong> {StudentData?.firstName}{' '}
                 {StudentData?.lastName}
               </p>
               <p>
@@ -132,7 +134,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 <strong>Class:</strong>
                 {
                   allclass?.Items.find(
-                    (c: IClass) => c.id === StudentData?.classId,
+                    (c: IClass) => c.id === StudentData?.classId
                   )?.name
                 }
               </p>
@@ -164,10 +166,10 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                       }
                     </td>
                     <td className="border border-sky-500 p-1">
-                      {m.grade || "-"}
+                      {m.grade || '-'}
                     </td>
                     <td className="border border-sky-500 p-1">
-                      {m.GPA || "-"}
+                      {m.GPA || '-'}
                     </td>
                     <td className="border border-sky-500 p-1">
                       {m.marksObtained}
@@ -240,12 +242,19 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </p>
               <p className="flex">
                 <strong>DATE OF ISSUE:</strong>
-                {"date of issue yaha"}
+                {'date of issue yaha'}
               </p>
               <p className="flex justify-end gap-4">
-                <strong>Total Running Days:</strong>
-                <strong>Total Absent Days</strong>
-                <strong> Total Present Days</strong>
+                <strong>
+                  Total Running Days: {allattendencecount?.totalRunningDays}
+                </strong>
+                <strong>
+                  Total Absent Days {allattendencecount?.totalAbsentDays}
+                </strong>
+                <strong>
+                  {' '}
+                  Total Present Days {allattendencecount?.totalPresentDays}
+                </strong>
               </p>
             </div>
 
@@ -266,7 +275,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SchoolMarkSheet;
+export default SchoolMarkSheet
