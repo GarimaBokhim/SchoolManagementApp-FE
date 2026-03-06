@@ -1,109 +1,109 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useRef, useState } from "react";
-import { X } from "lucide-react";
-import { IStudent } from "../types/IStudents";
-import { useAddStudent } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { IStudent } from '../types/IStudents'
+import { useAddStudent } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
-} from "@/components/common/hooks";
-import { useGetAllParents } from "../../_Parent/hooks";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+} from '@/components/common/hooks'
+import { useGetAllParents } from '../../_Parent/hooks'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 type Props = {
-  form: UseFormReturn<IStudent>;
-  onClose: () => void;
-};
+  form: UseFormReturn<IStudent>
+  onClose: () => void
+}
 const AddStudentForm = ({ form, onClose }: Props) => {
-  const addStudent = useAddStudent();
-  const { handleError, clearError } = useErrorHandler();
-  const { data: allProvince } = useGetAllProvince();
-  const { data: allClass } = useGetAllClass();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const [genderStatus, setGenderStatus] = useState<number | null>(null);
+  const addStudent = useAddStudent()
+  const { handleError, clearError } = useErrorHandler()
+  const { data: allProvince } = useGetAllProvince()
+  const { data: allClass } = useGetAllClass()
+  const [selectedClassId, setSelectedClassId] = useState<string | null>('')
+  const [genderStatus, setGenderStatus] = useState<number | null>(null)
   const [selectedProvinceId, setSelectedProvinceId] = useState<
     number | undefined
-  >(0);
+  >(0)
   const [selectedDistrictId, setSelectedDistrictId] = useState<
     number | undefined
-  >(0);
-  const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0);
+  >(0)
+  const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0)
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | undefined
-  >(0);
+  >(0)
   const { data: filteredDistrict } =
-    useGetDistrictByProvince(selectedProvinceId);
-  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
+    useGetDistrictByProvince(selectedProvinceId)
+  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
   const { data: filteredMunicipality } =
-    useGetMunicipalityByDistrict(selectedDistrictId);
-    console.log("data",filteredMunicipality);
+    useGetMunicipalityByDistrict(selectedDistrictId)
+  console.log('data', filteredMunicipality)
   const handleClose = () => {
-    form.reset();
-  };
+    form.reset()
+  }
 
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
-    clearError();
+    clearError()
 
     try {
-      const formData = new FormData();
-      formData.append("firstName", data.firstName);
-      formData.append("middleName", data.middleName ?? "");
-      formData.append("lastName", data.lastName);
-      formData.append("registrationNumber", data.registrationNumber);
-      formData.append("genderStatus", String(genderStatus));
-      formData.append("dateOfBirth", new Date(data.dateOfBirth).toISOString());
-      formData.append("email", data.email);
-      formData.append("phoneNumber", data.phoneNumber);
-      formData.append("address", data.address);
+      const formData = new FormData()
+      formData.append('firstName', data.firstName)
+      formData.append('middleName', data.middleName ?? '')
+      formData.append('lastName', data.lastName)
+      formData.append('registrationNumber', data.registrationNumber)
+      formData.append('genderStatus', String(genderStatus))
+      formData.append('dateOfBirth', new Date(data.dateOfBirth).toISOString())
+      formData.append('email', data.email)
+      formData.append('phoneNumber', data.phoneNumber)
+      formData.append('address', data.address)
       formData.append(
-        "enrollmentDate",
+        'enrollmentDate',
         new Date(data.enrollmentDate).toISOString()
-      );
-      formData.append("parentId", data.parentId);
-      formData.append("classId", data.classId);
-      formData.append("provinceId", String(data.provinceId));
-      formData.append("districtId", String(data.districtId));
-      formData.append("municipalityId", String(data.municipalityId ?? 0));
-      formData.append("vdcid", String(data.vdcid ?? 0));
-      formData.append("wardNumber", String(data.wardNumber));
+      )
+      formData.append('parentId', data.parentId)
+      formData.append('classId', data.classId)
+      formData.append('provinceId', String(data.provinceId))
+      formData.append('districtId', String(data.districtId))
+      formData.append('municipalityId', String(data.municipalityId ?? 0))
+      formData.append('vdcid', String(data.vdcid ?? 0))
+      formData.append('wardNumber', String(data.wardNumber))
       if (data.studentImg instanceof File) {
-        formData.append("studentImg", data.studentImg);
+        formData.append('studentImg', data.studentImg)
       }
 
       await toast.promise(addStudent.mutateAsync(formData), {
-        loading: "Adding Student...",
-        success: "Successfully added Student",
-      });
+        loading: 'Adding Student...',
+        success: 'Successfully added Student',
+      })
 
-      handleClose();
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [studentImgPath, setStudentImgPath] = useState<string>("");
-  const handleImageClick = () => fileInputRef.current?.click();
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [studentImgPath, setStudentImgPath] = useState<string>('')
+  const handleImageClick = () => fileInputRef.current?.click()
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    console.log(file);
+    const file = event.target.files?.[0]
+    console.log(file)
     if (file) {
-      setStudentImgPath(URL.createObjectURL(file));
-      form.setValue("studentImg", file);
+      setStudentImgPath(URL.createObjectURL(file))
+      form.setValue('studentImg', file)
     }
-  };
+  }
 
-  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
-  const { data: allParents } = useGetAllParents();
+  const [selectedParenId, setSelectedParenId] = useState<string | null>(null)
+  const { data: allParents } = useGetAllParents()
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -185,21 +185,21 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     name="genderStatus"
                     value={genderStatus}
                     options={[
-                      { id: 1, name: "Male" },
-                      { id: 2, name: "Female" },
-                      { id: 3, name: "Other" },
+                      { id: 1, name: 'Male' },
+                      { id: 2, name: 'Female' },
+                      { id: 3, name: 'Other' },
                     ]}
                     dropDownWidth="w-full"
                     selected={
                       [
-                        { id: 1, name: "Male" },
-                        { id: 2, name: "Female" },
-                        { id: 3, name: "Other" },
+                        { id: 1, name: 'Male' },
+                        { id: 2, name: 'Female' },
+                        { id: 3, name: 'Other' },
                       ].find((g) => g.id === genderStatus) || null
                     }
                     onSelect={(option) => setGenderStatus(option?.id ?? null)}
-                    getLabel={(o) => o?.name || ""}
-                    getValue={(o) => o?.id ?? ""}
+                    getLabel={(o) => o?.name || ''}
+                    getValue={(o) => o?.id ?? ''}
                   />
                   <AppCombobox
                     value={selectedParenId}
@@ -216,8 +216,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                       ) || null
                     }
                     onSelect={(group) => setSelectedParenId(group?.id ?? null)}
-                    getLabel={(g) => g?.fullName ?? ""}
-                    getValue={(g) => g?.id ?? ""}
+                    getLabel={(g) => g?.fullName ?? ''}
+                    getValue={(g) => g?.id ?? ''}
                   />
                 </div>
               </div>
@@ -248,8 +248,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     ) || null
                   }
                   onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
-                  getLabel={(g) => g?.provinceNameInEnglish ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.provinceNameInEnglish ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <AppCombobox
                   value={selectedDistrictId}
@@ -266,8 +266,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     ) || null
                   }
                   onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
-                  getLabel={(g) => g?.districtNameInEnglish ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.districtNameInEnglish ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <AppCombobox
                   value={selectedMunicipalityId}
@@ -286,10 +286,10 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   onSelect={(group) =>
                     setSelectedMunicipalityId(group?.Id ?? 0)
                   }
-                  getLabel={(g) => g?.MunicipalityNameinNepali ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.MunicipalityNameinNepali ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
-                
+
                 <AppCombobox
                   value={selectedVdcId}
                   dropDownWidth="w-full"
@@ -306,8 +306,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     filteredVdc?.find((g) => g.Id === selectedVdcId) || null
                   }
                   onSelect={(group) => setSelectedVdcId(group?.Id ?? 0)}
-                  getLabel={(g) => g?.VdcNameInNepali ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.VdcNameInNepali ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <InputElement
                   label="Ward Number"
@@ -364,8 +364,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     null
                   }
                   onSelect={(group) => setSelectedClassId(group?.id ?? null)}
-                  getLabel={(g) => g?.name ?? ""}
-                  getValue={(g) => g?.id ?? ""}
+                  getLabel={(g) => g?.name ?? ''}
+                  getValue={(g) => g?.id ?? ''}
                 />
               </div>
             </section>
@@ -382,7 +382,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddStudentForm;
+export default AddStudentForm
