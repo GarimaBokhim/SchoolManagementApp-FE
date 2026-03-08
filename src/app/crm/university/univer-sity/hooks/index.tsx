@@ -34,14 +34,24 @@ export const useAddUniversity = () => {
   });
 };
 
-export const useGetAllUniversities = () => {
+// ✅ Now accepts optional query params string (e.g. "&search=abc&startDate=2081-01-01")
+export const useGetAllUniversities = (queryParams?: string) => {
   return useQuery({
-    queryKey: [queryKey],
+    queryKey: [queryKey, queryParams], // ✅ re-fetches when queryParams changes
     queryFn: async () => {
+      const paramObj: Record<string, string> = {};
+      if (queryParams) {
+        const parsed = new URLSearchParams(queryParams.replace(/^&/, ""));
+        parsed.forEach((value, key) => {
+          paramObj[key] = value;
+        });
+      }
+
       const response = await api.get<IPaginationResponse<IUniversity>>(
-        UniversityEndPoints.getAllUniversities
+        UniversityEndPoints.getAllUniversities,
+        { params: paramObj } // ✅ actually sent to the API
       );
-      
+
       return response.data ?? {
         Items: [],
         TotalItems: 0,
@@ -49,7 +59,7 @@ export const useGetAllUniversities = () => {
         pageSize: 10,
         TotalPages: 1,
         FirstPage: 1,
-        LastPage: 1
+        LastPage: 1,
       };
     },
   });
