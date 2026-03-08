@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Search, MapPin, ChevronDown, GraduationCap, Eye, Send, Filter, RotateCcw, Building2, Plus } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  Search,
+  GraduationCap,
+  Eye,
+  Send,
+  Filter,
+  RotateCcw,
+  Building2,
+  Plus,
+} from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
 import { useForm } from "react-hook-form";
 import { api } from "../../api/api_helper";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -11,7 +19,12 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddCourseModal from "./Add";
 import { useGetAllUniversities } from "../../univer-sity/hooks";
 import { IUniversity } from "../../univer-sity/types/IUniversity";
-
+import DateRangeFilter, {
+  DateRangeFilterRef,
+} from "@/components/DateFilter/FilterComponent";
+import toast, { Toaster } from "react-hot-toast";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
 
 interface Course {
   id: string;
@@ -40,8 +53,8 @@ interface FilterCourseResponse {
 
 interface FilterFormData {
   search: string;
-  university: string;
-  location: string;
+  startDate: string;
+  endDate: string;
 }
 
 const STUDY_LEVEL_LABELS: Record<number, string> = {
@@ -62,19 +75,34 @@ const AllCourseForm = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [params, setParams] = useState("");
+  const formRef = useRef<DateRangeFilterRef>(null);
 
-  const { data: universitiesData, isLoading: loadingUniversities } = useGetAllUniversities();
-  const universities: IUniversity[] = universitiesData?.Items ?? universitiesData?.items ?? [];
+  const { data: universitiesData, isLoading: loadingUniversities } =
+    useGetAllUniversities();
+  const universities: IUniversity[] =
+    universitiesData?.Items ?? universitiesData?.items ?? [];
 
   const form = useForm<FilterFormData>({
-    defaultValues: { search: "", university: "", location: "" },
+    defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
-  const fetchCourses = async () => {
+  const { handleError, clearError } = useErrorHandler();
+
+  // ✅ Now accepts queryParams and sends them to the API
+  const fetchCourses = async (queryParams?: string) => {
     setLoadingCourses(true);
     try {
+      const paramObj: Record<string, unknown> = {};
+      if (queryParams) {
+        const parsed = new URLSearchParams(queryParams.replace(/^&/, ""));
+        parsed.forEach((value, key) => {
+          paramObj[key] = value;
+        });
+      }
       const response = await api.get<FilterCourseResponse>(
-        "api/AcademicPrograms/FilterCourse"
+        "api/AcademicPrograms/FilterCourse",
+        { params: paramObj }
       );
       if (response.data) {
         setCourses(response.data.Items ?? []);
@@ -92,18 +120,56 @@ const AllCourseForm = () => {
   });
 
   const getUniversityName = (universityId: string) =>
-    universities.find((u: IUniversity) => u.id === universityId)?.name ?? "University";
+    universities.find((u: IUniversity) => u.id === universityId)?.name ??
+    "University";
 
-  const onFilterSubmit = (_data: FilterFormData) => {
-    Toast.info("Filter feature coming soon");
+  const onFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.search
+          ? `search=${encodeURIComponent(formData.search)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      const fullQuery = queryParams ? `&${queryParams}` : "";
+
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          await fetchCourses(fullQuery); // ✅ params now actually sent to API
+        })(),
+        {
+          loading: "Fetching data...",
+          success: "Data fetched successfully!",
+        }
+      );
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
+      console.error("Error during form submission:", error);
+    }
   };
 
   const handleClearFilters = () => {
-    form.reset({ search: "", university: "", location: "" });
+    form.reset({ search: "", startDate: "", endDate: "" });
+    setParams("");
+    formRef.current?.handleClear();
+    fetchCourses(); // no params = fetch all
   };
 
-  const handleViewDetails = (_courseId: string) => Toast.info("Viewing course details");
-  const handleApplyNow = (_courseId: string) => Toast.success("Application started!");
+  const handleViewDetails = (_courseId: string) =>
+    Toast.info("Viewing course details");
+  const handleApplyNow = (_courseId: string) =>
+    Toast.success("Application started!");
 
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
@@ -111,7 +177,10 @@ const AllCourseForm = () => {
 
   const formatCurrency = (amount: number, currency: string) => {
     const currencyMap: Record<string, string> = {
-      sg: "SGD", usd: "USD", eur: "EUR", gbp: "GBP",
+      sg: "SGD",
+      usd: "USD",
+      eur: "EUR",
+      gbp: "GBP",
     };
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -128,7 +197,9 @@ const AllCourseForm = () => {
       <div className="p-4 sm:p-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading courses...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading courses...
+          </p>
         </div>
       </div>
     );
@@ -136,18 +207,20 @@ const AllCourseForm = () => {
 
   return (
     <>
+      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
           {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All Courses</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white !font-bold"
+                className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {canAdd && (
                 <ButtonElement
@@ -168,58 +241,45 @@ const AllCourseForm = () => {
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
-                <div className="flex-1 min-w-[200px] flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search Courses</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search by course or university..."
-                      {...form.register("search")}
-                      className={inputClass}
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                  </div>
-                </div>
+                {/* Date Range Quick Filters — Yesterday / 7 Days / This Month / This Year */}
+                <DateRangeFilter
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onFilterSubmit}
+                  setParams={setParams}
+                />
 
-                <div className="flex-1 min-w-[200px] flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">University</label>
-                  <div className="relative">
-                    <select {...form.register("university")} className={inputClass}>
-                      <option value="">All Universities</option>
-                      {universities.map((u: IUniversity) => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
-                      ))}
-                    </select>
-                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                {/* Search input + Filter/Clear buttons on the same row */}
+                <div className="flex flex-1 items-end gap-2 min-w-[200px]">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Search Courses
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search by course or university..."
+                        {...form.register("search")}
+                        className={inputClass}
+                      />
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={16}
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex-1 min-w-[200px] flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
-                  <div className="relative">
-                    <select {...form.register("location")} className={inputClass}>
-                      <option value="">All Locations</option>
-                      <option value="USA">United States</option>
-                    </select>
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150 !text-white"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={handleClearFilters}
-                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150 !text-white"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
                   />
                 </div>
               </form>
@@ -238,7 +298,10 @@ const AllCourseForm = () => {
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2 flex-1">
-                          <GraduationCap size={18} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                          <GraduationCap
+                            size={18}
+                            className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                          />
                           <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
                             {course.title}
                           </h3>
@@ -247,7 +310,10 @@ const AllCourseForm = () => {
 
                       <div className="mb-3">
                         <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                          <Building2 size={16} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                          <Building2
+                            size={16}
+                            className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                          />
                           <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
                             {getUniversityName(course.universityId)}
                           </p>
@@ -259,7 +325,8 @@ const AllCourseForm = () => {
                           {formatCurrency(course.tuationFee, course.currency)}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {STUDY_LEVEL_LABELS[course.studyLevel] || `Level ${course.studyLevel}`}
+                          {STUDY_LEVEL_LABELS[course.studyLevel] ||
+                            `Level ${course.studyLevel}`}
                         </div>
                       </div>
 
@@ -283,8 +350,13 @@ const AllCourseForm = () => {
               </div>
             ) : (
               <div className="text-center py-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                <GraduationCap size={64} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">No courses found</h3>
+                <GraduationCap
+                  size={64}
+                  className="mx-auto text-gray-400 mb-4"
+                />
+                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                  No courses found
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                   Try adjusting your search or filter criteria.
                 </p>
