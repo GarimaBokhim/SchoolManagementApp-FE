@@ -49,7 +49,7 @@ export const useGetAllUniversities = (queryParams?: string) => {
 
       const response = await api.get<IPaginationResponse<IUniversity>>(
         UniversityEndPoints.getAllUniversities,
-        { params: paramObj } // ✅ actually sent to the API
+        { params: paramObj } // actually sent to the API
       );
 
       return response.data ?? {

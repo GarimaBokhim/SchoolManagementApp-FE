@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Filter, Plus, Edit, BookOpen, MoreVertical, RotateCcw } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
@@ -8,7 +8,6 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { api } from "@/utils/instance";
 import AddRequirementsModal from "../pages/Add";
 import DateRangeFilter, {
   DateRangeFilterRef,
@@ -16,32 +15,8 @@ import DateRangeFilter, {
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { useForm } from "react-hook-form";
+import useRequirements from "../hooks/UseRequirements";
 
-interface RequirementItem {
-  id: string;
-  descriptions: string;
-  courseId: string;
-  isActive: boolean;
-  schoolId: string;
-  createdBy: string;
-  createdAt: string;
-  modifiedBy: string;
-  modifiedAt: string;
-}
-
-interface ApiResponse {
-  Items: RequirementItem[];
-  TotalItems: number;
-}
-
-interface Course {
-  id: string;
-  title: string;
-}
-
-interface CourseApiResponse {
-  Items: Course[];
-}
 
 interface FilterFormData {
   search: string;
@@ -53,12 +28,8 @@ const AllRequirementsForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
 
-  const [requirements, setRequirements] = useState<RequirementItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-  const [filtered, setFiltered] = useState<RequirementItem[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [courseMap, setCourseMap] = useState<Record<string, string>>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [params, setParams] = useState("");
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -68,58 +39,10 @@ const AllRequirementsForm = () => {
     defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
+  // ✅ All data fetching & deletion logic now lives in the custom hook
+  const { filtered, loading, courseMap, fetchRequirements, handleDelete } = useRequirements();
+
   const { handleError, clearError } = useErrorHandler();
-
-  const fetchCourses = async () => {
-    try {
-      const res = await api.get<CourseApiResponse>("api/AcademicPrograms/FilterCourse");
-      const items = res.data?.Items ?? [];
-      const map: Record<string, string> = {};
-      items.forEach((c) => { map[String(c.id)] = c.title; });
-      setCourseMap(map);
-    } catch {
-      toast.error("Failed to load courses.");
-    }
-  };
-
-  const fetchRequirements = async (queryParams?: string) => {
-    try {
-      const paramObj: Record<string, unknown> = {};
-      if (queryParams) {
-        const parsed = new URLSearchParams(queryParams.replace(/^&/, ""));
-        parsed.forEach((value, key) => { paramObj[key] = value; });
-      }
-      const res = await api.get<ApiResponse>(
-        "api/AcademicPrograms/FilterRequirements",
-        { params: paramObj }
-      );
-      const items = res.data?.Items ?? [];
-      setRequirements(items);
-      setFiltered(items);
-    } catch {
-      toast.error("Failed to load requirements.");
-    }
-  };
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await fetchCourses();
-      await fetchRequirements();
-      setLoading(false);
-    };
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
@@ -164,16 +87,6 @@ const AllRequirementsForm = () => {
     fetchRequirements();
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/api/AcademicPrograms/DeleteRequirement/${id}`);
-      toast.success("Requirement deleted successfully!");
-      fetchRequirements();
-    } catch {
-      toast.error("Failed to delete requirement.");
-    }
-  };
-
   const inputClass = `w-full px-4 py-2.5 pl-4 bg-white dark:bg-[#1f1f22] border border-gray-300
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500
     dark:text-white text-sm`;
@@ -214,7 +127,6 @@ const AllRequirementsForm = () => {
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
-                {/* Date Range Quick Filters — Yesterday / 7 Days / This Month / This Year */}
                 <DateRangeFilter
                   ref={formRef}
                   form={form}
@@ -222,7 +134,6 @@ const AllRequirementsForm = () => {
                   setParams={setParams}
                 />
 
-                {/* Search + Filter/Clear on same row */}
                 <div className="flex flex-1 items-end gap-2 min-w-[200px]">
                   <div className="flex-1 flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
