@@ -254,7 +254,9 @@ const AllExamForm = () => {
                       <td className="py-3 px-2 md:px-4">
                         {Exam.isfinalExam ? 'Yes' : 'No'}
                       </td>
-                      <td className="py-3 px-2 md:px-4">{`${Exam.examDate}`}</td>
+                      <td className="py-3 px-2 md:px-4">
+                        {new Date(Exam.examDate).toISOString().split('T')[0]}
+                      </td>
                       <td className="py-3 px-2 md:px-4">
                         <div className="flex justify-center flex-wrap gap-1 md:gap-2">
                           {canDelete && (
