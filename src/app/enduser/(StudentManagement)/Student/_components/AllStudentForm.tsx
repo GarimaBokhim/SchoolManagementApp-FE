@@ -159,7 +159,6 @@ const AllStudentForm = () => {
   }
   return (
     <>
-      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
@@ -308,7 +307,10 @@ const AllStudentForm = () => {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
                         <td className="py-1 px-4">{index + 1}</td>
-                        <td className="py-1 px-4">{student.firstName}</td>
+                        <td className="py-1 px-4">
+                          {student.firstName}
+                          {student.middleName} {student.lastName}
+                        </td>
                         <td className="py-1 px-4">
                           {student.registrationNumber}
                         </td>

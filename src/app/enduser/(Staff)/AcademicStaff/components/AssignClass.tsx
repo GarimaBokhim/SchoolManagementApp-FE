@@ -106,7 +106,7 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
                     <span className="font-medium">{cls.name}</span>
                   </label>
 
-                  {selectedClasses.includes(cls.id as string) &&
+                  {/* {selectedClasses.includes(cls.id as string) &&
                     subjectsForClass.length > 0 && (
                       <div className="ml-6 mt-1 space-y-1">
                         {subjectsForClass.map((sub) => (
@@ -123,7 +123,7 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
                           </label>
                         ))}
                       </div>
-                    )}
+                    )} */}
                 </div>
               )
             })}
