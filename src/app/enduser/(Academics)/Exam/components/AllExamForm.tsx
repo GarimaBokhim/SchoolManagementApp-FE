@@ -138,7 +138,6 @@ const AllExamForm = () => {
   }
   return (
     <>
-      <Toaster position="top-right" />
       <div className="px-2 md:px-4">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
           {/* Header and Filter buttons */}
