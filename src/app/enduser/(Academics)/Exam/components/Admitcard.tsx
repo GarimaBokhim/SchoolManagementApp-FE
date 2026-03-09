@@ -4,7 +4,7 @@
 import React, { forwardRef, useEffect, useState } from 'react'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
 import { IExam } from '../types/IExams'
-import { useGetAllClass } from '../../Class/hooks'
+import { useGetAllClass, useGetClassById } from '../../Class/hooks'
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
 
 type AdmitCardProps = {
@@ -16,7 +16,7 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
   ({ student, exam }, ref) => {
     const [institutionId, setInstitutionId] = useState<string | null>(null)
 
-    const { data: allClass } = useGetAllClass()
+    const { data: allClass } = useGetClassById(student.classId)
     const { data: schoolDetail } = useGetAllSchool()
     useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -27,10 +27,6 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
     }, [])
     const school = schoolDetail?.Items?.find(
       (i) => i.institutionId === institutionId
-    )
-
-    const studentClass = allClass?.Items?.find(
-      (item) => item.id === student.classId
     )
 
     return (
@@ -68,7 +64,7 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
 
             <div className="flex gap-10">
               <div>
-                <b>Class:</b> {studentClass?.name ?? '-'}
+                <b>Class:</b> {allClass?.name ?? '-'}
               </div>
 
               <div>
