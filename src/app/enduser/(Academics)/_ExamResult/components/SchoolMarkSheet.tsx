@@ -6,7 +6,7 @@ import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hoo
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useRef, useEffect } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
-import { useGetAllClass } from '../../Class/hooks'
+import { useGetAllClass, useGetClassById } from '../../Class/hooks'
 import { IClass } from '../../Class/types/IClass'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
@@ -22,7 +22,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data: allSubject } = useGetAllSubjects()
   const { data: StudentData } = useGetStudentById(studentId)
   const { data: allExam } = useGetAllExams()
-  const { data: allclass } = useGetAllClass()
+  const { data: allclass } = useGetClassById(StudentData?.classId || '')
   const { data: allattendencecount } = useGetAttendenceCount(studentId)
 
   const storedUser = localStorage.getItem('userDetails')
@@ -132,11 +132,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </p>
               <p className="flex">
                 <strong>Class:</strong>
-                {
-                  allclass?.Items.find(
-                    (c: IClass) => c.id === StudentData?.classId
-                  )?.name
-                }
+                {allclass?.name}
               </p>
               <p>
                 <strong>Roll No:</strong>
@@ -242,7 +238,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </p>
               <p className="flex">
                 <strong>DATE OF ISSUE:</strong>
-                {'date of issue yaha'}
+                {data?.createdAt &&
+                  new Date(data?.createdAt).toISOString().split('T')[0]}
               </p>
               <p className="flex justify-end gap-4">
                 <strong>
