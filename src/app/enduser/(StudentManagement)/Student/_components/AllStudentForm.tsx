@@ -1,14 +1,14 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { IFilterStudentByDate, IStudent } from "../types/IStudents";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { EditButton } from "@/components/Buttons/EditButton";
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import { IFilterStudentByDate, IStudent } from '../types/IStudents'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { EditButton } from '@/components/Buttons/EditButton'
 import {
   Edit,
   Filter,
@@ -16,90 +16,95 @@ import {
   Plus,
   RotateCcw,
   Trash,
-} from "lucide-react";
-import EditStudent from "../pages/Edit";
+} from 'lucide-react'
+import EditStudent from '../pages/Edit'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+} from '@/components/DateFilter/FilterComponent'
 import {
   useFilterStudentByDate,
   useGetAllStudents,
   useRemoveStudent,
   useUploadStudents,
-} from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddStudent from "../pages/Add";
-import DeleteButton from "@/components/Buttons/DeleteButton";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import ImportButtonForm from "@/components/Buttons/importbutton";
-import ExportButtonForm from "@/components/Buttons/exportbuttonform";
-import AllPrintFormForParents from "../../_Parent/components/PrintAllParentsform";
-import ExcelParentTable from "../../_Parent/components/Excelprint";
-import { PrintIDCardButton } from "./idcardprint";
-import AddRegistration from "../../_Registration/pages/Add";
+} from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddStudent from '../pages/Add'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+import {
+  useGetAllClass,
+  useGetClassById,
+} from '@/app/enduser/(Academics)/Class/hooks'
+import ImportButtonForm from '@/components/Buttons/importbutton'
+import ExportButtonForm from '@/components/Buttons/exportbuttonform'
+import AllPrintFormForParents from '../../_Parent/components/PrintAllParentsform'
+import ExcelParentTable from '../../_Parent/components/Excelprint'
+import { PrintIDCardButton } from './idcardprint'
+import AddRegistration from '../../_Registration/pages/Add'
 const EnrollmentStatus = [
-  { id: 1, name: "Active" },
-  { id: 2, name: "Promoted" },
-  { id: 3, name: "Repeated" },
-  { id: 4, name: "Graduated" },
-  { id: 5, name: "Dropped" },
-  { id: 6, name: "Added" },
-  { id: 7, name: "Enrolled" },
-];
+  { id: 1, name: 'Active' },
+  { id: 2, name: 'Promoted' },
+  { id: 3, name: 'Repeated' },
+  { id: 4, name: 'Graduated' },
+  { id: 5, name: 'Dropped' },
+  { id: 6, name: 'Added' },
+  { id: 7, name: 'Enrolled' },
+]
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
-  const [showStudents, setShowStudents] = useState(false);
-  const [showRegistration, setShowRegistration] = useState(false);
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
+  const [showStudents, setShowStudents] = useState(false)
+  const [showRegistration, setShowRegistration] = useState(false)
   const [selectedIdForRegistration, setSelectedIdForRegistration] =
-    useState<string>("");
-  const [addModal, setAddModal] = useState(false);
-  const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const [params, setParams] = useState("");
-  const { data: allStudent } = useGetAllStudents();
+    useState<string>('')
+  const [addModal, setAddModal] = useState(false)
+  const { menuStatus } = usePermissions()
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
+  const [selectedId, setSelectedId] = useState<string>('')
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
+  const { data: allStudent } = useGetAllStudents()
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
-    "",
-  );
-  const fullQuery = query + (params || "");
+    ''
+  )
+  const fullQuery = query + (params || '')
 
   const {
     data: filteredStudent,
     refetch,
     isLoading,
-  } = useFilterStudentByDate(fullQuery);
+  } = useFilterStudentByDate(fullQuery)
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
+    refetch()
+  }, [paginationParams, refetch])
   const form = useForm<IFilterStudentByDate>({
     defaultValues: {
-      firstName: "",
-      startDate: "",
-      endDate: "",
+      firstName: '',
+      startDate: '',
+      endDate: '',
     },
-  });
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
-  const { data: allClass } = useGetAllClass();
-    const { mutateAsync: uploadstudent } = useUploadStudents();
+  })
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
+  const { data: allclass } = useGetClassById(
+    allStudent?.Items[0]?.classId || ''
+  )
+  const { mutateAsync: uploadstudent } = useUploadStudents()
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.firstName
@@ -113,45 +118,45 @@ const AllStudentForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
-        },
-      );
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
+        }
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
-  const refForInput = useRef<HTMLInputElement>(null);
+  }
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
-  const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteStudent = useRemoveStudent();
+    refForInput.current?.focus()
+  }, [])
+  const formRef = useRef<DateRangeFilterRef>(null)
+  const deleteStudent = useRemoveStudent()
   const handleDelete = async (id: string) => {
     try {
-      await deleteStudent.mutateAsync(id);
-      toast.success("User deleted successfully!");
-      refetch();
+      await deleteStudent.mutateAsync(id)
+      toast.success('User deleted successfully!')
+      refetch()
     } catch {
-      toast.error("Error deleting user.");
+      toast.error('Error deleting user.')
     }
-  };
+  }
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    formRef.current?.handleClear();
-    form.reset();
-  };
+    refetch()
+    setParams('')
+    formRef.current?.handleClear()
+    form.reset()
+  }
   return (
     <>
       <Toaster position="top-right" />
@@ -180,26 +185,26 @@ const AllStudentForm = () => {
                 file="/template/ledgerTemplate.xlsx"
                 data={
                   <AllPrintFormForParents
-                    startDate={form.watch("startDate")}
-                    endDate={form.watch("endDate")}
+                    startDate={form.watch('startDate')}
+                    endDate={form.watch('endDate')}
                   />
                 }
                 excelData={
                   <ExcelParentTable
-                    startDate={form.watch("startDate")}
-                    endDate={form.watch("endDate")} 
+                    startDate={form.watch('startDate')}
+                    endDate={form.watch('endDate')}
                   />
                 }
               />
               <ImportButtonForm
-              handleExcelImport={async (file) => {
-                await toast.promise(uploadstudent(file), {
-                  loading: "Uploading...",
-                  success: "Item uploaded successfully!",
-                  error: "Upload failed! Please Check the format",
-                });
-              }}
-            />
+                handleExcelImport={async (file) => {
+                  await toast.promise(uploadstudent(file), {
+                    loading: 'Uploading...',
+                    success: 'Item uploaded successfully!',
+                    error: 'Upload failed! Please Check the format',
+                  })
+                }}
+              />
             </div>
           </div>
           {openFilter && (
@@ -225,14 +230,14 @@ const AllStudentForm = () => {
                     options={allStudent?.Items}
                     selected={
                       allStudent?.Items?.find(
-                        (g) => g.firstName === selectedStudentName,
+                        (g) => g.firstName === selectedStudentName
                       ) || null
                     }
                     onSelect={(group) => {
-                      setSelectedStudentName(group ? group.firstName : null);
+                      setSelectedStudentName(group ? group.firstName : null)
                     }}
-                    getLabel={(g) => g?.firstName ?? ""}
-                    getValue={(g) => g?.firstName ?? ""}
+                    getLabel={(g) => g?.firstName ?? ''}
+                    getValue={(g) => g?.firstName ?? ''}
                   />
                 </div>
 
@@ -308,22 +313,18 @@ const AllStudentForm = () => {
                           {student.registrationNumber}
                         </td>
                         <td className="py-1 px-4 hidden md:table-cell">
-                          {student.genderStatus === 0 ? "M" : "F"}
+                          {student.genderStatus === 0 ? 'M' : 'F'}
                         </td>
                         <td className="py-1 px-4 hidden lg:table-cell">
                           {student.email}
                         </td>
                         <td className="py-1 px-4 hidden lg:table-cell">
-                          {
-                            allClass?.Items?.find(
-                              (i) => i.id === student.classId,
-                            )?.name
-                          }
+                          {allclass?.name}
                         </td>
                         <td className="py-1 px-4 hidden lg:table-cell">
                           {
                             EnrollmentStatus?.find(
-                              (i) => i.id === student.enrollmentStatus,
+                              (i) => i.id === student.enrollmentStatus
                             )?.name
                           }
                         </td>
@@ -337,7 +338,7 @@ const AllStudentForm = () => {
                           {
                             new Date(student.dateOfBirth)
                               .toISOString()
-                              .split("T")[0]
+                              .split('T')[0]
                           }
                         </td>
                         <td className="py-1 px-4 text-center align-middle whitespace-nowrap">
@@ -345,7 +346,7 @@ const AllStudentForm = () => {
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(student.id ? student.id : "")
+                                  handleDelete(student.id ? student.id : '')
                                 }
                                 headerText={<Trash />}
                                 content="Are you sure you want to delete this student?"
@@ -359,15 +360,15 @@ const AllStudentForm = () => {
                                     type="button"
                                     text=""
                                     onClick={() => {
-                                      setShowStudents(true);
-                                      setSelectedId(student.id ?? "");
+                                      setShowStudents(true)
+                                      setSelectedId(student.id ?? '')
                                     }}
                                     className="!text-xs !bg-teal-500"
                                   />
                                 }
                               />
                             )}
-                            <PrintIDCardButton StudentId={student.id ?? ""} />
+                            <PrintIDCardButton StudentId={student.id ?? ''} />
 
                             <EditButton
                               button={
@@ -376,10 +377,10 @@ const AllStudentForm = () => {
                                   type="button"
                                   text=""
                                   onClick={() => {
-                                    setShowRegistration(true);
+                                    setShowRegistration(true)
                                     setSelectedIdForRegistration(
-                                      student.id ?? "",
-                                    );
+                                      student.id ?? ''
+                                    )
                                   }}
                                   className="!text-xs !bg-blue-500"
                                 />
@@ -388,7 +389,7 @@ const AllStudentForm = () => {
                           </div>
                         </td>
                       </tr>
-                    ),
+                    )
                   )
                 ) : (
                   <tr>
@@ -436,7 +437,7 @@ const AllStudentForm = () => {
         <AddStudent visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllStudentForm;
+export default AllStudentForm
