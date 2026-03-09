@@ -259,6 +259,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
+                    fullMarks: 0,
                   })
                 }
               />
