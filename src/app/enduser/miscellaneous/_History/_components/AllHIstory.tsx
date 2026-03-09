@@ -1,75 +1,75 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { IFilterHistory, IHistory } from "../types/IHistory";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import { IFilterHistory, IHistory } from '../types/IHistory'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { Filter, Plus, RotateCcw } from 'lucide-react'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
-import { useFilterHistoryByDate } from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddHistory from "../pages/Add";
-import { useGetAllSchoolItems } from "../../_SchoolItem/hooks";
+} from '@/components/DateFilter/FilterComponent'
+import { useFilterHistoryByDate } from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddHistory from '../pages/Add'
+import { useGetAllSchoolItems } from '../../_SchoolItem/hooks'
 const AllHistoryForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
-  const [addModal, setAddModal] = useState(false);
-  const { menuStatus } = usePermissions();
-  const { canAdd } = useMenuPermissionData(menuStatus);
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const [params, setParams] = useState("");
-  const { data: allSchoolItem } = useGetAllSchoolItems();
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
+  const [addModal, setAddModal] = useState(false)
+  const { menuStatus } = usePermissions()
+  const { canAdd } = useMenuPermissionData(menuStatus)
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
+  const { data: allSchoolItem } = useGetAllSchoolItems()
   const [selectedSchoolItem, setSelectedSchoolItem] = useState<string | null>(
-    ""
-  );
-  const fullQuery = query + (params || "");
+    ''
+  )
+  const fullQuery = query + (params || '')
 
   const {
     data: filteredHistory,
     refetch,
     isLoading,
-  } = useFilterHistoryByDate(fullQuery);
+  } = useFilterHistoryByDate(fullQuery)
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
+    refetch()
+  }, [paginationParams, refetch])
   const form = useForm<IFilterHistory>({
     defaultValues: {
-      schoolItemId: "",
-      startDate: "",
-      endDate: "",
+      schoolItemId: '',
+      startDate: '',
+      endDate: '',
     },
-  });
+  })
   const itemStatus = [
-    { id: 1, name: "Available" },
-    { id: 2, name: "Damaged" },
-    { id: 3, name: "Replaced" },
-    { id: 4, name: "Lost" },
-    { id: 5, name: "Disposed" },
-  ];
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
+    { id: 1, name: 'Available' },
+    { id: 2, name: 'Damaged' },
+    { id: 3, name: 'Replaced' },
+    { id: 4, name: 'Lost' },
+    { id: 5, name: 'Disposed' },
+  ]
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
   const onSubmit: SubmitHandler<IFilterHistory> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.schoolItemId
@@ -83,29 +83,29 @@ const AllHistoryForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
-  const refForInput = useRef<HTMLInputElement>(null);
+  }
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
-  const formRef = useRef<DateRangeFilterRef>(null);
+    refForInput.current?.focus()
+  }, [])
+  const formRef = useRef<DateRangeFilterRef>(null)
   // const deleteHistory = useRemoveHistory();
   // const handleDelete = async (id: string) => {
   //   try {
@@ -117,12 +117,12 @@ const AllHistoryForm = () => {
   //   }
   // };
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    setSelectedSchoolItem("");
-    formRef.current?.handleClear();
-    form.reset();
-  };
+    refetch()
+    setParams('')
+    setSelectedSchoolItem('')
+    formRef.current?.handleClear()
+    form.reset()
+  }
   return (
     <>
       <Toaster position="top-right" />
@@ -176,10 +176,10 @@ const AllHistoryForm = () => {
                       ) || null
                     }
                     onSelect={(group) => {
-                      setSelectedSchoolItem(group?.id ?? null);
+                      setSelectedSchoolItem(group?.id ?? null)
                     }}
-                    getLabel={(g) => g?.name ?? ""}
-                    getValue={(g) => g?.id ?? ""}
+                    getLabel={(g) => g?.name ?? ''}
+                    getValue={(g) => g?.id ?? ''}
                   />
                 </div>
 
@@ -303,7 +303,7 @@ const AllHistoryForm = () => {
         <AddHistory visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllHistoryForm;
+export default AllHistoryForm
