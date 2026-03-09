@@ -195,79 +195,78 @@ const AllAcademicTeamForm = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Full Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Address</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500">
-                      Loading AcademicTeams...
-                    </td>
+          <div className="flex flex-col h-[70vh] sm:h-[75vh] md:h-[80vh] overflow-hidden mt-4">
+            <div className="overflow-x-auto overflow-y-auto flex-1">
+              <table className="w-full border-collapse text-xs sm:text-sm">
+                <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-[#80878c] dark:text-white">
+                  <tr className="uppercase text-sm font-semibold border-b border-gray-200 text-gray-700 dark:text-white">
+                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                    <th className="px-4 py-3 text-left">Full Name</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">Address</th>
+                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                   </tr>
-                ) : filteredAcademicTeam?.Items &&
-                  filteredAcademicTeam?.Items.length > 0 ? (
-                  filteredAcademicTeam?.Items.map(
-                    (AcademicTeam: IAcademicTeam, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                      >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{AcademicTeam.fullName}</td>
-                        <td className="py-3 px-4">{AcademicTeam.email}</td>
-                        <td className="py-3 px-4">{AcademicTeam.address}</td>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="p-4 text-center text-gray-500">
+                        Loading AcademicTeams...
+                      </td>
+                    </tr>
+                  ) : filteredAcademicTeam?.Items?.length ? (
+                    filteredAcademicTeam?.Items.map(
+                      (AcademicTeam: IAcademicTeam, index: number) => (
+                        <tr
+                          key={index}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        >
+                          <td className="py-3 px-4">{index + 1}</td>
+                          <td className="py-3 px-4">{AcademicTeam.fullName}</td>
+                          <td className="py-3 px-4">{AcademicTeam.email}</td>
+                          <td className="py-3 px-4">{AcademicTeam.address}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex justify-center gap-2">
+                              <ButtonElement
+                                icon={<Box size={14} />}
+                                type="button"
+                                text=""
+                                handleClick={() => {
+                                  handleAssignClass(AcademicTeam.id)
+                                  setIsModalOpen(!isModalOpen)
+                                }}
+                                customStyle="!text-xs font-bold !bg-teal-500"
+                              />
+                            </div>
 
-                        <td className="py-3 px-4">
-                          <div className="flex justify-center gap-2">
-                            <ButtonElement
-                              icon={<Box size={14} />}
-                              type="button"
-                              text=""
-                              handleClick={() => {
-                                handleAssignClass(AcademicTeam.id)
-                                setIsModalOpen(!isModalOpen)
-                              }}
-                              customStyle="!text-xs font-bold !bg-teal-500"
-                            />
-                          </div>
-
-                          {selectedTeacherId === AcademicTeam.id &&
-                            isModalOpen && (
-                              <div className="relative">
-                                <AssignClass
-                                  key={selectedTeacherId}
-                                  teacherId={selectedTeacherId || ''}
-                                  visible={isModalOpen}
-                                  onClose={() => setIsModalOpen(false)}
-                                />
-                              </div>
-                            )}
-                        </td>
-                      </tr>
+                            {selectedTeacherId === AcademicTeam.id &&
+                              isModalOpen && (
+                                <div className="relative">
+                                  <AssignClass
+                                    key={selectedTeacherId}
+                                    teacherId={selectedTeacherId || ''}
+                                    visible={isModalOpen}
+                                    onClose={() => setIsModalOpen(false)}
+                                  />
+                                </div>
+                              )}
+                          </td>
+                        </tr>
+                      )
                     )
-                  )
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
-                      No AcademicTeams found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="p-4 text-center text-gray-500 italic"
+                      >
+                        No AcademicTeams found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <AddAcademicTeam
