@@ -54,25 +54,30 @@ commit_and_push() {
 }
 
 create_branch_from_username() {
+ # 1. Get user and branch info first
     GIT_USER=$(get_git_username)
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-    # 1. Get the feature description from the user
-    echo -n "Enter feature name (e.g., login-fix): "
+    # 2. ASK PROMPT: Get the feature name from you immediately
+    echo -n "What feature are you working on? (e.g., login-ui): "
     read FEATURE_INPUT
-    # Sanitize: replace spaces with hyphens and convert to lowercase
+
+    # Sanitize the input (replace spaces with hyphens)
     FEATURE_NAME=$(echo "$FEATURE_INPUT" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
+    # 3. Pull latest changes
     echo "Pulling latest changes from origin/$CURRENT_BRANCH..."
     git pull origin "$CURRENT_BRANCH"
 
-    # 2. Format the date (YYYY-MM-DD) and construct branch name
-    DATE_STAMP=$(date +%Y-%m-%d)
-    BRANCH_NAME="feature/${GIT_USER}/${DATE_STAMP}/${FEATURE_NAME}"
+    # 4. Construct the branch name with Date and Feature
+    TS=$(date +%Y%m%d)
+    BRANCH_NAME="feature/${GIT_USER}/${TS}-${FEATURE_NAME}"
 
+    # 5. Create and switch
     echo "Creating and switching to branch: $BRANCH_NAME"
     git checkout -b "$BRANCH_NAME"
 
+    # 6. ASK PROMPT: Push to remote or not?
     echo -n "Push this branch to remote? (y/n): "
     read PUSH_CHOICE
 
@@ -82,6 +87,8 @@ create_branch_from_username() {
         echo "------------------------------------------------"
         echo "PR Link: $REPO_URL/pull/new/$BRANCH_NAME"
         echo "------------------------------------------------"
+    else
+        echo "Branch created locally. Remember to push later!"
     fi
 }
 
