@@ -4,10 +4,14 @@ import React, { useState } from 'react'
 import { X, Save } from 'lucide-react'
 import { api } from '@/utils/instance'
 import toast from 'react-hot-toast'
+import { useForm } from 'react-hook-form'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useGetAllCountries } from '../hooks'
+import { ICountry } from '../types/ICountry'
 
 interface UniversityFormData {
   name: string
-  country: string
+  countryId: string
   descriptions: string
   website: string
   globalRanking: number
@@ -28,7 +32,7 @@ const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gra
 
 const defaultFormData: UniversityFormData = {
   name: '',
-  country: '',
+  countryId: '',
   descriptions: '',
   website: '',
   globalRanking: 0,
@@ -42,6 +46,14 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
   const [formData, setFormData] = useState<UniversityFormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null)
+
+  // ✅ returns ICountry[] directly (Items extracted in hook)
+  const { data: countryList } = useGetAllCountries()
+
+  const comboForm = useForm({
+    defaultValues: { countryId: '' },
+  })
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -56,20 +68,25 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.countryId) {
+      setError('Please select a country.')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
     try {
       await api.post('/api/AcademicPrograms/AddUniversity', formData)
       toast.success('University added successfully!')
       setFormData(defaultFormData)
+      setSelectedCountry(null)
+      comboForm.reset({ countryId: '' })
       if (onSuccess) onSuccess()
       onClose()
     } catch (err: unknown) {
       const axiosErr = err as {
-        response?: {
-          status?: number
-          data?: { message?: string; title?: string }
-        }
+        response?: { status?: number; data?: { message?: string; title?: string } }
         request?: unknown
         message?: string
       }
@@ -95,6 +112,8 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData(defaultFormData)
+      setSelectedCountry(null)
+      comboForm.reset({ countryId: '' })
       setError(null)
       onClose()
     }
@@ -142,6 +161,8 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
+
+              {/* University Name */}
               <div className="flex flex-col gap-1 lg:col-span-2">
                 <label className={labelClass}>
                   University Name <span className="text-red-500">*</span>
@@ -157,21 +178,39 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
                 />
               </div>
 
+              {/* Country combobox */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>
                   Country <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g. United States"
-                  className={inputClass}
+                <AppCombobox
+                  label="Select Country"
+                  name="countryId"
+                  form={comboForm}
+                  options={countryList ?? []}
+                  selected={selectedCountry}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(country) => {
+                    setSelectedCountry(country)
+                    setFormData((prev) => ({
+                      ...prev,
+                      countryId: country?.id ?? '',
+                    }))
+                    setError(null)
+                  }}
+                  getLabel={(country) => country?.name ?? ''}
+                  getValue={(country) => country?.id ?? ''}
+                  renderOptionExtra={(country) => (
+                    <span className={`text-xs ${country?.isActive ? 'text-green-500' : 'text-gray-400'}`}>
+                      {country?.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  )}
+                  placeholder="Search country..."
                 />
               </div>
 
+              {/* Website */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Website</label>
                 <input
@@ -184,6 +223,7 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
                 />
               </div>
 
+              {/* Global Ranking */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Global Ranking</label>
                 <input
@@ -197,6 +237,7 @@ const AddUniversityModal: React.FC<AddUniversityModalProps> = ({
                 />
               </div>
 
+              {/* Description */}
               <div className="flex flex-col gap-1 lg:col-span-3">
                 <label className={labelClass}>Description</label>
                 <textarea

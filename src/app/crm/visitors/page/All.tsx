@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import AllCrmStudents from '../../applications/crm_students/pages/All'
-import AllLeads from '../../applications/Leads/pages/All'
+import AllLeads from '../../applications/leads/pages/All'
 
 const Allvisitors = () => {
   const exam = [
