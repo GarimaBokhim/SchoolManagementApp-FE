@@ -233,6 +233,17 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                       placeholder="Enter marks"
                     />
                   </div>
+                  {/* Full Marks Input */}
+                  <div className="mt-1">
+                    <InputElement
+                      label="Full Marks"
+                      form={form}
+                      name={`marksObtained.${index}.fullMarks`}
+                      inputType="number"
+                      placeholder="Full marks"
+                      readOnly
+                    />
+                  </div>
 
                   <div className="col-span-12 md:col-span-2 flex justify-center">
                     <button
@@ -259,6 +270,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
+                    fullMarks: 0,
                   })
                 }
               />

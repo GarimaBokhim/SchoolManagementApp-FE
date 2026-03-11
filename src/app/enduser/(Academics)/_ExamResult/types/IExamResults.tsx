@@ -6,6 +6,7 @@ export interface IExamResult {
   marksObtained: {
     subjectId: string
     marksObtained: number
+    fullMarks: number
   }[]
 }
 
@@ -26,6 +27,7 @@ export interface IMarkSheet {
   grade: string
   GPA: string
   division: string
+  createdAt: string
   MarksWithGrades: ISubjectMark[]
 }
 export interface ISubjectMark {
@@ -33,11 +35,4 @@ export interface ISubjectMark {
   marksObtained: number
   grade: string
   GPA: string
-}
-export interface IAttendencecount {
-  totalRunningDays: number
-  totalPresentDays: number
-  totalAbsentDays: number
-  totalLateDays: number
-  totalExcusedDays: number
 }

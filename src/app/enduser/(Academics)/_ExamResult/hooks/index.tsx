@@ -23,6 +23,7 @@ type ExamResultRequest = {
   marksObtained: {
     subjectId: string
     marksObtained: number
+    fullMarks: number
   }[]
 }
 

@@ -1,52 +1,51 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import AllCrmStudents from "../../applications/crm_students/pages/All";
-import AllLeads from "../../applications/leads/pages/All";
+import { useState } from 'react'
+import AllCrmStudents from '../../applications/crm_students/pages/All'
+import AllLeads from '../../applications/Leads/pages/All'
 
 const Allvisitors = () => {
   const exam = [
-    { id: "lead", label: "Lead" },
-    { id: "profile", label: "profile" },
-  ];
+    { id: 'lead', label: 'Lead' },
+    { id: 'profile', label: 'profile' },
+  ]
 
-  const [activeReport, setActiveReport] = useState<string>("lead");
+  const [activeReport, setActiveReport] = useState<string>('lead')
 
   const renderReport = () => {
     switch (activeReport) {
-      case "lead":
-        return <AllLeads />;
+      case 'lead':
+        return <AllLeads />
 
-      case "profile":
-        return <AllCrmStudents />;
+      case 'profile':
+        return <AllCrmStudents />
 
-   
       default:
-        return <AllLeads />;
+        return <AllLeads />
     }
-  };
+  }
 
   return (
     <div className="p-4 h-full">
       {/* Tabs */}
       <div className="bg-blue-100 rounded-t-xl px-4 pt-4 flex gap-1">
         {exam.map((t) => {
-          const isActive = activeReport === t.id;
+          const isActive = activeReport === t.id
 
           return (
             <button
               key={t.id}
               onClick={() => setActiveReport(t.id)}
               className={
-                "px-6 py-2 text-sm font-medium transition-all " +
+                'px-6 py-2 text-sm font-medium transition-all ' +
                 (isActive
-                  ? "text-blue-700 border-b-2 border-blue-700 font-semibold"
-                  : "text-blue-600 hover:bg-blue-200 rounded-sm")
+                  ? 'text-blue-700 border-b-2 border-blue-700 font-semibold'
+                  : 'text-blue-600 hover:bg-blue-200 rounded-sm')
               }
             >
               {t.label}
             </button>
-          );
+          )
         })}
       </div>
 
@@ -55,7 +54,7 @@ const Allvisitors = () => {
         {renderReport()}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Allvisitors;
+export default Allvisitors
