@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IUniversity } from "../types/IUniversity";
-import { ICountry } from "../types/Icountry";
+import { ICountry } from "../types/ICountry";
+
 
 export const UniversityEndPoints = {
   getAllUniversities: "/api/AcademicPrograms/FilterUniversity",
@@ -67,7 +68,6 @@ export const useGetAllUniversities = (queryParams?: string) => {
   });
 };
 
-// ✅ Added here so it's accessible via ../hooks
 export const useGetAllCountries = () => {
   return useQuery({
     queryKey: [countryQueryKey],

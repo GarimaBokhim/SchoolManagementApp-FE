@@ -6,8 +6,8 @@ import { api } from '@/utils/instance'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { useGetAllCountries } from '../hooks'  // ✅ now from index.ts
-import { ICountry } from '../types/Icountry'
+import { useGetAllCountries } from '../hooks'
+import { ICountry } from '../types/ICountry'
 
 interface UniversityFormData {
   name: string
