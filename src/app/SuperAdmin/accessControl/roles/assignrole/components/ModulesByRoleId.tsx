@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useEffect, useState, MouseEvent } from "react";
 import { useGetModuleByRoleId } from "@/app/SuperAdmin/navigation/modules/hooks";

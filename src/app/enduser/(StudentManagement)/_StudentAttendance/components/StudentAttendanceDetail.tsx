@@ -1,67 +1,67 @@
-"use client";
-import React, { useState } from "react";
-import { Filter, RotateCcw, X } from "lucide-react";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hooks";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { IFilterAttendance } from "../types/IStudentAttendance";
-import toast from "react-hot-toast";
-import { useGetAttendanceReport } from "../hooks";
-import { Toast } from "@/components/Toast/toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { useGetAllStudents } from "../../Student/hooks";
+'use client'
+import React, { useState } from 'react'
+import { Filter, RotateCcw, X } from 'lucide-react'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { useGetAllAcademicTeams } from '@/app/enduser/(Staff)/AcademicStaff/hooks'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { IFilterAttendance } from '../types/IStudentAttendance'
+import toast from 'react-hot-toast'
+import { useGetAttendanceReport } from '../hooks'
+import { Toast } from '@/components/Toast/toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { useGetAllStudents } from '../../Student/hooks'
 
 interface Props {
-  visible: boolean;
-  onClose: () => void;
-  classId: string | null;
+  visible: boolean
+  onClose: () => void
+  classId: string | null
 }
 const MonthList = [
-  { name: "Baisakh", value: 1 },
-  { name: "Jestha", value: 2 },
-  { name: "Ashadh", value: 3 },
-  { name: "Shrawan", value: 4 },
-  { name: "Bhadra", value: 5 },
-  { name: "Ashwin", value: 6 },
-  { name: "Kartik", value: 7 },
-  { name: "Mangsir", value: 8 },
-  { name: "Poush", value: 9 },
-  { name: "Magh", value: 10 },
-  { name: "Falgun", value: 11 },
-  { name: "Chaitra", value: 12 },
-];
+  { name: 'Baisakh', value: 1 },
+  { name: 'Jestha', value: 2 },
+  { name: 'Ashadh', value: 3 },
+  { name: 'Shrawan', value: 4 },
+  { name: 'Bhadra', value: 5 },
+  { name: 'Ashwin', value: 6 },
+  { name: 'Kartik', value: 7 },
+  { name: 'Mangsir', value: 8 },
+  { name: 'Poush', value: 9 },
+  { name: 'Magh', value: 10 },
+  { name: 'Falgun', value: 11 },
+  { name: 'Chaitra', value: 12 },
+]
 const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
-  if (!visible) return null;
   const form = useForm<IFilterAttendance>({
     defaultValues: {
-      academicTeamId: "",
-      yearName: "",
-      nameOfMonths: "",
+      academicTeamId: '',
+      yearName: '',
+      nameOfMonths: '',
     },
-  });
-  const { data: allAcademicTeam } = useGetAllAcademicTeams();
+  })
+  const { data: allAcademicTeam } = useGetAllAcademicTeams()
   const [selectedAcademicTeamId, setSelectedAcademicTeamId] = useState<
     string | null
-  >(null);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(0);
-  const [selectedYear, setSelectedYear] = useState("2082");
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const year = String(selectedYear);
-  const month = String(selectedMonth).padStart(2, "0");
+  >(null)
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(0)
+  const [selectedYear, setSelectedYear] = useState('2082')
+  const days = Array.from({ length: 31 }, (_, i) => i + 1)
+  const year = String(selectedYear)
+  const month = String(selectedMonth).padStart(2, '0')
   const getDateKey = (day: number) =>
-    `${year}-${month}-${String(day).padStart(2, "0")}`;
-  const [params, setParams] = useState("");
-  const { data: attendanceReport } = useGetAttendanceReport(params);
-  const { data: allStudents } = useGetAllStudents();
-  const { handleError, clearError } = useErrorHandler();
+    `${year}-${month}-${String(day).padStart(2, '0')}`
+  const [params, setParams] = useState('')
+  const { data: attendanceReport } = useGetAttendanceReport(params)
+  const { data: allStudents } = useGetAllStudents()
+  const { handleError, clearError } = useErrorHandler()
   const onClearClick = () => {
-    setSelectedAcademicTeamId("");
-    setSelectedMonth(0);
-    setSelectedYear("");
-  };
+    setSelectedAcademicTeamId('')
+    setSelectedMonth(0)
+    setSelectedYear('')
+  }
+  if (!visible) return null
   const onSubmit: SubmitHandler<IFilterAttendance> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         classId ? `classId=${encodeURIComponent(classId)}` : null,
@@ -74,23 +74,23 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `?${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `?${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
+          setParams(fullQuery)
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
-        },
-      );
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
+        }
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
+  }
   return (
     <div className="fixed ml-12 md:ml-64 sm:ml-16 xs:ml-0  inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div className="bg-white dark:bg-[#2f2f2f] w-[96%] max-w-7xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
@@ -120,18 +120,18 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                 options={allAcademicTeam?.Items}
                 selected={
                   allAcademicTeam?.Items?.find(
-                    (g) => g.id === selectedAcademicTeamId,
+                    (g) => g.id === selectedAcademicTeamId
                   ) || null
                 }
                 onSelect={(group) => {
                   if (group) {
-                    setSelectedAcademicTeamId(group.id || null);
+                    setSelectedAcademicTeamId(group.id || null)
                   } else {
-                    setSelectedAcademicTeamId(null);
+                    setSelectedAcademicTeamId(null)
                   }
                 }}
-                getLabel={(g) => g?.fullName ?? ""}
-                getValue={(g) => g?.id ?? ""}
+                getLabel={(g) => g?.fullName ?? ''}
+                getValue={(g) => g?.id ?? ''}
               />
             </div>
             <div className="flex-1 min-w-[240px]">
@@ -148,13 +148,13 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                 }
                 onSelect={(group) => {
                   if (group) {
-                    setSelectedMonth(group.value || null);
+                    setSelectedMonth(group.value || null)
                   } else {
-                    setSelectedMonth(null);
+                    setSelectedMonth(null)
                   }
                 }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.value ?? ""}
+                getLabel={(g) => g?.name ?? ''}
+                getValue={(g) => g?.value ?? ''}
               />
             </div>
 
@@ -203,26 +203,33 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                         {index + 1}
                       </td>
                       <td className="border px-2 py-2">
-                        {allStudents?.Items.find(
-                          (i) => i.id === student.StudentId,
-                        )?.firstName ?? "—"}
+                        {(() => {
+                          const s = allStudents?.Items.find(
+                            (i) => i.id === student.StudentId
+                          )
+                          return s
+                            ? [s.firstName, s.middleName, s.lastName]
+                                .filter(Boolean)
+                                .join(' ')
+                            : '—'
+                        })()}
                       </td>
                       {days.map((day) => {
-                        const dateKey = getDateKey(day);
-                        const status = student.Attendance?.[dateKey]?.Status;
+                        const dateKey = getDateKey(day)
+                        const status = student.Attendance?.[dateKey]?.Status
 
                         return (
                           <td
                             key={day}
                             className="border px-2 py-2 text-center hover:bg-emerald-100 dark:hover:bg-emerald-800"
                           >
-                            {status ?? "-"}
+                            {status ?? '-'}
                           </td>
-                        );
+                        )
                       })}
                     </tr>
                   ))
-                : "No attendance report of this month"}
+                : 'No attendance report of this month'}
             </tbody>
           </table>
         </div>
@@ -246,7 +253,7 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MonthlyAttendanceSheet;
+export default MonthlyAttendanceSheet

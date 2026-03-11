@@ -11,6 +11,10 @@ interface Props {
   awardId: string;
   onClose: () => void;
 }
+type InnerHTML = {
+  __html: string;
+};
+
 
 const StudentAwardCertificate: React.FC<Props> = ({
   visible,
@@ -123,7 +127,7 @@ const StudentAwardCertificate: React.FC<Props> = ({
           {/* Title */}
           <div className="flex justify-center mb-6">
             <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl">
-              CERTIFICATE OF MERIT
+              {alltemplate?.Items.find((template) => template.id === templateId)?.templateSubject}
             </h1>
           </div>
 
@@ -135,31 +139,11 @@ const StudentAwardCertificate: React.FC<Props> = ({
       dangerouslySetInnerHTML={{ __html: awardData?.contentHtml as string }}
     />
   ) : (
-    <>
-      <p className="my-3">
-        This is to formally recognize{" "}
-        <strong><u>{studentName}</u></strong>, a diligent student of{" "}
-        <strong>{schoolName}</strong>, for outstanding achievement in{" "}
-        <strong>{awardData?.awardedBy}</strong>. The award is granted
-        on{" "}
-        <strong>
-          {new Date(awardData?.awardedAt || "").toLocaleDateString()}
-        </strong>{" "}
-        in appreciation of{" "}
-        <strong>{awardData?.awardDescriptions}</strong>.
-      </p>
-
-      <p className="my-3">
-        This award honors the exemplary dedication, effort, and
-        performance demonstrated by the student, serving as a
-        testament to their commitment to excellence.
-      </p>
-
-      <p className="italic mt-3">
-        We extend our heartfelt congratulations and best wishes for
-        continued success in all future endeavors.
-      </p>
-    </>
+    
+   <div
+  className="prose max-w-none text-gray-700"
+  dangerouslySetInnerHTML={{ __html: awardData?.contentHtml as string }}
+/>
   )}
 </div>
 

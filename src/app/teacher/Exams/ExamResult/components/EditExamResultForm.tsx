@@ -24,9 +24,8 @@ type Props = {
 const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const editExamResult = useEditExamResult();
   const { handleError, clearError } = useErrorHandler();
-
   const { control, reset } = form;
-
+  
   const { data: ExamResultData } = useGetExamResultById(ExamResultId);
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
@@ -34,11 +33,13 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     null
   );
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>();
-  useEffect(() => {
-    if (selectedStudent) {
+ useEffect(() => {
+  if (selectedStudent) {
+    queueMicrotask(() => {
       setSelectedClassId(selectedStudent.classId || "");
-    }
-  }, [selectedStudent]);
+    });
+  }
+}, [selectedStudent]);
   const { data: allExam } = useGetAllExams();
   const { data: allStudents } = useGetAllStudents();
 
@@ -61,10 +62,10 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
       remarks: ExamResultData.remarks,
       marksObtained: ExamResultData.marksObtained ?? [],
     });
-
-    setSelectedExamId(ExamResultData.examId);
-    setSelectedStudentId(ExamResultData.studentId);
-
+    queueMicrotask(()=>{
+     setSelectedExamId(ExamResultData.examId);
+     setSelectedStudentId(ExamResultData.studentId);
+    })
     replace(ExamResultData.marksObtained ?? []);
   }, [ExamResultData]);
 

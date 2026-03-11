@@ -1,6 +1,5 @@
 import {
   createContext,
-  useEffect,
   useState,
   ReactNode,
   FC,
@@ -29,7 +28,19 @@ type AuthProviderProps = {
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   const [userDetails, setUserDetails] = useState<ITokenPayloadObject | null>(
-    null
+    () => {
+      if (typeof window === "undefined") return null;
+
+      const stored = localStorage.getItem("userDetails");
+      if (!stored) return null;
+
+      try {
+        return JSON.parse(stored);
+      } catch (error) {
+        console.error("Failed to parse user details:", error);
+        return null;
+      }
+    },
   );
 
   const updateUserDetails = (details: ITokenPayloadObject | null) => {
@@ -41,17 +52,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
     setUserDetails(details);
   };
-
-  useEffect(() => {
-    const storedUserDetails = localStorage.getItem("userDetails");
-    if (storedUserDetails) {
-      try {
-        setUserDetails(JSON.parse(storedUserDetails));
-      } catch (error) {
-        console.error("Failed to parse user details:", error);
-      }
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{ userDetails, updateUserDetails }}>

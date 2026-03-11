@@ -1,82 +1,82 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
+'use client'
+import { useEffect, useRef, useState } from 'react'
 import {
   IAcademicTeam,
   IFilterAcademicTeamByDate,
-} from "../types/IAcademicTeam";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { Box, Filter, Plus, RotateCcw } from "lucide-react";
+} from '../types/IAcademicTeam'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { Box, Filter, Plus, RotateCcw } from 'lucide-react'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
-import { useFilterAcademicTeamByDate } from "../hooks";
-import AddAcademicTeam from "../pages/Add";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import AssignClass from "./AssignClass";
+} from '@/components/DateFilter/FilterComponent'
+import { useFilterAcademicTeamByDate } from '../hooks'
+import AddAcademicTeam from '../pages/Add'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import AssignClass from './AssignClass'
 
 const AllAcademicTeamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
 
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
 
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
 
-  const [addModal, setAddModal] = useState(false);
-  const { menuStatus } = usePermissions();
-  const { canAdd } = useMenuPermissionData(menuStatus);
+  const [addModal, setAddModal] = useState(false)
+  const { menuStatus } = usePermissions()
+  const { canAdd } = useMenuPermissionData(menuStatus)
 
-  const [params, setParams] = useState("");
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+  const [params, setParams] = useState('')
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
 
   const form = useForm<IFilterAcademicTeamByDate>({
     defaultValues: {
-      fullName: "",
-      startDate: "",
-      endDate: "",
+      fullName: '',
+      startDate: '',
+      endDate: '',
     },
-  });
+  })
 
-  const fullQuery = query + (params || "");
+  const fullQuery = query + (params || '')
 
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
-  });
+  })
 
   const {
     data: filteredAcademicTeam,
     refetch,
     isLoading,
-  } = useFilterAcademicTeamByDate(fullQuery);
+  } = useFilterAcademicTeamByDate(fullQuery)
 
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
+    refetch()
+  }, [paginationParams, refetch])
 
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
 
   const onSubmit: SubmitHandler<IFilterAcademicTeamByDate> = async (
     formData
   ) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.fullName
@@ -90,56 +90,55 @@ const AllAcademicTeamForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
+        .join('&')
 
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+      const fullQuery = queryParams ? `&${queryParams}` : ''
 
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
+  }
 
-  const refForInput = useRef<HTMLInputElement>(null);
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
+    refForInput.current?.focus()
+  }, [])
 
-  const formRef = useRef<DateRangeFilterRef>(null);
+  const formRef = useRef<DateRangeFilterRef>(null)
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<
     string | undefined
-  >("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  >('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleAssignClass = (academicTeamId?: string) => {
-    setSelectedTeacherId(academicTeamId);
-    setIsModalOpen(true);
-  };
+    setSelectedTeacherId(academicTeamId)
+    setIsModalOpen(true)
+  }
 
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    formRef.current?.handleClear();
-    form.reset();
-  };
+    refetch()
+    setParams('')
+    formRef.current?.handleClear()
+    form.reset()
+  }
 
   return (
     <>
-      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden h-full">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
             <h1 className=" text-xl font-semibold ">All AcademicTeams</h1>
 
@@ -196,78 +195,78 @@ const AllAcademicTeamForm = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Full Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Address</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500">
-                      Loading AcademicTeams...
-                    </td>
+          <div className="flex flex-col h-[70vh] sm:h-[75vh] md:h-[80vh] overflow-hidden mt-4">
+            <div className="overflow-x-auto overflow-y-auto flex-1">
+              <table className="w-full border-collapse text-xs sm:text-sm">
+                <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-[#80878c] dark:text-white">
+                  <tr className="uppercase text-sm font-semibold border-b border-gray-200 text-gray-700 dark:text-white">
+                    <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                    <th className="px-4 py-3 text-left">Full Name</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">Address</th>
+                    <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                   </tr>
-                ) : filteredAcademicTeam?.Items &&
-                  filteredAcademicTeam?.Items.length > 0 ? (
-                  filteredAcademicTeam?.Items.map(
-                    (AcademicTeam: IAcademicTeam, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                      >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{AcademicTeam.fullName}</td>
-                        <td className="py-3 px-4">{AcademicTeam.email}</td>
-                        <td className="py-3 px-4">{AcademicTeam.address}</td>
-
-                        <td className="py-3 px-4">
-                          <div className="flex justify-center gap-2">
-                            <ButtonElement
-                              icon={<Box size={14} />}
-                              type="button"
-                              text=""
-                              handleClick={() => {
-                                handleAssignClass(AcademicTeam.id);
-                                setIsModalOpen(!isModalOpen);
-                              }}
-                              customStyle="!text-xs font-bold !bg-teal-500"
-                            />
-                          </div>
-                          {selectedTeacherId === AcademicTeam.id &&
-                            isModalOpen && (
-                              <div className="relative ">
-                              <AssignClass
-                                key={selectedTeacherId}
-                                teacherId={selectedTeacherId || ""}
-                                visible={isModalOpen}
-                                onClose={() => setIsModalOpen(false)}
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="p-4 text-center text-gray-500">
+                        Loading AcademicTeams...
+                      </td>
+                    </tr>
+                  ) : filteredAcademicTeam?.Items?.length ? (
+                    filteredAcademicTeam?.Items.map(
+                      (AcademicTeam: IAcademicTeam, index: number) => (
+                        <tr
+                          key={index}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        >
+                          <td className="py-3 px-4">{index + 1}</td>
+                          <td className="py-3 px-4">{AcademicTeam.fullName}</td>
+                          <td className="py-3 px-4">{AcademicTeam.email}</td>
+                          <td className="py-3 px-4">{AcademicTeam.address}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex justify-center gap-2">
+                              <ButtonElement
+                                icon={<Box size={14} />}
+                                type="button"
+                                text=""
+                                handleClick={() => {
+                                  handleAssignClass(AcademicTeam.id)
+                                  setIsModalOpen(!isModalOpen)
+                                }}
+                                customStyle="!text-xs font-bold !bg-teal-500"
                               />
                             </div>
-                            )}
-                        </td>
-                      </tr>
+
+                            {selectedTeacherId === AcademicTeam.id &&
+                              isModalOpen && (
+                                <div className="relative">
+                                  <AssignClass
+                                    key={selectedTeacherId}
+                                    teacherId={selectedTeacherId || ''}
+                                    visible={isModalOpen}
+                                    onClose={() => setIsModalOpen(false)}
+                                  />
+                                </div>
+                              )}
+                          </td>
+                        </tr>
+                      )
                     )
-                  )
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
-                      No AcademicTeams found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="p-4 text-center text-gray-500 italic"
+                      >
+                        No AcademicTeams found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <AddAcademicTeam
@@ -294,7 +293,7 @@ const AllAcademicTeamForm = () => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllAcademicTeamForm;
+export default AllAcademicTeamForm

@@ -167,6 +167,7 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
             </h1>
             <div className="w-[120px] h-[130px] border-2 mt-[-2.5rem] border-black flex items-center justify-center relative overflow-hidden">
               {StudentData?.studentImg && (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
                   alt="Student Image"

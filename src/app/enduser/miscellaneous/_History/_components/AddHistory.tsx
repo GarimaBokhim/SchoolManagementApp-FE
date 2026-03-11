@@ -1,53 +1,54 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
 
-import { X } from "lucide-react";
-import { IHistory } from "../types/IHistory";
-import { useAddHistory } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllSchoolItems } from "../../_SchoolItem/hooks";
-import { useEffect, useState } from "react";
-import { ISchoolItem } from "../../_SchoolItem/types/ISchoolItem";
+import { X } from 'lucide-react'
+import { IHistory } from '../types/IHistory'
+import { useAddHistory } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useGetAllSchoolItems } from '../../_SchoolItem/hooks'
+import { useEffect, useState } from 'react'
+import { ISchoolItem } from '../../_SchoolItem/types/ISchoolItem'
 type Props = {
-  form: UseFormReturn<IHistory>;
-  onClose: () => void;
-};
+  form: UseFormReturn<IHistory>
+  onClose: () => void
+}
 const AddHistoryForm = ({ form, onClose }: Props) => {
-  const addHistory = useAddHistory();
-  const { handleError, clearError } = useErrorHandler();
-  const { data: allSchoolItem } = useGetAllSchoolItems();
-  const [selectedSchoolItemId, setSelectedSchoolItemId] = useState("");
-  const [prevItemStatus, setPrevItemStatus] = useState(0);
-  const [currentStatus, setCurrentStatus] = useState(0);
-  const [selectedSchoolItem, setSelectedSchoolItem] = useState<ISchoolItem>();
+  const addHistory = useAddHistory()
+  const { handleError, clearError } = useErrorHandler()
+  const { data: allSchoolItem } = useGetAllSchoolItems()
+  const [selectedSchoolItemId, setSelectedSchoolItemId] = useState('')
+  const [prevItemStatus, setPrevItemStatus] = useState(0)
+  const [currentStatus, setCurrentStatus] = useState(0)
+  const [selectedSchoolItem, setSelectedSchoolItem] = useState<ISchoolItem>()
   useEffect(() => {
     if (selectedSchoolItem) {
-      console.log(selectedSchoolItem);
-      setPrevItemStatus(selectedSchoolItem.itemStatus);
+      console.log(selectedSchoolItem)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPrevItemStatus(selectedSchoolItem.itemStatus)
     }
-  }, [selectedSchoolItem]);
+  }, [selectedSchoolItem])
   const handleClose = () => {
-    form.reset();
-    onClose();
-  };
+    form.reset()
+    onClose()
+  }
   const onSubmit: SubmitHandler<IHistory> = async (data) => {
-    clearError();
+    clearError()
     try {
       await toast.promise(addHistory.mutateAsync(data), {
-        loading: "Adding History...",
-        success: "Successfully added History",
-      });
-      handleClose();
+        loading: 'Adding History...',
+        success: 'Successfully added History',
+      })
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
 
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
@@ -83,39 +84,38 @@ const AddHistoryForm = ({ form, onClose }: Props) => {
                   ) || null
                 }
                 onSelect={(group) => {
-                  setSelectedSchoolItemId(group?.id ?? "");
-                  if (group) setSelectedSchoolItem(group);
+                  setSelectedSchoolItemId(group?.id ?? '')
+                  if (group) setSelectedSchoolItem(group)
                 }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
+                getLabel={(g) => g?.name ?? ''}
+                getValue={(g) => g?.id ?? ''}
               />
               <AppCombobox
                 label="Previous Item Status"
                 dropdownPositionClass="absolute"
                 name="previousStatus"
-                readOnly
                 form={form}
                 value={prevItemStatus}
                 options={[
-                  { id: 1, name: "Available" },
-                  { id: 2, name: "Damaged" },
-                  { id: 3, name: "Replaced" },
-                  { id: 4, name: "Lost" },
-                  { id: 5, name: "Disposed" },
+                  { id: 1, name: 'Available' },
+                  { id: 2, name: 'Damaged' },
+                  { id: 3, name: 'Replaced' },
+                  { id: 4, name: 'Lost' },
+                  { id: 5, name: 'Disposed' },
                 ]}
                 dropDownWidth="w-full"
                 selected={
                   [
-                    { id: 1, name: "Available" },
-                    { id: 2, name: "Damaged" },
-                    { id: 3, name: "Replaced" },
-                    { id: 4, name: "Lost" },
-                    { id: 5, name: "Disposed" },
+                    { id: 1, name: 'Available' },
+                    { id: 2, name: 'Damaged' },
+                    { id: 3, name: 'Replaced' },
+                    { id: 4, name: 'Lost' },
+                    { id: 5, name: 'Disposed' },
                   ].find((g) => g.id === prevItemStatus) || null
                 }
                 onSelect={(option) => setPrevItemStatus(option?.id ?? 0)}
-                getLabel={(o) => o?.name || ""}
-                getValue={(o) => o?.id ?? ""}
+                getLabel={(o) => o?.name || ''}
+                getValue={(o) => o?.id ?? ''}
               />
               <AppCombobox
                 label="Current Item Status"
@@ -124,25 +124,25 @@ const AddHistoryForm = ({ form, onClose }: Props) => {
                 form={form}
                 value={currentStatus}
                 options={[
-                  { id: 1, name: "Available" },
-                  { id: 2, name: "Damaged" },
-                  { id: 3, name: "Replaced" },
-                  { id: 4, name: "Lost" },
-                  { id: 5, name: "Disposed" },
+                  { id: 1, name: 'Available' },
+                  { id: 2, name: 'Damaged' },
+                  { id: 3, name: 'Replaced' },
+                  { id: 4, name: 'Lost' },
+                  { id: 5, name: 'Disposed' },
                 ]}
                 dropDownWidth="w-full"
                 selected={
                   [
-                    { id: 1, name: "Available" },
-                    { id: 2, name: "Damaged" },
-                    { id: 3, name: "Replaced" },
-                    { id: 4, name: "Lost" },
-                    { id: 5, name: "Disposed" },
+                    { id: 1, name: 'Available' },
+                    { id: 2, name: 'Damaged' },
+                    { id: 3, name: 'Replaced' },
+                    { id: 4, name: 'Lost' },
+                    { id: 5, name: 'Disposed' },
                   ].find((g) => g.id === currentStatus) || null
                 }
                 onSelect={(option) => setCurrentStatus(option?.id ?? 0)}
-                getLabel={(o) => o?.name || ""}
-                getValue={(o) => o?.id ?? ""}
+                getLabel={(o) => o?.name || ''}
+                getValue={(o) => o?.id ?? ''}
               />
               <InputElement
                 label="Remarks"
@@ -163,7 +163,7 @@ const AddHistoryForm = ({ form, onClose }: Props) => {
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddHistoryForm;
+export default AddHistoryForm

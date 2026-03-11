@@ -11,7 +11,6 @@ import { Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
@@ -20,7 +19,6 @@ import { useFilterSchoolAwardByDate, useRemoveSchoolAward } from "../hooks";
 import { IfilterSchoolAward, ISchoolAward } from "../types/Ischoolaward";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import AddschoolAward from "./Addschoolaward";
-import { EditButton } from "@/components/Buttons/EditButton";
 import SchoolAwardCertificate from "./printawardcertificate";
 
 const AllSchoolAwardForm = () => {
@@ -52,7 +50,6 @@ const AllSchoolAwardForm = () => {
   const deleteSchoolAward = useRemoveSchoolAward();
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-  const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
     const [ShowAwardPrint, setShowAwardPrint] = useState(false);
     const [AwardId, setAwardId] = useState<string | null>(null);
 
@@ -108,7 +105,6 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
   const onClearClick = () => {
     refetch();
     setParams("");
-    setselectedSchoolId("");
     formRef.current?.handleClear();
     form.reset();
   };

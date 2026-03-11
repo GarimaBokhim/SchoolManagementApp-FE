@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { ILedgers } from "../types/ILedgers";
@@ -35,6 +36,7 @@ const EditLedgerForm = ({ form, onClose, ledgerId }: Props) => {
     const openGroupIds = [
       "dff66bb4-11e6-4e5f-8bb9-f00c01b90284",
       "f5c2cba4-e4c7-496a-9f07-f2060c426e06",
+    
     ];
     setOpenExtension(openGroupIds.includes(selectedSubLedgerGroupId));
   }, [selectedSubLedgerGroupId]);

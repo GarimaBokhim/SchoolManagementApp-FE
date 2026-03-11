@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { Box, CircuitBoard, School, User, UserCog } from "lucide-react";
+import {  School, User, UserCog } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import PieChartSection from "./PieChart";

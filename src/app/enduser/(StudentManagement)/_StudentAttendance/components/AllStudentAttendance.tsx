@@ -108,8 +108,6 @@ const AllStudentAttendanceForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  const { data: allStudents } = useGetAllStudents();
-  const { data: allAcademicTeam } = useGetAllAcademicTeams();
   const onClearClick = () => {
     refetch();
     setParams("");

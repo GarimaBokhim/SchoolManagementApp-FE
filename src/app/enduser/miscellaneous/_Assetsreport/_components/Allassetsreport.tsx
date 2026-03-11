@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {  useState } from "react";
 import { useForm } from "react-hook-form";
 import { Filter, RotateCcw } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";

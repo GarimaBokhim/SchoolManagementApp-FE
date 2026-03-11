@@ -1,73 +1,75 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IExamResult, IMarkSheet } from "../types/IExamResults";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+import { IPaginationResponse } from '@/types/IPaginationResponse'
+import { IExamResult, IMarkSheet } from '../types/IExamResults'
 const ExamResultEndPoints = {
-  getAllExamResults: "/api/Academics/all-examResult",
-  createExamResults: "/api/Academics/AddExamResult",
-  removeExamResults: "/api/Academics/Delete",
-  updateExamResults: "/api/Academics/UpdateExamResult",
-  getExamResultsById: "/api/Academics/ExamResult",
-  generateMarkSheet: "/api/Academics/MarkSheet",
-  filterExamResultByDate: "/api/Academics/FilterExamResult",
-};
+  getAllExamResults: '/api/Academics/all-examResult',
+  createExamResults: '/api/Academics/AddExamResult',
+  removeExamResults: '/api/Academics/Delete',
+  updateExamResults: '/api/Academics/UpdateExamResult',
+  getExamResultsById: '/api/Academics/ExamResult',
+  generateMarkSheet: '/api/Academics/MarkSheet',
+  filterExamResultByDate: '/api/Academics/FilterExamResult',
+  AttendenceCount: '/api/Student/AttendanceCount',
+}
 
-const queryKey = "ExamResults";
-const filteredExamResultQuery = "FilteredExamResults";
+const queryKey = 'ExamResults'
+const filteredExamResultQuery = 'FilteredExamResults'
 type ExamResultRequest = {
-  id?: string;
-  examId: string;
-  studentId: string;
-  remarks?: string;
+  id?: string
+  examId: string
+  studentId: string
+  remarks?: string
   marksObtained: {
-    subjectId: string;
-    marksObtained: number;
-  }[];
-};
+    subjectId: string
+    marksObtained: number
+    fullMarks: number
+  }[]
+}
 
 export const useAddExamResult = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<IExamResult, Error, ExamResultRequest>({
     mutationFn: async (data: ExamResultRequest): Promise<IExamResult> => {
-      console.log("Add ExamResult", data);
+      console.log('Add ExamResult', data)
       const response = await api.post(
         ExamResultEndPoints.createExamResults,
         data
-      );
+      )
 
-      return response.data;
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] })
     },
     onError: (error) => {
-      console.error("Error adding ExamResult:", error);
+      console.error('Error adding ExamResult:', error)
     },
-  });
-};
+  })
+}
 
 export const useRemoveExamResult = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<IExamResult, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IExamResult> => {
       if (!Id) {
-        throw new Error("Id is required to remove a ExamResult");
+        throw new Error('Id is required to remove a ExamResult')
       }
       const response = await api.delete(
         `${ExamResultEndPoints.removeExamResults}/${Id}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] })
     },
-  });
-};
+  })
+}
 
 export const useEditExamResult = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<
     IExamResult,
     Error,
@@ -75,38 +77,38 @@ export const useEditExamResult = () => {
   >({
     mutationFn: async ({ id, data }): Promise<IExamResult> => {
       if (!id) {
-        throw new Error("Ïd is required to edit ExamResult");
+        throw new Error('Ïd is required to edit ExamResult')
       }
       const response = await api.patch(
         `${ExamResultEndPoints.updateExamResults}/${id}`,
         data
-      );
-      return response.data;
+      )
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] });
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filteredExamResultQuery] })
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
     },
-  });
-};
+  })
+}
 
 export const useGetExamResultById = (ExamResultId: string) => {
   return useQuery({
     queryKey: [queryKey, ExamResultId],
     queryFn: async (): Promise<IExamResult> => {
       if (!ExamResultId) {
-        throw new Error("Id is required to get a ExamResult");
+        throw new Error('Id is required to get a ExamResult')
       }
       const response = await api.get<IExamResult>(
         `${ExamResultEndPoints.getExamResultsById}/${ExamResultId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!ExamResultId,
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 
 export const useGetAllExamResults = (params?: string) => {
   return useQuery({
@@ -114,8 +116,8 @@ export const useGetAllExamResults = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${ExamResultEndPoints.getAllExamResults}${params}`
-        : `${ExamResultEndPoints.getAllExamResults}`;
-      const response = await api.get<IPaginationResponse<IExamResult>>(url);
+        : `${ExamResultEndPoints.getAllExamResults}`
+      const response = await api.get<IPaginationResponse<IExamResult>>(url)
       return (
         response.data ?? {
           data: [],
@@ -123,10 +125,10 @@ export const useGetAllExamResults = (params?: string) => {
           isPagination: 1,
           pageSize: 10,
         }
-      );
+      )
     },
-  });
-};
+  })
+}
 
 export const useFilterExamResultByDate = (params?: string) => {
   return useQuery({
@@ -134,29 +136,29 @@ export const useFilterExamResultByDate = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${ExamResultEndPoints.filterExamResultByDate}${params}`
-        : ExamResultEndPoints.filterExamResultByDate;
-      const response = await api.get<IPaginationResponse<IExamResult>>(url);
-      return response.data;
+        : ExamResultEndPoints.filterExamResultByDate
+      const response = await api.get<IPaginationResponse<IExamResult>>(url)
+      return response.data
     },
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 
 export const useGenerateMarkSheet = (studentId: string, examId: string) => {
   return useQuery({
     queryKey: [queryKey, studentId],
     queryFn: async (): Promise<IMarkSheet> => {
       if (!studentId) {
-        throw new Error("Id is required to get a IssuedCertificate");
+        throw new Error('Id is required to get a IssuedCertificate')
       }
       const response = await api.get<IMarkSheet>(
         `${ExamResultEndPoints.generateMarkSheet}?studentId=${studentId}&examId=${examId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!studentId,
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}

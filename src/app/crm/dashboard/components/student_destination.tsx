@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, MapPin } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { destinations } from '../data/mock_data';
 
 interface Destination {

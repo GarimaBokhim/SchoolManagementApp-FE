@@ -1,60 +1,64 @@
-"use client";
-import { School, X } from "lucide-react";
-import { useGenerateMarkSheet } from "../hooks";
-import { useGetAllSubjects } from "../../Subject/hooks";
-import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
-import { useRef, useEffect } from "react";
-import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllClass } from "../../Class/hooks";
-
+'use client'
+import { X } from 'lucide-react'
+import { useGenerateMarkSheet } from '../hooks'
+import { useGetAllSubjects } from '../../Subject/hooks'
+import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
+import { useRef, useEffect } from 'react'
+import { useGetAllExams } from '../../Exam/hooks'
+import { useGetAllClass, useGetClassById } from '../../Class/hooks'
+import { IClass } from '../../Class/types/IClass'
+import { IExam } from '../../Exam/types/IExams'
+import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
 
 interface Props {
-  studentId: string;
-  examId: string;
-  onClose: () => void;
+  studentId: string
+  examId: string
+  onClose: () => void
 }
 
 const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
-  const { data } = useGenerateMarkSheet(studentId, examId);
-  const { data: allSubject } = useGetAllSubjects();
-  const { data: StudentData } = useGetStudentById(studentId);
-  const { data: allExam} = useGetAllExams();
-  const {data:allclass} = useGetAllClass();
+  const { data } = useGenerateMarkSheet(studentId, examId)
+  const { data: allSubject } = useGetAllSubjects()
+  const { data: StudentData } = useGetStudentById(studentId)
+  const { data: allExam } = useGetAllExams()
+  const { data: allclass } = useGetClassById(StudentData?.classId || '')
+  const { data: allattendencecount } = useGetAttendenceCount(studentId)
 
-  const storedUser = localStorage.getItem("userDetails");
-  let schoolId = "";
+  const storedUser = localStorage.getItem('userDetails')
+  let schoolId = ''
   if (storedUser) {
     try {
-      const parsedUser = JSON.parse(storedUser);
-      schoolId = parsedUser.schoolId;
+      const parsedUser = JSON.parse(storedUser)
+      schoolId = parsedUser.schoolId
     } catch (error) {
-      console.error("Failed to parse user details:", error);
+      console.error('Failed to parse user details:', error)
     }
   }
 
-  const { data: SchoolData } = useGetSchoolById(schoolId);
-  const modalRef = useRef<HTMLDivElement>(null);
-const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
+  const { data: SchoolData } = useGetSchoolById(schoolId)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const ExamName = allExam?.Items.find(
+    (exam: IExam) => exam.id === examId
+  )?.name
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
- 
   const handlePrint = () => {
-    const content = document.getElementById("marksheet")?.outerHTML;
-    if (!content) return;
+    const content = document.getElementById('marksheet')?.outerHTML
+    if (!content) return
 
-    const printWindow = window.open("", "", "width=900,height=1000");
+    const printWindow = window.open('', '', 'width=900,height=1000')
     printWindow?.document.write(`
   <html>
     <head>
@@ -73,11 +77,11 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
     </head>
     <body>${content}</body>
   </html>
-`);
-    printWindow?.document.close();
-    printWindow?.focus();
-    printWindow?.print();
-  };
+`)
+    printWindow?.document.close()
+    printWindow?.focus()
+    printWindow?.print()
+  }
 
   return (
     <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0  bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
@@ -86,57 +90,52 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
         className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Print Marksheet</h2>{" "}
+          <h2 className="text-xl font-semibold">Print Marksheet</h2>{' '}
           <button onClick={onClose} className="text-red-500 text-xl">
-            <X />{" "}
-          </button>{" "}
+            <X />{' '}
+          </button>{' '}
         </div>
         <div
           id="marksheet"
           className="bg-white shadow-2xl mx-auto border-2 text-sky-600 p-4 sm:p-6"
-          style={{ backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" }}
+          style={{ backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}
         >
           <div className="border-4 border-sky-500 p-3 sm:p-5">
             <header className="pb-4 mb-2 relative">
-            <div className="flex items-start justify-center w-full">
-          
-              {StudentData?.studentImg && (
-                <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
-                  <img
-                    src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
-                    alt="Student Image"
-                    className="w-full h-full object-cover"
-                  />
+              <div className="flex items-start justify-center w-full">
+                {StudentData?.studentImg && (
+                  <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                    <img
+                      src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                      alt="Student Image"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
+                  <p className="text-sm">{SchoolData?.address}</p>
+                  <p className="font-semibold mt-2 underline">{ExamName}</p>
+                  <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
                 </div>
-              )}
-
-              <div className="text-center">
-                <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
-                <p className="text-sm">{SchoolData?.address}</p>
-                <p className="font-semibold mt-2 underline">
-                  {ExamName}
-                </p>
-                <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
               </div>
-            </div>
-          </header>
-
-
-
+            </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
               <p className="flex">
-                <strong>Name:</strong> {StudentData?.firstName}{" "}
+                <strong>Name:</strong> {StudentData?.firstName}{' '}
                 {StudentData?.lastName}
               </p>
               <p>
                 <strong>Section:</strong> {StudentData?.classSectionId}
               </p>
               <p className="flex">
-                <strong>Class:</strong>{allclass?.Items.find((c : any) => c.id === StudentData?.classId)?.name}
+                <strong>Class:</strong>
+                {allclass?.name}
               </p>
               <p>
-                <strong>Roll No:</strong> 
+                <strong>Roll No:</strong>
               </p>
             </div>
 
@@ -163,10 +162,10 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
                       }
                     </td>
                     <td className="border border-sky-500 p-1">
-                      {m.grade || "-"}
+                      {m.grade || '-'}
                     </td>
                     <td className="border border-sky-500 p-1">
-                      {m.GPA || "-"}
+                      {m.GPA || '-'}
                     </td>
                     <td className="border border-sky-500 p-1">
                       {m.marksObtained}
@@ -223,18 +222,12 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
               </table>
 
               <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
-                <p className=" inline-block px-2">
-                  OBT.MARKS :
-                </p>
+                <p className=" inline-block px-2">OBT.MARKS :</p>
                 <strong>{data?.totalObtainedMarks}</strong>
                 <div>
-                  <p className=" inline-block px-2">
-                  GPA :
-                </p>
-                  <strong>
-                    {data?.GPA}
-                  </strong>
-                 <strong>({data?.grade})</strong>
+                  <p className=" inline-block px-2">GPA :</p>
+                  <strong>{data?.GPA}</strong>
+                  <strong>({data?.grade})</strong>
                 </div>
               </div>
             </div>
@@ -244,13 +237,21 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
                 <strong>Remarks:</strong> {data?.remarks}
               </p>
               <p className="flex">
-                <strong>DATE OF ISSUE:</strong>{"date of issue yaha"}
+                <strong>DATE OF ISSUE:</strong>
+                {data?.createdAt &&
+                  new Date(data?.createdAt).toISOString().split('T')[0]}
               </p>
               <p className="flex justify-end gap-4">
-                <strong>Total Running Days:</strong>
-                <strong>Total Absent Days</strong>
-                <strong> Total Present Days</strong>
-
+                <strong>
+                  Total Running Days: {allattendencecount?.totalRunningDays}
+                </strong>
+                <strong>
+                  Total Absent Days {allattendencecount?.totalAbsentDays}
+                </strong>
+                <strong>
+                  {' '}
+                  Total Present Days {allattendencecount?.totalPresentDays}
+                </strong>
               </p>
             </div>
 
@@ -271,7 +272,7 @@ const ExamName = allExam?.Items.find((exam : any) => exam.id === examId)?.name;
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SchoolMarkSheet;
+export default SchoolMarkSheet

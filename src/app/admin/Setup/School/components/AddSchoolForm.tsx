@@ -1,61 +1,64 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { ISchool } from "../types/ISchool";
-import { useAddSchool, useGetAllFiscalYear } from "../hooks";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { ISchool } from '../types/ISchool'
+import { useAddSchool, useGetAllFiscalYear } from '../hooks'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import { useGetAllInstitution } from '@/app/SuperAdmin/institutionSetup/Institution/hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
-import { useRef, useState } from "react";
-import { X } from "lucide-react";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import toast from "react-hot-toast";
+import { useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import toast from 'react-hot-toast'
+import { useGetAllAcademicYear } from '@/app/enduser/(StudentManagement)/_Registration/hooks'
 
 type Props = {
-  form: UseFormReturn<ISchool>;
-  onClose: () => void;
-};
+  form: UseFormReturn<ISchool>
+  onClose: () => void
+}
 
 const AddSchoolForm = ({ form, onClose }: Props) => {
-  const addSchool = useAddSchool();
-  const [institutionId, setInstitutionId] = useState("");
-  const { data: institution } = useGetAllInstitution();
-  const { data: fiscalYear } = useGetAllFiscalYear();
-  const [fiscalYearId, setFiscalYearId] = useState("");
-  const { handleError, clearError } = useErrorHandler();
+  const addSchool = useAddSchool()
+  const [institutionId, setInstitutionId] = useState('')
+  const { data: institution } = useGetAllInstitution()
+  const { data: fiscalYear } = useGetAllFiscalYear()
+  const { data: academicYear } = useGetAllAcademicYear()
+  const [fiscalYearId, setFiscalYearId] = useState('')
+  const [academicYearId, setAcademicYearId] = useState('')
+  const { handleError, clearError } = useErrorHandler()
   const onSubmit: SubmitHandler<ISchool> = async (data) => {
-    clearError();
+    clearError()
     try {
       await toast.promise(addSchool.mutateAsync(data), {
-        loading: "Adding School...",
-        success: "Successfully added School",
-      });
-      onClose();
+        loading: 'Adding School...',
+        success: 'Successfully added School',
+      })
+      onClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
-    const [schoollogo, setschoollogo] = useState("");
-      const fileInputRef = useRef<HTMLInputElement>(null);
- const handleImageClick = () => fileInputRef.current?.click();
-   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  }
+  const [schoollogo, setschoollogo] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const handleImageClick = () => fileInputRef.current?.click()
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setschoollogo(reader.result as string);
-      reader.readAsDataURL(file);
+      const reader = new FileReader()
+      reader.onloadend = () => setschoollogo(reader.result as string)
+      reader.readAsDataURL(file)
     }
-  };
+  }
   // const handleSelectFiscalYear = (id: string) => {
   //   form.setValue("fiscalYearId", id);
   // };
 
   const handleSelectInstitution = (id: string) => {
-    form.setValue("institutionId", id);
-  };
+    form.setValue('institutionId', id)
+  }
 
   return (
     <div
@@ -136,29 +139,30 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                 />
               </div>
               <div className="space-y-4">
-
-              <div className="flex-shrink-0 flex flex-col items-center justify-center">
-                <div
-                  onClick={handleImageClick}
-                  className="w-24 h-24   bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
-                >
-                  {schoollogo ? (
-                    <img
-                      src={schoollogo}
-                      alt="School Logo"
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-sm">Click to add</span>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+                <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                  <div
+                    onClick={handleImageClick}
+                    className="w-24 h-24   bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
+                  >
+                    {schoollogo ? (
+                      <img
+                        src={schoollogo}
+                        alt="School Logo"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">
+                        Click to add
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
                 </div>
                 <AppCombobox
                   required
@@ -175,14 +179,14 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                   }
                   onSelect={(group) => {
                     if (group) {
-                      setInstitutionId(group.id || "");
-                      handleSelectInstitution(group.id || "");
+                      setInstitutionId(group.id || '')
+                      handleSelectInstitution(group.id || '')
                     } else {
-                      setInstitutionId("");
+                      setInstitutionId('')
                     }
                   }}
-                  getLabel={(g) => g?.name || ""}
-                  getValue={(g) => g?.id ?? ""}
+                  getLabel={(g) => g?.name || ''}
+                  getValue={(g) => g?.id ?? ''}
                 />
                 <AppCombobox
                   required
@@ -198,14 +202,39 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
                   }
                   onSelect={(group) => {
                     if (group) {
-                      setFiscalYearId(group.Id || "");
+                      setFiscalYearId(group.Id || '')
                     } else {
-                      setFiscalYearId("");
+                      setFiscalYearId('')
                     }
                   }}
-                  getLabel={(g) => g?.FyName || ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.FyName || ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
+
+                <AppCombobox
+                  required
+                  value={academicYearId}
+                  form={form}
+                  name="academicYearId"
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute z-50"
+                  label="Academics Year"
+                  options={academicYear?.Items}
+                  selected={
+                    academicYear?.Items.find((g) => g.Id === academicYearId) ||
+                    null
+                  }
+                  onSelect={(group) => {
+                    if (group) {
+                      setAcademicYearId(group.Id || '')
+                    } else {
+                      setAcademicYearId('')
+                    }
+                  }}
+                  getLabel={(g) => g?.Name || ''}
+                  getValue={(g) => g?.Id ?? ''}
+                />
+
                 {/* <div className="flex items-center">
                   <InputElement
                     label=""
@@ -296,7 +325,7 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddSchoolForm;
+export default AddSchoolForm

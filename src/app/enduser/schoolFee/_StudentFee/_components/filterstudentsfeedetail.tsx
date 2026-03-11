@@ -42,10 +42,13 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
 
   useEffect(() => {
     if (!studentId) return;
-    setSelectedStudentId(studentId);
-    setValue("studentId", studentId);
-    const query = `?studentId=${encodeURIComponent(studentId)}`;
-    setParams(query);
+    queueMicrotask(()=>{
+      setSelectedStudentId(studentId);
+      setValue("studentId", studentId);
+      const query = `?studentId=${encodeURIComponent(studentId)}`;
+      setParams(query);
+    })
+  
     refetch();
   }, [studentId]);
 

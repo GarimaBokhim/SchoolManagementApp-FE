@@ -3,6 +3,7 @@ import { forwardRef } from "react";
 import { RegisterOptions } from "react-hook-form";
 import DatePicker from "../DatePicker/DatePicker";
 import { useDate } from "@/context/auth/PrimaryDateContext";
+
 interface IInput {
   label?: string;
   layout?: "column" | "row";
@@ -62,12 +63,14 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
       customStyle = "",
       inputTypeCheckBox,
     },
-    ref: React.Ref<HTMLInputElement>
+    ref
   ) => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+
     const isPrimaryBs = useDate();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (inputType === "number") {
         const raw = e.target.value;
@@ -79,6 +82,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
         onChange?.(e);
       }
     };
+
     const {
       ref: registerRef,
       onChange: rhfOnChange,
@@ -88,7 +92,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
     });
 
     return (
-      <div className={`font-poppins`}>
+      <div className="font-poppins">
         {preview ? (
           <span className="text-gray-800">{form.getValues(name)}</span>
         ) : (
@@ -115,7 +119,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   className={`h-4 w-4 border-gray-300 rounded ${customStyle}`}
                 />
                 <label htmlFor={name} className="text-gray-700 text-sm">
-                  {label ? `${`${label}`}` : ""}
+                  {label ?? ""}
                 </label>
               </div>
             ) : inputType !== "file" ? (
@@ -124,12 +128,12 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   id={name}
                   type={inputType}
                   disabled={disabled}
-                  {...form.register(name, { required: required })}
+                  {...form.register(name, { required })}
                   placeholder={placeholder}
                   readOnly={readOnly}
                   min={inputType === "number" ? min : 0}
                   max={max}
-                  className={`w-full p-2 py-1.2  border ${
+                  className={`w-full p-2 py-1.2 border ${
                     form.formState.errors[name]
                       ? "border-red-500"
                       : "border-gray-400"
@@ -150,14 +154,14 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                       e.preventDefault();
                     }
                   }}
-                  ref={(e) => {
-                    registerRef(e);
+                  ref={(element) => {
+                    registerRef(element);
                     if (typeof ref === "function") {
-                      ref(e);
+                      ref(element);
                     } else if (ref) {
                       (
                         ref as React.MutableRefObject<HTMLInputElement | null>
-                      ).current = e;
+                      ).current = element;
                     }
                   }}
                   {...rest}
@@ -174,7 +178,7 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                     {required && (
                       <span className="text-red-500 text-xl mr-1">*</span>
                     )}
-                    {label ? `${`${label}`}` : ""}
+                    {label ?? ""}
                   </div>
                 </label>
               </div>
@@ -185,12 +189,12 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                 accept={accept}
                 onChange={onChange}
                 onSelect={onChange}
-                {...form.register(name, { required: required })}
+                {...form.register(name, { required })}
                 className={`px-3 mt-1 py-2 rounded border ${
                   form.formState.errors[name]
                     ? "border-red-500"
                     : "border-gray-300"
-                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm bg-white dark:bg-[#353535] dark:text-white border-[#035BBA] dark:bg-[#353535] focus:border-[#4788CD] ${customStyle}`}
+                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm bg-white dark:bg-[#353535] dark:text-white border-[#035BBA] focus:border-[#4788CD] ${customStyle}`}
                 ref={ref}
               />
             )}
@@ -206,3 +210,5 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
     );
   }
 );
+
+InputElement.displayName = "InputElement";

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import {
@@ -52,7 +53,6 @@ function InnerCombobox<T>(
     disabled,
     renderOptionExtra,
     readOnly,
-    className,
   }: AppComboboxProps<T>,
   ref: React.Ref<HTMLInputElement>
 ) {
