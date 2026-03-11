@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import { IUniversity } from '../../univer-sity/types/IUniversity';
-import { useGetAllUniversities } from '../../univer-sity/types';
+import {  useGetUniversities } from '../../univer-sity/hooks';
 
 
 interface CourseFormData {
@@ -62,7 +62,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
   const [selectedStudyLevel, setSelectedStudyLevel] = useState<StudyLevelOption | null>(null);
 
 
-  const { data: universityData, isLoading: loadingUniversities } = useGetAllUniversities();
+const { data: universities, isLoading: loadingUniversities } = useGetUniversities();
 
   const comboForm = useForm({
     defaultValues: { studyLevel: 0, universityId: '' },
@@ -240,7 +240,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
                   label={loadingUniversities ? 'Loading...' : 'Select University'}
                   name="universityId"
                   form={comboForm}
-                  options={universityData?.Items ?? []}  // ✅ Items from IPaginationResponse
+                options={universities ?? []}
                   selected={selectedUniversity}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
