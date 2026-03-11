@@ -7,19 +7,24 @@ import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
 
-const MONTH_OPTIONS = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
+interface MonthOption {
+  id: number;
+  name: string;
+}
+
+const MONTH_OPTIONS: MonthOption[] = [
+  { id: 1, name: "January" },
+  { id: 2, name: "February" },
+  { id: 3, name: "March" },
+  { id: 4, name: "April" },
+  { id: 5, name: "May" },
+  { id: 6, name: "June" },
+  { id: 7, name: "July" },
+  { id: 8, name: "August" },
+  { id: 9, name: "September" },
+  { id: 10, name: "October" },
+  { id: 11, name: "November" },
+  { id: 12, name: "December" },
 ];
 
 interface Course {
@@ -58,11 +63,12 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
   const [formData, setFormData] = useState<IntakeFormData>(defaultFormData);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<MonthOption | null>(MONTH_OPTIONS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const comboForm = useForm({
-    defaultValues: { courseId: '' },
+    defaultValues: { courseId: '', month: 1 },
   });
 
   const fetchCourses = useCallback(async () => {
@@ -70,7 +76,7 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
       const res = await api.get('/api/AcademicPrograms/GetAllCourse');
       setCourses(res.data?.Items ?? []);
     } catch {
-      // silently fail — dropdown will be empty
+      // silently fail
     }
   }, []);
 
@@ -78,12 +84,9 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
     if (isOpen) fetchCourses();
   }, [isOpen, fetchCourses]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'month' ? Number(value) : value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
   };
 
@@ -92,6 +95,10 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
 
     if (!formData.courseId) {
       setError('Please select a course.');
+      return;
+    }
+    if (!formData.month) {
+      setError('Please select an intake month.');
       return;
     }
 
@@ -108,7 +115,8 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
       toast.success('Intake added successfully!');
       setFormData(defaultFormData);
       setSelectedCourse(null);
-      comboForm.reset({ courseId: '' });
+      setSelectedMonth(MONTH_OPTIONS[0]);
+      comboForm.reset({ courseId: '', month: 1 });
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -137,7 +145,8 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
     if (!isSubmitting) {
       setFormData(defaultFormData);
       setSelectedCourse(null);
-      comboForm.reset({ courseId: '' });
+      setSelectedMonth(MONTH_OPTIONS[0]);
+      comboForm.reset({ courseId: '', month: 1 });
       setError(null);
       onClose();
     }
@@ -204,20 +213,26 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
                 />
               </div>
 
-              {/* Month */}
+              {/* Month — combobox with enum 1–12 */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Intake Month <span className="text-red-500">*</span></label>
-                <select
+                <AppCombobox
+                  label="Select Month"
                   name="month"
-                  value={formData.month}
-                  onChange={handleChange}
-                  required
-                  className={inputClass}
-                >
-                  {MONTH_OPTIONS.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
+                  form={comboForm}
+                  options={MONTH_OPTIONS}
+                  selected={selectedMonth}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(month) => {
+                    setSelectedMonth(month);
+                    setFormData((prev) => ({ ...prev, month: month?.id ?? 1 }));
+                    setError(null);
+                  }}
+                  getLabel={(month) => month?.name ?? ''}
+                  getValue={(month) => month?.id ?? 1}
+                  placeholder="Search month..."
+                />
               </div>
 
               {/* Deadline */}
@@ -233,30 +248,32 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
                 />
               </div>
 
-              {/* ✅ Status — radio buttons replacing the select */}
-              <div className="flex flex-col gap-2">
+              {/* Status - Modern Toggle Switch */}
+              <div className="flex flex-col gap-1">
                 <label className={labelClass}>Status <span className="text-red-500">*</span></label>
-                <div className="flex items-center gap-6 h-[42px]">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="radio"
-                      name="isOpen"
-                      checked={formData.isOpen === true}
-                      onChange={() => setFormData((prev) => ({ ...prev, isOpen: true }))}
-                      className="w-4 h-4 accent-green-600"
+                <div className="flex items-center h-[42px]">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, isOpen: !prev.isOpen }))}
+                    className={`
+                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                      ${formData.isOpen 
+                        ? 'bg-green-600 dark:bg-green-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'}
+                    `}
+                    role="switch"
+                    aria-checked={formData.isOpen}
+                  >
+                    <span
+                      className={`
+                        inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out
+                        ${formData.isOpen ? 'translate-x-6' : 'translate-x-1'}
+                      `}
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Open</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="radio"
-                      name="isOpen"
-                      checked={formData.isOpen === false}
-                      onChange={() => setFormData((prev) => ({ ...prev, isOpen: false }))}
-                      className="w-4 h-4 accent-red-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Closed</span>
-                  </label>
+                  </button>
+                  <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {formData.isOpen ? 'Open' : 'Closed'}
+                  </span>
                 </div>
               </div>
 
