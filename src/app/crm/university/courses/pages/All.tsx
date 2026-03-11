@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
-import { api } from "../../api/api_helper";
+import { api } from "@/utils/instance";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddCourseModal from "./Add";
