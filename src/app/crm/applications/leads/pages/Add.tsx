@@ -46,7 +46,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     completionYear: '',
     currentGpa: '',
     previousAcademicQualification: '',
-    source: 'website',
+    source: '',
     feedBackOrSuggestion: '',
   });
 
@@ -93,7 +93,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
         completionYear: '',
         currentGpa: '',
         previousAcademicQualification: '',
-        source: 'website',
+        source: '',
         feedBackOrSuggestion: '',
       });
 
@@ -258,6 +258,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
+              {/* ✅ Education Level — 4 enum values */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Education Level <span className="text-red-500">*</span></label>
                 <select
@@ -270,6 +271,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                   <option value={1}>Plus Two / Intermediate</option>
                   <option value={2}>{`Bachelor's Degree`}</option>
                   <option value={3}>{`Master's Degree`}</option>
+                  <option value={4}>PhD / Doctorate</option>
                 </select>
               </div>
 
@@ -309,21 +311,18 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 />
               </div>
 
+              {/* ✅ Source — plain text input */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Source <span className="text-red-500">*</span></label>
-                <select
+                <input
+                  type="text"
                   name="source"
                   value={formData.source}
                   onChange={handleChange}
                   required
+                  placeholder="e.g. Website, Referral, Social Media..."
                   className={inputClass}
-                >
-                  <option value="website">Website</option>
-                  <option value="referral">Referral</option>
-                  <option value="social_media">Social Media</option>
-                  <option value="walk_in">Walk-in</option>
-                  <option value="other">Other</option>
-                </select>
+                />
               </div>
 
             </div>

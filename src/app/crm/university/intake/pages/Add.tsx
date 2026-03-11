@@ -79,13 +79,10 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
   }, [isOpen, fetchCourses]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === 'month' ? Number(value)
-        : type === 'checkbox' ? (e.target as HTMLInputElement).checked
-        : value,
+      [name]: name === 'month' ? Number(value) : value,
     }));
     setError(null);
   };
@@ -185,7 +182,7 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
-              {/* Course — combobox from GetAllCourse */}
+              {/* Course */}
               <div className="flex flex-col gap-1 lg:col-span-2">
                 <label className={labelClass}>Course <span className="text-red-500">*</span></label>
                 <AppCombobox
@@ -236,20 +233,31 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
                 />
               </div>
 
-              {/* Is Open */}
-              <div className="flex flex-col gap-1">
+              {/* ✅ Status — radio buttons replacing the select */}
+              <div className="flex flex-col gap-2">
                 <label className={labelClass}>Status <span className="text-red-500">*</span></label>
-                <select
-                  name="isOpen"
-                  value={formData.isOpen ? 'true' : 'false'}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, isOpen: e.target.value === 'true' }))
-                  }
-                  className={inputClass}
-                >
-                  <option value="true">Open</option>
-                  <option value="false">Closed</option>
-                </select>
+                <div className="flex items-center gap-6 h-[42px]">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="isOpen"
+                      checked={formData.isOpen === true}
+                      onChange={() => setFormData((prev) => ({ ...prev, isOpen: true }))}
+                      className="w-4 h-4 accent-green-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Open</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="isOpen"
+                      checked={formData.isOpen === false}
+                      onChange={() => setFormData((prev) => ({ ...prev, isOpen: false }))}
+                      className="w-4 h-4 accent-red-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Closed</span>
+                  </label>
+                </div>
               </div>
 
             </div>

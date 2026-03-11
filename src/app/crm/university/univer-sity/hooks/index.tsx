@@ -10,10 +10,12 @@ export const UniversityEndPoints = {
   getAllUniversities: "/api/AcademicPrograms/FilterUniversity",
   createUniversity: "/api/University/AddUniversity",
   getAllCountries: "/api/AcademicPrograms/GetAllCountry",
+  getUniversities: "/api/AcademicPrograms/University",  
 };
 
 export const queryKey = "Universities";
 const countryQueryKey = "Countries";
+const universityQueryKey = "UniversityList";  
 
 export const useAddUniversity = () => {
   const queryClient = useQueryClient();
@@ -74,6 +76,20 @@ export const useGetAllCountries = () => {
     queryFn: async () => {
       const response = await api.get<IPaginationResponse<ICountry>>(
         UniversityEndPoints.getAllCountries
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+
+export const useGetUniversities = () => {
+  return useQuery({
+    queryKey: [universityQueryKey],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<IUniversity>>(
+        UniversityEndPoints.getUniversities
       );
       return response.data?.Items ?? [];
     },
