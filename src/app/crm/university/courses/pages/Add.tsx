@@ -30,10 +30,10 @@ interface StudyLevelOption {
 }
 
 const STUDY_LEVELS: StudyLevelOption[] = [
-  { id: 1, name: '+2 / Intermediate' },
-  { id: 2, name: "Bachelor's Degree" },
-  { id: 3, name: "Master's Degree" },
-   { id: 3, name: "Phd" },
+  { id: 1, name: 'Bachelor' },
+  { id: 2, name: "Undergraduate" },
+  { id: 3, name: "Masters" },
+   { id: 4, name: "Phd" },
 
 ];
 
