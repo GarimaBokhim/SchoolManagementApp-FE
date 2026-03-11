@@ -1,28 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
-import { api } from '../../api/api_helper';
+import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 
-interface University {
-  schoolId: string;
+interface UniversityFormData {
   name: string;
+  country: string;
+  descriptions: string;
+  website: string;
+  globalRanking: number;
 }
 
-interface UniversityApiResponse {
-  Items: University[];
-}
-
-interface CourseFormData {
-  title: string;
-  studyLevel: number;
-  tuationFee: number;
-  currency: string;
-  universityId: string;
-}
-
-interface AddCourseModalProps {
+interface AddUniversityModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -35,57 +26,24 @@ const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:bo
 
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`;
 
-const STUDY_LEVELS = [
-  { value: 1, label: "Bachelor's Degree" },
-  { value: 2, label: "Master's Degree" },
-  { value: 3, label: 'PhD / Doctorate' },
-  { value: 4, label: 'Diploma' },
-  { value: 5, label: 'Certificate' },
-  { value: 6, label: 'Foundation' },
-  { value: 7, label: 'English Language' },
-];
-
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'SGD', 'AUD', 'CAD', 'NPR', 'INR'];
-
-const defaultFormData: CourseFormData = {
-  title: '',
-  studyLevel: 1,
-  tuationFee: 0,
-  currency: 'USD',
-  universityId: '',
+const defaultFormData: UniversityFormData = {
+  name: '',
+  country: '',
+  descriptions: '',
+  website: '',
+  globalRanking: 0,
 };
 
-const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState<CourseFormData>(defaultFormData);
+const AddUniversityModal: React.FC<AddUniversityModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState<UniversityFormData>(defaultFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [loadingUniversities, setLoadingUniversities] = useState(false);
 
-  // ✅ Fetch universities when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const fetchUniversities = async () => {
-      setLoadingUniversities(true);
-      try {
-        const res = await api.get<UniversityApiResponse>('/api/AcademicPrograms/FilterUniversity');
-        setUniversities(res.data?.Items ?? []);
-      } catch {
-        toast.error('Failed to load universities.');
-      } finally {
-        setLoadingUniversities(false);
-      }
-    };
-
-    fetchUniversities();
-  }, [isOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'studyLevel' || name === 'tuationFee' ? Number(value) : value,
+      [name]: name === 'globalRanking' ? Number(value) : value,
     }));
     setError(null);
   };
@@ -95,8 +53,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
     setIsSubmitting(true);
     setError(null);
     try {
-      await api.post('/api/AcademicPrograms/AddCourse', formData);
-      toast.success('Course added successfully!');
+      await api.post('/api/AcademicPrograms/AddUniversity', formData);
+      toast.success('University added successfully!');
       setFormData(defaultFormData);
       if (onSuccess) onSuccess();
       onClose();
@@ -109,13 +67,13 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
       if (axiosErr.response) {
         const msg = axiosErr.response.data?.message || axiosErr.response.data?.title || 'Server error occurred';
         setError(`Error ${axiosErr.response.status}: ${msg}`);
-        toast.error(`Failed to add course: ${msg}`);
+        toast.error(`Failed to add university: ${msg}`);
       } else if (axiosErr.request) {
         setError('No response from server. Please check your connection.');
         toast.error('No response from server.');
       } else {
         setError(axiosErr.message ?? 'An unexpected error occurred');
-        toast.error('Failed to add course. Please try again.');
+        toast.error('Failed to add university. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -149,7 +107,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add New Course
+              Add New University
             </h1>
             <button type="button" onClick={handleClose} className="text-red-400 text-2xl hover:text-red-500">
               <X strokeWidth={3} />
@@ -164,73 +122,72 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
 
           <form onSubmit={handleSubmit}>
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Course Information
+              University Information
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
               <div className="flex flex-col gap-1 lg:col-span-2">
-                <label className={labelClass}>Course Title <span className="text-red-500">*</span></label>
+                <label className={labelClass}>University Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
-                  name="title"
-                  value={formData.title}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Bachelor of Computer Science"
+                  placeholder="e.g. Harvard University"
                   className={inputClass}
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className={labelClass}>Study Level <span className="text-red-500">*</span></label>
-                <select name="studyLevel" value={formData.studyLevel} onChange={handleChange} required className={inputClass}>
-                  {STUDY_LEVELS.map((level) => (
-                    <option key={level.value} value={level.value}>{level.label}</option>
-                  ))}
-                </select>
+                <label className={labelClass}>Country <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. United States"
+                  className={inputClass}
+                />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className={labelClass}>Tuition Fee <span className="text-red-500">*</span></label>
+                <label className={labelClass}>Website</label>
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  placeholder="e.g. https://harvard.edu"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>Global Ranking</label>
                 <input
                   type="number"
-                  name="tuationFee"
-                  value={formData.tuationFee}
+                  name="globalRanking"
+                  value={formData.globalRanking}
                   onChange={handleChange}
-                  required
                   min={0}
-                  placeholder="e.g. 15000"
+                  placeholder="e.g. 1"
                   className={inputClass}
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className={labelClass}>Currency <span className="text-red-500">*</span></label>
-                <select name="currency" value={formData.currency} onChange={handleChange} required className={inputClass}>
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className={labelClass}>University <span className="text-red-500">*</span></label>
-                <select
-                  name="universityId"
-                  value={formData.universityId}
+              <div className="flex flex-col gap-1 lg:col-span-3">
+                <label className={labelClass}>Description</label>
+                <textarea
+                  name="descriptions"
+                  value={formData.descriptions}
                   onChange={handleChange}
-                  required
-                  className={inputClass}
-                  disabled={loadingUniversities}
-                >
-                  <option value="">
-                    {loadingUniversities ? 'Loading universities...' : 'Select a university'}
-                  </option>
-                  {universities.map((u) => (
-                    <option key={u.schoolId} value={u.schoolId}>{u.name}</option>
-                  ))}
-                </select>
+                  rows={3}
+                  placeholder="Enter a brief description of the university..."
+                  className={`${inputClass} resize-none`}
+                />
               </div>
 
             </div>
@@ -244,7 +201,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
                            disabled:bg-green-300 disabled:cursor-not-allowed"
               >
                 <Save size={18} />
-                {isSubmitting ? 'Saving...' : 'Save Course'}
+                {isSubmitting ? 'Saving...' : 'Save University'}
               </button>
             </div>
           </form>
@@ -254,4 +211,4 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
   );
 };
 
-export default AddCourseModal;
+export default AddUniversityModal;

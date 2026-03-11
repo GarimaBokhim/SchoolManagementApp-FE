@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import {
   CalendarDays,
   Search,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
-import { api } from "@/utils/instance";
 import { useGetAllUniversities } from "@/app/crm/university/univer-sity/hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -24,6 +23,8 @@ import DateRangeFilter, {
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
+import useIntakes from "../hooks/UseIntakes";
+
 
 const MONTH_OPTIONS = [
   { value: 1, label: "January" },
@@ -39,30 +40,6 @@ const MONTH_OPTIONS = [
   { value: 11, label: "November" },
   { value: 12, label: "December" },
 ];
-
-interface IntakeItem {
-  id: string;
-  month: number;
-  deadline: string;
-  isOpen: boolean;
-  courseId: string;
-  isActive: boolean;
-  schoolId: string;
-  createdBy: string;
-  createdAt: string;
-  modifiedBy: string;
-  modifiedAt: string;
-}
-
-interface ApiResponse {
-  Items: IntakeItem[];
-  TotalItems: number;
-  PageIndex: number;
-  pageSize: number;
-  TotalPages: number;
-  FirstPage: number;
-  LastPage: number;
-}
 
 interface FilterFormData {
   startDate: string;
@@ -90,9 +67,6 @@ const AllIntakeForm = () => {
   const { canAdd } = useMenuPermissionData(menuStatus);
 
   const [openFilter, setOpenFilter] = useState(false);
-  const [intakes, setIntakes] = useState<IntakeItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [params, setParams] = useState("");
   const formRef = useRef<DateRangeFilterRef>(null);
@@ -101,7 +75,10 @@ const AllIntakeForm = () => {
     defaultValues: { startDate: "", endDate: "" },
   });
 
-  const { handleError, clearError } = useErrorHandler();
+
+  const { intakes, isLoading, error, fetchIntakes, clearError } = useIntakes();
+
+  const { handleError } = useErrorHandler();
 
   const { data: universitiesData } = useGetAllUniversities();
   const universities = universitiesData?.Items ?? [];
@@ -110,37 +87,6 @@ const AllIntakeForm = () => {
     const match = universities.find((u) => u.schoolId === schoolId);
     return match?.name ?? "Unknown University";
   };
-
-  const fetchIntakes = async (queryParams?: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const paramObj: Record<string, unknown> = {};
-      if (queryParams) {
-        const parsed = new URLSearchParams(queryParams.replace(/^&/, ""));
-        parsed.forEach((value, key) => {
-          paramObj[key] = value;
-        });
-      }
-      const response = await api.get<ApiResponse>(
-        "api/AcademicPrograms/FilterIntake",
-        { params: paramObj }
-      );
-      setIntakes(response.data?.Items ?? []);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message ?? err?.message ?? "Something went wrong."
-      );
-      setIntakes([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchIntakes();
-  }, []);
 
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
@@ -223,7 +169,6 @@ const AllIntakeForm = () => {
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
-                {/* Date Range Quick Filters — Yesterday / 7 Days / This Month / This Year */}
                 <DateRangeFilter
                   ref={formRef}
                   form={form}
@@ -231,7 +176,6 @@ const AllIntakeForm = () => {
                   setParams={setParams}
                 />
 
-                {/* Filter/Clear buttons */}
                 <div className="flex items-end gap-2 ml-auto">
                   <ButtonElement
                     type="submit"

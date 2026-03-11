@@ -379,7 +379,7 @@ const AllCourseForm = () => {
           setIsAddModalOpen(false);
           fetchCourses();
         }}
-        universities={universities}
+      
       />
     </>
   );
