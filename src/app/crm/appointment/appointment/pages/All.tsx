@@ -1,7 +1,6 @@
 "use client";
 
-import AllAppointmentsForm from "../../counselor/components/AllAppointsForm";
-
+import AllAppointmentsForm from "../components/AllAppointsForm";
 
 const AllAppointments = () => {
   return (

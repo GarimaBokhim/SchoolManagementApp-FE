@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { Filter, RotateCcw, Plus, User, Phone, Mail, Calendar } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Filter, RotateCcw, Plus, User } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import Pagination from "@/components/Pagination";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import DateRangeFilter from "@/components/DateFilter/FilterComponent";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
@@ -36,11 +38,31 @@ const AllCounselorsForm = () => {
     { id: '5', name: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', phone: '+1 234-567-8905', specialization: 'Research Guidance', status: 'Inactive', students: 0, joinDate: '2022-08-12' },
   ];
 
+  // Mock data for combobox search results
+  const mockSearchResults = [
+    { id: '1', fullName: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', status: 'Active' },
+    { id: '2', fullName: 'Prof. Michael Chen', email: 'michael.c@example.com', status: 'Active' },
+    { id: '3', fullName: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', status: 'On Leave' },
+    { id: '4', fullName: 'Dr. James Wilson', email: 'james.w@example.com', status: 'Active' },
+    { id: '5', fullName: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', status: 'Inactive' },
+  ];
+
   const [openFilter, setOpenFilter] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState(mockSearchResults);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const filterForm = useForm();
+  const dateFilterRef = useRef<any>(null);
+  
+  const filterForm = useForm({
+    defaultValues: {
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    }
+  });
+
   const paginationForm = useForm({
     defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
   });
@@ -48,6 +70,42 @@ const AllCounselorsForm = () => {
   const handleSearch = (searchParams: any) => {
     setPageSize(searchParams.pageSize || pageSize);
     setCurrentPage(searchParams.pageIndex);
+  };
+
+  const handleFilterSubmit = (data: any) => {
+    console.log("Filter data:", data);
+    setOpenFilter(false);
+    // Just for UI demo - no actual API call
+    alert(`Filter applied: ${JSON.stringify(data)}`);
+  };
+
+  const fetchUsers = (searchTerm: string) => {
+    // Mock search - filter mock results
+    if (searchTerm) {
+      const filtered = mockSearchResults.filter(user => 
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setSearchResults(filtered);
+    } else {
+      setSearchResults(mockSearchResults);
+    }
+  };
+
+  const handleProfileSelected = (profile: any) => {
+    setSelectedProfile(profile);
+    filterForm.setValue("firstName", profile?.fullName || "");
+  };
+
+  const onClearClick = () => {
+    filterForm.reset({
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    });
+    setSelectedProfile(null);
+    setSearchResults(mockSearchResults);
+    setOpenFilter(false);
   };
 
   const handleAddNew = () => {
@@ -105,28 +163,36 @@ const AllCounselorsForm = () => {
 
           {openFilter && (
             <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
-              <form className="flex flex-wrap items-end gap-4 md:gap-6">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Search by Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter counselor name..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-[#2a2a2a] dark:text-white"
+              <form
+                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={dateFilterRef}
+                  form={filterForm}
+                  onSubmit={handleFilterSubmit}
+                  setParams={() => {}}
+                />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search by Name"
+                    name="firstName"
+                    form={filterForm}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={handleProfileSelected}
+                    onFocus={() => fetchUsers("")}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email} • {profile.status}
+                      </div>
+                    )}
                   />
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Specialization
-                  </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-[#2a2a2a] dark:text-white">
-                    <option value="">All</option>
-                    <option value="career">Career Counseling</option>
-                    <option value="academic">Academic Advisor</option>
-                    <option value="mental">Mental Health</option>
-                    <option value="study">Study Abroad</option>
-                  </select>
                 </div>
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
@@ -139,7 +205,7 @@ const AllCounselorsForm = () => {
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
-                    onClick={() => setOpenFilter(false)}
+                    onClick={onClearClick}
                     className="!bg-gray-500 hover:!bg-gray-600 !text-white"
                   />
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AllCounselors from "../counselor/pages/All";
+import AllAppointments from "../appointment/pages/All";
 
 const AllServices = () => {
   const servicesTabs = [

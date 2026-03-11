@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from 'react';
-import { Filter, RotateCcw, Plus, Calendar, Clock, User, CheckCircle, XCircle } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Filter, RotateCcw, Plus, User } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import Pagination from "@/components/Pagination";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import DateRangeFilter from "@/components/DateFilter/FilterComponent";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 
 // Simple status badge component
-const AppointmentStatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({ status }: { status: string }) => {
   const colorMap: Record<string, string> = {
     'Scheduled': 'bg-blue-100 text-blue-700 border border-blue-300',
     'Completed': 'bg-green-100 text-green-700 border border-green-300',
@@ -27,82 +29,41 @@ const AppointmentStatusBadge = ({ status }: { status: string }) => {
 const AllAppointmentsForm = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  
+
   // Simple static data for appointments
   const appointments = [
-    { 
-      id: '1', 
-      studentName: 'John Smith', 
-      counselorName: 'Dr. Sarah Johnson', 
-      date: '2024-03-25', 
-      time: '10:00 AM', 
-      duration: '45 min',
-      type: 'Career Counseling',
-      status: 'Scheduled',
-      notes: 'Discuss career options in tech'
-    },
-    { 
-      id: '2', 
-      studentName: 'Emma Wilson', 
-      counselorName: 'Prof. Michael Chen', 
-      date: '2024-03-25', 
-      time: '11:30 AM', 
-      duration: '30 min',
-      type: 'Academic Advisor',
-      status: 'Scheduled',
-      notes: 'Course selection for next semester'
-    },
-    { 
-      id: '3', 
-      studentName: 'David Lee', 
-      counselorName: 'Ms. Emily Rodriguez', 
-      date: '2024-03-24', 
-      time: '02:00 PM', 
-      duration: '60 min',
-      type: 'Mental Health',
-      status: 'Completed',
-      notes: 'Follow-up session'
-    },
-    { 
-      id: '4', 
-      studentName: 'Maria Garcia', 
-      counselorName: 'Dr. James Wilson', 
-      date: '2024-03-24', 
-      time: '03:30 PM', 
-      duration: '45 min',
-      type: 'Study Abroad',
-      status: 'Completed',
-      notes: 'University application review'
-    },
-    { 
-      id: '5', 
-      studentName: 'Robert Brown', 
-      counselorName: 'Prof. Lisa Thompson', 
-      date: '2024-03-23', 
-      time: '09:30 AM', 
-      duration: '30 min',
-      type: 'Research Guidance',
-      status: 'Cancelled',
-      notes: 'Rescheduled to next week'
-    },
-    { 
-      id: '6', 
-      studentName: 'Jennifer Lee', 
-      counselorName: 'Dr. Sarah Johnson', 
-      date: '2024-03-26', 
-      time: '01:00 PM', 
-      duration: '45 min',
-      type: 'Career Counseling',
-      status: 'Pending',
-      notes: 'Initial consultation'
-    },
+    { id: '1', studentName: 'Alice Turner', counselorName: 'Dr. Sarah Johnson', date: '2024-03-15', time: '10:00 AM', type: 'Career Counseling', status: 'Scheduled', notes: 'First session' },
+    { id: '2', studentName: 'Bob Martinez', counselorName: 'Prof. Michael Chen', date: '2024-03-16', time: '11:30 AM', type: 'Academic Advisor', status: 'Completed', notes: 'Follow-up' },
+    { id: '3', studentName: 'Clara Singh', counselorName: 'Ms. Emily Rodriguez', date: '2024-03-17', time: '02:00 PM', type: 'Mental Health', status: 'Pending', notes: 'Initial consultation' },
+    { id: '4', studentName: 'David Kim', counselorName: 'Dr. James Wilson', date: '2024-03-18', time: '09:00 AM', type: 'Study Abroad', status: 'Scheduled', notes: 'Visa guidance' },
+    { id: '5', studentName: 'Eva Patel', counselorName: 'Dr. Sarah Johnson', date: '2024-03-19', time: '03:30 PM', type: 'Career Counseling', status: 'Cancelled', notes: 'Student request' },
+  ];
+
+  // Mock data for combobox search results
+  const mockSearchResults = [
+    { id: '1', fullName: 'Alice Turner', email: 'alice.t@example.com', status: 'Scheduled' },
+    { id: '2', fullName: 'Bob Martinez', email: 'bob.m@example.com', status: 'Completed' },
+    { id: '3', fullName: 'Clara Singh', email: 'clara.s@example.com', status: 'Pending' },
+    { id: '4', fullName: 'David Kim', email: 'david.k@example.com', status: 'Scheduled' },
+    { id: '5', fullName: 'Eva Patel', email: 'eva.p@example.com', status: 'Cancelled' },
   ];
 
   const [openFilter, setOpenFilter] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState(mockSearchResults);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const filterForm = useForm();
+  const dateFilterRef = useRef<any>(null);
+
+  const filterForm = useForm({
+    defaultValues: {
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    }
+  });
+
   const paginationForm = useForm({
     defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
   });
@@ -112,22 +73,56 @@ const AllAppointmentsForm = () => {
     setCurrentPage(searchParams.pageIndex);
   };
 
+  const handleFilterSubmit = (data: any) => {
+    console.log("Filter data:", data);
+    setOpenFilter(false);
+    alert(`Filter applied: ${JSON.stringify(data)}`);
+  };
+
+  const fetchUsers = (searchTerm: string) => {
+    if (searchTerm) {
+      const filtered = mockSearchResults.filter(user =>
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setSearchResults(filtered);
+    } else {
+      setSearchResults(mockSearchResults);
+    }
+  };
+
+  const handleProfileSelected = (profile: any) => {
+    setSelectedProfile(profile);
+    filterForm.setValue("firstName", profile?.fullName || "");
+  };
+
+  const onClearClick = () => {
+    filterForm.reset({
+      firstName: "",
+      startDate: "",
+      endDate: "",
+    });
+    setSelectedProfile(null);
+    setSearchResults(mockSearchResults);
+    setOpenFilter(false);
+  };
+
   const handleAddNew = () => {
-    alert('Schedule new appointment feature coming soon!');
+    alert('Add new appointment feature coming soon!');
   };
 
   const handleEdit = (appointment: any) => {
-    alert(`Edit appointment: ${appointment.studentName} with ${appointment.counselorName}`);
+    alert(`Edit appointment: ${appointment.studentName}`);
   };
 
   const handleDelete = (appointment: any) => {
-    if (confirm(`Are you sure you want to cancel this appointment?`)) {
-      alert(`Cancel appointment: ${appointment.studentName}`);
+    if (confirm(`Are you sure you want to delete appointment for ${appointment.studentName}?`)) {
+      alert(`Delete appointment: ${appointment.studentName}`);
     }
   };
 
   const handleView = (appointment: any) => {
-    alert(`View appointment details: ${appointment.studentName} - ${appointment.date} ${appointment.time}`);
+    alert(`View appointment details: ${appointment.studentName}`);
   };
 
   // Simple pagination calculation
@@ -157,7 +152,7 @@ const AllAppointmentsForm = () => {
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
-                  text="Schedule"
+                  text="Add Appointment"
                   onClick={handleAddNew}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
@@ -167,34 +162,36 @@ const AllAppointmentsForm = () => {
 
           {openFilter && (
             <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
-              <form className="flex flex-wrap items-end gap-4 md:gap-6">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date Range
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-[#2a2a2a] dark:text-white"
-                    />
-                    <span className="text-gray-500 self-center">to</span>
-                    <input
-                      type="date"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-[#2a2a2a] dark:text-white"
-                    />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Status
-                  </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-[#2a2a2a] dark:text-white">
-                    <option value="">All</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="pending">Pending</option>
-                  </select>
+              <form
+                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={dateFilterRef}
+                  form={filterForm}
+                  onSubmit={handleFilterSubmit}
+                  setParams={() => {}}
+                />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search by Name"
+                    name="firstName"
+                    form={filterForm}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={handleProfileSelected}
+                    onFocus={() => fetchUsers("")}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email} • {profile.status}
+                      </div>
+                    )}
+                  />
                 </div>
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
@@ -207,7 +204,7 @@ const AllAppointmentsForm = () => {
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
-                    onClick={() => setOpenFilter(false)}
+                    onClick={onClearClick}
                     className="!bg-gray-500 hover:!bg-gray-600 !text-white"
                   />
                 </div>
@@ -220,10 +217,10 @@ const AllAppointmentsForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Student</th>
-                  <th className="px-4 py-3 text-left">Counselor</th>
-                  <th className="px-4 py-3 text-left">Date & Time</th>
-                  <th className="px-4 py-3 text-left">Duration</th>
+                  <th className="px-4 py-3 text-left">Student Name</th>
+                  <th className="px-4 py-3 text-left">Counselor Name</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Time</th>
                   <th className="px-4 py-3 text-left">Type</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-center w-[100px]">Actions</th>
@@ -241,18 +238,11 @@ const AllAppointmentsForm = () => {
                       </td>
                       <td className="py-2 px-4 font-medium">{appointment.studentName}</td>
                       <td className="py-2 px-4">{appointment.counselorName}</td>
-                      <td className="py-2 px-4">
-                        <div className="flex items-center gap-1">
-                          <Calendar size={12} className="text-gray-400" />
-                          <span>{appointment.date}</span>
-                          <Clock size={12} className="text-gray-400 ml-1" />
-                          <span>{appointment.time}</span>
-                        </div>
-                      </td>
-                      <td className="py-2 px-4">{appointment.duration}</td>
+                      <td className="py-2 px-4">{appointment.date}</td>
+                      <td className="py-2 px-4">{appointment.time}</td>
                       <td className="py-2 px-4">{appointment.type}</td>
                       <td className="py-2 px-4">
-                        <AppointmentStatusBadge status={appointment.status} />
+                        <StatusBadge status={appointment.status} />
                       </td>
                       <td className="py-2 px-4">
                         <div className="flex items-center justify-center gap-2">
@@ -261,9 +251,9 @@ const AllAppointmentsForm = () => {
                             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                             title="View"
                           >
-                            <Calendar size={16} className="text-blue-600" />
+                            <User size={16} className="text-blue-600" />
                           </button>
-                          {canEdit && appointment.status === 'Scheduled' && (
+                          {canEdit && (
                             <button
                               onClick={() => handleEdit(appointment)}
                               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
@@ -274,22 +264,15 @@ const AllAppointmentsForm = () => {
                               </svg>
                             </button>
                           )}
-                          {canDelete && appointment.status === 'Scheduled' && (
+                          {canDelete && (
                             <button
                               onClick={() => handleDelete(appointment)}
                               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                              title="Cancel"
+                              title="Delete"
                             >
-                              <XCircle size={16} className="text-red-600" />
-                            </button>
-                          )}
-                          {appointment.status === 'Completed' && (
-                            <button
-                              className="p-1 opacity-50 cursor-not-allowed"
-                              title="Completed"
-                              disabled
-                            >
-                              <CheckCircle size={16} className="text-green-600" />
+                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           )}
                         </div>
