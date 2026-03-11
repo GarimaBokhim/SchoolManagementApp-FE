@@ -1,62 +1,62 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { useEffect } from "react";
-import { X } from "lucide-react";
-import { ITemplate } from "../types/ITemplate";
-import { useEditTemplate, useGetTemplateById } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import TextEditor from "@/components/Input/TextEditor";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import { useEffect } from 'react'
+import { X } from 'lucide-react'
+import { ITemplate } from '../types/ITemplate'
+import { useEditTemplate, useGetTemplateById } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import TextEditor from '@/components/Input/TextEditor'
 type Props = {
-  form: UseFormReturn<ITemplate>;
-  onClose: () => void;
-  TemplateId: string;
-};
-const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
-     const { setValue, watch } = form;
-   const details = watch("htmlTemplate");
-  const editTemplate = useEditTemplate();
-  const { handleError, clearError } = useErrorHandler();
-  const { data: TemplateData } = useGetTemplateById(TemplateId);
+  form: UseFormReturn<ITemplate>
+  onClose: () => void
+  certificateTemplateId: string
+}
+const EditTemplateForm = ({ form, onClose, certificateTemplateId }: Props) => {
+  const { setValue, watch } = form
+  const details = watch('htmlTemplate')
+  const editTemplate = useEditTemplate()
+  const { handleError, clearError } = useErrorHandler()
+  const { data: TemplateData } = useGetTemplateById(certificateTemplateId)
   const handleClose = () => {
-    form.reset();
-  };
+    form.reset()
+  }
 
   useEffect(() => {
     if (TemplateData) {
       form.reset({
-        templateName: TemplateData?.templateName ?? "",
-        templateType: TemplateData?.templateType ?? "",
-        htmlTemplate: TemplateData?.htmlTemplate ?? "",
-        templateSubject: TemplateData?.templateSubject ?? "",
-        templateVersion: TemplateData?.templateVersion ?? "",
-      });
+        templateName: TemplateData?.templateName ?? '',
+        templateType: TemplateData?.templateType ?? '',
+        htmlTemplate: TemplateData?.htmlTemplate ?? '',
+        templateSubject: TemplateData?.templateSubject ?? '',
+        templateVersion: TemplateData?.templateVersion ?? '',
+      })
     }
-  }, [TemplateData]);
+  }, [TemplateData])
   const onSubmit: SubmitHandler<ITemplate> = async (data) => {
-    clearError();
+    clearError()
 
     try {
-      clearError();
+      clearError()
       await toast.promise(
         editTemplate.mutateAsync({
-          id: TemplateId,
+          id: certificateTemplateId,
           data: data,
         }),
         {
-          loading: "Submitting Data",
-          success: "Successfully Edited Income",
+          loading: 'Submitting Data',
+          success: 'Successfully Edited Income',
         }
-      );
-      handleClose();
+      )
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
@@ -96,7 +96,7 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
                 name="templateSubject"
                 placeholder="Enter Template Subject"
                 required
-                />
+              />
               <InputElement
                 label="Template Type"
                 form={form}
@@ -104,7 +104,7 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
                 placeholder="Enter Template Type"
                 required
               />
-              
+
               <InputElement
                 label="Template Version"
                 form={form}
@@ -115,16 +115,16 @@ const EditTemplateForm = ({ form, onClose, TemplateId }: Props) => {
             </div>
             <TextEditor
               content={details}
-              onChange={(content) => setValue("htmlTemplate", content)}
+              onChange={(content) => setValue('htmlTemplate', content)}
             />
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text={'Submit'} />
             </div>
           </form>
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default EditTemplateForm;
+export default EditTemplateForm
