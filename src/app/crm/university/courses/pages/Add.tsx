@@ -1,18 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
-import { api } from '../../api/api_helper';
+import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { AppCombobox } from '@/components/Input/ComboBox';
+import { IUniversity } from '../../univer-sity/types/IUniversity';
+import { useGetAllUniversities } from '../../univer-sity/types';
 
-interface University {
-  schoolId: string;
-  name: string;
-}
-
-interface UniversityApiResponse {
-  Items: University[];
-}
 
 interface CourseFormData {
   title: string;
@@ -28,6 +24,21 @@ interface AddCourseModalProps {
   onSuccess?: () => void;
 }
 
+interface StudyLevelOption {
+  id: number;
+  name: string;
+}
+
+const STUDY_LEVELS: StudyLevelOption[] = [
+  { id: 1, name: '+2 / Intermediate' },
+  { id: 2, name: "Bachelor's Degree" },
+  { id: 3, name: "Master's Degree" },
+   { id: 3, name: "Phd" },
+
+];
+
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'SGD', 'AUD', 'CAD', 'NPR', 'INR'];
+
 const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
   bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
   focus:ring-2 focus:ring-green-500 focus:border-transparent
@@ -35,21 +46,9 @@ const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:bo
 
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`;
 
-const STUDY_LEVELS = [
-  { value: 1, label: "Bachelor's Degree" },
-  { value: 2, label: "Master's Degree" },
-  { value: 3, label: 'PhD / Doctorate' },
-  { value: 4, label: 'Diploma' },
-  { value: 5, label: 'Certificate' },
-  { value: 6, label: 'Foundation' },
-  { value: 7, label: 'English Language' },
-];
-
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'SGD', 'AUD', 'CAD', 'NPR', 'INR'];
-
 const defaultFormData: CourseFormData = {
   title: '',
-  studyLevel: 1,
+  studyLevel: 0,
   tuationFee: 0,
   currency: 'USD',
   universityId: '',
@@ -59,45 +58,46 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
   const [formData, setFormData] = useState<CourseFormData>(defaultFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [loadingUniversities, setLoadingUniversities] = useState(false);
+  const [selectedUniversity, setSelectedUniversity] = useState<IUniversity | null>(null);
+  const [selectedStudyLevel, setSelectedStudyLevel] = useState<StudyLevelOption | null>(null);
 
-  // ✅ Fetch universities when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
 
-    const fetchUniversities = async () => {
-      setLoadingUniversities(true);
-      try {
-        const res = await api.get<UniversityApiResponse>('/api/AcademicPrograms/FilterUniversity');
-        setUniversities(res.data?.Items ?? []);
-      } catch {
-        toast.error('Failed to load universities.');
-      } finally {
-        setLoadingUniversities(false);
-      }
-    };
+  const { data: universityData, isLoading: loadingUniversities } = useGetAllUniversities();
 
-    fetchUniversities();
-  }, [isOpen]);
+  const comboForm = useForm({
+    defaultValues: { studyLevel: 0, universityId: '' },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'studyLevel' || name === 'tuationFee' ? Number(value) : value,
+      [name]: name === 'tuationFee' ? Number(value) : value,
     }));
     setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.studyLevel) {
+      setError('Please select a study level.');
+      return;
+    }
+    if (!formData.universityId) {
+      setError('Please select a university.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
       await api.post('/api/AcademicPrograms/AddCourse', formData);
       toast.success('Course added successfully!');
       setFormData(defaultFormData);
+      setSelectedStudyLevel(null);
+      setSelectedUniversity(null);
+      comboForm.reset({ studyLevel: 0, universityId: '' });
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -125,6 +125,9 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData(defaultFormData);
+      setSelectedStudyLevel(null);
+      setSelectedUniversity(null);
+      comboForm.reset({ studyLevel: 0, universityId: '' });
       setError(null);
       onClose();
     }
@@ -169,6 +172,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
+              {/* Course Title */}
               <div className="flex flex-col gap-1 lg:col-span-2">
                 <label className={labelClass}>Course Title <span className="text-red-500">*</span></label>
                 <input
@@ -182,15 +186,29 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
                 />
               </div>
 
+              {/* Study Level */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Study Level <span className="text-red-500">*</span></label>
-                <select name="studyLevel" value={formData.studyLevel} onChange={handleChange} required className={inputClass}>
-                  {STUDY_LEVELS.map((level) => (
-                    <option key={level.value} value={level.value}>{level.label}</option>
-                  ))}
-                </select>
+                <AppCombobox
+                  label="Select Study Level"
+                  name="studyLevel"
+                  form={comboForm}
+                  options={STUDY_LEVELS}
+                  selected={selectedStudyLevel}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(level) => {
+                    setSelectedStudyLevel(level);
+                    setFormData((prev) => ({ ...prev, studyLevel: level?.id ?? 0 }));
+                    setError(null);
+                  }}
+                  getLabel={(level) => level?.name ?? ''}
+                  getValue={(level) => level?.id ?? 0}
+                  placeholder="Search study level..."
+                />
               </div>
 
+              {/* Tuition Fee */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Tuition Fee <span className="text-red-500">*</span></label>
                 <input
@@ -205,6 +223,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
                 />
               </div>
 
+              {/* Currency */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Currency <span className="text-red-500">*</span></label>
                 <select name="currency" value={formData.currency} onChange={handleChange} required className={inputClass}>
@@ -214,23 +233,29 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose, onSucc
                 </select>
               </div>
 
+              {/* University */}
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>University <span className="text-red-500">*</span></label>
-                <select
+                <AppCombobox
+                  label={loadingUniversities ? 'Loading...' : 'Select University'}
                   name="universityId"
-                  value={formData.universityId}
-                  onChange={handleChange}
-                  required
-                  className={inputClass}
-                  disabled={loadingUniversities}
-                >
-                  <option value="">
-                    {loadingUniversities ? 'Loading universities...' : 'Select a university'}
-                  </option>
-                  {universities.map((u) => (
-                    <option key={u.schoolId} value={u.schoolId}>{u.name}</option>
-                  ))}
-                </select>
+                  form={comboForm}
+                  options={universityData?.Items ?? []}  // ✅ Items from IPaginationResponse
+                  selected={selectedUniversity}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(university) => {
+                    setSelectedUniversity(university);
+                    setFormData((prev) => ({ ...prev, universityId: university?.id ?? '' }));
+                    setError(null);
+                  }}
+                  getLabel={(university) => university?.name ?? ''}
+                  getValue={(university) => university?.id ?? ''}
+                  renderOptionExtra={(university) => (
+                    <span className="text-xs text-gray-400">{university?.country}</span>
+                  )}
+                  placeholder="Search university..."
+                />
               </div>
 
             </div>

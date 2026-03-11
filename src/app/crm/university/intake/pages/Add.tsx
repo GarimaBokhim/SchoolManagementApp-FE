@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, Save } from 'lucide-react';
 import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { AppCombobox } from '@/components/Input/ComboBox';
 
 const MONTH_OPTIONS = [
   { value: 1, label: "January" },
@@ -23,10 +25,6 @@ const MONTH_OPTIONS = [
 interface Course {
   id: string;
   title: string;
-}
-
-interface CourseApiResponse {
-  Items: Course[];
 }
 
 interface IntakeFormData {
@@ -59,12 +57,17 @@ const defaultFormData: IntakeFormData = {
 const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState<IntakeFormData>(defaultFormData);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const comboForm = useForm({
+    defaultValues: { courseId: '' },
+  });
+
   const fetchCourses = useCallback(async () => {
     try {
-      const res = await api.get<CourseApiResponse>('api/AcademicPrograms/FilterCourse');
+      const res = await api.get('/api/AcademicPrograms/GetAllCourse');
       setCourses(res.data?.Items ?? []);
     } catch {
       // silently fail — dropdown will be empty
@@ -89,6 +92,12 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.courseId) {
+      setError('Please select a course.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -101,6 +110,8 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
       await api.post('/api/AcademicPrograms/AddIntake', payload);
       toast.success('Intake added successfully!');
       setFormData(defaultFormData);
+      setSelectedCourse(null);
+      comboForm.reset({ courseId: '' });
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -128,6 +139,8 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData(defaultFormData);
+      setSelectedCourse(null);
+      comboForm.reset({ courseId: '' });
       setError(null);
       onClose();
     }
@@ -172,21 +185,26 @@ const AddIntakeModal: React.FC<AddIntakeModalProps> = ({ isOpen, onClose, onSucc
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
 
-              {/* Course */}
+              {/* Course — combobox from GetAllCourse */}
               <div className="flex flex-col gap-1 lg:col-span-2">
                 <label className={labelClass}>Course <span className="text-red-500">*</span></label>
-                <select
+                <AppCombobox
+                  label="Select Course"
                   name="courseId"
-                  value={formData.courseId}
-                  onChange={handleChange}
-                  required
-                  className={inputClass}
-                >
-                  <option value="">Select a course</option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
+                  form={comboForm}
+                  options={courses}
+                  selected={selectedCourse}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(course) => {
+                    setSelectedCourse(course);
+                    setFormData((prev) => ({ ...prev, courseId: course?.id ?? '' }));
+                    setError(null);
+                  }}
+                  getLabel={(course) => course?.title ?? ''}
+                  getValue={(course) => course?.id ?? ''}
+                  placeholder="Search course..."
+                />
               </div>
 
               {/* Month */}
