@@ -3,7 +3,7 @@ import { useState } from 'react'
 import AllUniversity from '../univer-sity/pages/All'
 import AllCourse from '../courses/pages/All'
 import AllIntake from '../intake/pages/All'
-import AllRequirements from '../requirements/All'
+import AllRequirements from '../requirements/pages/all'
 
 const AllAcademicsProgram = () => {
   const tabs = [

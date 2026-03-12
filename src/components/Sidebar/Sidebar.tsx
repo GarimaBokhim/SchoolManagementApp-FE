@@ -31,7 +31,7 @@ import {
   Notebook,
   GiftIcon,
   NotepadTextDashedIcon,
-  School2,
+  Package,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -190,6 +190,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Setup: Settings,
     Applications: NotepadTextDashedIcon,
     "Academic Program": School,
+    "Services":Package,
   };
 
   const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999);
