@@ -18,3 +18,12 @@ export interface IUniversityUI extends IUniversity {
   programs?: number; 
   students?: number; 
 }
+
+
+export interface IUniversityFormData {
+  name: string;
+  countryId: string; 
+  descriptions: string;
+  website: string;
+  globalRanking: number;
+}
