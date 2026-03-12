@@ -31,16 +31,16 @@ import {
   Notebook,
   GiftIcon,
   NotepadTextDashedIcon,
-  School2,
-} from 'lucide-react'
-import { ISidebar } from '@/types/ISidebar'
-import { usePermissions } from '@/context/auth/PermissionContext'
-import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
-import DialogButton from '../Buttons/DialogButton'
-import { useSidebar } from '@/context/SidebarContext'
-import Image from 'next/image'
-import { useGetMenuStatus } from '@/app/SuperAdmin/navigation/menu/hooks'
+  Package,
+} from "lucide-react";
+import { ISidebar } from "@/types/ISidebar";
+import { usePermissions } from "@/context/auth/PermissionContext";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import DialogButton from "../Buttons/DialogButton";
+import { useSidebar } from "@/context/SidebarContext";
+import Image from "next/image";
+import { useGetMenuStatus } from "@/app/SuperAdmin/navigation/menu/hooks";
 
 type Props = {
   sideBarItems: ISidebar
@@ -187,8 +187,9 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Account: Calculator,
     Setup: Settings,
     Applications: NotepadTextDashedIcon,
-    'Academic Program': School,
-  }
+    "Academic Program": School,
+    "Services":Package,
+  };
 
   const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999)
   const handleLogout = () => navigate.push('/')
