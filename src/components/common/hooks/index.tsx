@@ -1,25 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IDistrict, IMunicipality, IProvince, IVdc } from "../types/ICommon";
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+import { IPaginationResponse } from '@/types/IPaginationResponse'
+import { IDistrict, IMunicipality, IProvince, IVdc } from '../types/ICommon'
 const CommonEndPoints = {
-  getAllProvince: "/api/SetupControllers/all-province",
-  getAllDistrict: "/api/SetupControllers/all-district",
-  getDistrictByProvince: "/api/SetupControllers/District",
-  getMunicipalityByDistrict: "/api/SetupControllers/GetMunicipality",
-  getVDCByDistrict: "/api/SetupControllers/GetVDC",
-};
+  getAllProvince: '/api/SetupControllers/all-province',
+  getAllDistrict: '/api/SetupControllers/all-district',
+  getDistrictByProvince: '/api/SetupControllers/District',
+  getMunicipalityByDistrict: '/api/SetupControllers/GetMunicipality',
+  getVDCByDistrict: '/api/SetupControllers/GetVDC',
+}
 
-const queryKey = "Province";
-const queryKeyForDistrict = "District";
+const queryKey = 'Province'
+const queryKeyForDistrict = 'District'
 export const useGetAllProvince = (params?: string) => {
   return useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
       const url = params
         ? `${CommonEndPoints.getAllProvince}${params}`
-        : `${CommonEndPoints.getAllProvince}`;
-      const response = await api.get<IPaginationResponse<IProvince>>(url);
+        : `${CommonEndPoints.getAllProvince}`
+      const response = await api.get<IPaginationResponse<IProvince>>(url)
       return (
         response.data ?? {
           data: [],
@@ -27,18 +27,18 @@ export const useGetAllProvince = (params?: string) => {
           isPagination: 1,
           pageSize: 10,
         }
-      );
+      )
     },
-  });
-};
+  })
+}
 export const useGetAllDistrict = (params?: string) => {
   return useQuery({
     queryKey: [queryKeyForDistrict],
     queryFn: async () => {
       const url = params
         ? `${CommonEndPoints.getAllDistrict}${params}`
-        : `${CommonEndPoints.getAllDistrict}`;
-      const response = await api.get<IPaginationResponse<IDistrict>>(url);
+        : `${CommonEndPoints.getAllDistrict}`
+      const response = await api.get<IPaginationResponse<IDistrict>>(url)
       return (
         response.data ?? {
           data: [],
@@ -46,62 +46,62 @@ export const useGetAllDistrict = (params?: string) => {
           isPagination: 1,
           pageSize: 10,
         }
-      );
+      )
     },
-  });
-};
+  })
+}
 
 export const useGetDistrictByProvince = (ProvinceId: number | undefined) => {
   return useQuery({
     queryKey: [queryKey, ProvinceId],
     queryFn: async (): Promise<IDistrict[]> => {
       if (!ProvinceId) {
-        throw new Error("ProvinceId is required to get a District");
+        throw new Error('ProvinceId is required to get a District')
       }
       const response = await api.get<IDistrict[]>(
         `${CommonEndPoints.getDistrictByProvince}/${ProvinceId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!ProvinceId,
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 export const useGetMunicipalityByDistrict = (
   DistrictId: number | undefined
 ) => {
   return useQuery({
-    queryKey: [queryKey, DistrictId],
+    queryKey: [queryKey, DistrictId, 'Municipality'],
     queryFn: async (): Promise<IMunicipality[]> => {
       if (!DistrictId) {
-        throw new Error("DistrictId is required to get a Municipality");
+        throw new Error('DistrictId is required to get a Municipality')
       }
       const response = await api.get<IMunicipality[]>(
         `${CommonEndPoints.getMunicipalityByDistrict}/${DistrictId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!DistrictId,
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 
 export const useGetVDCByDistrict = (DistrictId: number | undefined) => {
   return useQuery({
-    queryKey: [queryKey, DistrictId],
+    queryKey: [queryKey, DistrictId, 'VDC'],
     queryFn: async (): Promise<IVdc[]> => {
       if (!DistrictId) {
-        throw new Error("DistrictId is required to get a Municipality");
+        throw new Error('DistrictId is required to get a Municipality')
       }
       const response = await api.get<IVdc[]>(
         `${CommonEndPoints.getVDCByDistrict}/${DistrictId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!DistrictId,
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
