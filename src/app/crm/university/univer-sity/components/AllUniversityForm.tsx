@@ -52,7 +52,7 @@ const AllUniversityForm = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [params, setParams] = useState("");           // ✅ params drives the hook
+  const [params, setParams] = useState("");           
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 9;
 
@@ -60,7 +60,6 @@ const AllUniversityForm = () => {
     defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
-  // ✅ Pass params into the hook — refetches automatically when params changes
   const { data, isLoading, error, refetch } = useGetAllUniversities(params);
   const { handleError, clearError } = useErrorHandler();
 
@@ -85,7 +84,7 @@ const AllUniversityForm = () => {
 
       await toast.promise(
         (async () => {
-          setParams(fullQuery); // ✅ updating params triggers the hook to refetch
+          setParams(fullQuery); // updating params triggers the hook to refetch
           await refetch();
         })(),
         {
