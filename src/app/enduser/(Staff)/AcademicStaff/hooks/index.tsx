@@ -9,7 +9,7 @@ const AcademicTeamEndPoints = {
   updateAcademicTeams: '/api/StaffControllers/UpdateAcademicTeams',
   getAcademicTeamsById: '/api/StaffControllers/GetAcademicTeamsBy',
   filterAcademicTeamByDate: '/api/StaffControllers/FilterAcademicTeam',
-  assignClass: '/api/StaffControllers/AssignClassDetails',
+  assignClass: '/api/StaffControllers/AssignClass',
   unAssignClass: '/api/StaffControllers/UnAssignClass',
   unAssignAllClass: '/api/StaffControllers/UnAssignAllClass',
   allschoolclass: '/api/Academics/all-SchoolClass',
