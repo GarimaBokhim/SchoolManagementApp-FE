@@ -1,111 +1,131 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useRef, useState } from 'react';
-import { Filter, RotateCcw, Plus, X } from 'lucide-react';
-import { useForm } from "react-hook-form";
-import { Toaster } from "react-hot-toast";
+import { useRef, useState } from "react";
+import { Filter, RotateCcw, Plus, X, Users } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
+import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import DateRangeFilter from "@/components/DateFilter/FilterComponent";
+
+import { Counselor } from "../types/ICounselor";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import { Counselor } from '../types/ICounselor';
-import { CounselorActionMenu } from './CounselorActionMenu';
-import { useCounselorMutations } from '../hooks/useCounselorMutation';
-import { AddCounselorModal } from './AddCounselorModel';
+import DateRangeFilter, {
+  DateRangeFilterRef,
+} from "@/components/DateFilter/FilterComponent";
+import toast, { Toaster } from "react-hot-toast";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
+import { CounselorActionMenu } from "./CounselorActionMenu";
+import { AddCounselorModal } from "./AddCounselorModel";
+import { useAddCounselor, useGetAllCounselors } from "../hooks";
 
+interface FilterFormData {
+  search: string;
+  startDate: string;
+  endDate: string;
+}
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const colorMap: Record<string, string> = {
-    'Active': 'bg-green-100 text-green-700 border border-green-300',
-    'Inactive': 'bg-gray-100 text-gray-700 border border-gray-300',
-    'On Leave': 'bg-yellow-100 text-yellow-700 border border-yellow-300',
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colorMap[status] ?? 'bg-gray-100 text-gray-600'}`}>
-      {status}
-    </span>
-  );
+const formatDate = (dateStr: string) => {
+  if (!dateStr || dateStr.startsWith("0001")) return "N/A";
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
-const MOCK_COUNSELORS: Counselor[] = [
-  { id: '1', name: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', phone: '+1 234-567-8901', specialization: 'Career Counseling', status: 'Active', students: 24, joinDate: '2023-01-15' },
-  { id: '2', name: 'Prof. Michael Chen', email: 'michael.c@example.com', phone: '+1 234-567-8902', specialization: 'Academic Advisor', status: 'Active', students: 18, joinDate: '2023-03-20' },
-  { id: '3', name: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', phone: '+1 234-567-8903', specialization: 'Mental Health', status: 'On Leave', students: 12, joinDate: '2022-11-10' },
-  { id: '4', name: 'Dr. James Wilson', email: 'james.w@example.com', phone: '+1 234-567-8904', specialization: 'Study Abroad', status: 'Active', students: 21, joinDate: '2023-06-05' },
-  { id: '5', name: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', phone: '+1 234-567-8905', specialization: 'Research Guidance', status: 'Inactive', students: 0, joinDate: '2022-08-12' },
-];
-
-const MOCK_SEARCH_RESULTS = [
-  { id: '1', fullName: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', status: 'Active' },
-  { id: '2', fullName: 'Prof. Michael Chen', email: 'michael.c@example.com', status: 'Active' },
-  { id: '3', fullName: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', status: 'On Leave' },
-  { id: '4', fullName: 'Dr. James Wilson', email: 'james.w@example.com', status: 'Active' },
-  { id: '5', fullName: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', status: 'Inactive' },
-];
+const StatusBadge = ({ isActive }: { isActive: boolean }) => (
+  <span
+    className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+      isActive
+        ? "bg-green-100 text-green-700 border-green-300"
+        : "bg-red-100 text-red-700 border-red-300"
+    }`}
+  >
+    {isActive ? "Active" : "Inactive"}
+  </span>
+);
 
 const AllCounselorsForm = () => {
   const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
+  const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
 
-  const [counselors] = useState<Counselor[]>(MOCK_COUNSELORS);
   const [openFilter, setOpenFilter] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<any>(null);
-  const [searchResults, setSearchResults] = useState(MOCK_SEARCH_RESULTS);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [params, setParams] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
 
-  const dateFilterRef = useRef<any>(null);
+  const formRef = useRef<DateRangeFilterRef>(null);
+  const pageSize = 10;
 
-  const refetch = () => {};
-
-  const { handleAdd, handleDelete, handleEdit } = useCounselorMutations(refetch);
-
-  const filterForm = useForm({
-    defaultValues: { firstName: '', startDate: '', endDate: '' },
+  const form = useForm<FilterFormData>({
+    defaultValues: { search: "", startDate: "", endDate: "" },
   });
+
+  const { data, isLoading, error, refetch } = useGetAllCounselors(params);
+  const addCounselor = useAddCounselor();
+  const { handleError, clearError } = useErrorHandler();
 
   const paginationForm = useForm({
-    defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
+    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
   });
 
-  const handleSearch = (searchParams: any) => {
-    setPageSize(searchParams.pageSize || pageSize);
-    setCurrentPage(searchParams.pageIndex);
-  };
+  const onFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+      ]
+        .filter(Boolean)
+        .join("&");
 
-  const handleFilterSubmit = (data: any) => {
-    console.log('Filter data:', data);
-    setOpenFilter(false);
-  };
+      const fullQuery = queryParams ? `&${queryParams}` : "";
 
-  const fetchUsers = (searchTerm: string) => {
-    if (searchTerm) {
-      setSearchResults(
-        MOCK_SEARCH_RESULTS.filter((u) =>
-          u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          setCurrentPage(1);
+          await refetch();
+        })(),
+        {
+          loading: "Fetching data...",
+          success: "Data fetched successfully!",
+        }
       );
-    } else {
-      setSearchResults(MOCK_SEARCH_RESULTS);
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 
-  const handleProfileSelected = (profile: any) => {
-    setSelectedProfile(profile);
-    filterForm.setValue('firstName', profile?.fullName || '');
+  const handleClearFilters = () => {
+    form.reset({ search: "", startDate: "", endDate: "" });
+    setParams("");
+    setCurrentPage(1);
+    formRef.current?.handleClear();
+    refetch();
   };
 
-  const onClearClick = () => {
-    filterForm.reset({ firstName: '', startDate: '', endDate: '' });
-    setSelectedProfile(null);
-    setSearchResults(MOCK_SEARCH_RESULTS);
-    setOpenFilter(false);
+  const handleAdd = async (payload: { fullName: string; email: string; contactNumber: string }) => {
+    try {
+      await addCounselor.mutateAsync(payload);
+      Toast.success("Counselor added successfully!");
+      setIsAddModalOpen(false);
+    } catch {
+      Toast.error("Error adding counselor.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    Toast.info("Delete coming soon!");
+  };
+
+  const handleEdit = () => {
+    Toast.info("Edit coming soon!");
   };
 
   const handleView = (counselor: Counselor) => {
@@ -113,11 +133,42 @@ const AllCounselorsForm = () => {
     setShowDetailModal(true);
   };
 
-  const totalPages = Math.ceil(counselors.length / pageSize);
-  const paginatedData = counselors.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  if (error) {
+    const isAuthError = (error as any)?.response?.status === 401;
+    return (
+      <div className="p-4 sm:p-6">
+        <Toaster position="top-right" />
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="text-center py-16">
+            <Users size={64} className="mx-auto text-red-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+              {isAuthError ? "Authentication Required" : "Error loading counselors"}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {isAuthError ? "Please log in to view counselors." : "Please try again later."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const counselors = data?.Items || [];
+  const totalPages = data?.TotalPages || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedCounselors = counselors.slice(startIndex, startIndex + pageSize);
 
   return (
     <>
@@ -141,7 +192,7 @@ const AllCounselorsForm = () => {
                   icon={<Plus size={20} />}
                   type="button"
                   text="Add Counselor"
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => setIsAddModalOpen(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
               )}
@@ -152,36 +203,15 @@ const AllCounselorsForm = () => {
           {openFilter && (
             <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
-                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
                 <DateRangeFilter
-                  ref={dateFilterRef}
-                  form={filterForm}
-                  onSubmit={handleFilterSubmit}
-                  setParams={() => {}}
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onFilterSubmit}
+                  setParams={setParams}
                 />
-                <div className="flex-1 min-w-[240px]">
-                  <AppCombobox
-                    value={selectedProfile?.fullName || ''}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="Search by Name"
-                    name="firstName"
-                    form={filterForm}
-                    options={searchResults}
-                    selected={selectedProfile}
-                    onSelect={handleProfileSelected}
-                    onFocus={() => fetchUsers('')}
-                    getLabel={(profile) => profile?.fullName ?? ''}
-                    getValue={(profile) => profile?.id ?? ''}
-                    renderOptionExtra={(profile) => (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {profile.email} • {profile.status}
-                      </div>
-                    )}
-                  />
-                </div>
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
@@ -193,7 +223,7 @@ const AllCounselorsForm = () => {
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
-                    onClick={onClearClick}
+                    onClick={handleClearFilters}
                     className="!bg-gray-500 hover:!bg-gray-600 !text-white"
                   />
                 </div>
@@ -207,32 +237,28 @@ const AllCounselorsForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Counselor Name</th>
+                  <th className="px-4 py-3 text-left">Full Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone</th>
-                  <th className="px-4 py-3 text-left">Specialization</th>
-                  <th className="px-4 py-3 text-left">Students</th>
+                  <th className="px-4 py-3 text-left">Contact Number</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((counselor, index) => (
+                {paginatedCounselors.length > 0 ? (
+                  paginatedCounselors.map((counselor: Counselor, index: number) => (
                     <tr
                       key={counselor.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200"
                     >
                       <td className="py-2 px-4">
-                        {((currentPage - 1) * pageSize + index + 1).toString().padStart(2, '0')}
+                        {(startIndex + index + 1).toString().padStart(2, "0")}
                       </td>
-                      <td className="py-2 px-4 font-medium">{counselor.name}</td>
+                      <td className="py-2 px-4 font-medium">{counselor.fullName}</td>
                       <td className="py-2 px-4">{counselor.email}</td>
-                      <td className="py-2 px-4">{counselor.phone}</td>
-                      <td className="py-2 px-4">{counselor.specialization}</td>
-                      <td className="py-2 px-4">{counselor.students}</td>
+                      <td className="py-2 px-4">{counselor.contactNumber}</td>
                       <td className="py-2 px-4">
-                        <StatusBadge status={counselor.status} />
+                        <StatusBadge isActive={counselor.isActive} />
                       </td>
                       <td className="py-2 px-4">
                         <CounselorActionMenu
@@ -248,7 +274,7 @@ const AllCounselorsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
                       No counselors found.
                     </td>
                   </tr>
@@ -260,8 +286,8 @@ const AllCounselorsForm = () => {
 
         {/* Add Counselor Modal */}
         <AddCounselorModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAdd}
         />
 
@@ -287,23 +313,22 @@ const AllCounselorsForm = () => {
               <div className="overflow-y-auto px-6 py-4 flex-1">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold text-lg shrink-0">
-                    {selectedCounselor.name?.charAt(0).toUpperCase()}
+                    {selectedCounselor.fullName?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedCounselor.name}</p>
-                    <StatusBadge status={selectedCounselor.status} />
+                    <p className="font-semibold text-gray-800 dark:text-white">{selectedCounselor.fullName}</p>
+                    <StatusBadge isActive={selectedCounselor.isActive} />
                   </div>
                 </div>
                 {[
-                  { label: 'Email', value: selectedCounselor.email },
-                  { label: 'Phone', value: selectedCounselor.phone },
-                  { label: 'Specialization', value: selectedCounselor.specialization },
-                  { label: 'Students', value: String(selectedCounselor.students) },
-                  { label: 'Join Date', value: selectedCounselor.joinDate },
+                  { label: "Email", value: selectedCounselor.email },
+                  { label: "Contact Number", value: selectedCounselor.contactNumber },
+                  { label: "Created At", value: formatDate(selectedCounselor.createdAt) },
+                  { label: "Modified At", value: formatDate(selectedCounselor.modifiedAt) },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide sm:w-48 shrink-0">{label}</span>
-                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || 'N/A'}</span>
+                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || "N/A"}</span>
                   </div>
                 ))}
               </div>
@@ -320,7 +345,7 @@ const AllCounselorsForm = () => {
         )}
 
         {/* Pagination */}
-        {counselors.length > 0 && (
+        {counselors.length > 0 && totalPages > 1 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
@@ -331,7 +356,7 @@ const AllCounselorsForm = () => {
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
-              handleSearch={handleSearch}
+              handleSearch={(params) => setCurrentPage(params.pageIndex)}
             />
           </div>
         )}
