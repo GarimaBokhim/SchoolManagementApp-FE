@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import AllCrmStudents from '../../applications/crm_students/pages/All'
 import AllLeads from '../../applications/leads/pages/All'
+import ScheduleAppointment from '../schedule_appointment/ScheduleAppointmetnForm'
+
 
 const Allvisitors = () => {
   const exam = [
     { id: 'lead', label: 'Lead' },
-    { id: 'profile', label: 'profile' },
+    { id: 'schedule', label: 'Schedule Appointment' }, 
   ]
 
   const [activeReport, setActiveReport] = useState<string>('lead')
@@ -17,8 +18,8 @@ const Allvisitors = () => {
       case 'lead':
         return <AllLeads />
 
-      case 'profile':
-        return <AllCrmStudents />
+      case 'schedule': 
+        return <ScheduleAppointment />
 
       default:
         return <AllLeads />

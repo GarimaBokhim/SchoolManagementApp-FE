@@ -149,7 +149,7 @@ const AllAppointmentsForm = () => {
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
-                  text="Add Appointment"
+                  text="Add"
                   onClick={() => setShowAddModal(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />

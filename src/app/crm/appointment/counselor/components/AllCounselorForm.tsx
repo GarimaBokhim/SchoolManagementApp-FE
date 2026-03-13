@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from 'react';
-import { Filter, RotateCcw, Plus, User } from 'lucide-react';
+import { Filter, RotateCcw, Plus, X } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -10,8 +10,12 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import DateRangeFilter from "@/components/DateFilter/FilterComponent";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import { Counselor } from '../types/ICounselor';
+import { CounselorActionMenu } from './CounselorActionMenu';
+import { useCounselorMutations } from '../hooks/useCounselorMutation';
+import { AddCounselorModal } from './AddCounselorModel';
 
-// Simple status badge component
+
 const StatusBadge = ({ status }: { status: string }) => {
   const colorMap: Record<string, string> = {
     'Active': 'bg-green-100 text-green-700 border border-green-300',
@@ -25,42 +29,44 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+const MOCK_COUNSELORS: Counselor[] = [
+  { id: '1', name: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', phone: '+1 234-567-8901', specialization: 'Career Counseling', status: 'Active', students: 24, joinDate: '2023-01-15' },
+  { id: '2', name: 'Prof. Michael Chen', email: 'michael.c@example.com', phone: '+1 234-567-8902', specialization: 'Academic Advisor', status: 'Active', students: 18, joinDate: '2023-03-20' },
+  { id: '3', name: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', phone: '+1 234-567-8903', specialization: 'Mental Health', status: 'On Leave', students: 12, joinDate: '2022-11-10' },
+  { id: '4', name: 'Dr. James Wilson', email: 'james.w@example.com', phone: '+1 234-567-8904', specialization: 'Study Abroad', status: 'Active', students: 21, joinDate: '2023-06-05' },
+  { id: '5', name: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', phone: '+1 234-567-8905', specialization: 'Research Guidance', status: 'Inactive', students: 0, joinDate: '2022-08-12' },
+];
+
+const MOCK_SEARCH_RESULTS = [
+  { id: '1', fullName: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', status: 'Active' },
+  { id: '2', fullName: 'Prof. Michael Chen', email: 'michael.c@example.com', status: 'Active' },
+  { id: '3', fullName: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', status: 'On Leave' },
+  { id: '4', fullName: 'Dr. James Wilson', email: 'james.w@example.com', status: 'Active' },
+  { id: '5', fullName: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', status: 'Inactive' },
+];
+
 const AllCounselorsForm = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  
-  // Simple static data for counselors
-  const counselors = [
-    { id: '1', name: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', phone: '+1 234-567-8901', specialization: 'Career Counseling', status: 'Active', students: 24, joinDate: '2023-01-15' },
-    { id: '2', name: 'Prof. Michael Chen', email: 'michael.c@example.com', phone: '+1 234-567-8902', specialization: 'Academic Advisor', status: 'Active', students: 18, joinDate: '2023-03-20' },
-    { id: '3', name: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', phone: '+1 234-567-8903', specialization: 'Mental Health', status: 'On Leave', students: 12, joinDate: '2022-11-10' },
-    { id: '4', name: 'Dr. James Wilson', email: 'james.w@example.com', phone: '+1 234-567-8904', specialization: 'Study Abroad', status: 'Active', students: 21, joinDate: '2023-06-05' },
-    { id: '5', name: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', phone: '+1 234-567-8905', specialization: 'Research Guidance', status: 'Inactive', students: 0, joinDate: '2022-08-12' },
-  ];
 
-  // Mock data for combobox search results
-  const mockSearchResults = [
-    { id: '1', fullName: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', status: 'Active' },
-    { id: '2', fullName: 'Prof. Michael Chen', email: 'michael.c@example.com', status: 'Active' },
-    { id: '3', fullName: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', status: 'On Leave' },
-    { id: '4', fullName: 'Dr. James Wilson', email: 'james.w@example.com', status: 'Active' },
-    { id: '5', fullName: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', status: 'Inactive' },
-  ];
-
+  const [counselors] = useState<Counselor[]>(MOCK_COUNSELORS);
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
-  const [searchResults, setSearchResults] = useState(mockSearchResults);
+  const [searchResults, setSearchResults] = useState(MOCK_SEARCH_RESULTS);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
 
   const dateFilterRef = useRef<any>(null);
-  
+
+  const refetch = () => {};
+
+  const { handleAdd, handleDelete, handleEdit } = useCounselorMutations(refetch);
+
   const filterForm = useForm({
-    defaultValues: {
-      firstName: "",
-      startDate: "",
-      endDate: "",
-    }
+    defaultValues: { firstName: '', startDate: '', endDate: '' },
   });
 
   const paginationForm = useForm({
@@ -73,60 +79,40 @@ const AllCounselorsForm = () => {
   };
 
   const handleFilterSubmit = (data: any) => {
-    console.log("Filter data:", data);
+    console.log('Filter data:', data);
     setOpenFilter(false);
-    // Just for UI demo - no actual API call
-    alert(`Filter applied: ${JSON.stringify(data)}`);
   };
 
   const fetchUsers = (searchTerm: string) => {
-    // Mock search - filter mock results
     if (searchTerm) {
-      const filtered = mockSearchResults.filter(user => 
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      setSearchResults(
+        MOCK_SEARCH_RESULTS.filter((u) =>
+          u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
-      setSearchResults(filtered);
     } else {
-      setSearchResults(mockSearchResults);
+      setSearchResults(MOCK_SEARCH_RESULTS);
     }
   };
 
   const handleProfileSelected = (profile: any) => {
     setSelectedProfile(profile);
-    filterForm.setValue("firstName", profile?.fullName || "");
+    filterForm.setValue('firstName', profile?.fullName || '');
   };
 
   const onClearClick = () => {
-    filterForm.reset({
-      firstName: "",
-      startDate: "",
-      endDate: "",
-    });
+    filterForm.reset({ firstName: '', startDate: '', endDate: '' });
     setSelectedProfile(null);
-    setSearchResults(mockSearchResults);
+    setSearchResults(MOCK_SEARCH_RESULTS);
     setOpenFilter(false);
   };
 
-  const handleAddNew = () => {
-    alert('Add new counselor feature coming soon!');
+  const handleView = (counselor: Counselor) => {
+    setSelectedCounselor(counselor);
+    setShowDetailModal(true);
   };
 
-  const handleEdit = (counselor: any) => {
-    alert(`Edit counselor: ${counselor.name}`);
-  };
-
-  const handleDelete = (counselor: any) => {
-    if (confirm(`Are you sure you want to delete ${counselor.name}?`)) {
-      alert(`Delete counselor: ${counselor.name}`);
-    }
-  };
-
-  const handleView = (counselor: any) => {
-    alert(`View counselor details: ${counselor.name}`);
-  };
-
-  // Simple pagination calculation
   const totalPages = Math.ceil(counselors.length / pageSize);
   const paginatedData = counselors.slice(
     (currentPage - 1) * pageSize,
@@ -139,6 +125,7 @@ const AllCounselorsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
+          {/* Header */}
           <div className="flex flex-col sm:flex-row w-full justify-between p-4 px-4 sm:px-6 gap-4 items-start sm:items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Counselors</h1>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -154,13 +141,14 @@ const AllCounselorsForm = () => {
                   icon={<Plus size={20} />}
                   type="button"
                   text="Add Counselor"
-                  onClick={handleAddNew}
+                  onClick={() => setShowAddModal(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
               )}
             </div>
           </div>
 
+          {/* Filter Panel */}
           {openFilter && (
             <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
@@ -175,7 +163,7 @@ const AllCounselorsForm = () => {
                 />
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
-                    value={selectedProfile?.fullName || ""}
+                    value={selectedProfile?.fullName || ''}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
                     label="Search by Name"
@@ -184,9 +172,9 @@ const AllCounselorsForm = () => {
                     options={searchResults}
                     selected={selectedProfile}
                     onSelect={handleProfileSelected}
-                    onFocus={() => fetchUsers("")}
-                    getLabel={(profile) => profile?.fullName ?? ""}
-                    getValue={(profile) => profile?.id ?? ""}
+                    onFocus={() => fetchUsers('')}
+                    getLabel={(profile) => profile?.fullName ?? ''}
+                    getValue={(profile) => profile?.id ?? ''}
                     renderOptionExtra={(profile) => (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {profile.email} • {profile.status}
@@ -213,6 +201,7 @@ const AllCounselorsForm = () => {
             </div>
           )}
 
+          {/* Table */}
           <div className="overflow-x-auto relative">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
@@ -224,7 +213,7 @@ const AllCounselorsForm = () => {
                   <th className="px-4 py-3 text-left">Specialization</th>
                   <th className="px-4 py-3 text-left">Students</th>
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-center w-[100px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,37 +235,14 @@ const AllCounselorsForm = () => {
                         <StatusBadge status={counselor.status} />
                       </td>
                       <td className="py-2 px-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleView(counselor)}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                            title="View"
-                          >
-                            <User size={16} className="text-blue-600" />
-                          </button>
-                          {canEdit && (
-                            <button
-                              onClick={() => handleEdit(counselor)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                              title="Edit"
-                            >
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDelete(counselor)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                              title="Delete"
-                            >
-                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
+                        <CounselorActionMenu
+                          counselor={counselor}
+                          onView={handleView}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                        />
                       </td>
                     </tr>
                   ))
@@ -292,12 +258,74 @@ const AllCounselorsForm = () => {
           </div>
         </div>
 
+        {/* Add Counselor Modal */}
+        <AddCounselorModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAdd}
+        />
+
+        {/* View Detail Modal */}
+        {showDetailModal && selectedCounselor && (
+          <div
+            className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+            onClick={() => setShowDetailModal(false)}
+          >
+            <div
+              className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Counselor Details</h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X size={18} className="text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
+              <div className="overflow-y-auto px-6 py-4 flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold text-lg shrink-0">
+                    {selectedCounselor.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-white">{selectedCounselor.name}</p>
+                    <StatusBadge status={selectedCounselor.status} />
+                  </div>
+                </div>
+                {[
+                  { label: 'Email', value: selectedCounselor.email },
+                  { label: 'Phone', value: selectedCounselor.phone },
+                  { label: 'Specialization', value: selectedCounselor.specialization },
+                  { label: 'Students', value: String(selectedCounselor.students) },
+                  { label: 'Join Date', value: selectedCounselor.joinDate },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide sm:w-48 shrink-0">{label}</span>
+                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
         {counselors.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
               pagination={{
-                currentPage: currentPage,
+                currentPage,
                 firstPage: 1,
                 lastPage: totalPages,
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,

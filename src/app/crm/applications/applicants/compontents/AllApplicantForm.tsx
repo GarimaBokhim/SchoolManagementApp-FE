@@ -30,6 +30,7 @@ import {
   UserProfile,
 } from "../types/IApplicants";
 import { ActionMenu } from "./applicant_ui_components/ActionMenu";
+import UserProfilePopup from "./ProfilePopUp";
 
 const AllApplicantsForm = () => {
   const { menuStatus } = usePermissions();
@@ -59,6 +60,10 @@ const AllApplicantsForm = () => {
   // Modal states
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<SelectedApplicant | null>(null);
+
+  // Profile popup state
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [selectedProfileApplicant, setSelectedProfileApplicant] = useState<Applicant | null>(null);
 
   const [conversionData, setConversionData] = useState<ConvertToStudentData>({
     universityName: "",
@@ -144,6 +149,12 @@ const AllApplicantsForm = () => {
     if (applicant) {
       await handleDelete(applicant);
     }
+  };
+
+  // Profile name click handler
+  const handleNameClick = (applicant: Applicant) => {
+    setSelectedProfileApplicant(applicant);
+    setShowProfilePopup(true);
   };
 
   // Conversion form handlers
@@ -314,7 +325,14 @@ const AllApplicantsForm = () => {
                       <td className="py-1 px-4">
                         {(currentPage - 1) * paginationParams.pageSize + index + 1}
                       </td>
-                      <td className="py-1 px-4">{applicant.fullName ?? "-"}</td>
+                      <td className="py-1 px-4">
+                        <button
+                          onClick={() => handleNameClick(applicant)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-2 hover:underline-offset-4 transition-all font-medium text-left"
+                        >
+                          {applicant.fullName ?? "-"}
+                        </button>
+                      </td>
                       <td className="py-1 px-4">{applicant.email ?? "-"}</td>
                       <td className="py-1 px-4">{applicant.passportNo ?? "-"}</td>
                       <td className="py-1 px-4">{applicant.targetCountry ?? "-"}</td>
@@ -375,6 +393,16 @@ const AllApplicantsForm = () => {
               setSelectedApplicantId(null);
             }}
             applicantId={selectedApplicantId}
+          />
+
+          {/* Profile Popup */}
+          <UserProfilePopup
+            isOpen={showProfilePopup}
+            onClose={() => {
+              setShowProfilePopup(false);
+              setSelectedProfileApplicant(null);
+            }}
+            applicant={selectedProfileApplicant}
           />
         </div>
 
