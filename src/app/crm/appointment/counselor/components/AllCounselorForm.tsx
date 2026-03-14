@@ -6,19 +6,17 @@ import { Filter, RotateCcw, Plus, X, Users } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-
 import { Counselor } from "../types/ICounselor";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import DateRangeFilter, {
-  DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { CounselorActionMenu } from "./CounselorActionMenu";
 import { AddCounselorModal } from "./AddCounselorModel";
 import { useAddCounselor, useGetAllCounselors } from "../hooks";
+import { AppCombobox } from "@/components/Input/ComboBox";
 
 interface FilterFormData {
   search: string;
@@ -47,6 +45,12 @@ const StatusBadge = ({ isActive }: { isActive: boolean }) => (
   </span>
 );
 
+const MOCK_SEARCH_RESULTS = [
+  { id: "1", fullName: "test1", email: "a@example.com" },
+  { id: "2", fullName: "test2", email: "b@example.com" },
+  { id: "3", fullName: "test3", email: "c@example.com" },
+];
+
 const AllCounselorsForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
@@ -57,6 +61,8 @@ const AllCounselorsForm = () => {
   const [params, setParams] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState(MOCK_SEARCH_RESULTS);
 
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 10;
@@ -104,6 +110,8 @@ const AllCounselorsForm = () => {
 
   const handleClearFilters = () => {
     form.reset({ search: "", startDate: "", endDate: "" });
+    setSelectedProfile(null);
+    setSearchResults(MOCK_SEARCH_RESULTS);
     setParams("");
     setCurrentPage(1);
     formRef.current?.handleClear();
@@ -120,7 +128,7 @@ const AllCounselorsForm = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (_id: string) => {
     Toast.info("Delete coming soon!");
   };
 
@@ -191,7 +199,7 @@ const AllCounselorsForm = () => {
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
-                  text="Add Counselor"
+                  text="Add"
                   onClick={() => setIsAddModalOpen(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
@@ -212,6 +220,30 @@ const AllCounselorsForm = () => {
                   onSubmit={onFilterSubmit}
                   setParams={setParams}
                 />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search by Name"
+                    name="search"
+                    form={form}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={(profile) => {
+                      setSelectedProfile(profile);
+                      form.setValue("search", profile?.fullName || "");
+                    }}
+                    onFocus={() => setSearchResults(MOCK_SEARCH_RESULTS)}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email}
+                      </div>
+                    )}
+                  />
+                </div>
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
@@ -274,7 +306,7 @@ const AllCounselorsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                    <td colSpan={6} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
                       No counselors found.
                     </td>
                   </tr>
@@ -356,7 +388,7 @@ const AllCounselorsForm = () => {
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
-              handleSearch={(params) => setCurrentPage(params.pageIndex)}
+              handleSearch={(p) => setCurrentPage(p.pageIndex)}
             />
           </div>
         )}

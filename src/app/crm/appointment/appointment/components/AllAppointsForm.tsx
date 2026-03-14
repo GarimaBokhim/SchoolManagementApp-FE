@@ -10,16 +10,16 @@ import { useGetAllAppointments, useAddAppointment } from "../hooks";
 import { Appointment } from "../types/IAppointment";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import DateRangeFilter, {
-  DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { AppointmentActionMenu } from "./AppointmentActionMenu";
 import { AddAppointmentModal } from "../model/AddAppointmentModel";
+import { AppCombobox } from "@/components/Input/ComboBox";
 
 interface FilterFormData {
+  search: string;
   startDate: string;
   endDate: string;
 }
@@ -28,7 +28,7 @@ const APPOINTMENT_STATUS_LABELS: Record<number, string> = {
   1: "Scheduled",
   2: "Completed",
   3: "Cancelled",
-  4: "Pending",
+  4: "No Show",
 };
 
 const formatDate = (dateStr: string) => {
@@ -55,6 +55,12 @@ const StatusBadge = ({ status }: { status: number }) => {
   );
 };
 
+const MOCK_SEARCH_RESULTS = [
+  { id: "1", fullName: "Mock User 1", email: "a@example.com" },
+  { id: "2", fullName: "Mock User 2", email: "b@example.com" },
+  { id: "3", fullName: "Mock User 3", email: "c@example.com" },
+];
+
 const AllAppointmentsForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
@@ -65,12 +71,14 @@ const AllAppointmentsForm = () => {
   const [params, setParams] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState(MOCK_SEARCH_RESULTS);
 
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 10;
 
   const form = useForm<FilterFormData>({
-    defaultValues: { startDate: "", endDate: "" },
+    defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
   const { data, isLoading, error, refetch } = useGetAllAppointments(params);
@@ -111,7 +119,9 @@ const AllAppointmentsForm = () => {
   };
 
   const handleClearFilters = () => {
-    form.reset({ startDate: "", endDate: "" });
+    form.reset({ search: "", startDate: "", endDate: "" });
+    setSelectedProfile(null);
+    setSearchResults(MOCK_SEARCH_RESULTS);
     setParams("");
     setCurrentPage(1);
     formRef.current?.handleClear();
@@ -207,7 +217,7 @@ const AllAppointmentsForm = () => {
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
-                  text="Add Appointment"
+                  text="Add"
                   onClick={() => setIsAddModalOpen(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
@@ -228,6 +238,30 @@ const AllAppointmentsForm = () => {
                   onSubmit={onFilterSubmit}
                   setParams={setParams}
                 />
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedProfile?.fullName || ""}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Search by Name"
+                    name="search"
+                    form={form}
+                    options={searchResults}
+                    selected={selectedProfile}
+                    onSelect={(profile) => {
+                      setSelectedProfile(profile);
+                      form.setValue("search", profile?.fullName || "");
+                    }}
+                    onFocus={() => setSearchResults(MOCK_SEARCH_RESULTS)}
+                    getLabel={(profile) => profile?.fullName ?? ""}
+                    getValue={(profile) => profile?.id ?? ""}
+                    renderOptionExtra={(profile) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {profile.email}
+                      </div>
+                    )}
+                  />
+                </div>
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
@@ -376,7 +410,7 @@ const AllAppointmentsForm = () => {
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
-              handleSearch={(params) => setCurrentPage(params.pageIndex)}
+              handleSearch={(p) => setCurrentPage(p.pageIndex)}
             />
           </div>
         )}
