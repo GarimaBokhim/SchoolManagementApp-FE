@@ -1,30 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { X } from 'lucide-react';
 import { AddAppointmentPayload } from '../types/IAppointment';
+import { useGetAllLeads, useGetAllCounselorDetails } from '../hooks';
+import { AppCombobox } from '@/components/Input/ComboBox';
 
-
-// Static mock options 
-const MOCK_LEADS = [
-  { id: 'lead-1', name: 'Alice Turner' },
-  { id: 'lead-2', name: 'Bob Martinez' },
-  { id: 'lead-3', name: 'Clara Singh' },
-];
-
-const MOCK_COUNSELORS = [
-  { id: 'c-1', name: 'Dr. Sarah Johnson' },
-  { id: 'c-2', name: 'Prof. Michael Chen' },
-  { id: 'c-3', name: 'Ms. Emily Rodriguez' },
-];
+enum AppointmentStatus {
+  Scheduled = 1,
+  Completed = 2,
+  Cancelled = 3,
+  Pending = 4,
+}
 
 const APPOINTMENT_STATUSES = [
-  { value: 1, label: 'Scheduled' },
-  { value: 2, label: 'Completed' },
-  { value: 3, label: 'Cancelled' },
-  { value: 4, label: 'Pending' },
+  { value: AppointmentStatus.Scheduled, label: 'Scheduled' },
+  { value: AppointmentStatus.Completed, label: 'Completed' },
+  { value: AppointmentStatus.Cancelled, label: 'Cancelled' },
+  { value: AppointmentStatus.Pending, label: 'Pending' },
 ];
+
+interface FormValues {
+  leadId: string;
+  counselorId: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  notes: string;
+  appointmentStatus: number;
+}
 
 interface AddAppointmentModalProps {
   isOpen: boolean;
@@ -34,32 +39,33 @@ interface AddAppointmentModalProps {
 
 export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmentModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [selectedCounselor, setSelectedCounselor] = useState<any>(null);
+
+  const { data: leads = [], isLoading: leadsLoading } = useGetAllLeads();
+  const { data: counselors = [], isLoading: counselorsLoading } = useGetAllCounselorDetails();
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors },
-  } = useForm<{
-    leadId: string;
-    counselorId: string;
-    appointmentDate: string;
-    startTime: string;
-    endTime: string;
-    notes: string;
-    appointmentStatus: number;
-  }>({
+  } = useForm<FormValues>({
     defaultValues: {
-      appointmentStatus: 1,
+      appointmentStatus: AppointmentStatus.Scheduled,
     },
   });
 
   const handleClose = () => {
     reset();
+    setSelectedLead(null);
+    setSelectedCounselor(null);
     onClose();
   };
 
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
       const appointmentDate = new Date(data.appointmentDate).toISOString();
@@ -73,6 +79,8 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
         appointmentStatus: Number(data.appointmentStatus),
       });
       reset();
+      setSelectedLead(null);
+      setSelectedCounselor(null);
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -111,16 +119,44 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Lead <span className="text-red-500">*</span>
               </label>
-              <select
-                {...register('leadId', { required: 'Lead is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="">Select Lead</option>
-                {MOCK_LEADS.map((l) => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
-              {errors.leadId && <p className="text-xs text-red-500">{errors.leadId.message}</p>}
+              {leadsLoading ? (
+                <div className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] text-gray-400">
+                  Loading leads...
+                </div>
+              ) : (
+                <Controller
+                  name="leadId"
+                  control={control}
+                  rules={{ required: 'Lead is required' }}
+                  render={() => (
+                    <AppCombobox
+                      value={selectedLead?.fullName || ''}
+                      dropDownWidth="w-full"
+                      dropdownPositionClass="absolute"
+                      label=""
+                      name="leadId"
+                      form={null}
+                      options={leads}
+                      selected={selectedLead}
+                      onSelect={(lead) => {
+                        setSelectedLead(lead);
+                        setValue('leadId', lead?.id ?? '', { shouldValidate: true });
+                      }}
+                      onFocus={() => {}}
+                      getLabel={(lead) => lead?.fullName ?? ''}
+                      getValue={(lead) => lead?.id ?? ''}
+                      renderOptionExtra={(lead) => (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {lead.id}
+                        </div>
+                      )}
+                    />
+                  )}
+                />
+              )}
+              {errors.leadId && (
+                <p className="text-xs text-red-500">{errors.leadId.message}</p>
+              )}
             </div>
 
             {/* Counselor */}
@@ -128,16 +164,44 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Counselor <span className="text-red-500">*</span>
               </label>
-              <select
-                {...register('counselorId', { required: 'Counselor is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="">Select Counselor</option>
-                {MOCK_COUNSELORS.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {errors.counselorId && <p className="text-xs text-red-500">{errors.counselorId.message}</p>}
+              {counselorsLoading ? (
+                <div className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] text-gray-400">
+                  Loading counselors...
+                </div>
+              ) : (
+                <Controller
+                  name="counselorId"
+                  control={control}
+                  rules={{ required: 'Counselor is required' }}
+                  render={() => (
+                    <AppCombobox
+                      value={selectedCounselor?.fullName || ''}
+                      dropDownWidth="w-full"
+                      dropdownPositionClass="absolute"
+                      label=""
+                      name="counselorId"
+                      form={null}
+                      options={counselors}
+                      selected={selectedCounselor}
+                      onSelect={(counselor) => {
+                        setSelectedCounselor(counselor);
+                        setValue('counselorId', counselor?.id ?? '', { shouldValidate: true });
+                      }}
+                      onFocus={() => {}}
+                      getLabel={(counselor) => counselor?.fullName ?? ''}
+                      getValue={(counselor) => counselor?.id ?? ''}
+                      renderOptionExtra={(counselor) => (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {counselor.email}
+                        </div>
+                      )}
+                    />
+                  )}
+                />
+              )}
+              {errors.counselorId && (
+                <p className="text-xs text-red-500">{errors.counselorId.message}</p>
+              )}
             </div>
 
             {/* Appointment Date */}
@@ -150,7 +214,9 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
                 {...register('appointmentDate', { required: 'Date is required' })}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              {errors.appointmentDate && <p className="text-xs text-red-500">{errors.appointmentDate.message}</p>}
+              {errors.appointmentDate && (
+                <p className="text-xs text-red-500">{errors.appointmentDate.message}</p>
+              )}
             </div>
 
             {/* Start Time & End Time */}
@@ -164,7 +230,9 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
                   {...register('startTime', { required: 'Start time is required' })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                {errors.startTime && <p className="text-xs text-red-500">{errors.startTime.message}</p>}
+                {errors.startTime && (
+                  <p className="text-xs text-red-500">{errors.startTime.message}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1 flex-1">
                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -175,7 +243,9 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
                   {...register('endTime', { required: 'End time is required' })}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                {errors.endTime && <p className="text-xs text-red-500">{errors.endTime.message}</p>}
+                {errors.endTime && (
+                  <p className="text-xs text-red-500">{errors.endTime.message}</p>
+                )}
               </div>
             </div>
 
@@ -189,9 +259,14 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 {APPOINTMENT_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
                 ))}
               </select>
+              {errors.appointmentStatus && (
+                <p className="text-xs text-red-500">{errors.appointmentStatus.message}</p>
+              )}
             </div>
 
             {/* Notes */}

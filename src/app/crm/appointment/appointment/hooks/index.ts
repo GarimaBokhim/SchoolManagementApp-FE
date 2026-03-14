@@ -55,4 +55,28 @@ export const useAddAppointment = () => {
       console.error("Error adding appointment:", error);
     },
   });
+};export const useGetAllLeads = () => {
+  return useQuery({
+    queryKey: ["AllLeads"],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{ id: string; userId: string; fullName: string }>>(
+        "/api/Enrolments/AllInquiry"
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useGetAllCounselorDetails = () => {
+  return useQuery({
+    queryKey: ["AllCounselorDetails"],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{ id: string; fullName: string; email: string }>>(
+        "/api/Enrolments/AllCounselor"
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 };
