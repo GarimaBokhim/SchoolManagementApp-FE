@@ -10,6 +10,7 @@ const mockAppointments = [
     id: 1,
     clientName: 'Nimesh Lawati',
     time: '09:00 AM',
+    endTime: '09:30 AM',
     purpose: 'Admission Inquiry',
     date: new Date(2026, 2, 16), // March 16, 2026
     status: 'confirmed',
@@ -19,6 +20,7 @@ const mockAppointments = [
     id: 2,
     clientName: 'Garima Rai',
     time: '11:30 AM',
+    endTime: '12:15 PM',
     purpose: 'Counseling',
     date: new Date(2026, 2, 16),
     status: 'pending',
@@ -28,6 +30,7 @@ const mockAppointments = [
     id: 3,
     clientName: 'Suman Rai',
     time: '02:00 PM',
+    endTime: '02:45 PM',
     purpose: 'Follow-up Meeting',
     date: new Date(2026, 2, 16),
     status: 'confirmed',
@@ -37,6 +40,7 @@ const mockAppointments = [
     id: 4,
     clientName: 'Bhabin Sapkota',
     time: '10:00 AM',
+    endTime: '10:30 AM',
     purpose: 'Document Submission',
     date: new Date(2026, 2, 17),
     status: 'confirmed',
@@ -46,6 +50,7 @@ const mockAppointments = [
     id: 5,
     clientName: 'Nitesh Kafle',
     time: '03:30 PM',
+    endTime: '04:15 PM',
     purpose: 'Visa Consultation',
     date: new Date(2026, 2, 17),
     status: 'cancelled',
@@ -55,6 +60,7 @@ const mockAppointments = [
     id: 6,
     clientName: 'Pankaj Pokhrel',
     time: '01:00 PM',
+    endTime: '01:45 PM',
     purpose: 'Course Selection',
     date: new Date(2026, 2, 18),
     status: 'confirmed',
@@ -64,6 +70,7 @@ const mockAppointments = [
     id: 7,
     clientName: 'Asmita Basnet',
     time: '10:00 AM',
+    endTime: '10:50 AM',
     purpose: 'Scholarship Interview',
     date: new Date(2026, 2, 16),
     status: 'in-progress',
@@ -73,6 +80,7 @@ const mockAppointments = [
     id: 8,
     clientName: 'Ichya Chamlagain',
     time: '04:00 PM',
+    endTime: '04:30 PM',
     purpose: 'Application Review',
     date: new Date(2026, 2, 16),
     status: 'pending',
@@ -82,6 +90,7 @@ const mockAppointments = [
     id: 9,
     clientName: 'Gaurab Sapkota',
     time: '09:00 AM',
+    endTime: '09:45 AM',
     purpose: 'Visa Interview Prep',
     date: new Date(2026, 2, 17),
     status: 'in-progress',
@@ -91,6 +100,7 @@ const mockAppointments = [
     id: 10,
     clientName: 'Sujan Shrestha',
     time: '02:00 PM',
+    endTime: '02:30 PM',
     purpose: 'Document Verification',
     date: new Date(2026, 2, 17),
     status: 'cancelled',
@@ -100,6 +110,7 @@ const mockAppointments = [
     id: 11,
     clientName: 'Rajesh Rai',
     time: '11:00 AM',
+    endTime: '11:45 AM',
     purpose: 'Course Counseling',
     date: new Date(2026, 2, 18),
     status: 'pending',
@@ -109,6 +120,7 @@ const mockAppointments = [
     id: 12,
     clientName: 'Balen Shah',
     time: '03:00 PM',
+    endTime: '03:30 PM',
     purpose: 'Fee Payment Discussion',
     date: new Date(2026, 2, 18),
     status: 'in-progress',
@@ -228,7 +240,7 @@ const ScheduleAppointment = () => {
           <div className="h-[72px] bg-transparent"></div> {/* Spacer for header alignment */}
           <div className="space-y-2">
             {timeSlots.map((time) => (
-              <div key={time} className="h-[100px] flex items-start justify-end pr-2">
+              <div key={time} className="h-[120px] flex items-start justify-end pr-2">
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {time}
                 </span>
@@ -262,13 +274,18 @@ const ScheduleAppointment = () => {
                 const appointments = getAppointmentsForDateTime(day, time)
                 
                 return (
-                  <div key={time} className="min-h-[100px]">
+                  <div key={time} className="min-h-[120px]">
                     {appointments.length > 0 ? (
                       appointments.map((appointment) => (
                         <div
                           key={appointment.id}
                           className={`rounded-lg shadow-sm border-2 p-2 transition-all cursor-pointer ${getStatusCardColor(appointment.status)}`}
                         >
+                          {/* Time range - NEW */}
+                          <div className="text-[10px] font-medium text-gray-600 dark:text-gray-300 mb-1">
+                            {appointment.time} - {appointment.endTime}
+                          </div>
+                          
                           {/* Client info */}
                           <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
@@ -285,7 +302,7 @@ const ScheduleAppointment = () => {
                           </div>
 
                           {/* Actions - Small icons */}
-                          <div className="flex items-center justify-end space-x-1 mt-1">
+                          <div className="flex items-center justify-end space-x-1 mt-2">
                             <button className="p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded transition-colors">
                               <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -301,7 +318,7 @@ const ScheduleAppointment = () => {
                       ))
                     ) : (
                       // Empty slot with add button
-                      <button className="w-full h-full min-h-[100px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center">
+                      <button className="w-full h-full min-h-[120px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>

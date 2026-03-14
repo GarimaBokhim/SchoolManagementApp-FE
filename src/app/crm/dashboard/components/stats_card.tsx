@@ -1,35 +1,39 @@
-import React from 'react';
-import { TrendingUp, LucideIcon } from 'lucide-react';
+// components/stats_card.tsx
+import React from "react";
+import { LucideIcon } from "lucide-react";
 
-interface StatProps {
-  stat: {
-    icon: LucideIcon;
-    bgColor: string;
-    color: string;
-    change: string;
-    value: string | number;
-    label: string;
-    description: string;
-  };
+export interface StatItem {
+  label: string;
+  count: number | string;
+  icon: LucideIcon;
+  iconBg: string;   // e.g. "bg-blue-100 dark:bg-blue-900/40"
+  iconColor: string; // e.g. "text-blue-600 dark:text-blue-400"
 }
 
-const StatsCard: React.FC<StatProps> = ({ stat }) => {
+interface StatsCardProps {
+  stat: StatItem;
+}
+
+const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
   const Icon = stat.icon;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between">
-        <div className={`p-3 ${stat.bgColor} rounded-lg`}>
-          <Icon className={`h-6 w-6 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`} />
-        </div>
-        <div className="flex items-center space-x-1 text-sm font-medium text-green-600 dark:text-green-400">
-          <TrendingUp className="h-4 w-4" />
-          <span>{stat.change}</span>
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 flex items-center gap-4 hover:shadow-md transition-shadow duration-200">
+      {/* Circular Icon Frame */}
+      <div
+        className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center ${stat.iconBg}`}
+      >
+        <Icon className={`w-6 h-6 ${stat.iconColor}`} />
       </div>
-      <div className="mt-6">
-        <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{stat.value}</h3>
-        <p className="text-gray-600 dark:text-gray-300 font-medium mt-1">{stat.label}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stat.description}</p>
+
+      {/* Label & Count */}
+      <div className="flex flex-col">
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
+          {stat.label}
+        </span>
+        <span className="text-2xl font-bold text-gray-800 dark:text-white mt-0.5">
+          {stat.count}
+        </span>
       </div>
     </div>
   );
