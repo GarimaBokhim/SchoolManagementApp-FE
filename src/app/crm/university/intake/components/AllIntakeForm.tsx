@@ -299,23 +299,26 @@ const AllIntakeForm = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                <CalendarDays
-                  size={64}
-                  className="mx-auto text-gray-400 mb-4"
-                />
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                  No intakes found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                  Try adjusting your search or filter criteria.
-                </p>
-                <ButtonElement
-                  type="button"
-                  text="Clear Filters"
-                  onClick={handleClearFilters}
-                  className="mt-6 !bg-emerald-600 hover:!bg-emerald-700 !text-white"
-                />
+              <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
+                      <th className="px-4 py-3 text-left">S.N</th>
+                      <th className="px-4 py-3 text-left">Intake Month</th>
+                      <th className="px-4 py-3 text-left hidden md:table-cell">University</th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">Deadline</th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">Status</th>
+                      <th className="px-4 py-3 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan={6} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
+                        No intakes found.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
