@@ -21,7 +21,8 @@ const Dashboard: React.FC = () => {
           Manage student applications and track study abroad progress
         </p>
       </div>
-
+ {/* Quick Actions */}
+      <QuickActions />
       {/* Stats Cards — responsive: 1 col → 2 → 3 → 4 → up to 5 on very wide screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {dashboardStats.map((stat, index) => (
@@ -39,8 +40,7 @@ const Dashboard: React.FC = () => {
         <StudentDestinations />
       </div>
 
-      {/* Quick Actions */}
-      <QuickActions />
+     
     </div>
   );
 };

@@ -1,18 +1,8 @@
 import { 
-  Users, FileText, Award, DollarSign, 
-  GraduationCap, Calendar, MessageSquare, 
-  BookOpen, Globe,
-  Eye,
-  MessageCircle,
-  BookMarked,
-  Plane,
-  CheckSquare,
-  TrendingUp,
-  PhoneCall,
-  ClipboardList,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Target,
+  Eye, TrendingUp, Calendar, BookOpen, ClipboardList,
+  MessageCircle, BookMarked, Plane, CheckSquare,
+  PhoneCall, Users, Target, ArrowDownCircle, ArrowUpCircle,
+  GraduationCap, Globe, FileText, DollarSign, MessageSquare
 } from 'lucide-react';
 
 export const dashboardStats = [
@@ -22,6 +12,31 @@ export const dashboardStats = [
     icon: Eye,
     iconBg: 'bg-sky-100 dark:bg-sky-900/40',
     iconColor: 'text-sky-600 dark:text-sky-400',
+    route: '/crm/visitors',
+  },
+  {
+    label: 'Appointments',
+    count: 74,
+    icon: Calendar,
+    iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
+    iconColor: 'text-yellow-600 dark:text-yellow-400',
+    route: '/crm/appointment',
+  },
+  {
+    label: 'Universities',
+    count: 56,
+    icon: BookOpen,
+    iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+    iconColor: 'text-purple-600 dark:text-purple-400',
+    route: '/crm/university',
+  },
+  {
+    label: 'Applications',
+    count: 189,
+    icon: ClipboardList,
+    iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    route: '/crm/applications',
   },
   {
     label: 'Inquiries',
@@ -59,53 +74,11 @@ export const dashboardStats = [
     iconColor: 'text-orange-600 dark:text-orange-400',
   },
   {
-    label: 'Follow-ups',
-    count: 74,
-    icon: PhoneCall,
-    iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
-    iconColor: 'text-yellow-600 dark:text-yellow-400',
-  },
-  {
     label: 'Appearances',
     count: 431,
     icon: Users,
     iconBg: 'bg-pink-100 dark:bg-pink-900/40',
     iconColor: 'text-pink-600 dark:text-pink-400',
-  },
-  {
-    label: 'Assigned Applications',
-    count: 189,
-    icon: ClipboardList,
-    iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
-    iconColor: 'text-indigo-600 dark:text-indigo-400',
-  },
-  {
-    label: 'Courses',
-    count: 56,
-    icon: BookOpen,
-    iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-    iconColor: 'text-purple-600 dark:text-purple-400',
-  },
-  {
-    label: 'Leads Target',
-    count: 300,
-    icon: Target,
-    iconBg: 'bg-rose-100 dark:bg-rose-900/40',
-    iconColor: 'text-rose-600 dark:text-rose-400',
-  },
-  {
-    label: 'Incoming',
-    count: 98,
-    icon: ArrowDownCircle,
-    iconBg: 'bg-green-100 dark:bg-green-900/40',
-    iconColor: 'text-green-600 dark:text-green-400',
-  },
-  {
-    label: 'Outgoing',
-    count: 61,
-    icon: ArrowUpCircle,
-    iconBg: 'bg-red-100 dark:bg-red-900/40',
-    iconColor: 'text-red-600 dark:text-red-400',
   },
 ];
 
