@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { format, addDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { FlatAppointment } from './ISchedule'
 import { useScheduleAppointments } from './hooks/UseSchedule'
@@ -57,15 +57,40 @@ const appointmentMatchesSlot = (appointment: FlatAppointment, slot: string): boo
 const ScheduleAppointment = () => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [weekStart, setWeekStart] = useState(new Date())
 
   const { data: appointments = [], isLoading, error } = useScheduleAppointments()
 
+  // Initialize weekStart to make today the first column
+  useEffect(() => {
+    const today = new Date()
+    setWeekStart(today)
+    setSelectedDate(today)
+  }, [])
+
+  // Get week days starting from weekStart (which should be today)
   const getWeekDays = () => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i))
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   }
 
   const weekDays = getWeekDays()
+
+  // Navigate to previous week
+  const goToPreviousWeek = () => {
+    setWeekStart(subWeeks(weekStart, 1))
+  }
+
+  // Navigate to next week
+  const goToNextWeek = () => {
+    setWeekStart(addWeeks(weekStart, 1))
+  }
+
+  // Go to today (make today the first column)
+  const goToToday = () => {
+    const today = new Date()
+    setWeekStart(today)
+    setSelectedDate(today)
+  }
 
   const getAppointmentsForDateTime = (date: Date, slot: string): FlatAppointment[] => {
     return appointments.filter(
@@ -97,7 +122,7 @@ const ScheduleAppointment = () => {
         {/* Left — Navigation */}
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
+            onClick={goToPreviousWeek}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +133,7 @@ const ScheduleAppointment = () => {
             {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
           </span>
           <button
-            onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
+            onClick={goToNextWeek}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +141,7 @@ const ScheduleAppointment = () => {
             </svg>
           </button>
           <button
-            onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date()); }}
+            onClick={goToToday}
             className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Today
@@ -167,10 +192,14 @@ const ScheduleAppointment = () => {
               className={`text-center p-2 rounded-t-lg cursor-pointer ${
                 isSameDay(day, selectedDate)
                   ? 'bg-blue-600 text-white'
+                  : isSameDay(day, new Date())
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
               }`}
             >
-              <div className="text-xs font-medium">{format(day, 'EEE')}</div>
+              <div className="text-xs font-medium">
+                {isSameDay(day, new Date()) ? 'Today' : format(day, 'EEE')}
+              </div>
               <div className="text-lg font-bold">{format(day, 'd')}</div>
             </div>
 
