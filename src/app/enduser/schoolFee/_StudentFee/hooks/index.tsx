@@ -125,6 +125,8 @@ export const useFilterStudentFeeByDate = (params?: string) => {
         ? `${StudentFeeEndPoints.filterStudentFeeByDate}${params}`
         : StudentFeeEndPoints.filterStudentFeeByDate;
       const response = await api.get<IPaginationResponse<IStudentFee>>(url);
+
+        console.log("Final API URL:",response);
       return response.data;
     },
     staleTime: 0,

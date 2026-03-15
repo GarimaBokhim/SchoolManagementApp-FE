@@ -46,7 +46,13 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
 
   const { data: allExam } = useGetAllExams()
   const { data: allStudents } = useGetStudentByClass(selectedClassId || '')
-  const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
+  // const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
+
+  const { data: allSubject } = useGetSubjectByClassId(
+  selectedClassId && selectedExamId
+    ? { classId: selectedClassId, examId: selectedExamId }
+    : undefined
+);
 
   const handleClose = () => {
     form.reset()

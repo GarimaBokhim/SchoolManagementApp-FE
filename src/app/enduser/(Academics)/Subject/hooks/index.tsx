@@ -142,19 +142,19 @@ export const useFilterSubjectByDate = (params?: string) => {
   });
 };
 
-export const useGetSubjectByClassId = (classId: string) => {
+export const useGetSubjectByClassId = (params?: { classId: string; examId: string }) => {
   return useQuery({
-    queryKey: [queryKeyForClassID, classId],
+    queryKey: ['subjectByClass', params],
     queryFn: async (): Promise<ISubjectByClass[]> => {
-      if (!classId) {
-        throw new Error("Id is required to get a IssuedCertificate");
+      if (!params?.classId || !params?.examId) {
+        throw new Error("Both classId and examId are required");
       }
-      const response = await api.get<ISubjectByClass[]>(
-        `${SubjectEndPoints.getSubjectByClass}/${classId}`
-      );
+
+      const queryString = `?examId=${params.examId}&classId=${params.classId}`;
+      const response = await api.get<ISubjectByClass[]>(`${SubjectEndPoints.getSubjectByClass}${queryString}`);
       return response.data;
     },
-    enabled: !!classId,
+    enabled: !!params?.classId && !!params?.examId,
     staleTime: 0,
     retry: false,
   });

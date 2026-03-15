@@ -110,7 +110,7 @@ export const useFilterFeeTypeByDate = (params?: string) => {
     queryKey: [filterQueryKey, params, queryKey],
     queryFn: async () => {
       const url = params
-        ? `${FeeTypeEndPoints.filterFeeTypeByDate}${params}`
+        ? `${FeeTypeEndPoints.filterFeeTypeByDate}?${params}`
         : FeeTypeEndPoints.filterFeeTypeByDate;
       const response = await api.get<IPaginationResponse<IFeeType>>(url);
       return response.data;
