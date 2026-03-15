@@ -58,23 +58,19 @@ interface InquiryPayload {
   contactNumber: string;
   permanentAddress: string;
   educationLevel: number;
-  // English proficiency
   englishProficiency: number;
   bandScore: number;
   languageRemarks: string;
-  // Skill / Training
   skillOrTrainingName: string;
   institutionName: string;
   trainingRemarks: string;
   trainingStartDate: string;
   trainingEndDate: string;
-  // Academic
   completionYear: string;
   currentGpa: string;
   previousAcademicQualification: string;
   source: string;
   feedBackOrSuggestion: string;
-  // Nested program selection
   countries: {
     countryId: string;
     universities: {
@@ -145,7 +141,6 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
       gender: 1,
       educationLevel: 1,
       englishProficiency: 1,
-      countryId: '',
       universityId: '',
       courseId: '',
     },
@@ -160,8 +155,14 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const handleCountrySelect = (option: IdNameOption | null) => {
-    setSelectedCountry(option ?? undefined);
+  const handleCountryRadioChange = (country: IdNameOption) => {
+    // If same country clicked again, deselect it
+    if (selectedCountry?.id === country.id) {
+      setSelectedCountry(undefined);
+    } else {
+      setSelectedCountry(country);
+    }
+    // Always reset downstream when country changes
     setSelectedUniversity(undefined);
     setSelectedCourse(undefined);
     comboForm.setValue('universityId', '');
@@ -206,7 +207,6 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
       gender: 1,
       educationLevel: 1,
       englishProficiency: 1,
-      countryId: '',
       universityId: '',
       courseId: '',
     });
@@ -225,7 +225,6 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setIsSubmitting(true);
     setError(null);
 
-    // Build the nested countries payload only if a country was selected
     const countriesPayload: InquiryPayload['countries'] =
       selectedCountry
         ? [
@@ -505,54 +504,78 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Interested Program
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
+            <div className="mb-6 space-y-4">
 
-              <div className="flex flex-col gap-1">
+              {/* Country — radio buttons */}
+              <div>
                 <label className={labelClass}>Country</label>
-                <AppCombobox
-                  label="" name="countryId" form={comboForm}
-                  options={countries} selected={selectedCountry}
-                  dropDownWidth="w-full" dropdownPositionClass="absolute"
-                  onSelect={handleCountrySelect}
-                  getLabel={(o) => o?.name ?? ''} getValue={(o) => o?.id ?? ''}
-                  placeholder={countriesLoading ? 'Loading...' : 'Select country...'}
-                  disabled={countriesLoading}
-                />
+                {countriesLoading ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Loading countries...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    {countries.map((country) => {
+                      const isSelected = selectedCountry?.id === country.id;
+                      return (
+                        <label
+                          key={country.id}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all text-sm font-medium select-none
+                            ${isSelected
+                              ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 dark:border-green-500'
+                              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1f1f22] text-gray-700 dark:text-gray-300 hover:border-green-400 hover:bg-green-50/50 dark:hover:bg-green-900/10'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="country"
+                            value={country.id}
+                            checked={isSelected}
+                            onChange={() => handleCountryRadioChange(country)}
+                            className="accent-green-500 w-4 h-4"
+                          />
+                          {country.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className={labelClass}>University</label>
-                <AppCombobox
-                  label="" name="universityId" form={comboForm}
-                  options={universities} selected={selectedUniversity}
-                  dropDownWidth="w-full" dropdownPositionClass="absolute"
-                  onSelect={handleUniversitySelect}
-                  getLabel={(o) => o?.name ?? ''} getValue={(o) => o?.id ?? ''}
-                  placeholder={
-                    !selectedCountry ? 'Select country first'
-                    : universitiesLoading ? 'Loading...'
-                    : 'Select university...'
-                  }
-                  disabled={!selectedCountry || universitiesLoading}
-                />
-              </div>
+              {/* University & Course — shown only after a country is selected */}
+              {selectedCountry && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
-              <div className="flex flex-col gap-1">
-                <label className={labelClass}>Course</label>
-                <AppCombobox
-                  label="" name="courseId" form={comboForm}
-                  options={courses} selected={selectedCourse}
-                  dropDownWidth="w-full" dropdownPositionClass="absolute"
-                  onSelect={handleCourseSelect}
-                  getLabel={(o) => o?.title ?? ''} getValue={(o) => o?.id ?? ''}
-                  placeholder={
-                    !selectedUniversity ? 'Select university first'
-                    : coursesLoading ? 'Loading...'
-                    : 'Select course...'
-                  }
-                  disabled={!selectedUniversity || coursesLoading}
-                />
-              </div>
+                  <div className="flex flex-col gap-1">
+                    <label className={labelClass}>University</label>
+                    <AppCombobox
+                      label="" name="universityId" form={comboForm}
+                      options={universities} selected={selectedUniversity}
+                      dropDownWidth="w-full" dropdownPositionClass="absolute"
+                      onSelect={handleUniversitySelect}
+                      getLabel={(o) => o?.name ?? ''} getValue={(o) => o?.id ?? ''}
+                      placeholder={universitiesLoading ? 'Loading...' : 'Select university...'}
+                      disabled={universitiesLoading}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className={labelClass}>Course</label>
+                    <AppCombobox
+                      label="" name="courseId" form={comboForm}
+                      options={courses} selected={selectedCourse}
+                      dropDownWidth="w-full" dropdownPositionClass="absolute"
+                      onSelect={handleCourseSelect}
+                      getLabel={(o) => o?.title ?? ''} getValue={(o) => o?.id ?? ''}
+                      placeholder={
+                        !selectedUniversity ? 'Select university first'
+                        : coursesLoading ? 'Loading...'
+                        : 'Select course...'
+                      }
+                      disabled={!selectedUniversity || coursesLoading}
+                    />
+                  </div>
+
+                </div>
+              )}
 
             </div>
 
