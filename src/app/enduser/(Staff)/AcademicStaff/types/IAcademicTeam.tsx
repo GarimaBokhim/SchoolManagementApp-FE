@@ -28,5 +28,5 @@ export interface IAssignClass {
 }
 export interface unAssignClass {
   academicTeamId: string
-  classesId: string
+  classIds: string[]
 }

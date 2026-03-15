@@ -30,6 +30,7 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
 
   const [selectedClasses, setSelectedClasses] = useState<string[]>([])
 
+  /* Load assigned classes from AssignClassDetails API */
   useEffect(() => {
     if (assignedData?.Items) {
       const assignedIds = assignedData.Items.flatMap(
