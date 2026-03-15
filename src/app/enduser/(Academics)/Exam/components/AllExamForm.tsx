@@ -140,7 +140,7 @@ const AllExamForm = () => {
     <>
       <div className="px-2 md:px-4">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
-          {/* Header and Filter buttons */}
+  
           <div className="flex flex-col md:flex-row w-full justify-between p-3 px-4 pt-4 items-start md:items-center gap-3">
             <h1 className="text-lg md:text-xl font-semibold">All Exams</h1>
             <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:space-x-3">
