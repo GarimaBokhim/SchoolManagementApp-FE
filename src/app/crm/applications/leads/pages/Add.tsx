@@ -95,6 +95,113 @@ const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:bo
 
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`;
 
+// ── Single-select checkbox group (Country) ────────────────────────────────────
+
+interface SingleCheckboxGroupProps<T> {
+  items: T[];
+  selected: T | undefined;
+  getLabel: (item: T) => string;
+  getId: (item: T) => string;
+  onSelect: (item: T | undefined) => void;
+  loading?: boolean;
+  loadingText?: string;
+  emptyText?: string;
+}
+
+function SingleCheckboxGroup<T>({
+  items,
+  selected,
+  getLabel,
+  getId,
+  onSelect,
+  loading = false,
+  loadingText = 'Loading...',
+  emptyText = 'No options available',
+}: SingleCheckboxGroupProps<T>) {
+  if (loading) return <p className="text-sm text-gray-400 dark:text-gray-500">{loadingText}</p>;
+  if (items.length === 0) return <p className="text-sm text-gray-400 dark:text-gray-500">{emptyText}</p>;
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-2">
+      {items.map((item) => {
+        const id = getId(item);
+        const isChecked = selected ? getId(selected) === id : false;
+        return (
+          <label key={id} className="flex items-center gap-2 cursor-pointer select-none group">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              // single-select: checking same item deselects, checking new item replaces
+              onChange={() => onSelect(isChecked ? undefined : item)}
+              className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+            />
+            <span className={`text-sm transition-colors
+              ${isChecked
+                ? 'text-green-600 dark:text-green-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300 group-hover:text-green-600 dark:group-hover:text-green-400'
+              }`}
+            >
+              {getLabel(item)}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Multi-select checkbox group (University / Course) ─────────────────────────
+
+interface MultiCheckboxGroupProps<T> {
+  items: T[];
+  selected: T[];
+  getLabel: (item: T) => string;
+  getId: (item: T) => string;
+  onToggle: (item: T) => void;
+  loading?: boolean;
+  loadingText?: string;
+  emptyText?: string;
+}
+
+function MultiCheckboxGroup<T>({
+  items,
+  selected,
+  getLabel,
+  getId,
+  onToggle,
+  loading = false,
+  loadingText = 'Loading...',
+  emptyText = 'No options available',
+}: MultiCheckboxGroupProps<T>) {
+  if (loading) return <p className="text-sm text-gray-400 dark:text-gray-500">{loadingText}</p>;
+  if (items.length === 0) return <p className="text-sm text-gray-400 dark:text-gray-500">{emptyText}</p>;
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-2">
+      {items.map((item) => {
+        const id = getId(item);
+        const isChecked = selected.some((s) => getId(s) === id);
+        return (
+          <label key={id} className="flex items-center gap-2 cursor-pointer select-none group">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => onToggle(item)}
+              className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+            />
+            <span className={`text-sm transition-colors
+              ${isChecked
+                ? 'text-green-600 dark:text-green-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300 group-hover:text-green-600 dark:group-hover:text-green-400'
+              }`}
+            >
+              {getLabel(item)}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -128,55 +235,62 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
   const [trainingStartDate, setTrainingStartDate] = useState('');
   const [trainingEndDate, setTrainingEndDate] = useState('');
 
-  // ── Interested Program (cascading) ────────────────────────────────────────
+  // ── Interested Program ────────────────────────────────────────────────────
+  // Country: single select
   const [selectedCountry, setSelectedCountry] = useState<IdNameOption | undefined>(undefined);
-  const [selectedUniversity, setSelectedUniversity] = useState<IdNameOption | undefined>(undefined);
-  const [selectedCourse, setSelectedCourse] = useState<IdTitleOption | undefined>(undefined);
+  // Universities: multi-select array
+  const [selectedUniversities, setSelectedUniversities] = useState<IdNameOption[]>([]);
+  // Courses per university: map of universityId → selected course ids
+  const [selectedCoursesMap, setSelectedCoursesMap] = useState<Record<string, IdTitleOption[]>>({});
 
   // ── Feedback ──────────────────────────────────────────────────────────────
   const [feedBackOrSuggestion, setFeedBackOrSuggestion] = useState('');
 
   const comboForm = useForm({
-    defaultValues: {
-      gender: 1,
-      educationLevel: 1,
-      englishProficiency: 1,
-      universityId: '',
-      courseId: '',
-    },
+    defaultValues: { gender: 1, educationLevel: 1, englishProficiency: 1 },
   });
 
   // ── Cascading data ────────────────────────────────────────────────────────
   const { data: countries = [], isLoading: countriesLoading } = useGetAllCountries();
   const { data: universities = [], isLoading: universitiesLoading } =
     useGetUniversitiesByCountry(selectedCountry?.id ?? null);
-  const { data: courses = [], isLoading: coursesLoading } =
-    useGetCoursesByUniversity(selectedUniversity?.id ?? null);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const handleCountryRadioChange = (country: IdNameOption) => {
-    // If same country clicked again, deselect it
-    if (selectedCountry?.id === country.id) {
-      setSelectedCountry(undefined);
-    } else {
-      setSelectedCountry(country);
-    }
-    // Always reset downstream when country changes
-    setSelectedUniversity(undefined);
-    setSelectedCourse(undefined);
-    comboForm.setValue('universityId', '');
-    comboForm.setValue('courseId', '');
+  const handleCountrySelect = (country: IdNameOption | undefined) => {
+    setSelectedCountry(country);
+    // Reset universities and all courses when country changes
+    setSelectedUniversities([]);
+    setSelectedCoursesMap({});
   };
 
-  const handleUniversitySelect = (option: IdNameOption | null) => {
-    setSelectedUniversity(option ?? undefined);
-    setSelectedCourse(undefined);
-    comboForm.setValue('courseId', '');
+  const handleUniversityToggle = (university: IdNameOption) => {
+    setSelectedUniversities((prev) => {
+      const exists = prev.some((u) => u.id === university.id);
+      if (exists) {
+        // Remove university and clear its courses
+        setSelectedCoursesMap((map) => {
+          const updated = { ...map };
+          delete updated[university.id];
+          return updated;
+        });
+        return prev.filter((u) => u.id !== university.id);
+      }
+      return [...prev, university];
+    });
   };
 
-  const handleCourseSelect = (option: IdTitleOption | null) => {
-    setSelectedCourse(option ?? undefined);
+  const handleCourseToggle = (universityId: string, course: IdTitleOption) => {
+    setSelectedCoursesMap((prev) => {
+      const current = prev[universityId] ?? [];
+      const exists = current.some((c) => c.id === course.id);
+      return {
+        ...prev,
+        [universityId]: exists
+          ? current.filter((c) => c.id !== course.id)
+          : [...current, course],
+      };
+    });
   };
 
   const resetForm = () => {
@@ -200,16 +314,10 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setTrainingStartDate('');
     setTrainingEndDate('');
     setSelectedCountry(undefined);
-    setSelectedUniversity(undefined);
-    setSelectedCourse(undefined);
+    setSelectedUniversities([]);
+    setSelectedCoursesMap({});
     setFeedBackOrSuggestion('');
-    comboForm.reset({
-      gender: 1,
-      educationLevel: 1,
-      englishProficiency: 1,
-      universityId: '',
-      courseId: '',
-    });
+    comboForm.reset({ gender: 1, educationLevel: 1, englishProficiency: 1 });
     setError(null);
   };
 
@@ -225,19 +333,16 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setIsSubmitting(true);
     setError(null);
 
+    // Build nested payload: one country → many universities → each with their course ids
     const countriesPayload: InquiryPayload['countries'] =
       selectedCountry
         ? [
             {
               countryId: selectedCountry.id,
-              universities: selectedUniversity
-                ? [
-                    {
-                      universityId: selectedUniversity.id,
-                      courseIds: selectedCourse ? [selectedCourse.id] : [],
-                    },
-                  ]
-                : [],
+              universities: selectedUniversities.map((uni) => ({
+                universityId: uni.id,
+                courseIds: (selectedCoursesMap[uni.id] ?? []).map((c) => c.id),
+              })),
             },
           ]
         : [];
@@ -506,76 +611,52 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
             </p>
             <div className="mb-6 space-y-4">
 
-              {/* Country — radio buttons */}
-              <div>
+              {/* Country — single select */}
+              <div className="flex flex-col gap-2">
                 <label className={labelClass}>Country</label>
-                {countriesLoading ? (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Loading countries...</p>
-                ) : (
-                  <div className="flex flex-wrap gap-3 mt-1">
-                    {countries.map((country) => {
-                      const isSelected = selectedCountry?.id === country.id;
-                      return (
-                        <label
-                          key={country.id}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all text-sm font-medium select-none
-                            ${isSelected
-                              ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 dark:border-green-500'
-                              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1f1f22] text-gray-700 dark:text-gray-300 hover:border-green-400 hover:bg-green-50/50 dark:hover:bg-green-900/10'
-                            }`}
-                        >
-                          <input
-                            type="radio"
-                            name="country"
-                            value={country.id}
-                            checked={isSelected}
-                            onChange={() => handleCountryRadioChange(country)}
-                            className="accent-green-500 w-4 h-4"
-                          />
-                          {country.name}
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
+                <SingleCheckboxGroup<IdNameOption>
+                  items={countries}
+                  selected={selectedCountry}
+                  getLabel={(c) => c.name}
+                  getId={(c) => c.id}
+                  onSelect={handleCountrySelect}
+                  loading={countriesLoading}
+                  loadingText="Loading countries..."
+                  emptyText="No countries available"
+                />
               </div>
 
-              {/* University & Course — shown only after a country is selected */}
+              {/* Universities — multi select, shown after country picked */}
               {selectedCountry && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-
-                  <div className="flex flex-col gap-1">
-                    <label className={labelClass}>University</label>
-                    <AppCombobox
-                      label="" name="universityId" form={comboForm}
-                      options={universities} selected={selectedUniversity}
-                      dropDownWidth="w-full" dropdownPositionClass="absolute"
-                      onSelect={handleUniversitySelect}
-                      getLabel={(o) => o?.name ?? ''} getValue={(o) => o?.id ?? ''}
-                      placeholder={universitiesLoading ? 'Loading...' : 'Select university...'}
-                      disabled={universitiesLoading}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className={labelClass}>Course</label>
-                    <AppCombobox
-                      label="" name="courseId" form={comboForm}
-                      options={courses} selected={selectedCourse}
-                      dropDownWidth="w-full" dropdownPositionClass="absolute"
-                      onSelect={handleCourseSelect}
-                      getLabel={(o) => o?.title ?? ''} getValue={(o) => o?.id ?? ''}
-                      placeholder={
-                        !selectedUniversity ? 'Select university first'
-                        : coursesLoading ? 'Loading...'
-                        : 'Select course...'
-                      }
-                      disabled={!selectedUniversity || coursesLoading}
-                    />
-                  </div>
-
+                <div className="flex flex-col gap-2">
+                  <label className={labelClass}>
+                    University
+                    <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+                      — {selectedCountry.name}
+                    </span>
+                  </label>
+                  <MultiCheckboxGroup<IdNameOption>
+                    items={universities}
+                    selected={selectedUniversities}
+                    getLabel={(u) => u.name}
+                    getId={(u) => u.id}
+                    onToggle={handleUniversityToggle}
+                    loading={universitiesLoading}
+                    loadingText="Loading universities..."
+                    emptyText="No universities available for this country"
+                  />
                 </div>
               )}
+
+              {/* Courses per university — multi select, one block per selected university */}
+              {selectedUniversities.map((uni) => (
+                <UniversityCourses
+                  key={uni.id}
+                  university={uni}
+                  selectedCourses={selectedCoursesMap[uni.id] ?? []}
+                  onToggle={(course) => handleCourseToggle(uni.id, course)}
+                />
+              ))}
 
             </div>
 
@@ -608,6 +689,44 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
           </form>
         </fieldset>
       </div>
+    </div>
+  );
+};
+
+// ── Per-university course selector ────────────────────────────────────────────
+// Separate component so each university fetches its own courses independently.
+
+interface UniversityCoursesProps {
+  university: IdNameOption;
+  selectedCourses: IdTitleOption[];
+  onToggle: (course: IdTitleOption) => void;
+}
+
+const UniversityCourses: React.FC<UniversityCoursesProps> = ({
+  university,
+  selectedCourses,
+  onToggle,
+}) => {
+  const { data: courses = [], isLoading } = useGetCoursesByUniversity(university.id);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+        Course
+        <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+          — {university.name}
+        </span>
+      </label>
+      <MultiCheckboxGroup<IdTitleOption>
+        items={courses}
+        selected={selectedCourses}
+        getLabel={(c) => c.title}
+        getId={(c) => c.id}
+        onToggle={onToggle}
+        loading={isLoading}
+        loadingText={`Loading courses for ${university.name}...`}
+        emptyText={`No courses available for ${university.name}`}
+      />
     </div>
   );
 };
