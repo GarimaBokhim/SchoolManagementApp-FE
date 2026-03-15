@@ -21,7 +21,7 @@ export const LeadsHeader = ({ onToggleFilter, onAddNew }: LeadsHeaderProps) => {
         <ButtonElement
           icon={<Plus size={20} />}
           type="button"
-          text="Add New Lead"
+          text="Add"
           onClick={onAddNew}
           className="!text-md !font-bold !bg-blue-600 hover:!bg-blue-700 !text-white"
         />
