@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import { Icon } from "@iconify/react";
-import React, { useState, useEffect } from "react";
-import adi from "../../../public/assets/adi.jpg";
+'use client'
+import { Icon } from '@iconify/react'
+import React, { useState, useEffect } from 'react'
+import adi from '../../../public/assets/adi.jpg'
 import {
   BadgeCent,
   Banknote,
@@ -31,7 +31,7 @@ import {
   Notebook,
   GiftIcon,
   NotepadTextDashedIcon,
-  School2,
+  Package,
 } from "lucide-react";
 import { ISidebar } from "@/types/ISidebar";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -43,143 +43,141 @@ import Image from "next/image";
 import { useGetMenuStatus } from "@/app/SuperAdmin/navigation/menu/hooks";
 
 type Props = {
-  sideBarItems: ISidebar;
-};
+  sideBarItems: ISidebar
+}
 
 const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
-  const { setMenuStatus } = usePermissions();
-  const { isOpen } = useSidebar();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
-  const pathAfterFirst = `/${parts.slice(1).join("/")}`;
-  const navigate = useRouter();
-  const [activeRole, setActiveRole] = useState<string | undefined>("");
-  const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
-    "",
-  );
-  let role = "";
+  const { setMenuStatus } = usePermissions()
+  const { isOpen } = useSidebar()
+  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const pathname = usePathname()
+  const parts = pathname.split('/').filter(Boolean)
+  const pathAfterFirst = `/${parts.slice(1).join('/')}`
+  const navigate = useRouter()
+  const [activeRole, setActiveRole] = useState<string | undefined>('')
+  const [activeSubModule, setActiveSubModule] = useState<string | undefined>('')
+  let role = ''
   const [storedUser, setStoredUser] = useState<any>(() => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === 'undefined') return null
 
-    const user = localStorage.getItem("userDetails");
-    if (!user) return null;
+    const user = localStorage.getItem('userDetails')
+    if (!user) return null
 
     try {
-      return JSON.parse(user);
+      return JSON.parse(user)
     } catch (err) {
-      console.error("Failed to parse user details:", err);
-      return null;
+      console.error('Failed to parse user details:', err)
+      return null
     }
-  });
+  })
 
-  role = storedUser?.role || "";
+  role = storedUser?.role || ''
 
   const withRolePrefix = (path: string) => {
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`
 
-    const lowerRole = role?.toLowerCase();
+    const lowerRole = role?.toLowerCase()
 
-    let prefix = "";
+    let prefix = ''
 
-    if (lowerRole === "superadmin") prefix = "superadmin";
-    else if (lowerRole === "admin") prefix = "admin";
-    else if (lowerRole === "crm") prefix = "crm";
-    else if (lowerRole === "enduser") prefix = "enduser";
-    else prefix = lowerRole;
+    if (lowerRole === 'superadmin') prefix = 'superadmin'
+    else if (lowerRole === 'admin') prefix = 'admin'
+    else if (lowerRole === 'crm') prefix = 'crm'
+    else if (lowerRole === 'enduser') prefix = 'enduser'
+    else prefix = lowerRole
 
-    return `/${prefix}${cleanPath}`;
-  };
+    return `/${prefix}${cleanPath}`
+  }
 
   const { data: menuStatus, refetch } = useGetMenuStatus(
     activeSubModule,
-    activeRole,
-  );
+    activeRole
+  )
   useEffect(() => {
-    if (role === "superadmin" || role === "developeruser") {
+    if (role === 'superadmin' || role === 'developeruser') {
       setMenuStatus([
         {
-          menuName: "add",
+          menuName: 'add',
           isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
+          submoduleId: '',
+          icon: '',
+          targetUrl: '',
+          role: '',
           rank: 0,
         },
         {
-          menuName: "edit",
+          menuName: 'edit',
           isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
+          submoduleId: '',
+          icon: '',
+          targetUrl: '',
+          role: '',
           rank: 0,
         },
         {
-          menuName: "delete",
+          menuName: 'delete',
           isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
+          submoduleId: '',
+          icon: '',
+          targetUrl: '',
+          role: '',
           rank: 0,
         },
         {
-          menuName: "assign",
+          menuName: 'assign',
           isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
+          submoduleId: '',
+          icon: '',
+          targetUrl: '',
+          role: '',
           rank: 0,
         },
-      ]);
+      ])
     }
-  }, [role, setMenuStatus]);
+  }, [role, setMenuStatus])
 
   useEffect(() => {
-    const storedMenuStatus = localStorage.getItem("menuStatus");
+    const storedMenuStatus = localStorage.getItem('menuStatus')
     if (storedMenuStatus) {
-      setMenuStatus(JSON.parse(storedMenuStatus));
+      setMenuStatus(JSON.parse(storedMenuStatus))
     }
-  }, [setMenuStatus]);
+  }, [setMenuStatus])
 
   useEffect(() => {
-    if (activeRole !== "role" && menuStatus) {
-      setMenuStatus(menuStatus);
-      localStorage.setItem("menuStatus", JSON.stringify(menuStatus));
+    if (activeRole !== 'role' && menuStatus) {
+      setMenuStatus(menuStatus)
+      localStorage.setItem('menuStatus', JSON.stringify(menuStatus))
     }
-  }, [activeRole, menuStatus, setMenuStatus]);
+  }, [activeRole, menuStatus, setMenuStatus])
   useEffect(() => {
-    if (activeSubModule && activeRole) refetch();
-  }, [refetch, activeRole, activeSubModule]);
+    if (activeSubModule && activeRole) refetch()
+  }, [refetch, activeRole, activeSubModule])
 
   const staticIcons: {
     [key: string]:
       | React.ForwardRefExoticComponent<
-          Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+          Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
         >
-      | React.ReactElement;
+      | React.ReactElement
   } = {
     Dashboard: Home,
     Navigation: Navigation,
-    "Access Control": LockKeyholeOpen,
-    "Institution SetUp": School,
-    "Company SetUp": School2Icon,
+    'Access Control': LockKeyholeOpen,
+    'Institution SetUp': School,
+    'Company SetUp': School2Icon,
     Students: Users,
-    "Parents Information": (
+    'Parents Information': (
       <Icon icon="mynaui:users-group" width="24" height="24" />
     ),
     Academics: BookOpen,
-    "Fee and Accounting": Banknote,
+    'Fee and Accounting': Banknote,
     Finance: Banknote,
     Miscellaneous: GiftIcon,
-    "Attendance Management": Hand,
-    "Exam and Grading": BookCheck,
-    "Class Management": NotebookPen,
+    'Attendance Management': Hand,
+    'Exam and Grading': BookCheck,
+    'Class Management': NotebookPen,
     Certificate: NotepadText,
-    "Staff Management": BriefcaseBusiness,
+    'Staff Management': BriefcaseBusiness,
     User: User,
     Role: UserCog,
     Notice: Notebook,
@@ -190,10 +188,11 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Setup: Settings,
     Applications: NotepadTextDashedIcon,
     "Academic Program": School,
+    "Services":Package,
   };
 
-  const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999);
-  const handleLogout = () => navigate.push("/");
+  const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999)
+  const handleLogout = () => navigate.push('/')
 
   const sortedModules = [...sideBarItems.module]
     .sort(sortByRank)
@@ -202,7 +201,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       subModulesResponse: item.subModulesResponse
         ? [...item.subModulesResponse].sort(sortByRank)
         : [],
-    }));
+    }))
 
   const navLinks = sortedModules.map((item) => ({
     name: item.name,
@@ -213,25 +212,25 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       ? [...item.subModulesResponse].sort(sortByRank)
       : [],
     allowedRoles: item.role,
-  }));
+  }))
 
   const toggleSection = (section: string) => {
-    setActiveSection((prev) => (prev === section ? null : section));
-    if (activeSection !== section) setActiveSubModule("");
-  };
+    setActiveSection((prev) => (prev === section ? null : section))
+    if (activeSection !== section) setActiveSubModule('')
+  }
 
   const handleSelectSubModule = (
     id: string | undefined,
-    role: string | undefined,
+    role: string | undefined
   ) => {
-    setActiveSubModule(id);
-    setActiveRole(role);
-  };
+    setActiveSubModule(id)
+    setActiveRole(role)
+  }
   return (
     <div
       className={`h-screen flex flex-col dark:bg-[#0A0A0A] bg-white border-r border-gray-200 shadow-sm 
     transition-[width,background-color,border-color] duration-300 ease-in-out overflow-hidden ${
-      isOpen ? "w-64" : "w-16"
+      isOpen ? 'w-64' : 'w-16'
     }`}
     >
       <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 text-gray-800 dark:text-white bg-white dark:bg-[#0A0A0A] shadow-sm border-y dark:border-white space-y-2 md:space-y-0">
@@ -256,33 +255,33 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       <div className="flex-1 mt-4 px-2 overflow-y-auto space-y-1">
         {navLinks
           .filter((item) => {
-            const lowerRole = role?.toLowerCase() || "";
-            if (lowerRole === "superadmin" || lowerRole === "developeruser")
-              return (item.allowedRoles ?? []).includes(lowerRole);
-            return true;
+            const lowerRole = role?.toLowerCase() || ''
+            if (lowerRole === 'superadmin' || lowerRole === 'developeruser')
+              return (item.allowedRoles ?? []).includes(lowerRole)
+            return true
           })
           .map((item) => {
-            const hasSubItems = item.subItems.length > 0;
-            const isOpenSection = activeSection === item.key;
+            const hasSubItems = item.subItems.length > 0
+            const isOpenSection = activeSection === item.key
             const hasActiveChild = item.subItems.some(
-              (child) => pathAfterFirst === child.targetUrl,
-            );
-            const active = pathAfterFirst === item.url;
+              (child) => pathAfterFirst === child.targetUrl
+            )
+            const active = pathAfterFirst === item.url
 
             if (!hasSubItems) {
               return (
                 <Link
                   key={item.key}
                   href={
-                    role === "superadmin" || role === "developeruser"
+                    role === 'superadmin' || role === 'developeruser'
                       ? item.url
                       : withRolePrefix(item.url)
                   }
                   className={`group relative flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease
                     ${
                       active
-                        ? "bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none"
-                        : "text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black"
+                        ? 'bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none'
+                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
                 >
                   {active && (
@@ -298,7 +297,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                     </span>
                   )}
                 </Link>
-              );
+              )
             }
 
             return (
@@ -309,8 +308,8 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                   className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease-in-out
                     ${
                       hasActiveChild
-                        ? "bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none"
-                        : "text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black"
+                        ? 'bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none'
+                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
                 >
                   {hasActiveChild && (
@@ -341,30 +340,30 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                   <div
                     className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
                   ${
-                    isOpenSection ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                    isOpenSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
                   }`}
                   >
                     {item.subItems.map((subItem, index) => {
-                      const activeSub = pathAfterFirst === subItem.targetUrl;
+                      const activeSub = pathAfterFirst === subItem.targetUrl
                       return (
                         <Link
                           key={subItem.targetUrl + index}
                           href={
-                            role === "superadmin" || role === "developeruser"
+                            role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl
                               : withRolePrefix(subItem.targetUrl)
                           }
                           onClick={() =>
                             handleSelectSubModule(
                               subItem.subModulesId!,
-                              subItem.role,
+                              subItem.role
                             )
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors
                           ${
                             activeSub
-                              ? "bg-[#e5f1fe] text-[#035BBA] font-medium"
-                              : "text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black"
+                              ? 'bg-[#e5f1fe] text-[#035BBA] font-medium'
+                              : 'text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black'
                           }`}
                         >
                           {subItem.icon &&
@@ -379,7 +378,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                             </span>
                           )}
                         </Link>
-                      );
+                      )
                     })}
                   </div>
                 )}
@@ -402,7 +401,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                         <Link
                           key={subItem.targetUrl + index}
                           href={
-                            role === "superadmin" || role === "developeruser"
+                            role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl
                               : withRolePrefix(subItem.targetUrl)
                           }
@@ -410,8 +409,8 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
           hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-white
           ${
             pathAfterFirst === subItem.targetUrl
-              ? "bg-[#e5f1fe] text-[#035BBA] font-medium"
-              : ""
+              ? 'bg-[#e5f1fe] text-[#035BBA] font-medium'
+              : ''
           }`}
                         >
                           {subItem.name}
@@ -420,16 +419,18 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                     </div>
                   )}
               </div>
-            );
+            )
           })}
       </div>
       {isOpen && (
         <div className="p-4 border-t border-gray-200 hidden md:block">
-          <p className="text-xs text-gray-500">© 2025 SchoolManagement System</p>
+          <p className="text-xs text-gray-500">
+            © 2025 SchoolManagement System
+          </p>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

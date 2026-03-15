@@ -1,137 +1,182 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useRef, useState } from 'react';
-import { Filter, RotateCcw, Plus, User } from 'lucide-react';
-import { useForm } from "react-hook-form";
-import { Toaster } from "react-hot-toast";
+import { useRef, useState } from "react";
+import { Filter, RotateCcw, Plus, X, Users } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
+import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import DateRangeFilter from "@/components/DateFilter/FilterComponent";
+import { Counselor } from "../types/ICounselor";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
+import toast, { Toaster } from "react-hot-toast";
+import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { Toast } from "@/components/Toast/toast";
+import { CounselorActionMenu } from "./CounselorActionMenu";
+import { AddCounselorModal } from "./AddCounselorModel";
+import { useAddCounselor, useGetAllCounselors } from "../hooks";
+import { AppCombobox } from "@/components/Input/ComboBox";
 
-// Simple status badge component
-const StatusBadge = ({ status }: { status: string }) => {
-  const colorMap: Record<string, string> = {
-    'Active': 'bg-green-100 text-green-700 border border-green-300',
-    'Inactive': 'bg-gray-100 text-gray-700 border border-gray-300',
-    'On Leave': 'bg-yellow-100 text-yellow-700 border border-yellow-300',
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colorMap[status] ?? 'bg-gray-100 text-gray-600'}`}>
-      {status}
-    </span>
-  );
+interface FilterFormData {
+  search: string;
+  startDate: string;
+  endDate: string;
+}
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr || dateStr.startsWith("0001")) return "N/A";
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
+
+const StatusBadge = ({ isActive }: { isActive: boolean }) => (
+  <span
+    className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+      isActive
+        ? "bg-green-100 text-green-700 border-green-300"
+        : "bg-red-100 text-red-700 border-red-300"
+    }`}
+  >
+    {isActive ? "Active" : "Inactive"}
+  </span>
+);
+
+const MOCK_SEARCH_RESULTS = [
+  { id: "1", fullName: "test1", email: "a@example.com" },
+  { id: "2", fullName: "test2", email: "b@example.com" },
+  { id: "3", fullName: "test3", email: "c@example.com" },
+];
 
 const AllCounselorsForm = () => {
   const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  
-  // Simple static data for counselors
-  const counselors = [
-    { id: '1', name: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', phone: '+1 234-567-8901', specialization: 'Career Counseling', status: 'Active', students: 24, joinDate: '2023-01-15' },
-    { id: '2', name: 'Prof. Michael Chen', email: 'michael.c@example.com', phone: '+1 234-567-8902', specialization: 'Academic Advisor', status: 'Active', students: 18, joinDate: '2023-03-20' },
-    { id: '3', name: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', phone: '+1 234-567-8903', specialization: 'Mental Health', status: 'On Leave', students: 12, joinDate: '2022-11-10' },
-    { id: '4', name: 'Dr. James Wilson', email: 'james.w@example.com', phone: '+1 234-567-8904', specialization: 'Study Abroad', status: 'Active', students: 21, joinDate: '2023-06-05' },
-    { id: '5', name: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', phone: '+1 234-567-8905', specialization: 'Research Guidance', status: 'Inactive', students: 0, joinDate: '2022-08-12' },
-  ];
-
-  // Mock data for combobox search results
-  const mockSearchResults = [
-    { id: '1', fullName: 'Dr. Sarah Johnson', email: 'sarah.j@example.com', status: 'Active' },
-    { id: '2', fullName: 'Prof. Michael Chen', email: 'michael.c@example.com', status: 'Active' },
-    { id: '3', fullName: 'Ms. Emily Rodriguez', email: 'emily.r@example.com', status: 'On Leave' },
-    { id: '4', fullName: 'Dr. James Wilson', email: 'james.w@example.com', status: 'Active' },
-    { id: '5', fullName: 'Prof. Lisa Thompson', email: 'lisa.t@example.com', status: 'Inactive' },
-  ];
+  const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
 
   const [openFilter, setOpenFilter] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<any>(null);
-  const [searchResults, setSearchResults] = useState(mockSearchResults);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [params, setParams] = useState("");
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState(MOCK_SEARCH_RESULTS);
 
-  const dateFilterRef = useRef<any>(null);
-  
-  const filterForm = useForm({
-    defaultValues: {
-      firstName: "",
-      startDate: "",
-      endDate: "",
-    }
+  const formRef = useRef<DateRangeFilterRef>(null);
+  const pageSize = 10;
+
+  const form = useForm<FilterFormData>({
+    defaultValues: { search: "", startDate: "", endDate: "" },
   });
+
+  const { data, isLoading, error, refetch } = useGetAllCounselors(params);
+  const addCounselor = useAddCounselor();
+  const { handleError, clearError } = useErrorHandler();
 
   const paginationForm = useForm({
-    defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
+    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
   });
 
-  const handleSearch = (searchParams: any) => {
-    setPageSize(searchParams.pageSize || pageSize);
-    setCurrentPage(searchParams.pageIndex);
-  };
+  const onFilterSubmit = async (formData: FilterFormData) => {
+    clearError();
+    try {
+      const queryParams = [
+        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+      ]
+        .filter(Boolean)
+        .join("&");
 
-  const handleFilterSubmit = (data: any) => {
-    console.log("Filter data:", data);
-    setOpenFilter(false);
-    // Just for UI demo - no actual API call
-    alert(`Filter applied: ${JSON.stringify(data)}`);
-  };
+      const fullQuery = queryParams ? `&${queryParams}` : "";
 
-  const fetchUsers = (searchTerm: string) => {
-    // Mock search - filter mock results
-    if (searchTerm) {
-      const filtered = mockSearchResults.filter(user => 
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery);
+          setCurrentPage(1);
+          await refetch();
+        })(),
+        {
+          loading: "Fetching data...",
+          success: "Data fetched successfully!",
+        }
       );
-      setSearchResults(filtered);
-    } else {
-      setSearchResults(mockSearchResults);
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 
-  const handleProfileSelected = (profile: any) => {
-    setSelectedProfile(profile);
-    filterForm.setValue("firstName", profile?.fullName || "");
-  };
-
-  const onClearClick = () => {
-    filterForm.reset({
-      firstName: "",
-      startDate: "",
-      endDate: "",
-    });
+  const handleClearFilters = () => {
+    form.reset({ search: "", startDate: "", endDate: "" });
     setSelectedProfile(null);
-    setSearchResults(mockSearchResults);
-    setOpenFilter(false);
+    setSearchResults(MOCK_SEARCH_RESULTS);
+    setParams("");
+    setCurrentPage(1);
+    formRef.current?.handleClear();
+    refetch();
   };
 
-  const handleAddNew = () => {
-    alert('Add new counselor feature coming soon!');
-  };
-
-  const handleEdit = (counselor: any) => {
-    alert(`Edit counselor: ${counselor.name}`);
-  };
-
-  const handleDelete = (counselor: any) => {
-    if (confirm(`Are you sure you want to delete ${counselor.name}?`)) {
-      alert(`Delete counselor: ${counselor.name}`);
+  const handleAdd = async (payload: { fullName: string; email: string; contactNumber: string }) => {
+    try {
+      await addCounselor.mutateAsync(payload);
+      Toast.success("Counselor added successfully!");
+      setIsAddModalOpen(false);
+    } catch {
+      Toast.error("Error adding counselor.");
     }
   };
 
-  const handleView = (counselor: any) => {
-    alert(`View counselor details: ${counselor.name}`);
+  const handleDelete = async (_id: string) => {
+    Toast.info("Delete coming soon!");
   };
 
-  // Simple pagination calculation
-  const totalPages = Math.ceil(counselors.length / pageSize);
-  const paginatedData = counselors.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const handleEdit = () => {
+    Toast.info("Edit coming soon!");
+  };
+
+  const handleView = (counselor: Counselor) => {
+    setSelectedCounselor(counselor);
+    setShowDetailModal(true);
+  };
+
+  if (error) {
+    const isAuthError = (error as any)?.response?.status === 401;
+    return (
+      <div className="p-4 sm:p-6">
+        <Toaster position="top-right" />
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="text-center py-16">
+            <Users size={64} className="mx-auto text-red-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+              {isAuthError ? "Authentication Required" : "Error loading counselors"}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {isAuthError ? "Please log in to view counselors." : "Please try again later."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const counselors = data?.Items || [];
+  const totalPages = data?.TotalPages || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedCounselors = counselors.slice(startIndex, startIndex + pageSize);
 
   return (
     <>
@@ -139,6 +184,7 @@ const AllCounselorsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
+          {/* Header */}
           <div className="flex flex-col sm:flex-row w-full justify-between p-4 px-4 sm:px-6 gap-4 items-start sm:items-center">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Counselors</h1>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -153,25 +199,26 @@ const AllCounselorsForm = () => {
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
-                  text="Add Counselor"
-                  onClick={handleAddNew}
+                  text="Add"
+                  onClick={() => setIsAddModalOpen(true)}
                   className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
                 />
               )}
             </div>
           </div>
 
+          {/* Filter Panel */}
           {openFilter && (
             <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
-                onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
+                onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
                 <DateRangeFilter
-                  ref={dateFilterRef}
-                  form={filterForm}
-                  onSubmit={handleFilterSubmit}
-                  setParams={() => {}}
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onFilterSubmit}
+                  setParams={setParams}
                 />
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
@@ -179,17 +226,20 @@ const AllCounselorsForm = () => {
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
                     label="Search by Name"
-                    name="firstName"
-                    form={filterForm}
+                    name="search"
+                    form={form}
                     options={searchResults}
                     selected={selectedProfile}
-                    onSelect={handleProfileSelected}
-                    onFocus={() => fetchUsers("")}
+                    onSelect={(profile) => {
+                      setSelectedProfile(profile);
+                      form.setValue("search", profile?.fullName || "");
+                    }}
+                    onFocus={() => setSearchResults(MOCK_SEARCH_RESULTS)}
                     getLabel={(profile) => profile?.fullName ?? ""}
                     getValue={(profile) => profile?.id ?? ""}
                     renderOptionExtra={(profile) => (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {profile.email} • {profile.status}
+                        {profile.email}
                       </div>
                     )}
                   />
@@ -205,7 +255,7 @@ const AllCounselorsForm = () => {
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
-                    onClick={onClearClick}
+                    onClick={handleClearFilters}
                     className="!bg-gray-500 hover:!bg-gray-600 !text-white"
                   />
                 </div>
@@ -213,76 +263,50 @@ const AllCounselorsForm = () => {
             </div>
           )}
 
+          {/* Table */}
           <div className="overflow-x-auto relative">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Counselor Name</th>
+                  <th className="px-4 py-3 text-left">Full Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone</th>
-                  <th className="px-4 py-3 text-left">Specialization</th>
-                  <th className="px-4 py-3 text-left">Students</th>
+                  <th className="px-4 py-3 text-left">Contact Number</th>
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-center w-[100px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((counselor, index) => (
+                {paginatedCounselors.length > 0 ? (
+                  paginatedCounselors.map((counselor: Counselor, index: number) => (
                     <tr
                       key={counselor.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200"
                     >
                       <td className="py-2 px-4">
-                        {((currentPage - 1) * pageSize + index + 1).toString().padStart(2, '0')}
+                        {(startIndex + index + 1).toString().padStart(2, "0")}
                       </td>
-                      <td className="py-2 px-4 font-medium">{counselor.name}</td>
+                      <td className="py-2 px-4 font-medium">{counselor.fullName}</td>
                       <td className="py-2 px-4">{counselor.email}</td>
-                      <td className="py-2 px-4">{counselor.phone}</td>
-                      <td className="py-2 px-4">{counselor.specialization}</td>
-                      <td className="py-2 px-4">{counselor.students}</td>
+                      <td className="py-2 px-4">{counselor.contactNumber}</td>
                       <td className="py-2 px-4">
-                        <StatusBadge status={counselor.status} />
+                        <StatusBadge isActive={counselor.isActive} />
                       </td>
                       <td className="py-2 px-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleView(counselor)}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                            title="View"
-                          >
-                            <User size={16} className="text-blue-600" />
-                          </button>
-                          {canEdit && (
-                            <button
-                              onClick={() => handleEdit(counselor)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                              title="Edit"
-                            >
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDelete(counselor)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                              title="Delete"
-                            >
-                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
+                        <CounselorActionMenu
+                          counselor={counselor}
+                          onView={handleView}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                    <td colSpan={6} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
                       No counselors found.
                     </td>
                   </tr>
@@ -292,18 +316,79 @@ const AllCounselorsForm = () => {
           </div>
         </div>
 
-        {counselors.length > 0 && (
+        {/* Add Counselor Modal */}
+        <AddCounselorModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAdd}
+        />
+
+        {/* View Detail Modal */}
+        {showDetailModal && selectedCounselor && (
+          <div
+            className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+            onClick={() => setShowDetailModal(false)}
+          >
+            <div
+              className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Counselor Details</h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X size={18} className="text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
+              <div className="overflow-y-auto px-6 py-4 flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold text-lg shrink-0">
+                    {selectedCounselor.fullName?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-white">{selectedCounselor.fullName}</p>
+                    <StatusBadge isActive={selectedCounselor.isActive} />
+                  </div>
+                </div>
+                {[
+                  { label: "Email", value: selectedCounselor.email },
+                  { label: "Contact Number", value: selectedCounselor.contactNumber },
+                  { label: "Created At", value: formatDate(selectedCounselor.createdAt) },
+                  { label: "Modified At", value: formatDate(selectedCounselor.modifiedAt) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide sm:w-48 shrink-0">{label}</span>
+                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || "N/A"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {counselors.length > 0 && totalPages > 1 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
               pagination={{
-                currentPage: currentPage,
+                currentPage,
                 firstPage: 1,
                 lastPage: totalPages,
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
-              handleSearch={handleSearch}
+              handleSearch={(p) => setCurrentPage(p.pageIndex)}
             />
           </div>
         )}

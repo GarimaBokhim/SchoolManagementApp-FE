@@ -52,7 +52,7 @@ const AllUniversityForm = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [params, setParams] = useState("");           // ✅ params drives the hook
+  const [params, setParams] = useState("");           
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 9;
 
@@ -60,7 +60,6 @@ const AllUniversityForm = () => {
     defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
-  // ✅ Pass params into the hook — refetches automatically when params changes
   const { data, isLoading, error, refetch } = useGetAllUniversities(params);
   const { handleError, clearError } = useErrorHandler();
 
@@ -85,7 +84,7 @@ const AllUniversityForm = () => {
 
       await toast.promise(
         (async () => {
-          setParams(fullQuery); // ✅ updating params triggers the hook to refetch
+          setParams(fullQuery); // updating params triggers the hook to refetch
           await refetch();
         })(),
         {
@@ -321,20 +320,26 @@ const AllUniversityForm = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                <GraduationCap size={64} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                  No universities found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                  Try adjusting your search or filter criteria.
-                </p>
-                <ButtonElement
-                  type="button"
-                  text="Clear Filters"
-                  onClick={handleClearFilters}
-                  className="mt-6 !bg-emerald-600 hover:!bg-emerald-700 !text-white"
-                />
+              <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
+                      <th className="px-4 py-3 text-left">S.N</th>
+                      <th className="px-4 py-3 text-left">University Name</th>
+                      <th className="px-4 py-3 text-left hidden md:table-cell">Location</th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">Global Rank</th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">Website</th>
+                      <th className="px-4 py-3 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan={6} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
+                        No universities found.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

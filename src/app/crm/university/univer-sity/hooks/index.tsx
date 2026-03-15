@@ -3,13 +3,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IUniversity } from "../types/IUniversity";
+import { ICountry } from "../types/ICountry";
+
 
 export const UniversityEndPoints = {
   getAllUniversities: "/api/AcademicPrograms/FilterUniversity",
   createUniversity: "/api/University/AddUniversity",
+  getAllCountries: "/api/AcademicPrograms/GetAllCountry",
+  getUniversities: "/api/AcademicPrograms/University",  
 };
 
 export const queryKey = "Universities";
+const countryQueryKey = "Countries";
+const universityQueryKey = "UniversityList";  
 
 export const useAddUniversity = () => {
   const queryClient = useQueryClient();
@@ -34,10 +40,9 @@ export const useAddUniversity = () => {
   });
 };
 
-// ✅ Now accepts optional query params string (e.g. "&search=abc&startDate=2081-01-01")
 export const useGetAllUniversities = (queryParams?: string) => {
   return useQuery({
-    queryKey: [queryKey, queryParams], // ✅ re-fetches when queryParams changes
+    queryKey: [queryKey, queryParams],
     queryFn: async () => {
       const paramObj: Record<string, string> = {};
       if (queryParams) {
@@ -49,7 +54,7 @@ export const useGetAllUniversities = (queryParams?: string) => {
 
       const response = await api.get<IPaginationResponse<IUniversity>>(
         UniversityEndPoints.getAllUniversities,
-        { params: paramObj } // actually sent to the API
+        { params: paramObj }
       );
 
       return response.data ?? {
@@ -62,5 +67,32 @@ export const useGetAllUniversities = (queryParams?: string) => {
         LastPage: 1,
       };
     },
+  });
+};
+
+export const useGetAllCountries = () => {
+  return useQuery({
+    queryKey: [countryQueryKey],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<ICountry>>(
+        UniversityEndPoints.getAllCountries
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+
+export const useGetUniversities = () => {
+  return useQuery({
+    queryKey: [universityQueryKey],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<IUniversity>>(
+        UniversityEndPoints.getUniversities
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };

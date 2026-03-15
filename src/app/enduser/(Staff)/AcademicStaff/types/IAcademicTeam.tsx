@@ -23,7 +23,8 @@ export interface IFilterAcademicTeamByDate {
 
 export interface IAssignClass {
   academicTeamId: string
-  classIds: string[]
+  subjectIds: string[]
+  ClassIds: string[]
 }
 export interface unAssignClass {
   academicTeamId: string

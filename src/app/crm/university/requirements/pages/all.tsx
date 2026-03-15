@@ -1,6 +1,6 @@
 "use client";
 
-import AllRequirementsForm from "./components/AllRequirementsForm";
+import AllRequirementsForm from "../components/AllRequirementsForm";
 
 const AllRequirements = () => {
   return (

@@ -32,15 +32,14 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
 
   /* Load assigned classes from AssignClassDetails API */
   useEffect(() => {
-    if (assignedData?.items) {
-      const assignedIds = assignedData.items.map(
-        (item: IAssignClass) => item.classIds
+    if (assignedData?.Items) {
+      const assignedIds = assignedData.Items.flatMap(
+        (item: IAssignClass) => item.ClassIds
       )
 
       setSelectedClasses(assignedIds)
     }
   }, [assignedData])
-
   const handleAssign = async (classId: string) => {
     try {
       await assignClass.mutateAsync({
@@ -106,8 +105,8 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
         <ButtonElement
           type="button"
           text="Close"
-          handleClick={onClose}
-          className="!bg-gray-500 hover:!bg-gray-600"
+          onClick={onClose}
+          className="hover:bg-teal-700 transition-all"
         />
       </div>
     </div>
