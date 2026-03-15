@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Filter, RotateCcw, Plus, X, CalendarDays } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { useGetAllAppointments, useAddAppointment } from "../hooks";
+import { useGetAllAppointments, useAddAppointment, useGetAllLeads, useGetAllCounselorDetails } from "../hooks";
 import { Appointment } from "../types/IAppointment";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -82,8 +81,23 @@ const AllAppointmentsForm = () => {
   });
 
   const { data, isLoading, error, refetch } = useGetAllAppointments(params);
+  const { data: leads = [] } = useGetAllLeads();
+  const { data: counselors = [] } = useGetAllCounselorDetails();
   const addAppointment = useAddAppointment();
   const { handleError, clearError } = useErrorHandler();
+
+  // Build lookup maps id → name
+  const leadMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    leads.forEach((l: any) => { map[l.id] = l.fullName; });
+    return map;
+  }, [leads]);
+
+  const counselorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    counselors.forEach((c: any) => { map[c.id] = c.fullName; });
+    return map;
+  }, [counselors]);
 
   const paginationForm = useForm({
     defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
@@ -287,6 +301,8 @@ const AllAppointmentsForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Lead</th>
+                  <th className="px-4 py-3 text-left">Counselor</th>
                   <th className="px-4 py-3 text-left">Appointment Date</th>
                   <th className="px-4 py-3 text-left">Start Time</th>
                   <th className="px-4 py-3 text-left">End Time</th>
@@ -304,6 +320,16 @@ const AllAppointmentsForm = () => {
                     >
                       <td className="py-2 px-4">
                         {(startIndex + index + 1).toString().padStart(2, "0")}
+                      </td>
+                      <td className="py-2 px-4 font-medium">
+                        {leadMap[appointment.leadId] || (
+                          <span className="text-gray-400 italic text-xs">Unknown</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-4">
+                        {counselorMap[appointment.counselorId] || (
+                          <span className="text-gray-400 italic text-xs">Unknown</span>
+                        )}
                       </td>
                       <td className="py-2 px-4">{formatDate(appointment.appointmentDate)}</td>
                       <td className="py-2 px-4">{appointment.startTime}</td>
@@ -326,7 +352,7 @@ const AllAppointmentsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                    <td colSpan={9} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
                       No appointments found.
                     </td>
                   </tr>
@@ -375,6 +401,8 @@ const AllAppointmentsForm = () => {
                   </div>
                 </div>
                 {[
+                  { label: "Lead", value: leadMap[selectedAppointment.leadId] || "Unknown" },
+                  { label: "Counselor", value: counselorMap[selectedAppointment.counselorId] || "Unknown" },
                   { label: "Start Time", value: selectedAppointment.startTime },
                   { label: "End Time", value: selectedAppointment.endTime },
                   { label: "Notes", value: selectedAppointment.notes },
