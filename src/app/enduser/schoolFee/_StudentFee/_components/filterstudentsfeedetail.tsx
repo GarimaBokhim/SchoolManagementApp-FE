@@ -39,7 +39,7 @@ const ViewStudentFeeForm = ({
   const [selectedClassId, setSelectedClassId] = useState('')
   const { data: allStudents } = useGetStudentByClass(selectedClassId)
   const [params, setParams] = useState('')
-  const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
+  const [printData] = useState<IPaymentRecord | null>(null)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
