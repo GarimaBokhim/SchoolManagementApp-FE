@@ -16,7 +16,7 @@ const AddClassModal = ({ isOpen, onClose, onSuccess }: Props) => {
             ✕
           </button>
         </div>
-        {/* TODO: Add your class form fields here */}
+       
         <p className="text-sm text-gray-500">Form coming soon...</p>
         <div className="mt-6 flex justify-end gap-2">
           <button

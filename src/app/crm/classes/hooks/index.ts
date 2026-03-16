@@ -6,7 +6,7 @@ import {
   TrainingRegistration,
   AddConsultancyClassPayload,
   AddTrainingRegistrationPayload,
-} from '../types/IClass'
+} from '../class/types/IClass'
 
 export const ClassEndPoints = {
   filterClasses: '/api/Enrolments/FilterConsultancyClasss',
