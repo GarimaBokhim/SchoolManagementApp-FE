@@ -23,21 +23,25 @@ import { CreditCard } from "lucide-react";
 import { X } from "lucide-react";
 import ViewStudentFeeForm from "./filterstudentsfeedetail";
 import PaymentRecordForm from "./paymentrecords";
+
 const AllStudentFeeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+  
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  
   const [addModal, setAddModal] = useState(false);
   const [viewModal, setViewModal] = useState(false);
   const [viewpaymentModal, setViewpaymentModal] = useState(false);
@@ -56,9 +60,11 @@ const AllStudentFeeForm = () => {
     refetch,
     isLoading,
   } = useFilterStudentFeeByDate(fullQuery);
+  
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  
 
 
 
@@ -75,6 +81,7 @@ const AllStudentFeeForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
     clearError();
     try {
@@ -108,21 +115,14 @@ const AllStudentFeeForm = () => {
       console.error("Error during form submission:", error);
     }
   };
+  
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+  
   const formRef = useRef<DateRangeFilterRef>(null);
-  // const deleteStudentFee = useRemoveStudentFee();
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteStudentFee.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+  
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -130,6 +130,7 @@ const AllStudentFeeForm = () => {
     setSelectedStudentId("");
     form.reset();
   };
+  
   return (
     <>
       <Toaster position="top-right" />
@@ -215,8 +216,6 @@ const AllStudentFeeForm = () => {
                   <th className="px-4 py-3 text-center">S.N</th>
                   <th className="px-4 py-3 text-center">Student</th>
                   <th className="px-4 py-3 text-center">Fee Structure</th>
-                  {/* <th className="px-4 py-3 text-center">Total Amount</th>
-                  <th className="px-4 py-3 text-center">Paid Amount</th> */}
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -253,13 +252,6 @@ const AllStudentFeeForm = () => {
                             "-"}
                         </td>
 
-                        {/* <td className="py-3 px-4 hidden md:table-cell">
-                          {StudentFee.totalAmount}
-                        </td>
-                        
-                        <td className="py-3 px-4 hidden lg:table-cell">
-                          {StudentFee.paidAmount}
-                        </td> */}
                       <td className="py-3 px-4 text-center">
                         <div className="flex justify-center gap-2">
                           <ButtonElement
@@ -319,49 +311,50 @@ const AllStudentFeeForm = () => {
         )}
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
       </div>
+      
+      {/* View Student Fee Modal - UPDATED to pass both studentId and classId */}
       {viewModal && selectedStudentFee && (
-  <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
-    <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
-      <button
-        className="absolute top-[-6px] right-1
-                   w-10 h-10
-                   flex items-center justify-center
-                   text-red-500 hover:text-gray-700"
-        onClick={() => setViewModal(false)}
-      >
-        <X size={23} strokeWidth={2.5} />
-      </button>
+        <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
+            <button
+              className="absolute top-[-6px] right-1
+                         w-10 h-10
+                         flex items-center justify-center
+                         text-red-500 hover:text-gray-700"
+              onClick={() => setViewModal(false)}
+            >
+              <X size={23} strokeWidth={2.5} />
+            </button>
 
-      <ViewStudentFeeForm
-        studentId={selectedStudentFee.studentId}
-      />
-    </div>
-  </div>
-)}
+            <ViewStudentFeeForm
+              studentId={selectedStudentFee.studentId}
+              classId={selectedStudentFee.classId}  //  passing classId (from nimesh )
+            />
+          </div>
+        </div>
+      )}
 
-    {viewpaymentModal && selectedStudentFee && (
-  <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
-                 <button  className="absolute top-[-6px] right-1
-                            w-10 h-10
-                            flex items-center justify-center
-                            text-red-500 hover:text-gray-700"
-        onClick={() => setViewpaymentModal(false)}
-      >
-        <X size={24} strokeWidth={2.5} />
-      </button>
+      {/* Payment Modal */}
+      {viewpaymentModal && selectedStudentFee && (
+        <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
+            <button  className="absolute top-[-6px] right-1
+                               w-10 h-10
+                               flex items-center justify-center
+                               text-red-500 hover:text-gray-700"
+              onClick={() => setViewpaymentModal(false)}
+            >
+              <X size={24} strokeWidth={2.5} />
+            </button>
 
-      <PaymentRecordForm
-        studentid={selectedStudentFee?.studentId || ""} 
-        classid={selectedStudentFee?.classId || ""}
-        onClose={() => setViewpaymentModal(false)}
-      />
-    </div>
-  </div>
-)}
-
-
-
+            <PaymentRecordForm
+              studentid={selectedStudentFee?.studentId || ""} 
+              classid={selectedStudentFee?.classId || ""}    
+              onClose={() => setViewpaymentModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };
