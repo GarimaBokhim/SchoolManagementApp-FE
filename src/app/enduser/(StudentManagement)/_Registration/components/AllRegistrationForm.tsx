@@ -27,8 +27,6 @@ import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllStudents } from "../../Student/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 
-
-
 const AllRegistrationForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
