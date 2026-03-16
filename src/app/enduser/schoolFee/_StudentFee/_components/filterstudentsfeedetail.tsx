@@ -24,22 +24,17 @@ import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import PaymentReceiptPrint from './printpaymentrecordindividually'
 
 interface ViewStudentFeeFormProps {
-  studentId?: string
-  classId?: string
+  studentId?: string;
+  classId?: string;  // ADDED: classId prop
 }
 
-const ViewStudentFeeForm = ({
-  studentId,
-  classId,
-}: ViewStudentFeeFormProps) => {
-  const { handleError, clearError } = useErrorHandler()
-
-  const { data: allClasses } = useGetAllClass()
-  const [selectedStudentId, setSelectedStudentId] = useState('')
-  const [selectedClassId, setSelectedClassId] = useState('')
-  const { data: allStudents } = useGetStudentByClass(selectedClassId)
-  const [params, setParams] = useState('')
-  const [printData] = useState<IPaymentRecord | null>(null)
+const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => {
+  const { handleError, clearError } = useErrorHandler();
+  const { data: allStudents } = useGetAllStudents();
+  const { data: allClasses } = useGetAllClass();
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [params, setParams] = useState("");
+  const [printData, setPrintData] = useState<IPaymentRecord | null>(null);
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
@@ -58,17 +53,20 @@ const ViewStudentFeeForm = ({
     isLoading,
   } = useGetStudentFeesummary(params)
 
+  // UPDATED: useEffect now uses both studentId and classId
   useEffect(() => {
-    if (!studentId) return
-    queueMicrotask(() => {
-      setSelectedStudentId(studentId)
-      setValue('studentId', studentId)
-      const query = `?studentId=${encodeURIComponent(studentId)}`
-      setParams(query)
+    if (!studentId || !classId) return;  // Check both
+    
+    queueMicrotask(()=>{
+      setSelectedStudentId(studentId);
+      setValue("studentId", studentId);
+      // Include both in the query
+      const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`;
+      setParams(query);
     })
-
-    refetch()
-  }, [studentId, refetch, setValue])
+  
+    refetch();
+  }, [studentId, classId]);  // Added classId to dependency array
 
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
     clearError()
@@ -78,10 +76,10 @@ const ViewStudentFeeForm = ({
         formData.classId && `classId=${formData.classId}`,
         formData.startDate && `startDate=${formData.startDate}`,
         formData.endDate && `endDate=${formData.endDate}`,
-      ]
-        .filter(Boolean)
-        .join('&')
-      const fullQuery = queryParams ? `?${queryParams}` : ''
+        classId && `classId=${classId}`,  // ADDED: include classId in filter
+      ].filter(Boolean).join("&");
+
+      const fullQuery = queryParams ? `?${queryParams}` : "";
 
       await toast.promise(
         (async () => {
@@ -99,12 +97,16 @@ const ViewStudentFeeForm = ({
   }
 
   const onClear = () => {
-    form.reset()
-    setSelectedStudentId('')
-    setSelectedClassId('')
-    setParams('')
-    refetch()
-  }
+    form.reset();
+    setSelectedStudentId("");
+    // Keep classId in params when clearing
+    if (classId) {
+      setParams(`?classId=${encodeURIComponent(classId)}`);
+    } else {
+      setParams("");
+    }
+    refetch();
+  };
 
   const getPaymentMethodLabel = (value: number) => {
     switch (value) {
@@ -134,64 +136,75 @@ const ViewStudentFeeForm = ({
       paymentMethod: fee.paymentMethod,
       reference: fee.reference || '-',
     }
+  };
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600')
-    if (!printWindow) return
+  const handlePrint = (fee: Istudentfeesummary) => {
+    const data: IPaymentRecord = {
+      studentid: fee.studentId,         
+      classid: fee.classId,            
+      amountPaid: fee.paidAmount,       
+      paymentDate: fee.paymentDate || new Date().toISOString(),
+      paymentMethod: fee.paymentMethod, 
+      reference: fee.reference || "-",  
+    };
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
 
     printWindow.document.write(`
-    <html>
-      <head>
-        <title>Payment Receipt</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .receipt { width: 700px; border: 1px solid #000; padding: 10px; font-size: 12px; }
-          .header { text-align: center; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 6px; }
-          table { width: 100%; border-collapse: collapse; }
-          td { border: 1px solid #000; padding: 4px; }
-          .footer { margin-top: 30px; display: flex; justify-content: space-between; }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <h3>Lumbini Academy Pvt. Ltd</h3>
-            <div>STUDENT PAYMENT RECEIPT</div>
+      <html>
+        <head>
+          <title>Payment Receipt</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .receipt { width: 700px; border: 1px solid #000; padding: 10px; font-size: 12px; }
+            .header { text-align: center; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 6px; }
+            table { width: 100%; border-collapse: collapse; }
+            td { border: 1px solid #000; padding: 4px; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; }
+          </style>
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="header">
+              <h3>Lumbini Academy Pvt. Ltd</h3>
+              <div>STUDENT PAYMENT RECEIPT</div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Date: <b>${data.paymentDate}</b></span>
+              <span>Method: <b>${data.paymentMethod}</b></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Student ID: <b>${data.studentid}</b></span>
+              <span>Class ID: <b>${data.classid}</b></span>
+            </div>
+
+            <div style="margin-bottom:6px;">Reference: <b>${data.reference}</b></div>
+
+            <table>
+              <tbody>
+                <tr>
+                  <td>Amount Paid</td>
+                  <td><b>${data.amountPaid}</b></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="footer">
+              <span>Cashier Signature</span>
+              <span>Authorized By</span>
+            </div>
           </div>
+        </body>
+      </html>
+    `);
 
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Date: <b>${data.paymentDate}</b></span>
-            <span>Method: <b>${data.paymentMethod}</b></span>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Student ID: <b>${data.studentid}</b></span>
-            <span>Class ID: <b>${data.classid}</b></span>
-          </div>
-
-          <div style="margin-bottom:6px;">Reference: <b>${data.reference}</b></div>
-
-          <table>
-            <tbody>
-              <tr>
-                <td>Amount Paid</td>
-                <td><b>${data.amountPaid}</b></td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <span>Cashier Signature</span>
-            <span>Authorized By</span>
-          </div>
-        </div>
-      </body>
-    </html>
-  `)
-
-    printWindow.document.close()
-    printWindow.focus()
-    printWindow.print()
-  }
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   return (
     <>
@@ -217,12 +230,17 @@ const ViewStudentFeeForm = ({
                 null
               }
               onSelect={(student) => {
-                const id = student?.id ?? ''
-                setSelectedStudentId(id)
-                form.setValue('studentId', id)
-                const query = id ? `?studentId=${encodeURIComponent(id)}` : ''
-                setParams(query)
-                refetch()
+                const id = student?.id ?? "";
+                setSelectedStudentId(id);
+                form.setValue("studentId", id);
+              
+                const query = id 
+                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}` 
+                  : classId 
+                    ? `?classId=${encodeURIComponent(classId)}`
+                    : "";
+                setParams(query);
+                refetch();
               }}
               getLabel={(s) => (s ? `${s.firstName} ${s.lastName}` : '-')}
               getValue={(s) => s?.id ?? ''}
@@ -318,32 +336,23 @@ const ViewStudentFeeForm = ({
                 </td>
               </tr>
             ) : filteredStudentFee?.Items?.length ? (
-              filteredStudentFee.Items.map(
-                (fee: Istudentfeesummary, index: number) => (
-                  <tr key={index}>
-                    <td className="px-4 py-3">{index + 1}</td>
-                    <td className="px-4 py-3">
-                      {
-                        allClasses?.Items?.find((c) => c.id === fee.classId)
-                          ?.name
-                      }
-                    </td>
-                    <td className="px-4 py-3">{fee.paidAmount}</td>
-                    <td className="px-4 py-3">
-                      {getPaymentMethodLabel(fee.paymentMethod)}
-                    </td>
-                    <td className="px-4 py-3">{fee.totalAmount}</td>
-                    <td className="px-4 py-3">{fee.dueAmount}</td>
-                    <td className="px-4 py-3">
-                      <ButtonElement
-                        text=""
-                        icon={<Printer size={14} />}
-                        onClick={() => handlePrint(fee)}
-                      />
-                    </td>
-                  </tr>
-                )
-              )
+              filteredStudentFee.Items.map((fee: Istudentfeesummary, index: number) => (
+                <tr key={index}>
+                  <td className="px-4 py-3">{index + 1}</td>
+                  <td className="px-4 py-3">{allClasses?.Items?.find((c) => c.id === fee.classId)?.name}</td>
+                  <td className="px-4 py-3">{fee.paidAmount}</td>
+                  <td className="px-4 py-3">{getPaymentMethodLabel(fee.paymentMethod)}</td>
+                  <td className="px-4 py-3">{fee.totalAmount}</td>
+                  <td className="px-4 py-3">{fee.dueAmount}</td>
+                  <td className="px-4 py-3">
+                    <ButtonElement  
+                      text=""
+                      icon={<Printer size={14} />} 
+                      onClick={() => handlePrint(fee)} 
+                    />
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan={7} className="py-6 text-center text-gray-500">
@@ -364,4 +373,4 @@ const ViewStudentFeeForm = ({
   )
 }
 
-export default ViewStudentFeeForm
+export default ViewStudentFeeForm;
