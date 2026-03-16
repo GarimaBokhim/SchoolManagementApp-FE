@@ -9,10 +9,11 @@ const AcademicTeamEndPoints = {
   updateAcademicTeams: '/api/StaffControllers/UpdateAcademicTeams',
   getAcademicTeamsById: '/api/StaffControllers/GetAcademicTeamsBy',
   filterAcademicTeamByDate: '/api/StaffControllers/FilterAcademicTeam',
-  assignClass: '/api/StaffControllers/AssignClassDetails',
+  assignClass: '/api/StaffControllers/AssignClass',
   unAssignClass: '/api/StaffControllers/UnAssignClass',
   unAssignAllClass: '/api/StaffControllers/UnAssignAllClass',
   allschoolclass: '/api/Academics/all-SchoolClass',
+  assignClassDetails: '/api/StaffControllers/AssignClassDetails',
 }
 
 const queryKey = 'AcademicTeams'
@@ -192,6 +193,29 @@ export const useUnassignClass = () => {
     },
     onError: (error: Error) => {
       console.error('Error unassigning class/subject', error)
+    },
+  })
+}
+
+export const useGetAssignClassDetails = (params?: string) => {
+  return useQuery({
+    queryKey: [AssignQueryKey, params],
+    queryFn: async () => {
+      const url = params
+        ? `${AcademicTeamEndPoints.assignClassDetails}${params}`
+        : `${AcademicTeamEndPoints.assignClassDetails}`
+
+      const response = await api.get<IPaginationResponse<IAssignClass>>(url)
+
+      return (
+        response.data ?? {
+          items: [],
+          totalItems: 0,
+          pageIndex: 1,
+          pageSize: 10,
+          totalPages: 0,
+        }
+      )
     },
   })
 }
