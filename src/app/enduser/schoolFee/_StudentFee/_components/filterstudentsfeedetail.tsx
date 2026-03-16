@@ -18,9 +18,10 @@ import PaymentReceiptPrint from "./printpaymentrecordindividually";
 
 interface ViewStudentFeeFormProps {
   studentId?: string;
+  classId?: string;  // ADDED: classId prop
 }
 
-const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
+const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allStudents } = useGetAllStudents();
   const { data: allClasses } = useGetAllClass();
@@ -40,17 +41,20 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
 
   const { data: filteredStudentFee, refetch, isLoading } = useGetStudentFeesummary(params);
 
+  // UPDATED: useEffect now uses both studentId and classId
   useEffect(() => {
-    if (!studentId) return;
+    if (!studentId || !classId) return;  // Check both
+    
     queueMicrotask(()=>{
       setSelectedStudentId(studentId);
       setValue("studentId", studentId);
-      const query = `?studentId=${encodeURIComponent(studentId)}`;
+      // Include both in the query
+      const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`;
       setParams(query);
     })
   
     refetch();
-  }, [studentId]);
+  }, [studentId, classId]);  // Added classId to dependency array
 
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
     clearError();
@@ -59,6 +63,7 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
         formData.studentId && `studentId=${formData.studentId}`,
         formData.startDate && `startDate=${formData.startDate}`,
         formData.endDate && `endDate=${formData.endDate}`,
+        classId && `classId=${classId}`,  // ADDED: include classId in filter
       ].filter(Boolean).join("&");
 
       const fullQuery = queryParams ? `?${queryParams}` : "";
@@ -81,7 +86,12 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
   const onClear = () => {
     form.reset();
     setSelectedStudentId("");
-    setParams("");
+    // Keep classId in params when clearing
+    if (classId) {
+      setParams(`?classId=${encodeURIComponent(classId)}`);
+    } else {
+      setParams("");
+    }
     refetch();
   };
 
@@ -97,75 +107,73 @@ const ViewStudentFeeForm = ({ studentId }: ViewStudentFeeFormProps) => {
     }
   };
 
-const handlePrint = (fee: Istudentfeesummary) => {
-  const data: IPaymentRecord = {
-    studentid: fee.studentId,         
-    classid: fee.classId,            
-    amountPaid: fee.paidAmount,       
-    paymentDate: fee.paymentDate || new Date().toISOString(),
-    paymentMethod: fee.paymentMethod, 
-    reference: fee.reference || "-",  
+  const handlePrint = (fee: Istudentfeesummary) => {
+    const data: IPaymentRecord = {
+      studentid: fee.studentId,         
+      classid: fee.classId,            
+      amountPaid: fee.paidAmount,       
+      paymentDate: fee.paymentDate || new Date().toISOString(),
+      paymentMethod: fee.paymentMethod, 
+      reference: fee.reference || "-",  
+    };
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Payment Receipt</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .receipt { width: 700px; border: 1px solid #000; padding: 10px; font-size: 12px; }
+            .header { text-align: center; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 6px; }
+            table { width: 100%; border-collapse: collapse; }
+            td { border: 1px solid #000; padding: 4px; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; }
+          </style>
+        </head>
+        <body>
+          <div class="receipt">
+            <div class="header">
+              <h3>Lumbini Academy Pvt. Ltd</h3>
+              <div>STUDENT PAYMENT RECEIPT</div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Date: <b>${data.paymentDate}</b></span>
+              <span>Method: <b>${data.paymentMethod}</b></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Student ID: <b>${data.studentid}</b></span>
+              <span>Class ID: <b>${data.classid}</b></span>
+            </div>
+
+            <div style="margin-bottom:6px;">Reference: <b>${data.reference}</b></div>
+
+            <table>
+              <tbody>
+                <tr>
+                  <td>Amount Paid</td>
+                  <td><b>${data.amountPaid}</b></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="footer">
+              <span>Cashier Signature</span>
+              <span>Authorized By</span>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
-
-  const printWindow = window.open("", "_blank", "width=800,height=600");
-  if (!printWindow) return;
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Payment Receipt</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .receipt { width: 700px; border: 1px solid #000; padding: 10px; font-size: 12px; }
-          .header { text-align: center; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 6px; }
-          table { width: 100%; border-collapse: collapse; }
-          td { border: 1px solid #000; padding: 4px; }
-          .footer { margin-top: 30px; display: flex; justify-content: space-between; }
-        </style>
-      </head>
-      <body>
-        <div class="receipt">
-          <div class="header">
-            <h3>Lumbini Academy Pvt. Ltd</h3>
-            <div>STUDENT PAYMENT RECEIPT</div>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Date: <b>${data.paymentDate}</b></span>
-            <span>Method: <b>${data.paymentMethod}</b></span>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Student ID: <b>${data.studentid}</b></span>
-            <span>Class ID: <b>${data.classid}</b></span>
-          </div>
-
-          <div style="margin-bottom:6px;">Reference: <b>${data.reference}</b></div>
-
-          <table>
-            <tbody>
-              <tr>
-                <td>Amount Paid</td>
-                <td><b>${data.amountPaid}</b></td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <span>Cashier Signature</span>
-            <span>Authorized By</span>
-          </div>
-        </div>
-      </body>
-    </html>
-  `);
-
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-};
-
-
 
   return (
     <>
@@ -188,7 +196,12 @@ const handlePrint = (fee: Istudentfeesummary) => {
                 const id = student?.id ?? "";
                 setSelectedStudentId(id);
                 form.setValue("studentId", id);
-                const query = id ? `?studentId=${encodeURIComponent(id)}` : "";
+              
+                const query = id 
+                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}` 
+                  : classId 
+                    ? `?classId=${encodeURIComponent(classId)}`
+                    : "";
                 setParams(query);
                 refetch();
               }}
@@ -246,10 +259,9 @@ const handlePrint = (fee: Istudentfeesummary) => {
                   <td className="px-4 py-3">{fee.dueAmount}</td>
                   <td className="px-4 py-3">
                     <ButtonElement  
-                    text=""
-                    icon={<Printer size={14}  />
-                    } 
-                    onClick={() => handlePrint(fee)} 
+                      text=""
+                      icon={<Printer size={14} />} 
+                      onClick={() => handlePrint(fee)} 
                     />
                   </td>
                 </tr>
