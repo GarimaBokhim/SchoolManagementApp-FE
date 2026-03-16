@@ -1,39 +1,81 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Filter } from 'lucide-react'
-import { useGetAllConsultancyClasses } from '../../hooks'
+import { useRef, useState } from 'react'
+import { BookOpen, Filter, Plus } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
+import Pagination from '@/components/Pagination'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { ConsultancyClass, AddConsultancyClassPayload } from '../types/IClass'
-import { useClassMutations } from '../../hooks/useClassMutation'
+import { useGetAllConsultancyClasses } from '../hooks'
+import { useClassMutations } from '../hooks/useClassMutation'
 import { AddConsultancyClassModal } from './AddConsultenctClassModel'
 
 const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
   1: 'IELTS', 2: 'TOEFL', 3: 'PTE', 4: 'Other',
 }
 
-const AllClassesForm = () => {
-  const [queryParams, setQueryParams] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [showFilter, setShowFilter] = useState(false)
+interface FilterFormData {
+  startDate: string
+  endDate: string
+}
 
-  const { data, isLoading, refetch } = useGetAllConsultancyClasses(queryParams)
+const AllClassesForm = () => {
+  const { menuStatus } = usePermissions()
+  const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
+
+  const [openFilter, setOpenFilter] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [params, setParams] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const formRef = useRef<DateRangeFilterRef>(null)
+  const pageSize = 10
+
+  const form = useForm<FilterFormData>({
+    defaultValues: { startDate: '', endDate: '' },
+  })
+
+  const paginationForm = useForm({
+    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
+  })
+
+  const { data, isLoading, error, refetch } = useGetAllConsultancyClasses(params)
   const { handleAdd, handleDelete, handleEdit } = useClassMutations(refetch)
 
   const classes: ConsultancyClass[] = data?.Items ?? []
+  const totalPages = data?.TotalPages ?? 1
 
-  const handleFilter = () => {
-    const params = new URLSearchParams()
-    if (startDate) params.append('startDate', startDate)
-    if (endDate) params.append('endDate', endDate)
-    setQueryParams(params.toString())
+  const onFilterSubmit = async (formData: FilterFormData) => {
+    const queryParams = [
+      formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+      formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join('&')
+
+    const fullQuery = queryParams ? `&${queryParams}` : ''
+
+    await toast.promise(
+      (async () => {
+        setParams(fullQuery)
+        await refetch()
+      })(),
+      {
+        loading: 'Fetching data...',
+        success: 'Data fetched successfully!',
+      }
+    )
   }
 
-  const handleClear = () => {
-    setStartDate('')
-    setEndDate('')
-    setQueryParams('')
+  const handleClearFilters = () => {
+    form.reset({ startDate: '', endDate: '' })
+    setParams('')
+    formRef.current?.handleClear()
+    refetch()
   }
 
   const handleAddSubmit = async (payload: AddConsultancyClassPayload) => {
@@ -41,142 +83,187 @@ const AllClassesForm = () => {
     setIsAddModalOpen(false)
   }
 
+  if (error) {
+    return (
+      <div className="p-4 sm:p-6">
+        <Toaster position="top-right" />
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="text-center py-16">
+            <BookOpen size={64} className="mx-auto text-red-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+              Error loading classes
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">Please try again later.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
+      <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Classes</h2>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowFilter(!showFilter)}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
-              >
-                <Filter size={15} /> Filter
-              </button>
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
-              >
-                <Plus size={15} /> Add Class
-              </button>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold dark:text-white">All Classes</h1>
+            <div className="flex items-center space-x-3">
+              <ButtonElement
+                type="button"
+                text="Filter"
+                icon={<Filter size={14} />}
+                onClick={() => setOpenFilter(!openFilter)}
+                className="!bg-emerald-600 hover:!bg-emerald-700"
+              />
+              {canAdd && (
+                <ButtonElement
+                  icon={<Plus size={18} />}
+                  type="button"
+                  text="Add New"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="!font-semibold"
+                />
+              )}
             </div>
           </div>
 
-          {/* Filter */}
-          {showFilter && (
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#2a2b2e]">
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <button
-                  onClick={handleFilter}
-                  className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  Search
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
+          {/* Filter Panel */}
+          {openFilter && (
+            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <form
+                onSubmit={form.handleSubmit(onFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onFilterSubmit}
+                  setParams={setParams}
+                  startDateKey="startDate"
+                  endDateKey="endDate"
+                />
+              </form>
             </div>
           )}
 
           {/* Table */}
-          {isLoading ? (
-            <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-            </div>
-          ) : classes.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-sm">
-              No classes found.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-[#2a2b2e] text-gray-500 dark:text-gray-400 uppercase text-xs">
-                  <tr>
-                    <th className="px-6 py-3">S.N.</th>
-                    <th className="px-6 py-3">Class Name</th>
-                    <th className="px-6 py-3">Start Time</th>
-                    <th className="px-6 py-3">End Time</th>
-                    <th className="px-6 py-3">Batch</th>
-                    <th className="px-6 py-3">Proficiency</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Actions</th>
+          <div className="px-4 pb-4">
+            <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
+                    <th className="px-4 py-3 text-left">S.N</th>
+                    <th className="px-4 py-3 text-left">Class Name</th>
+                    <th className="px-4 py-3 text-left hidden md:table-cell">Start Time</th>
+                    <th className="px-4 py-3 text-left hidden md:table-cell">End Time</th>
+                    <th className="px-4 py-3 text-left hidden lg:table-cell">Batch</th>
+                    <th className="px-4 py-3 text-left hidden lg:table-cell">Proficiency</th>
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {classes.map((cls, index) => (
-                    <tr
-                      key={cls.id}
-                      className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
-                    >
-                      <td className="px-6 py-4 text-gray-500">{index + 1}</td>
-                      <td className="px-6 py-4 font-medium text-gray-800 dark:text-gray-100">{cls.name}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{cls.startTime}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{cls.endTime}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{cls.batch}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                        {ENGLISH_PROFICIENCY_LABELS[cls.englishProficiency] ?? cls.englishProficiency}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          cls.isActive
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                        }`}>
-                          {cls.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleEdit()}
-                            className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(cls.id)}
-                            className="text-xs text-red-500 hover:text-red-600 font-medium"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                  {classes.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="p-4 text-center italic text-gray-500 dark:text-gray-400"
+                      >
+                        No classes found.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    classes.map((cls, index) => (
+                      <tr
+                        key={cls.id}
+                        className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
+                      >
+                        <td className="px-4 py-3 text-gray-500">
+                          {(currentPage - 1) * pageSize + index + 1}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                          {cls.name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                          {cls.startTime}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                          {cls.endTime}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
+                          {cls.batch}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
+                          {ENGLISH_PROFICIENCY_LABELS[cls.englishProficiency] ?? cls.englishProficiency}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            cls.isActive
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {cls.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-center gap-3">
+                            {canEdit && (
+                              <button
+                                onClick={() => handleEdit()}
+                                className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => handleDelete(cls.id)}
+                                className="text-xs text-red-500 hover:text-red-600 font-medium"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Pagination */}
+        {classes.length > 0 && totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              form={paginationForm}
+              pagination={{
+                currentPage,
+                firstPage: 1,
+                lastPage: totalPages,
+                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
+                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+              }}
+              handleSearch={(p) => setCurrentPage(p.pageIndex)}
+            />
+          </div>
+        )}
       </div>
 
       <AddConsultancyClassModal

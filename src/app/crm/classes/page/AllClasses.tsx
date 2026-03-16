@@ -1,6 +1,5 @@
 "use client";
 
-import AllRegistrationForm from "@/app/enduser/(StudentManagement)/_Registration/components/AllRegistrationForm";
 import { useState } from "react";
 import AllClassesForm from "../class/components/AllClassForm";
 import AllRegistrationsForms from "../trainingRegistration/components/AllRegistrationForm";

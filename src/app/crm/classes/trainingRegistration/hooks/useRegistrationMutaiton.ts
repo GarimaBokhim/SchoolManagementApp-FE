@@ -1,6 +1,6 @@
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import { AddTrainingRegistrationPayload } from '../class/types/IClass'
+import { AddTrainingRegistrationPayload } from '../../class/types/IClass'
 
 export const useRegistrationMutations = (refetch: () => void) => {
   const handleAdd = async (payload: AddTrainingRegistrationPayload) => {

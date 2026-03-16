@@ -1,12 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
-import {
-  ConsultancyClass,
-  TrainingRegistration,
-  AddConsultancyClassPayload,
-  AddTrainingRegistrationPayload,
-} from '../class/types/IClass'
+import { AddConsultancyClassPayload, AddTrainingRegistrationPayload, ConsultancyClass, TrainingRegistration } from '../types/IClass'
+
 
 export const ClassEndPoints = {
   filterClasses: '/api/Enrolments/FilterConsultancyClasss',
@@ -55,7 +51,6 @@ export const useAddConsultancyClass = () => {
   })
 }
 
-// dropdown for registration modal
 export const useGetAllClassesDropdown = () => {
   return useQuery({
     queryKey: ['AllConsultancyClassesDropdown'],
@@ -102,5 +97,17 @@ export const useAddTrainingRegistration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [registrationQueryKey] })
     },
+  })
+}
+export const useGetAllApplicants = () => {
+  return useQuery({
+    queryKey: ['AllApplicants'],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
+        '/api/Enrolments/AllApplicant'
+      )
+      return response.data?.Items ?? []
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }

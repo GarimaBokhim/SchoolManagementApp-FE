@@ -1,6 +1,6 @@
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import { AddConsultancyClassPayload } from '../class/types/IClass'
+import { AddConsultancyClassPayload } from '../types/IClass'
 
 export const useClassMutations = (refetch: () => void) => {
   const handleAdd = async (payload: AddConsultancyClassPayload) => {

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { X } from 'lucide-react'
 import { AddTrainingRegistrationPayload } from '../../class/types/IClass'
-import { useGetAllClassesDropdown } from '../../hooks'
+import { useGetAllClassesDropdown } from '../../class/hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface Props {
