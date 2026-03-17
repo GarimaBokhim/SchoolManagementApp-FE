@@ -42,7 +42,7 @@ const AllSchoolAwardForm = () => {
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const fullQuery = query + (params || "");
-  const StudentAwardform = useForm<ISchoolAward>()
+  const StudentAwardform = useForm<ISchoolAward>();
   const { data, refetch, isLoading } = useFilterSchoolAwardByDate(fullQuery);
   const { data: allSchools } = useGetAllSchool();
   const { menuStatus } = usePermissions();
@@ -50,8 +50,8 @@ const AllSchoolAwardForm = () => {
   const deleteSchoolAward = useRemoveSchoolAward();
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-    const [ShowAwardPrint, setShowAwardPrint] = useState(false);
-    const [AwardId, setAwardId] = useState<string | null>(null);
+  const [ShowAwardPrint, setShowAwardPrint] = useState(false);
+  const [AwardId, setAwardId] = useState<string | null>(null);
 
   const form = useForm<IfilterSchoolAward>({
     defaultValues: {
@@ -67,38 +67,24 @@ const AllSchoolAwardForm = () => {
     refetch();
   }, [paginationParams, refetch]);
 
-const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
-  clearError();
-
-  try {
-    const queryParams = [
-      formData.startDate
-        ? `startDate=${encodeURIComponent(formData.startDate)}`
-        : null,
-      formData.endDate
-        ? `endDate=${encodeURIComponent(formData.endDate)}`
-        : null,
-    ]
-      .filter(Boolean)
-      .join("&");
-
-    setParams(queryParams ? `&${queryParams}` : "");
-  } catch (error) {
-    const errorMsg = handleError(error);
-    Toast.error(errorMsg);
-  }
-};
-
-
- 
-
-  const handleDelete = async (id: string) => {
+  const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
+    clearError();
     try {
-      await deleteSchoolAward.mutateAsync(id);
-      toast.success("School award deleted successfully!");
-      refetch();
-    } catch {
-      toast.error("Error deleting school award.");
+      const queryParams = [
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("&");
+
+      setParams(queryParams ? `&${queryParams}` : "");
+    } catch (error) {
+      const errorMsg = handleError(error);
+      Toast.error(errorMsg);
     }
   };
 
@@ -108,6 +94,10 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
     formRef.current?.handleClear();
     form.reset();
   };
+
+ 
+  const getSerialNumber = (index: number) =>
+    (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
 
   return (
     <>
@@ -150,7 +140,11 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
                   setParams={setParams}
                 />
                 <div className="flex gap-2 ml-auto">
-                  <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} />
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                  />
                   <ButtonElement
                     type="button"
                     text="Clear"
@@ -166,76 +160,99 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-3 text-center">S.N</th>
+                <tr className="bg-gray-100 dark:bg-gray-700">
+                  <th className="px-4 py-3 text-center w-16">S.N</th>
                   <th className="px-4 py-3 text-center">School</th>
                   <th className="px-4 py-3 text-center">Awarded By</th>
                   <th className="px-4 py-3 text-center">Description</th>
                   <th className="px-4 py-3 text-center">Awarded At</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
+                
+                  <th className="px-4 py-3 text-center w-28">Actions</th>
                 </tr>
               </thead>
               <tbody>
-              {isLoading ? (
-                    <tr>
-                        <td colSpan={5} className="p-4 text-center">
-                        Loading...
-                        </td>
-                    </tr>
-                    ) : data?.Items?.length ? (
-                    data.Items.map((award, index) => (
-                        <tr key={award.Id} className="border-t">
-                        <td className="px-4 py-2 text-center">{index + 1}</td>
-                        <td className="px-4 py-2 text-center"> { allSchools?.Items?.find(  (i) => i.id === award.schoolId )?.name}</td>
-                        <td className="px-4 py-2 text-center">{award.awardedBy}</td>
-                        <td className="px-4 py-2 text-center">{award.awardDescriptions}</td>
-                        <td className="px-4 py-2 text-center"> {new Date(award.awardedAt).toLocaleDateString()}</td>
-                       <td className="px-4 py-2  flex gap-2 items-center">
-                      {canDelete && award.Id && (
-                        <DeleteButton
-                          onConfirm={async () => {
-                            await deleteSchoolAward.mutateAsync(award.Id);
-                            toast.success("School award deleted successfully!");
-                          }}
-                          headerText={<Trash />}
-                          content="Are you sure you want to delete this School Award?"
-                        />
-                      )}
-                      <ButtonElement
-                        icon={<Printer size={14} />}
-                        text=""
-                        type="button"
-                        onClick={() => {
-                          setShowAwardPrint(true);
-                          setAwardId(
-                            data?.Items?.find((i) => i.Id === award.Id)?.Id || null
-                          );
-                        }}
-                        className="!text-xs"
-                      />
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center">
+                      Loading...
                     </td>
-
-                        </tr>
-                    ))
-                    ) : (
-                    <tr>
-                        <td colSpan={5} className="p-4 text-center italic">
-                        No School Awards found.
-                        </td>
+                  </tr>
+                ) : data?.Items?.length ? (
+                  data.Items.map((award, index) => (
+                    <tr
+                      key={award.Id}
+                      className="border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                     
+                      <td className="px-4 py-3 text-center">
+                        {getSerialNumber(index)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {allSchools?.Items?.find(
+                          (i) => i.id === award.schoolId
+                        )?.name}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {award.awardedBy}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {award.awardDescriptions}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {new Date(award.awardedAt).toLocaleDateString()}
+                      </td>
+                 
+                      <td className="px-4 py-3 text-center w-28">
+                        <div className="flex items-center justify-center gap-2">
+                          {canDelete && award.Id && (
+                            <DeleteButton
+                              onConfirm={async () => {
+                                await deleteSchoolAward.mutateAsync(award.Id);
+                                toast.success(
+                                  "School award deleted successfully!"
+                                );
+                              }}
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this School Award?"
+                            />
+                          )}
+                          <ButtonElement
+                            icon={<Printer size={14} />}
+                            text=""
+                            type="button"
+                            onClick={() => {
+                              setShowAwardPrint(true);
+                              setAwardId(
+                                data?.Items?.find((i) => i.Id === award.Id)
+                                  ?.Id || null
+                              );
+                            }}
+                            className="!text-xs"
+                          />
+                        </div>
+                      </td>
                     </tr>
-                    )}
-
-
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center italic text-gray-500 dark:text-gray-400"
+                    >
+                      No School Awards found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-            {data && data?.Items?.length > 0 && (
+        {data && data?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={form}
-              pagination={{         
+              pagination={{
                 currentPage: data.PageIndex,
                 firstPage: data.FirstPage,
                 lastPage: data.LastPage,
@@ -246,7 +263,8 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
             />
           </div>
         )}
-         {ShowAwardPrint && (
+
+        {ShowAwardPrint && (
           <SchoolAwardCertificate
             visible={ShowAwardPrint}
             onClose={() => setShowAwardPrint(false)}
@@ -254,7 +272,11 @@ const onSubmit: SubmitHandler<IfilterSchoolAward> = async (formData) => {
           />
         )}
 
-        <AddschoolAward form={StudentAwardform} visible={addModal} onClose={() => setAddModal(false)} />
+        <AddschoolAward
+          form={StudentAwardform}
+          visible={addModal}
+          onClose={() => setAddModal(false)}
+        />
       </div>
     </>
   );
