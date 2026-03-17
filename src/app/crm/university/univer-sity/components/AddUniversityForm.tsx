@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X, Save } from 'lucide-react'
+import { X, Save, Plus } from 'lucide-react'
 import { UseFormReturn } from 'react-hook-form'
 import { api } from '@/utils/instance'
 import toast from 'react-hot-toast'
@@ -10,6 +10,8 @@ import { useGetAllCountries } from '../hooks'
 import { ICountry } from '../types/ICountry'
 import { IUniversityFormData } from '../types/IUniversity'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { useQueryClient } from '@tanstack/react-query'
+import { AddCountryPopup } from './AddCountryPopUp'
 
 interface AddUniversityFormProps {
   form: UseFormReturn<IUniversityFormData>
@@ -32,9 +34,16 @@ export const AddUniversityForm: React.FC<AddUniversityFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null)
+  const [isAddCountryPopupOpen, setIsAddCountryPopupOpen] = useState(false)
   const { handleError, clearError } = useErrorHandler()
+  const queryClient = useQueryClient()
 
   const { data: countryList } = useGetAllCountries()
+
+  const handleCountryAdded = () => {
+    // Invalidate and refetch countries
+    queryClient.invalidateQueries({ queryKey: ['Countries'] })
+  }
 
   const handleSubmit = async (data: IUniversityFormData) => {
     clearError()
@@ -65,6 +74,12 @@ export const AddUniversityForm: React.FC<AddUniversityFormProps> = ({
 
   return (
     <fieldset disabled={isSubmitting} className="min-w-0">
+      <AddCountryPopup
+        isOpen={isAddCountryPopupOpen}
+        onClose={() => setIsAddCountryPopupOpen(false)}
+        onSuccess={handleCountryAdded}
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
           Add New University
@@ -104,11 +119,21 @@ export const AddUniversityForm: React.FC<AddUniversityFormProps> = ({
             />
           </div>
 
-          {/* Country combobox */}
+          {/* Country combobox with plus icon */}
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>
-              Country <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Country <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsAddCountryPopupOpen(true)}
+                className="p-1 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors"
+                title="Add new country"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
             <AppCombobox
               label="Select Country"
               name="countryId"
