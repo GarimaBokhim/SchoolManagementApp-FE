@@ -1,33 +1,45 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client'
 
-import { useEffect, useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import toast, { Toaster } from "react-hot-toast";
-import { Filter, Printer, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from 'react'
+import { useForm, SubmitHandler } from 'react-hook-form'
+import toast, { Toaster } from 'react-hot-toast'
+import { Filter, Printer, RotateCcw } from 'lucide-react'
 
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { InputElement } from "@/components/Input/InputElement";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { InputElement } from '@/components/Input/InputElement'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
 
-import { IFilterStudentFee, IPaymentRecord, Istudentfeesummary } from "../types/IStudentFee";
-import { useGetStudentFeesummary } from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import PaymentReceiptPrint from "./printpaymentrecordindividually";
+import {
+  IFilterStudentFee,
+  IPaymentRecord,
+  Istudentfeesummary,
+} from '../types/IStudentFee'
+import { useGetStudentFeesummary } from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import PaymentReceiptPrint from './printpaymentrecordindividually'
+import { useReactToPrint } from 'react-to-print'
 
 interface ViewStudentFeeFormProps {
   studentId?: string;
   classId?: string;  // ADDED: classId prop
 }
 
-const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => {
-  const { handleError, clearError } = useErrorHandler();
-  const { data: allStudents } = useGetAllStudents();
-  const { data: allClasses } = useGetAllClass();
-  const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [params, setParams] = useState("");
-  const [printData, setPrintData] = useState<IPaymentRecord | null>(null);
+const ViewStudentFeeForm = ({
+  studentId,
+  classId,
+}: ViewStudentFeeFormProps) => {
+  const { handleError, clearError } = useErrorHandler()
+
+  const { data: allClasses } = useGetAllClass()
+  const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [selectedClassId, setSelectedClassId] = useState('')
+  const { data: allStudents } = useGetStudentByClass(selectedClassId)
+  const [params, setParams] = useState('')
+  const componentRef = useRef<HTMLDivElement>(null)
+  const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
@@ -35,7 +47,10 @@ const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => 
       startDate: "",
       endDate: "",
     },
-  });
+  })
+  const handlePrintComponent = useReactToPrint({
+    contentRef: componentRef,
+  })
 
   const { setValue } = form;
 
@@ -117,63 +132,12 @@ const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => 
       reference: fee.reference || "-",  
     };
 
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (!printWindow) return;
+    setPrintData(data)
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Payment Receipt</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .receipt { width: 700px; border: 1px solid #000; padding: 10px; font-size: 12px; }
-            .header { text-align: center; border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 6px; }
-            table { width: 100%; border-collapse: collapse; }
-            td { border: 1px solid #000; padding: 4px; }
-            .footer { margin-top: 30px; display: flex; justify-content: space-between; }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div class="header">
-              <h3>Lumbini Academy Pvt. Ltd</h3>
-              <div>STUDENT PAYMENT RECEIPT</div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span>Date: <b>${data.paymentDate}</b></span>
-              <span>Method: <b>${data.paymentMethod}</b></span>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span>Student ID: <b>${data.studentid}</b></span>
-              <span>Class ID: <b>${data.classid}</b></span>
-            </div>
-
-            <div style="margin-bottom:6px;">Reference: <b>${data.reference}</b></div>
-
-            <table>
-              <tbody>
-                <tr>
-                  <td>Amount Paid</td>
-                  <td><b>${data.amountPaid}</b></td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="footer">
-              <span>Cashier Signature</span>
-              <span>Authorized By</span>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  };
+    setTimeout(() => {
+      handlePrintComponent?.()
+    }, 100)
+  }
 
   return (
     <>
@@ -274,10 +238,11 @@ const ViewStudentFeeForm = ({ studentId, classId }: ViewStudentFeeFormProps) => 
           </tbody>
         </table>
       </div>
-
       {printData && (
-        <div style={{ position: "absolute", left: "-9999px" }}>
-          <PaymentReceiptPrint data={printData} />
+        <div style={{ display: 'none' }}>
+          <div ref={componentRef}>
+            <PaymentReceiptPrint data={printData} />
+          </div>
         </div>
       )}
     </>

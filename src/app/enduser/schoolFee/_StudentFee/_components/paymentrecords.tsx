@@ -1,19 +1,20 @@
-"use client";
+'use client'
 
-import { useForm, SubmitHandler } from "react-hook-form";
-import toast, { Toaster } from "react-hot-toast";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { InputElement } from "@/components/Input/InputElement";
-import { useAddPaymentRecord } from "../hooks";
-import { IPaymentRecord } from "../types/IStudentFee";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { useState } from "react";
-import PaymentReceiptPrint from "./printpaymentrecordindividually";
+import { useForm, SubmitHandler } from 'react-hook-form'
+import toast, { Toaster } from 'react-hot-toast'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { InputElement } from '@/components/Input/InputElement'
+import { useAddPaymentRecord } from '../hooks'
+import { IPaymentRecord } from '../types/IStudentFee'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { useState, useRef, useCallback } from 'react'
+import PaymentReceiptPrint from './printpaymentrecordindividually'
+import { useReactToPrint } from 'react-to-print'
 
 interface PaymentRecordFormProps {
-  classid: string; 
-  studentid: string;
-  onClose?: () => void;
+  classid: string
+  studentid: string
+  onClose?: () => void
 }
 
 const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
@@ -21,61 +22,70 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
   classid,
   onClose,
 }) => {
-  const { handleError, clearError } = useErrorHandler();
-  const [printData, setPrintData] = useState<IPaymentRecord | null>(null);
+  const { handleError, clearError } = useErrorHandler()
+  const { mutate: addPayment, isPending } = useAddPaymentRecord()
 
-  const { mutate: addPayment, isPending } = useAddPaymentRecord();
+  const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
+  const componentRef = useRef<HTMLDivElement>(null)
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+  })
+
+  const handleReadyToPrint = useCallback(() => {
+    setTimeout(() => {
+      handlePrint()
+    }, 100)
+  }, [handlePrint])
 
   const form = useForm<IPaymentRecord>({
     defaultValues: {
       studentid,
-      classid, 
+      classid,
       amountPaid: 0,
-      paymentDate: new Date().toISOString().split("T")[0],
+      paymentDate: new Date().toISOString().split('T')[0],
       paymentMethod: 1,
-      reference: "",
+      reference: '',
     },
-  });
+  })
 
   const onSubmit: SubmitHandler<IPaymentRecord> = (data) => {
-    clearError();
+    clearError()
 
     if (data.amountPaid <= 0) {
-      toast.error("Amount must be greater than zero");
-      return;
+      toast.error('Amount must be greater than zero')
+      return
     }
 
     addPayment(data, {
       onSuccess: () => {
-        toast.success("Payment recorded successfully!");
+        toast.success('Payment recorded successfully!')
 
-        setPrintData(data);
-
-        setTimeout(() => {
-          window.print();
-        }, 300);
+        // ✅ trigger print flow
+        setPrintData(data)
 
         form.reset({
           studentid,
           classid,
           amountPaid: 0,
-          paymentDate: new Date().toISOString().split("T")[0],
+          paymentDate: new Date().toISOString().split('T')[0],
           paymentMethod: 1,
-          reference: "",
-        });
+          reference: '',
+        })
 
-        if (onClose) onClose();
+        onClose?.()
       },
       onError: (error) => {
-        toast.error(handleError(error) || "Failed to record payment");
+        toast.error(handleError(error) || 'Failed to record payment')
       },
-    });
-  };
+    })
+  }
 
   return (
     <>
       <Toaster position="top-right" />
 
+      {/* FORM */}
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 no-print">
         <div className="w-full max-w-md bg-white rounded-2xl border shadow-lg">
           <div className="px-6 py-4 border-b">
@@ -96,7 +106,7 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
               required
             />
 
-            <input type="hidden" {...form.register("classid")} />
+            <input type="hidden" {...form.register('classid')} />
 
             <InputElement
               label="Amount *"
@@ -107,7 +117,7 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
             />
 
             <select
-              {...form.register("paymentMethod", { valueAsNumber: true })}
+              {...form.register('paymentMethod', { valueAsNumber: true })}
               className="h-[42px] px-3 border rounded-md"
             >
               <option value={0}>Cash</option>
@@ -127,16 +137,34 @@ const PaymentRecordForm: React.FC<PaymentRecordFormProps> = ({
 
             <ButtonElement
               type="submit"
-              text={isPending ? "Adding..." : "Add Payment"}
+              text={isPending ? 'Adding...' : 'Add Payment'}
               disabled={isPending}
             />
           </form>
         </div>
       </div>
 
-      {printData && <PaymentReceiptPrint data={printData} />}
+      {/* PRINT AREA (hidden) */}
+      {printData && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          <div ref={componentRef}>
+            <PaymentReceiptPrint
+              data={printData}
+              onReady={handleReadyToPrint}
+            />
+          </div>
+        </div>
+      )}
     </>
-  );
-};
+  )
+}
 
-export default PaymentRecordForm;
+export default PaymentRecordForm
