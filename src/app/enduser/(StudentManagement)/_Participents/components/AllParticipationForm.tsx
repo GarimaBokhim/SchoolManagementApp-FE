@@ -13,10 +13,23 @@ import AddParticipationModal from './AddParticipationModel'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { IFilterActivityByDate, Participation } from '../../_Activities/types/IActivities'
-import { useFilterParticipation, useGetAllActivitiesDropdown, useGetAllStudents } from '../../_Activities/hooks'
+import {
+  useFilterParticipation,
+  useGetAllActivitiesDropdown,
+  useGetAllStudents,
+} from '../../_Activities/hooks'
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
-  1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd',
+  1: 'First Place',
+  2: 'Second Place',
+  3: 'Third Place',
+  4: 'Runner Up',
+  5: 'Honorable Mention',
+  6: 'Gold Standard',
+  7: 'Creative Excellence',
+  8: 'Best Team Leader',
+  9: 'Active Participant',
+  10: 'Outstanding Efforts',
 }
 
 const AllParticipationForm = () => {
@@ -24,9 +37,16 @@ const AllParticipationForm = () => {
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 10, pageIndex: 1, isPagination: true,
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
   })
-  type SearchParam = { pageSize: number; pageIndex: number; isPagination: boolean }
+
+  type SearchParam = {
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
 
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize
@@ -169,7 +189,7 @@ const AllParticipationForm = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
                       Loading Participations...
                     </td>
                   </tr>
@@ -179,22 +199,19 @@ const AllParticipationForm = () => {
                       key={p.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-2 px-4">{index + 1}</td>
-
-                      {/* ✅ Student full name instead of ID */}
-                      <td className="py-2 px-4 font-medium">
+                      <td className="px-4 py-3 text-left">
+                        {((filteredParticipation?.PageIndex - 1) * paginationParams.pageSize) + index + 1}
+                      </td>
+                      <td className="px-4 py-3 text-left font-medium">
                         {studentMap[p.studentId] ?? p.studentId}
                       </td>
-
-                      {/* ✅ Activity name instead of ID */}
-                      <td className="py-2 px-4 hidden md:table-cell">
+                      <td className="px-4 py-3 text-left hidden md:table-cell">
                         {activityMap[p.activityId] ?? p.activityId}
                       </td>
-
-                      <td className="py-2 px-4 hidden lg:table-cell">
+                      <td className="px-4 py-3 text-left hidden lg:table-cell">
                         {AWARD_POSITION_LABELS[p.awardPosition] ?? `Position ${p.awardPosition}`}
                       </td>
-                      <td className="py-2 px-4 text-center">
+                      <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           p.isActive
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -203,7 +220,7 @@ const AllParticipationForm = () => {
                           {p.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="py-2 px-4">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex justify-center gap-2">
                           {canEdit && (
                             <ButtonElement
@@ -227,7 +244,7 @@ const AllParticipationForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500 italic">
                       No participations found.
                     </td>
                   </tr>

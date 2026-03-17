@@ -16,7 +16,14 @@ import { Toast } from '@/components/Toast/toast'
 import AddActivityModal from './AddActivitiesModel'
 
 const ACTIVITY_CATEGORY_LABELS: Record<number, string> = {
-  0: 'Sports', 1: 'Arts', 2: 'Music', 3: 'Other',
+  0: 'Sports',
+  1: 'Academics',
+  2: 'Creative Arts',
+  3: 'Environmental',
+  4: 'Performing Arts',
+  5: 'Technical',
+  6: 'Social Services',
+  7: 'Vocational',
 }
 
 const AllActivityForm = () => {
@@ -24,9 +31,16 @@ const AllActivityForm = () => {
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
   const [paginationParams, setPaginationParams] = useState({
-    pageSize: 10, pageIndex: 1, isPagination: true,
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
   })
-  type SearchParam = { pageSize: number; pageIndex: number; isPagination: boolean }
+
+  type SearchParam = {
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
 
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize
@@ -161,7 +175,7 @@ const AllActivityForm = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
                       Loading Activities...
                     </td>
                   </tr>
@@ -171,18 +185,20 @@ const AllActivityForm = () => {
                       key={activity.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-2 px-4">{index + 1}</td>
-                      <td className="py-2 px-4 font-medium">{activity.name}</td>
-                      <td className="py-2 px-4 hidden md:table-cell">
+                      {/* ✅ S.N. continues across pages */}
+                      <td className="px-4 py-3 text-left">
+                        {((filteredActivity?.PageIndex - 1) * paginationParams.pageSize) + index + 1}
+                      </td>
+                      <td className="px-4 py-3 text-left font-medium">
+                        {activity.name}
+                      </td>
+                      <td className="px-4 py-3 text-left hidden md:table-cell">
                         {ACTIVITY_CATEGORY_LABELS[activity.activityCategory] ?? activity.activityCategory}
                       </td>
-
-                      {/* ✅ Event name instead of ID */}
-                      <td className="py-2 px-4 hidden lg:table-cell">
+                      <td className="px-4 py-3 text-left hidden lg:table-cell">
                         {eventMap[activity.eventId] ?? activity.eventId}
                       </td>
-
-                      <td className="py-2 px-4 text-center">
+                      <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           activity.isActive
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -191,7 +207,7 @@ const AllActivityForm = () => {
                           {activity.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="py-2 px-4">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex justify-center gap-2">
                           {canEdit && (
                             <ButtonElement
@@ -215,7 +231,7 @@ const AllActivityForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500 italic">
                       No activities found.
                     </td>
                   </tr>

@@ -84,7 +84,7 @@ const AllUniversityForm = () => {
 
       await toast.promise(
         (async () => {
-          setParams(fullQuery); // updating params triggers the hook to refetch
+          setParams(fullQuery);
           await refetch();
         })(),
         {
@@ -101,7 +101,7 @@ const AllUniversityForm = () => {
 
   const handleClearFilters = () => {
     form.reset({ search: "", startDate: "", endDate: "" });
-    setParams(""); // ✅ clears params → hook fetches all
+    setParams("");
     formRef.current?.handleClear();
     refetch();
   };
@@ -190,7 +190,6 @@ const AllUniversityForm = () => {
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
-                {/* Date Range Quick Filters — Yesterday / 7 Days / This Month / This Year */}
                 <DateRangeFilter
                   ref={formRef}
                   form={form}
@@ -198,7 +197,6 @@ const AllUniversityForm = () => {
                   setParams={setParams}
                 />
 
-                {/* Search input + Filter/Clear buttons on the same row */}
                 <div className="flex flex-1 items-end gap-2 min-w-[200px]">
                   <div className="flex-1 flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -256,7 +254,8 @@ const AllUniversityForm = () => {
                       </div>
 
                       <div className="mb-3">
-                        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                        {/* ✅ FIX: justify-center centers all three items; ml-auto removed from button */}
+                        <div className="flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                           <MapPin
                             size={16}
                             className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
@@ -264,6 +263,18 @@ const AllUniversityForm = () => {
                           <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
                             {generateLocation(university)}
                           </p>
+                          {canAdd && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                console.log("Add country for university:", university.id);
+                              }}
+                              className="p-1 border border-emerald-600 dark:border-emerald-400 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors duration-150 flex-shrink-0"
+                              title="Add Country"
+                            >
+                              <Plus size={14} className="text-emerald-600 dark:text-emerald-400" />
+                            </button>
+                          )}
                         </div>
                       </div>
 
