@@ -18,13 +18,16 @@ import {
 import { useGetStudentFeesummary } from '../hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
-import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import {
+  useGetAllClass,
+  useGetClassById,
+} from '@/app/enduser/(Academics)/Class/hooks'
 import PaymentReceiptPrint from './printpaymentrecordindividually'
 import { useReactToPrint } from 'react-to-print'
 
 interface ViewStudentFeeFormProps {
-  studentId?: string;
-  classId?: string;  // ADDED: classId prop
+  studentId?: string
+  classId?: string // ADDED: classId prop
 }
 
 const ViewStudentFeeForm = ({
@@ -37,100 +40,114 @@ const ViewStudentFeeForm = ({
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [selectedClassId, setSelectedClassId] = useState('')
   const { data: allStudents } = useGetStudentByClass(selectedClassId)
+  const { data: allclasses } = useGetAllClass()
   const [params, setParams] = useState('')
   const componentRef = useRef<HTMLDivElement>(null)
   const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
-      studentId: "",
-      startDate: "",
-      endDate: "",
+      studentId: '',
+      startDate: '',
+      endDate: '',
     },
   })
   const handlePrintComponent = useReactToPrint({
     contentRef: componentRef,
   })
 
-  const { setValue } = form;
+  const { setValue } = form
 
-  const { data: filteredStudentFee, refetch, isLoading } = useGetStudentFeesummary(params);
+  const {
+    data: filteredStudentFee,
+    refetch,
+    isLoading,
+  } = useGetStudentFeesummary(params)
 
   // UPDATED: useEffect now uses both studentId and classId
   useEffect(() => {
-    if (!studentId || !classId) return;  // Check both
-    
-    queueMicrotask(()=>{
-      setSelectedStudentId(studentId);
-      setValue("studentId", studentId);
+    if (!studentId || !classId) return // Check both
+
+    queueMicrotask(() => {
+      setSelectedStudentId(studentId)
+      setValue('studentId', studentId)
       // Include both in the query
-      const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`;
-      setParams(query);
+      const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`
+      setParams(query)
     })
-  
-    refetch();
-  }, [studentId, classId]);  // Added classId to dependency array
+
+    refetch()
+  }, [studentId, classId]) // Added classId to dependency array
 
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.studentId && `studentId=${formData.studentId}`,
         formData.startDate && `startDate=${formData.startDate}`,
         formData.endDate && `endDate=${formData.endDate}`,
-        classId && `classId=${classId}`,  // ADDED: include classId in filter
-      ].filter(Boolean).join("&");
+        classId && `classId=${classId}`, // ADDED: include classId in filter
+      ]
+        .filter(Boolean)
+        .join('&')
 
-      const fullQuery = queryParams ? `?${queryParams}` : "";
+      const fullQuery = queryParams ? `?${queryParams}` : ''
 
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      toast.error(handleError(error));
+      toast.error(handleError(error))
     }
-  };
+  }
 
   const onClear = () => {
-    form.reset();
-    setSelectedStudentId("");
+    form.reset()
+    setSelectedStudentId('')
     // Keep classId in params when clearing
     if (classId) {
-      setParams(`?classId=${encodeURIComponent(classId)}`);
+      setParams(`?classId=${encodeURIComponent(classId)}`)
     } else {
-      setParams("");
+      setParams('')
     }
-    refetch();
-  };
+    refetch()
+  }
 
   const getPaymentMethodLabel = (value: number) => {
     switch (value) {
-      case 0: return "Cash";
-      case 1: return "Credit Card";
-      case 2: return "Debit Card";
-      case 3: return "Bank Transfer";
-      case 4: return "Mobile Payment";
-      case 5: return "Cheque";
-      default: return "Unknown";
+      case 0:
+        return 'Cash'
+      case 1:
+        return 'Credit Card'
+      case 2:
+        return 'Debit Card'
+      case 3:
+        return 'Bank Transfer'
+      case 4:
+        return 'Mobile Payment'
+      case 5:
+        return 'Cheque'
+      default:
+        return 'Unknown'
     }
-  };
+  }
 
   const handlePrint = (fee: Istudentfeesummary) => {
     const data: IPaymentRecord = {
-      studentid: fee.studentId,         
-      classid: fee.classId,            
-      amountPaid: fee.paidAmount,       
+      studentid: fee.studentId,
+      classid: fee.classId,
+      amountPaid: fee.paidAmount,
       paymentDate: fee.paymentDate || new Date().toISOString(),
-      paymentMethod: fee.paymentMethod, 
-      reference: fee.reference || "-",  
-    };
+      paymentMethod: fee.paymentMethod,
+      reference: fee.reference || '-',
+    }
 
     setPrintData(data)
 
@@ -145,7 +162,10 @@ const ViewStudentFeeForm = ({
 
       {/* FILTER FORM */}
       <div className="bg-white p-5 rounded-xl border shadow-sm mb-4 flex justify-center">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-start gap-3 w-full max-w-[900px] flex-wrap sm:flex-nowrap">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex items-start gap-3 w-full max-w-[900px] flex-wrap sm:flex-nowrap"
+        >
           <div className="flex-none w-[250px]">
             <AppCombobox
               value={selectedStudentId}
@@ -155,40 +175,96 @@ const ViewStudentFeeForm = ({
               name="studentId"
               form={form}
               options={allStudents?.Items ?? []}
-              selected={allStudents?.Items?.find((s) => s.id === selectedStudentId) ?? null}
+              selected={
+                allStudents?.Items?.find((s) => s.id === selectedStudentId) ??
+                null
+              }
               onSelect={(student) => {
-                const id = student?.id ?? "";
-                setSelectedStudentId(id);
-                form.setValue("studentId", id);
+                const id = student?.id ?? ''
+                setSelectedStudentId(id)
+                form.setValue('studentId', id)
                 // Keep classId in the query when changing student
-                const query = id 
-                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}` 
-                  : classId 
+                const query = id
+                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}`
+                  : classId
                     ? `?classId=${encodeURIComponent(classId)}`
-                    : "";
-                setParams(query);
-                refetch();
+                    : ''
+                setParams(query)
+                refetch()
               }}
-              getLabel={(s) => (s ? `${s.firstName} ${s.lastName}` : "-")}
-              getValue={(s) => s?.id ?? ""}
+              getLabel={(s) => (s ? `${s.firstName} ${s.lastName}` : '-')}
+              getValue={(s) => s?.id ?? ''}
+              className="h-[42px]"
+            />
+          </div>
+
+          <div className="flex-none w-[250px]">
+            <AppCombobox
+              value={selectedClassId}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              label="Class "
+              name="classId"
+              form={form}
+              options={allclasses?.Items ?? []}
+              selected={
+                allclasses?.Items?.find((s) => s.id === selectedClassId) ?? null
+              }
+              onSelect={(student) => {
+                const id = student?.id ?? ''
+                setSelectedClassId(id)
+                form.setValue('classId', id)
+                const query = id
+                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}`
+                  : classId
+                    ? `?classId=${encodeURIComponent(classId)}`
+                    : ''
+                setParams(query)
+                refetch()
+              }}
+              getLabel={(s) => (s ? `${s.name}` : '-')}
+              getValue={(s) => s?.id ?? ''}
               className="h-[42px]"
             />
           </div>
 
           <div className="flex-none w-[170px]">
-            <InputElement label="Start Date" inputType="date" name="startDate" form={form} className="w-full h-[42px]" />
+            <InputElement
+              label="Start Date"
+              inputType="date"
+              name="startDate"
+              form={form}
+              className="w-full h-[42px]"
+            />
           </div>
 
           <div className="flex-none w-[170px]">
-            <InputElement label="End Date" inputType="date" name="endDate" form={form} className="w-full h-[42px]" />
+            <InputElement
+              label="End Date"
+              inputType="date"
+              name="endDate"
+              form={form}
+              className="w-full h-[42px]"
+            />
           </div>
 
           <div className="flex-none">
-            <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} className="h-[42px] px-6 !bg-emerald-600 hover:!bg-emerald-700" />
+            <ButtonElement
+              type="submit"
+              text="Filter"
+              icon={<Filter size={14} />}
+              className="h-[42px] px-6 !bg-emerald-600 hover:!bg-emerald-700"
+            />
           </div>
 
           <div className="flex-none">
-            <ButtonElement type="button" text="Clear" icon={<RotateCcw size={14} />} onClick={onClear} className="h-[42px] px-6 !bg-gray-600 hover:!bg-gray-700" />
+            <ButtonElement
+              type="button"
+              text="Clear"
+              icon={<RotateCcw size={14} />}
+              onClick={onClear}
+              className="h-[42px] px-6 !bg-gray-600 hover:!bg-gray-700"
+            />
           </div>
         </form>
       </div>
@@ -210,29 +286,42 @@ const ViewStudentFeeForm = ({
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center">Loading...</td>
+                <td colSpan={7} className="py-6 text-center">
+                  Loading...
+                </td>
               </tr>
             ) : filteredStudentFee?.Items?.length ? (
-              filteredStudentFee.Items.map((fee: Istudentfeesummary, index: number) => (
-                <tr key={index}>
-                  <td className="px-4 py-3">{index + 1}</td>
-                  <td className="px-4 py-3">{allClasses?.Items?.find((c) => c.id === fee.classId)?.name}</td>
-                  <td className="px-4 py-3">{fee.paidAmount}</td>
-                  <td className="px-4 py-3">{getPaymentMethodLabel(fee.paymentMethod)}</td>
-                  <td className="px-4 py-3">{fee.totalAmount}</td>
-                  <td className="px-4 py-3">{fee.dueAmount}</td>
-                  <td className="px-4 py-3">
-                    <ButtonElement  
-                      text=""
-                      icon={<Printer size={14} />} 
-                      onClick={() => handlePrint(fee)} 
-                    />
-                  </td>
-                </tr>
-              ))
+              filteredStudentFee.Items.map(
+                (fee: Istudentfeesummary, index: number) => (
+                  <tr key={index}>
+                    <td className="px-4 py-3">{index + 1}</td>
+                    <td className="px-4 py-3">
+                      {
+                        allClasses?.Items?.find((c) => c.id === fee.classId)
+                          ?.name
+                      }
+                    </td>
+                    <td className="px-4 py-3">{fee.paidAmount}</td>
+                    <td className="px-4 py-3">
+                      {getPaymentMethodLabel(fee.paymentMethod)}
+                    </td>
+                    <td className="px-4 py-3">{fee.totalAmount}</td>
+                    <td className="px-4 py-3">{fee.dueAmount}</td>
+                    <td className="px-4 py-3">
+                      <ButtonElement
+                        text=""
+                        icon={<Printer size={14} />}
+                        onClick={() => handlePrint(fee)}
+                      />
+                    </td>
+                  </tr>
+                )
+              )
             ) : (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-gray-500">No data found</td>
+                <td colSpan={7} className="py-6 text-center text-gray-500">
+                  No data found
+                </td>
               </tr>
             )}
           </tbody>
@@ -246,7 +335,7 @@ const ViewStudentFeeForm = ({
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ViewStudentFeeForm;
+export default ViewStudentFeeForm
