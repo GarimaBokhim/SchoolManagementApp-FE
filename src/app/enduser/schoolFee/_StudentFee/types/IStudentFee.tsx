@@ -35,4 +35,5 @@ export interface filtersummary {
   startDate: string
   endDate: string
   studentId: string
+  classId: string
 }
