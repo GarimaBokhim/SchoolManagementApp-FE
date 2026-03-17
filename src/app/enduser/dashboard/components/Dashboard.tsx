@@ -62,12 +62,17 @@ const Dashboard: React.FC = () => {
   return (
     <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="p-6 flex flex-col gap-6">
+
+        {/* ✅ Top header section */}
         <SchoolInfoCard schoolId={schoolId} />
+
+        {/* ✅ QuickActions now appears right below the header */}
+        <QuickActions />
 
         <StatCard cards={cards} />
 
-        {/* Charts */}
-        <div className="flex gap-6 h-[28rem]">
+        {/* ✅ Charts — reduced height from h-[28rem] to h-[22rem] */}
+        <div className="flex gap-6 h-[22rem]">
           <div className="w-[70%]">
             <BarChartSection />
           </div>
@@ -159,7 +164,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-            <QuickActions />
       </div>
     </div>
   );

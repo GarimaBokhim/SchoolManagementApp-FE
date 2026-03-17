@@ -3,23 +3,36 @@
 import { useState } from 'react'
 import AllParticipation from '../../_Participents/pages/All'
 import AllActivity from '../../_Activities/pages/All'
+import EventSchedule from './static_event_page_for_now/EventSchedule'
+
 
 const AllCurricularActivities = () => {
   const tabs = [
+    { id: 'event', label: 'Event' },        
     { id: 'activity', label: 'Activity' },
     { id: 'participation', label: 'Participation' },
   ]
 
-  const [activeReport, setActiveReport] = useState<string>('activity')
+  const [activeReport, setActiveReport] = useState<string>('event')
 
   const renderReport = () => {
     switch (activeReport) {
+      case 'event':
+        return <EventSchedule />
       case 'activity':
-        return <div className="text-center"><AllActivity /></div>
+        return (
+          <div className="text-center">
+            <AllActivity />
+          </div>
+        )
       case 'participation':
-        return <div className="text-center"><AllParticipation /></div>
+        return (
+          <div className="text-center">
+            <AllParticipation />
+          </div>
+        )
       default:
-        return <div className="text-center"><AllActivity /></div>
+        return <EventSchedule />
     }
   }
 
