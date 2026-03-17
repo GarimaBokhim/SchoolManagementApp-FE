@@ -121,17 +121,21 @@ export const AddUniversityForm: React.FC<AddUniversityFormProps> = ({
 
           {/* Country combobox with plus icon */}
           <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-start gap-3 mb-1.5">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Country <span className="text-red-500">*</span>
               </label>
+              {/* Add Country button with square border */}
               <button
                 type="button"
                 onClick={() => setIsAddCountryPopupOpen(true)}
-                className="p-1 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors"
+                className="p-1 border border-gray-300 dark:border-gray-600 rounded-md 
+                         text-green-600 hover:text-green-700 dark:text-green-500 
+                         dark:hover:text-green-400 hover:bg-green-50 
+                         dark:hover:bg-green-900/20 transition-colors"
                 title="Add new country"
               >
-                <Plus size={18} />
+                <Plus size={16} />
               </button>
             </div>
             <AppCombobox
