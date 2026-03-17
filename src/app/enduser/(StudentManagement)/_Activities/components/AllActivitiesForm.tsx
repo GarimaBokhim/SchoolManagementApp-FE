@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ActivityIcon, Filter, Plus, RotateCcw } from 'lucide-react'
+import { Filter, Plus, RotateCcw } from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
@@ -9,10 +9,10 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import toast, { Toaster } from 'react-hot-toast'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useFilterActivity } from '../hooks'
+import { useFilterActivity, useGetAllEvents } from '../hooks'
+import { Activity, IFilterActivityByDate } from '../types/IActivities'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
-import { Activity, IFilterActivityByDate } from '../types/IActivities'
 import AddActivityModal from './AddActivitiesModel'
 
 const ACTIVITY_CATEGORY_LABELS: Record<number, string> = {
@@ -49,6 +49,10 @@ const AllActivityForm = () => {
   const handleSubmitForm = useForm<SearchParam>({ defaultValues: {} })
 
   const { data: filteredActivity, refetch, isLoading } = useFilterActivity(fullQuery)
+
+  // ✅ Event lookup map
+  const { data: events = [] } = useGetAllEvents()
+  const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
   const onSubmit: SubmitHandler<IFilterActivityByDate> = async (formData) => {
     clearError()
@@ -149,7 +153,7 @@ const AllActivityForm = () => {
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Activity Name</th>
                   <th className="px-4 py-3 text-left hidden md:table-cell">Category</th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">Event ID</th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">Event</th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
@@ -172,9 +176,12 @@ const AllActivityForm = () => {
                       <td className="py-2 px-4 hidden md:table-cell">
                         {ACTIVITY_CATEGORY_LABELS[activity.activityCategory] ?? activity.activityCategory}
                       </td>
-                      <td className="py-2 px-4 font-mono text-xs hidden lg:table-cell">
-                        {activity.eventId}
+
+                      {/* ✅ Event name instead of ID */}
+                      <td className="py-2 px-4 hidden lg:table-cell">
+                        {eventMap[activity.eventId] ?? activity.eventId}
                       </td>
+
                       <td className="py-2 px-4 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           activity.isActive

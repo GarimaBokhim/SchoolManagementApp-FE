@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { X } from 'lucide-react'
+
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { useGetAllActivitiesDropdown } from '../../_Activities/hooks'
+import toast from 'react-hot-toast'
+import { Toast } from '@/components/Toast/toast'
+import { useAddParticipation, useGetAllActivitiesDropdown } from '../../_Activities/hooks'
 import { AddParticipationPayload } from '../../_Activities/types/IActivities'
 
 interface Props {
@@ -16,8 +19,8 @@ interface Props {
 const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<any>(null)
-  const { useAddParticipation } = require('../hooks')
-  const { mutateAsync: addParticipation } = useAddParticipation()
+
+  const { mutateAsync: addParticipation } = useAddParticipation() 
   const { data: activities = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
 
   const {
@@ -41,9 +44,12 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
     setIsSubmitting(true)
     try {
       await addParticipation(data)
+      toast.success('Participation added successfully!')
       reset()
       setSelectedActivity(null)
       onSuccess()
+    } catch {
+      Toast.error('Error adding participation.')
     } finally {
       setIsSubmitting(false)
     }

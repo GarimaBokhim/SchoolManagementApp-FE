@@ -9,11 +9,11 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import toast, { Toaster } from 'react-hot-toast'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddParticipationModal from './AddParticipationModel'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { IFilterActivityByDate, Participation } from '../../_Activities/types/IActivities'
-import { useFilterParticipation, useGetAllActivitiesDropdown } from '../../_Activities/hooks'
-import AddParticipationModal from './AddParticipationModel'
+import { useFilterParticipation, useGetAllActivitiesDropdown, useGetAllStudents } from '../../_Activities/hooks'
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
   1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd',
@@ -50,9 +50,17 @@ const AllParticipationForm = () => {
 
   const { data: filteredParticipation, refetch, isLoading } = useFilterParticipation(fullQuery)
 
-  // ✅ Resolve activity names
+  // ✅ Lookup maps — id → name
   const { data: activities = [] } = useGetAllActivitiesDropdown()
+  const { data: students = [] } = useGetAllStudents()
+
   const activityMap = Object.fromEntries(activities.map((a) => [a.id, a.name]))
+  const studentMap = Object.fromEntries(
+    students.map((s) => [
+      s.id,
+      [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
+    ])
+  )
 
   const onSubmit: SubmitHandler<IFilterActivityByDate> = async (formData) => {
     clearError()
@@ -151,7 +159,7 @@ const AllParticipationForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Student ID</th>
+                  <th className="px-4 py-3 text-left">Student Name</th>
                   <th className="px-4 py-3 text-left hidden md:table-cell">Activity</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Award Position</th>
                   <th className="px-4 py-3 text-center">Status</th>
@@ -172,10 +180,17 @@ const AllParticipationForm = () => {
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
                       <td className="py-2 px-4">{index + 1}</td>
-                      <td className="py-2 px-4 font-mono text-xs">{p.studentId}</td>
+
+                      {/* ✅ Student full name instead of ID */}
+                      <td className="py-2 px-4 font-medium">
+                        {studentMap[p.studentId] ?? p.studentId}
+                      </td>
+
+                      {/* ✅ Activity name instead of ID */}
                       <td className="py-2 px-4 hidden md:table-cell">
                         {activityMap[p.activityId] ?? p.activityId}
                       </td>
+
                       <td className="py-2 px-4 hidden lg:table-cell">
                         {AWARD_POSITION_LABELS[p.awardPosition] ?? `Position ${p.awardPosition}`}
                       </td>

@@ -99,3 +99,31 @@ export const useAddParticipation = () => {
     },
   })
 }
+
+export const useGetAllStudents = () => {
+  return useQuery({
+    queryKey: ['AllStudents'],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{
+        id: string
+        firstName: string
+        middleName: string
+        lastName: string
+      }>>('/api/Student/all-Students')
+      return response.data?.Items ?? []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+export const useGetAllEvents = () => {
+  return useQuery({
+    queryKey: ['AllEvents'],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{ id: string; title: string }>>(
+        '/api/Academics/GetAllEvents'
+      )
+      return response.data?.Items ?? []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
