@@ -24,7 +24,11 @@ const EditTemplate = ({ visible, onClose, TemplateId }: Props) => {
   if (!visible) return null;
 
   return (
-    <EditTemplateForm form={form} onClose={onClose} TemplateId={TemplateId} />
+   <EditTemplateForm
+  form={form}
+  onClose={onClose}
+  certificateTemplateId={TemplateId}
+/>
   );
 };
 
