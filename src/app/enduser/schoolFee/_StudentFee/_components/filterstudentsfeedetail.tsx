@@ -27,7 +27,7 @@ import { useReactToPrint } from 'react-to-print'
 
 interface ViewStudentFeeFormProps {
   studentId?: string
-  classId?: string // ADDED: classId prop
+  classId?: string
 }
 
 const ViewStudentFeeForm = ({
@@ -52,6 +52,7 @@ const ViewStudentFeeForm = ({
       endDate: '',
     },
   })
+
   const handlePrintComponent = useReactToPrint({
     contentRef: componentRef,
   })
@@ -64,20 +65,18 @@ const ViewStudentFeeForm = ({
     isLoading,
   } = useGetStudentFeesummary(params)
 
-  // UPDATED: useEffect now uses both studentId and classId
   useEffect(() => {
-    if (!studentId || !classId) return // Check both
+    if (!studentId || !classId) return
 
     queueMicrotask(() => {
       setSelectedStudentId(studentId)
       setValue('studentId', studentId)
-      // Include both in the query
       const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`
       setParams(query)
     })
 
     refetch()
-  }, [studentId, classId]) // Added classId to dependency array
+  }, [studentId, classId])
 
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
     clearError()
@@ -86,7 +85,7 @@ const ViewStudentFeeForm = ({
         formData.studentId && `studentId=${formData.studentId}`,
         formData.startDate && `startDate=${formData.startDate}`,
         formData.endDate && `endDate=${formData.endDate}`,
-        classId && `classId=${classId}`, // ADDED: include classId in filter
+        classId && `classId=${classId}`,
       ]
         .filter(Boolean)
         .join('&')
@@ -111,7 +110,6 @@ const ViewStudentFeeForm = ({
   const onClear = () => {
     form.reset()
     setSelectedStudentId('')
-    // Keep classId in params when clearing
     if (classId) {
       setParams(`?classId=${encodeURIComponent(classId)}`)
     } else {
@@ -122,27 +120,20 @@ const ViewStudentFeeForm = ({
 
   const getPaymentMethodLabel = (value: number) => {
     switch (value) {
-      case 0:
-        return 'Cash'
-      case 1:
-        return 'Credit Card'
-      case 2:
-        return 'Debit Card'
-      case 3:
-        return 'Bank Transfer'
-      case 4:
-        return 'Mobile Payment'
-      case 5:
-        return 'Cheque'
-      default:
-        return 'Unknown'
+      case 0: return 'Cash'
+      case 1: return 'Credit Card'
+      case 2: return 'Debit Card'
+      case 3: return 'Bank Transfer'
+      case 4: return 'Mobile Payment'
+      case 5: return 'Cheque'
+      default: return 'Unknown'
     }
   }
 
   const handlePrint = (fee: Istudentfeesummary) => {
     const data: IPaymentRecord = {
-      studentid: fee.studentId,
-      classid: fee.classId,
+      studentid: studentId ?? '',        // student id and class id is coming from props 
+      classid: classId ?? fee.classId,   
       amountPaid: fee.paidAmount,
       paymentDate: fee.paymentDate || new Date().toISOString(),
       paymentMethod: fee.paymentMethod,
@@ -183,7 +174,6 @@ const ViewStudentFeeForm = ({
                 const id = student?.id ?? ''
                 setSelectedStudentId(id)
                 form.setValue('studentId', id)
-                // Keep classId in the query when changing student
                 const query = id
                   ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}`
                   : classId
@@ -192,7 +182,13 @@ const ViewStudentFeeForm = ({
                 setParams(query)
                 refetch()
               }}
-              getLabel={(s) => (s ? `${s.firstName} ${s.lastName}` : '-')}
+              getLabel={(s) =>
+                s
+                  ? [s.firstName, s.middleName, s.lastName]
+                      .filter(Boolean)
+                      .join(' ')
+                  : '-'
+              }
               getValue={(s) => s?.id ?? ''}
               className="h-[42px]"
             />
@@ -203,21 +199,21 @@ const ViewStudentFeeForm = ({
               value={selectedClassId}
               dropDownWidth="w-full"
               dropdownPositionClass="absolute"
-              label="Class "
+              label="Class"
               name="classId"
               form={form}
               options={allclasses?.Items ?? []}
               selected={
                 allclasses?.Items?.find((s) => s.id === selectedClassId) ?? null
               }
-              onSelect={(student) => {
-                const id = student?.id ?? ''
+              onSelect={(cls) => {
+                const id = cls?.id ?? ''
                 setSelectedClassId(id)
                 form.setValue('classId', id)
                 const query = id
-                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}`
-                  : classId
-                    ? `?classId=${encodeURIComponent(classId)}`
+                  ? `?studentId=${encodeURIComponent(selectedStudentId)}&classId=${encodeURIComponent(id)}`
+                  : selectedStudentId
+                    ? `?studentId=${encodeURIComponent(selectedStudentId)}`
                     : ''
                 setParams(query)
                 refetch()
@@ -296,10 +292,7 @@ const ViewStudentFeeForm = ({
                   <tr key={index}>
                     <td className="px-4 py-3">{index + 1}</td>
                     <td className="px-4 py-3">
-                      {
-                        allClasses?.Items?.find((c) => c.id === fee.classId)
-                          ?.name
-                      }
+                      {allClasses?.Items?.find((c) => c.id === fee.classId)?.name ?? '-'}
                     </td>
                     <td className="px-4 py-3">{fee.paidAmount}</td>
                     <td className="px-4 py-3">

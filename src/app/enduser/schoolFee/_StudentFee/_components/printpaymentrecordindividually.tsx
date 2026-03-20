@@ -21,7 +21,9 @@ const paymentMethods: Record<number, string> = {
 
 const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: schools } = useGetAllSchool()
-  const { data: students } = useGetAllStudents()
+
+  // ✅ Fetch all students without pagination so .find() works reliably
+  const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
   const isReady = schools?.Items?.length && students?.Items?.length && classData
@@ -34,15 +36,23 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
 
   const schoolName = schools?.Items?.[0]?.name ?? ''
 
+  // ✅ Full name — firstName + middleName + lastName
   const studentName = useMemo(() => {
-    return (
-      students?.Items?.find((s) => s.id === data.studentid)?.firstName ?? '-'
-    )
+    const student = students?.Items?.find((s) => s.id === data.studentid)
+    if (!student) return '-'
+    return [student.firstName, student.middleName, student.lastName]
+      .filter(Boolean)
+      .join(' ')
   }, [students, data.studentid])
+
+  // ✅ Formatted date
+  const formattedPaymentDate = data.paymentDate
+    ? new Date(data.paymentDate).toISOString().split('T')[0]
+    : '-'
 
   const receiptData = {
     schoolName,
-    paymentDate: data.paymentDate,
+    paymentDate: formattedPaymentDate,
     paymentMethod: paymentMethods[data.paymentMethod] ?? '-',
     studentName,
     className: classData?.name ?? '-',
@@ -50,7 +60,7 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     amountPaid: data.amountPaid,
   }
 
-  if (!isReady) return null // ⛔ prevent premature render
+  if (!isReady) return null
 
   return (
     <div
@@ -63,8 +73,11 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
         background: '#fff',
       }}
     >
-      <Receipt label="First Installment" showSeparator {...receiptData} />
-      <Receipt label="Second Installment" {...receiptData} />
+      {/* School copy */}
+      <Receipt label="School Copy" showSeparator {...receiptData} />
+
+      {/* Student copy */}
+      <Receipt label="Student Copy" {...receiptData} />
     </div>
   )
 }
