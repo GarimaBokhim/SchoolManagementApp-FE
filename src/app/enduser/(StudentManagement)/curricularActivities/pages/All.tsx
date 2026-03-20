@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import AllParticipation from '../../_Participents/pages/All'
 import AllActivity from '../../_Activities/pages/All'
-import EventSchedule from './static_event_page_for_now/EventSchedule'
+import EventSchedule from './schedulePage/EventSchedule'
 
 
 const AllCurricularActivities = () => {
