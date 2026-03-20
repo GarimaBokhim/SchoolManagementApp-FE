@@ -22,7 +22,6 @@ const paymentMethods: Record<number, string> = {
 const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: schools } = useGetAllSchool()
 
-  // ✅ Fetch all students without pagination so .find() works reliably
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
@@ -36,7 +35,7 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
 
   const schoolName = schools?.Items?.[0]?.name ?? ''
 
-  // ✅ Full name — firstName + middleName + lastName
+  // Full name — firstName + middleName + lastName  fixed bug 
   const studentName = useMemo(() => {
     const student = students?.Items?.find((s) => s.id === data.studentid)
     if (!student) return '-'
@@ -45,7 +44,6 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
       .join(' ')
   }, [students, data.studentid])
 
-  // ✅ Formatted date
   const formattedPaymentDate = data.paymentDate
     ? new Date(data.paymentDate).toISOString().split('T')[0]
     : '-'

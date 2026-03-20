@@ -16,12 +16,12 @@ const Receipt = ({
   schoolName = '',
   paymentDate = '',
   paymentMethod = '',
-  studentName = '',   // ✅ now actually used
+  studentName = '',   
   className = '',
   reference = '',
   amountPaid = '',
 }: ReceiptProps) => {
-  // ✅ No hooks needed here — all data comes from props
+  
   return (
     <div
       style={{
@@ -66,7 +66,7 @@ const Receipt = ({
         }}
       >
         <span>
-          Student: <b>{studentName || '-'}</b>  {/* ✅ uses prop */}
+          Student: <b>{studentName || '-'}</b>  
         </span>
         <span>
           Class: <b>{className}</b>
