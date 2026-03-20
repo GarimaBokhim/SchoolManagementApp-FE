@@ -1,20 +1,19 @@
 export interface IEvents {
-    id?: string;
-    title: string;
-    descriptions: string;
-    eventsType: string;
-    eventsDate: string;
-    participants: string;
-    eventTime: string;
-    venue: string;
-    chiefGuest: string;
-    organizer: string;
-    mentor: string;
-    schoolId?: string
+  id?: string;
+  title: string;
+  descriptions: string;
+  eventsType: number;
+  eventsDate: string;
+  participants: string;
+  eventTime: string;
+  venue: string;
+  chiefGuest: string;
+  organizer: string;
+  mentor: string;
+  schoolId?: string;
 }
 
 export interface IfilterEvents {
-    startDate: string;
-    endDate: string;
-} 
- 
+  startDate: string;
+  endDate: string;
+}

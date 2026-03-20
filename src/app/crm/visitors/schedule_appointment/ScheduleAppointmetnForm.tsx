@@ -1,21 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { format, addDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
+import React, { useState, useEffect, useMemo } from 'react'
+import { format, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { FlatAppointment } from './ISchedule'
 import { useScheduleAppointments } from './hooks/UseSchedule'
-
-
-const timeSlots = [
-  '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-]
 
 const statusLegend = [
   { status: 'confirmed', label: 'Confirmed', color: 'bg-green-500' },
   { status: 'pending', label: 'Pending', color: 'bg-yellow-500' },
   { status: 'cancelled', label: 'Cancelled', color: 'bg-red-500' },
   { status: 'in-progress', label: 'In Progress', color: 'bg-blue-500' },
+  { status: 'show', label: 'Show', color: 'bg-purple-500' },
 ]
 
 const getStatusCardColor = (status: string) => {
@@ -24,77 +19,100 @@ const getStatusCardColor = (status: string) => {
   if (s === 'pending') return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-200 dark:hover:bg-yellow-900/50';
   if (s === 'cancelled') return 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-900/50';
   if (s === 'in-progress') return 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-900/50';
+  if (s === 'show') return 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-900/50';
   return 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700';
 }
 
 const getInitials = (name: string) => {
   if (!name) return '??';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
 const parseHour = (timeStr: string): number => {
   if (!timeStr) return -1;
-  const [hourStr] = timeStr.split(':');
-  const period = timeStr.includes('PM') ? 'PM' : 'AM';
-  let hour = parseInt(hourStr, 10);
-  if (period === 'PM' && hour !== 12) hour += 12;
-  if (period === 'AM' && hour === 12) hour = 0;
-  return hour;
+
+  // 12-hour format — has AM or PM
+  if (timeStr.includes('AM') || timeStr.includes('PM')) {
+    const [hourStr] = timeStr.split(':');
+    const period = timeStr.includes('PM') ? 'PM' : 'AM';
+    let hour = parseInt(hourStr, 10);
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    return hour;
+  }
+
+  // 24-hour format — "HH:MM:SS" or "HH:MM"
+  return parseInt(timeStr.split(':')[0], 10);
 }
 
-const appointmentMatchesSlot = (appointment: FlatAppointment, slot: string): boolean => {
+/**
+ * Formats a raw time string (any format) into a display string like "10:35 PM"
+ */
+const formatDisplayTime = (timeStr: string): string => {
+  if (!timeStr) return '';
+  if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+  const parts = timeStr.split(':');
+  const hour = parseInt(parts[0], 10);
+  const minute = parts[1] || '00';
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
+}
+
+/**
+ * Converts a 24h hour number to a slot label like "10:00 AM"
+ */
+const hourToSlotLabel = (hour: number): string => {
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour.toString().padStart(2, '0')}:00 ${ampm}`;
+}
+
+const appointmentMatchesSlot = (appointment: FlatAppointment, slotHour: number): boolean => {
   if (!appointment.startTime) return false;
-  const aptHour = parseHour(appointment.startTime);
-  const slotHour = parseHour(slot);
-  return aptHour === slotHour;
+  return parseHour(appointment.startTime) === slotHour;
 }
 
 const ScheduleAppointment = () => {
-  const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [weekStart, setWeekStart] = useState(new Date())
 
   const { data: appointments = [], isLoading, error } = useScheduleAppointments()
 
-  // Initialize weekStart to make today the first column
   useEffect(() => {
     const today = new Date()
     setWeekStart(today)
     setSelectedDate(today)
   }, [])
 
-  // Get week days starting from weekStart (which should be today)
-  const getWeekDays = () => {
-    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  }
+  /**
+   * Dynamically build time slots based on actual appointment hours.
+   * Falls back to 9 AM–5 PM if no data yet.
+   */
+  const timeSlots: number[] = useMemo(() => {
+    if (appointments.length === 0) {
+      return Array.from({ length: 9 }, (_, i) => i + 9) // 9–17
+    }
+    const hours = appointments.map((apt) => parseHour(apt.startTime)).filter((h) => h >= 0)
+    const minHour = Math.min(...hours, 9)
+    const maxHour = Math.max(...hours, 17)
+    return Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour)
+  }, [appointments])
 
+  const getWeekDays = () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const weekDays = getWeekDays()
 
-  // Navigate to previous week
-  const goToPreviousWeek = () => {
-    setWeekStart(subWeeks(weekStart, 1))
-  }
-
-  // Navigate to next week
-  const goToNextWeek = () => {
-    setWeekStart(addWeeks(weekStart, 1))
-  }
-
-  // Go to today (make today the first column)
+  const goToPreviousWeek = () => setWeekStart(subWeeks(weekStart, 1))
+  const goToNextWeek = () => setWeekStart(addWeeks(weekStart, 1))
   const goToToday = () => {
     const today = new Date()
     setWeekStart(today)
     setSelectedDate(today)
   }
 
-  const getAppointmentsForDateTime = (date: Date, slot: string): FlatAppointment[] => {
+  const getAppointmentsForDateTime = (date: Date, slotHour: number): FlatAppointment[] => {
     return appointments.filter(
-      (apt) => isSameDay(apt.date, date) && appointmentMatchesSlot(apt, slot)
+      (apt) => isSameDay(apt.date, date) && appointmentMatchesSlot(apt, slotHour)
     )
   }
 
@@ -121,10 +139,7 @@ const ScheduleAppointment = () => {
 
         {/* Left — Navigation */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={goToPreviousWeek}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
+          <button onClick={goToPreviousWeek} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -132,18 +147,12 @@ const ScheduleAppointment = () => {
           <span className="text-lg font-medium text-gray-700 dark:text-gray-200 min-w-40 text-center">
             {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
           </span>
-          <button
-            onClick={goToNextWeek}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
+          <button onClick={goToNextWeek} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-          <button
-            onClick={goToToday}
-            className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-          >
+          <button onClick={goToToday} className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             Today
           </button>
         </div>
@@ -168,15 +177,17 @@ const ScheduleAppointment = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 grid grid-cols-8 gap-2 min-h-0">
+      <div className="flex-1 grid grid-cols-8 gap-2 min-h-0 overflow-y-auto">
 
         {/* Time Column */}
         <div className="flex flex-col">
           <div className="h-[72px] bg-transparent" />
           <div className="space-y-2">
-            {timeSlots.map((time) => (
-              <div key={time} className="h-[120px] flex items-start justify-end pr-2">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{time}</span>
+            {timeSlots.map((hour) => (
+              <div key={hour} className="h-[120px] flex items-start justify-end pr-2">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {hourToSlotLabel(hour)}
+                </span>
               </div>
             ))}
           </div>
@@ -205,11 +216,10 @@ const ScheduleAppointment = () => {
 
             {/* Time slots */}
             <div className="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg p-1 space-y-2 overflow-y-auto">
-              {timeSlots.map((time) => {
-                const slotAppointments = getAppointmentsForDateTime(day, time)
-
+              {timeSlots.map((hour) => {
+                const slotAppointments = getAppointmentsForDateTime(day, hour)
                 return (
-                  <div key={time} className="min-h-[120px]">
+                  <div key={hour} className="min-h-[120px]">
                     {slotAppointments.length > 0 ? (
                       slotAppointments.map((appointment) => (
                         <div
@@ -218,7 +228,7 @@ const ScheduleAppointment = () => {
                         >
                           {/* Time range */}
                           <div className="text-[10px] font-medium text-gray-600 dark:text-gray-300 mb-1">
-                            {appointment.startTime} - {appointment.endTime}
+                            {formatDisplayTime(appointment.startTime)} - {formatDisplayTime(appointment.endTime)}
                           </div>
 
                           {/* Client info */}

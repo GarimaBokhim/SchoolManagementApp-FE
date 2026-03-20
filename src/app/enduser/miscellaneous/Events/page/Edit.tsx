@@ -19,22 +19,22 @@ const Edit = ({ onClose }: Props) => {
 
   const { data, isLoading } = useGetEventsById(id);
 
-  const form = useForm<IEvents>({
-    defaultValues: {
-      id: "",
-      title: "",
-      descriptions: "",
-      eventsType: "",
-      eventsDate: "",
-      participants: "",
-      eventTime: "",
-      venue: "",
-      chiefGuest: "",
-      organizer: "",
-      mentor: "",
-      schoolId: "",
-    },
-  });
+const form = useForm<IEvents>({
+  defaultValues: {
+    id: "",
+    title: "",
+    descriptions: "",
+    eventsType: 0,
+    eventsDate: "",
+    participants: "",
+    eventTime: "",
+    venue: "",
+    chiefGuest: "",
+    organizer: "",
+    mentor: "",
+    schoolId: "",
+  },
+});
 
   useEffect(() => {
     if (data) {

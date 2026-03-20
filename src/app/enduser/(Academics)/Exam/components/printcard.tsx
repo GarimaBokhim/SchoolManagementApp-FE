@@ -1,53 +1,76 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 'use client'
 
 import React, { useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
-import { useParams } from 'next/navigation'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Printer } from 'lucide-react'
 import { useGetExamById } from '../hooks'
+import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
+import { useGetClassById } from '../../Class/hooks'
 import AdmitCard from './Admitcard'
+import { useGetAllParents } from '@/app/enduser/(StudentManagement)/_Parent/hooks'
+import { IParent } from '@/app/enduser/(StudentManagement)/_Parent/types/IParents'
 
-const PrintAdmitCardsPage = () => {
-  const { ExamId } = useParams()
+
+type Props = {
+  ExamId: string
+}
+
+const PrintAdmitCardsPage = ({ ExamId }: Props) => {
   const printRef = useRef<HTMLDivElement>(null)
-
-  const { data: exam } = useGetExamById(ExamId as string)
-  const { data: students } = useGetStudentByClass(exam?.classId as string)
-
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [isOpen, setIsOpen] = useState(false)
 
-  if (!exam || !students?.Items) return null
+  // ✅ All hooks at top level
+  const { data: exam } = useGetExamById(ExamId)
+  const { data: students } = useGetStudentByClass(exam?.classId as string)
+
+  // ✅ Lifted up here — single API call for school, class and parents
+  const { data: schoolDetail } = useGetAllSchool()
+  const { data: classDetail } = useGetClassById(exam?.classId as string)
+  const { data: allParents } = useGetAllParents()
+
+  const allStudentIds = students?.Items?.map((s) => s.id as string) ?? []
+  const isAllSelected =
+    selectedStudents.length === allStudentIds.length && allStudentIds.length > 0
 
   const toggleStudent = (id: string) => {
     setSelectedStudents((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     )
   }
-  const allStudentIds = students.Items.map((student) => student.id as string)
-
-  const isAllSelected =
-    selectedStudents.length === allStudentIds.length && allStudentIds.length > 0
 
   const toggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedStudents([])
-    } else {
-      setSelectedStudents(allStudentIds)
-    }
+    setSelectedStudents(isAllSelected ? [] : allStudentIds)
   }
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `${exam.name}-Admit-Cards`,
+    documentTitle: `${exam?.name ?? 'Exam'}-Admit-Cards`,
     onAfterPrint: () => {
       setIsOpen(false)
       setSelectedStudents([])
     },
   })
+
+  const handleOpen = () => {
+    if (!exam || !students?.Items?.length) {
+      alert('Student or exam data not available yet. Please try again.')
+      return
+    }
+    setIsOpen(true)
+  }
+
+  const handleClose = () => {
+    setIsOpen(false)
+    setSelectedStudents([])
+  }
+
+  // ✅ Helper to find parent for a student
+  const getParentForStudent = (parentId: string): IParent | null => {
+    return allParents?.Items?.find((p) => p.id === parentId) ?? null
+  }
 
   return (
     <div>
@@ -55,15 +78,16 @@ const PrintAdmitCardsPage = () => {
         type="button"
         text=""
         icon={<Printer size={16} />}
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
       />
 
-      {isOpen && (
+      {isOpen && exam && students?.Items && (
         <div className="fixed inset-0 ml-12 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]   max-h-full overflow-auto rounded-lg shadow-lg p-6 relative">
+          <div className="bg-white max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw] max-h-full overflow-auto rounded-lg shadow-lg p-6 relative">
+
+            {/* Modal Header */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">{exam.name} - Admit Cards</h2>
-
               <div className="flex gap-3">
                 <ButtonElement
                   type="button"
@@ -77,15 +101,16 @@ const PrintAdmitCardsPage = () => {
                     handlePrint()
                   }}
                 />
-
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   className="px-3 py-1 bg-gray-200 rounded"
                 >
                   Close
                 </button>
               </div>
             </div>
+
+            {/* Select All */}
             <div className="flex items-center gap-2 mb-4 border-b pb-2">
               <input
                 type="checkbox"
@@ -96,6 +121,7 @@ const PrintAdmitCardsPage = () => {
               <label className="font-medium cursor-pointer">Select All</label>
             </div>
 
+            {/* Student List Preview */}
             <div className="space-y-3">
               {students.Items.map((student) => (
                 <div
@@ -108,8 +134,13 @@ const PrintAdmitCardsPage = () => {
                     checked={selectedStudents.includes(student.id as string)}
                     onChange={() => toggleStudent(student.id as string)}
                   />
-
-                  <AdmitCard student={student} exam={exam} />
+                  <AdmitCard
+                    student={student}
+                    exam={exam}
+                    schoolDetail={schoolDetail}
+                    classDetail={classDetail}
+                    parent={getParentForStudent(student.parentId)}
+                  />
                 </div>
               ))}
             </div>
@@ -117,16 +148,20 @@ const PrintAdmitCardsPage = () => {
         </div>
       )}
 
+      {/* Hidden print area */}
       <div className="hidden">
         <div ref={printRef}>
-          {students.Items.filter((student) =>
-            selectedStudents.includes(student.id as string)
+          {students?.Items?.filter((s) =>
+            selectedStudents.includes(s.id as string)
           ).map((student) => (
-            <div
-              key={student.id}
-              className="flex items-start gap-4 border p-4 rounded-md bg-gray-50"
-            >
-              <AdmitCard student={student} exam={exam} />
+            <div key={student.id} className="p-4">
+              <AdmitCard
+                student={student}
+                exam={exam!}
+                schoolDetail={schoolDetail}
+                classDetail={classDetail}
+                parent={getParentForStudent(student.parentId)}
+              />
             </div>
           ))}
         </div>

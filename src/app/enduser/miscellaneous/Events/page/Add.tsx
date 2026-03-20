@@ -15,7 +15,7 @@ const Add = ({  onClose }: props) => {
       id: "",
       title: "",
       descriptions: "",
-      eventsType: "",
+      eventsType: 0,
       eventsDate: new Date().toISOString().split("T")[0],
       participants: "",
       eventTime: "",
