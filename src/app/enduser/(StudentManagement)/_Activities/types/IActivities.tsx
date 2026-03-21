@@ -28,6 +28,9 @@ export interface AddActivityPayload {
   name: string
   activityCategory: number
   eventId: string
+  startTime: string
+  endTime: string
+  activityDate: string
 }
 
 export interface AddParticipationPayload {
