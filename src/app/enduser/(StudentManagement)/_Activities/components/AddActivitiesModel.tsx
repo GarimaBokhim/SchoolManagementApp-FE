@@ -1,16 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { X } from 'lucide-react'
 import { AddActivityPayload } from '../types/IActivities'
+import { useGetAllEvents, useAddActivity } from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 const ACTIVITY_CATEGORY_OPTIONS = [
-  { value: 0, label: 'Sports' },
-  { value: 1, label: 'Arts' },
-  { value: 2, label: 'Music' },
-  { value: 3, label: 'Other' },
+  { value: 1, label: 'Sports' },
+  { value: 2, label: 'Academic' },
+  { value: 3, label: 'Creative Art' },
+  { value: 4, label: 'Environmental' },
+  { value: 5, label: 'Performing Arts' },
+  { value: 6, label: 'Technical' },
+  { value: 7, label: 'Social Service' },
+  { value: 8, label: 'Vocational' },
 ]
+
+interface EventOption {
+  id: string
+  title: string
+}
 
 interface Props {
   visible: boolean
@@ -18,30 +29,50 @@ interface Props {
   onSuccess: () => void
 }
 
+// Extended payload to match full API schema
+interface AddActivityFormPayload extends AddActivityPayload {
+  startTime: string
+  endTime: string
+  activityDate: string
+}
+
 const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { useAddActivity } = require('../hooks')
+  const [selectedEvent, setSelectedEvent] = useState<EventOption | null>(null)
+
   const { mutateAsync: addActivity } = useAddActivity()
+  const { data: events, isLoading: eventsLoading } = useGetAllEvents()
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors },
-  } = useForm<AddActivityPayload>({
-    defaultValues: { activityCategory: 0 },
+  } = useForm<AddActivityFormPayload>({
+    defaultValues: {
+      activityCategory: 1,
+      name: '',
+      eventId: '',
+      startTime: '',
+      endTime: '',
+      activityDate: '',
+    },
   })
 
   const handleClose = () => {
     reset()
+    setSelectedEvent(null)
     onClose()
   }
 
-  const onFormSubmit = async (data: AddActivityPayload) => {
+  const onFormSubmit = async (data: AddActivityFormPayload) => {
     setIsSubmitting(true)
     try {
       await addActivity(data)
       reset()
+      setSelectedEvent(null)
       onSuccess()
     } finally {
       setIsSubmitting(false)
@@ -57,7 +88,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
       onClick={handleClose}
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[500px]
+        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[520px]
                    max-h-[95vh] rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
@@ -75,7 +106,8 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
         </div>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
-          {/* Name */}
+
+          {/* Activity Name */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity Name <span className="text-red-500">*</span>
@@ -85,7 +117,9 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
               placeholder="e.g. Football Tournament"
               className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-xs text-red-500">{errors.name.message}</p>
+            )}
           </div>
 
           {/* Activity Category */}
@@ -98,22 +132,88 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
               className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               {ACTIVITY_CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
             </select>
           </div>
 
-          {/* Event ID */}
+          {/* Event — AppCombobox */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Event ID <span className="text-red-500">*</span>
+              Event <span className="text-red-500">*</span>
+            </label>
+            <Controller
+              name="eventId"
+              control={control}
+              rules={{ required: 'Event is required' }}
+              render={({ field }) => (
+                <AppCombobox<EventOption>
+                  name="eventId"
+                  label="Select Event"
+                  required
+                  options={eventsLoading ? [] : (events as EventOption[] ?? [])}
+                  selected={selectedEvent ?? undefined}
+                  getLabel={(opt) => opt.title}
+                  getValue={(opt) => opt.id}
+                  placeholder={eventsLoading ? 'Loading events...' : 'Search event...'}
+                  onSelect={(opt) => {
+                    setSelectedEvent(opt)
+                    field.onChange(opt ? opt.id : '')
+                  }}
+                />
+              )}
+            />
+            {errors.eventId && (
+              <p className="text-xs text-red-500">{errors.eventId.message}</p>
+            )}
+          </div>
+
+          {/* Activity Date */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Activity Date <span className="text-red-500">*</span>
             </label>
             <input
-              {...register('eventId', { required: 'Event ID is required' })}
-              placeholder="Enter event ID"
+              type="date"
+              {...register('activityDate', { required: 'Activity date is required' })}
               className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            {errors.eventId && <p className="text-xs text-red-500">{errors.eventId.message}</p>}
+            {errors.activityDate && (
+              <p className="text-xs text-red-500">{errors.activityDate.message}</p>
+            )}
+          </div>
+
+          {/* Start Time & End Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Start Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                {...register('startTime', { required: 'Start time is required' })}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {errors.startTime && (
+                <p className="text-xs text-red-500">{errors.startTime.message}</p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                End Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                {...register('endTime', { required: 'End time is required' })}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {errors.endTime && (
+                <p className="text-xs text-red-500">{errors.endTime.message}</p>
+              )}
+            </div>
           </div>
 
           {/* Footer */}
