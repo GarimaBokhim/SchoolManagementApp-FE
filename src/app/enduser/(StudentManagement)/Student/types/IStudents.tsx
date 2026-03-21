@@ -4,6 +4,7 @@ export interface IStudent {
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
+  admissionNumber?: string;
   genderStatus: 0;
   studentStatus: 0;
   dateOfBirth: Date;

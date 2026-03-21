@@ -1,8 +1,3 @@
-import {
-  useGetAllStudents,
-  useGetStudentById,
-} from '@/app/enduser/(StudentManagement)/Student/hooks'
-
 type ReceiptProps = {
   label?: string
   showSeparator?: boolean
@@ -21,13 +16,12 @@ const Receipt = ({
   schoolName = '',
   paymentDate = '',
   paymentMethod = '',
+  studentName = '',   
   className = '',
   reference = '',
   amountPaid = '',
 }: ReceiptProps) => {
-  const { data } = useGetAllStudents()
-  const { data: allstudent } = useGetStudentById(data?.items?.[0]?.id || '')
-  console.log('allstudent', allstudent)
+  
   return (
     <div
       style={{
@@ -72,11 +66,7 @@ const Receipt = ({
         }}
       >
         <span>
-          Student:{' '}
-          <b>
-            {allstudent?.firstName} {allstudent?.middleName}{' '}
-            {allstudent?.lastName}
-          </b>
+          Student: <b>{studentName || '-'}</b>  
         </span>
         <span>
           Class: <b>{className}</b>
