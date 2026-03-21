@@ -57,15 +57,17 @@ export interface SchoolResponse {
 }
 
 export interface UserProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  enrolmentType: number;
-  createdAt: string;
-  contactNumber?: string;
-  source?: string;
+  id: string
+  fullName: string
+  email: string
+  enrolmentType: number
+  genderStatus: number
+  dob: string
+  admissionDate: string
+  intrestedCountry: string
+  contactNumber?: string
+  source?: string
 }
-
 export interface UserProfileResponse {
   Items: UserProfile[];
   TotalItems: number;

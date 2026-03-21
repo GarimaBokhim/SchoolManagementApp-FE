@@ -1,5 +1,5 @@
 export interface EventScheduleItem {
-  id: string; // real event id for API calls
+  id: string; 
   title: string;
   descriptions: string;
   eventsType: number;
