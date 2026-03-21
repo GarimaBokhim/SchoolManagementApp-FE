@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { format, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { FlatEventSchedule } from '../types/Ievent'
-import { useScheduleEvents } from '../hooks/useEventSchedule'
+import { useScheduleEvents, useActivitiesByEvent } from '../hooks/useEventSchedule'
 
 const EVENT_TYPE_MAP: Record<number, { label: string; cardColor: string; dotColor: string }> = {
   1:  { label: 'Academic',    cardColor: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 hover:bg-blue-200',         dotColor: 'bg-blue-500'   },
@@ -17,6 +17,18 @@ const EVENT_TYPE_MAP: Record<number, { label: string; cardColor: string; dotColo
   9:  { label: 'Holiday',     cardColor: 'bg-teal-100 dark:bg-teal-900/30 border-teal-300 dark:border-teal-700 hover:bg-teal-200',           dotColor: 'bg-teal-500'   },
   10: { label: 'Examination', cardColor: 'bg-gray-100 dark:bg-gray-900/30 border-gray-300 dark:border-gray-700 hover:bg-gray-200',           dotColor: 'bg-gray-500'   },
   99: { label: 'Other',       cardColor: 'bg-slate-100 dark:bg-slate-900/30 border-slate-300 dark:border-slate-700 hover:bg-slate-200',     dotColor: 'bg-slate-500'  },
+}
+
+// Activity category label map
+const ACTIVITY_CATEGORY_MAP: Record<number, string> = {
+  1: 'Sports',
+  2: 'Academic',
+  3: 'Creative Art',
+  4: 'Environmental',
+  5: 'Performing Arts',
+  6: 'Technical',
+  7: 'Social Service',
+  8: 'Vocational',
 }
 
 const getEventTypeInfo = (eventsType: number) =>
@@ -42,77 +54,60 @@ const formatDisplayTime = (timeStr: string): string => {
   return `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`
 }
 
-// Modal Component
-const EventModal = ({ event, onClose }: { event: FlatEventSchedule | null; onClose: () => void }) => {
+// ── Event Modal ───────────────────────────────────────────────────
+
+const EventModal = ({
+  event,
+  onClose,
+}: {
+  event: FlatEventSchedule | null
+  onClose: () => void
+}) => {
   const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'completed'>('all')
-  
+
+  // Fetch real activities for this event
+  const {
+    data: activities = [],
+    isLoading: activitiesLoading,
+  } = useActivitiesByEvent(event?.eventsId ?? null)
+
+  // Reset tab when event changes
+  useEffect(() => {
+    setActiveTab('all')
+  }, [event?.eventsId])
+
   if (!event) return null
 
   const typeInfo = getEventTypeInfo(event.eventsType)
 
-  // Static data for tabs
-  const allActivities = [
-    {
-      id: 1,
-      title: 'Registration Opens',
-      description: 'Participants can register for the event online',
-      time: '9:00 AM',
-      status: 'completed',
-      date: 'Mar 20, 2024'
-    },
-    {
-      id: 2,
-      title: 'Welcome Session',
-      description: 'Opening ceremony and introduction to the event',
-      time: '10:00 AM',
-      status: 'upcoming',
-      date: 'Mar 21, 2024'
-    },
-    {
-      id: 3,
-      title: 'Keynote Speech',
-      description: 'Main presentation by the guest speaker',
-      time: '11:30 AM',
-      status: 'upcoming',
-      date: 'Mar 21, 2024'
-    },
-    {
-      id: 4,
-      title: 'Networking Break',
-      description: 'Coffee and networking session',
-      time: '1:00 PM',
-      status: 'upcoming',
-      date: 'Mar 21, 2024'
-    },
-    {
-      id: 5,
-      title: 'Workshop Session',
-      description: 'Interactive hands-on workshop',
-      time: '2:30 PM',
-      status: 'upcoming',
-      date: 'Mar 21, 2024'
-    }
+  // Determine upcoming/completed by comparing activityDate to today
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const enriched = activities.map((a) => {
+    const actDate = a.activityDate ? new Date(a.activityDate) : null
+    const status = actDate && actDate < today ? 'completed' : 'upcoming'
+    return { ...a, status }
+  })
+
+  const filtered =
+    activeTab === 'all'
+      ? enriched
+      : enriched.filter((a) => a.status === activeTab)
+
+  const tabs: { key: 'all' | 'upcoming' | 'completed'; label: string }[] = [
+    { key: 'all',       label: `All Activities (${enriched.length})` },
+    { key: 'upcoming',  label: `Upcoming (${enriched.filter(a => a.status === 'upcoming').length})` },
+    { key: 'completed', label: `Completed (${enriched.filter(a => a.status === 'completed').length})` },
   ]
 
-  const upcomingActivities = allActivities.filter(activity => activity.status === 'upcoming')
-  const completedActivities = allActivities.filter(activity => activity.status === 'completed')
-
-  const getActivitiesForTab = () => {
-    switch (activeTab) {
-      case 'all':
-        return allActivities
-      case 'upcoming':
-        return upcomingActivities
-      case 'completed':
-        return completedActivities
-      default:
-        return allActivities
-    }
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    // Same margin as AddActivityModal to respect sidebar
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0">
+      <div
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header Card */}
         <div className={`p-6 border-b ${typeInfo.cardColor} rounded-t-xl`}>
           <div className="flex items-start justify-between">
@@ -125,11 +120,11 @@ const EventModal = ({ event, onClose }: { event: FlatEventSchedule | null; onClo
                   🕐 {formatDisplayTime(event.eventTime)}
                 </span>
               </div>
-              
+
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {event.title}
               </h2>
-              
+
               <div className="space-y-2 mt-4">
                 {event.venue && event.venue !== 'string' && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
@@ -151,7 +146,7 @@ const EventModal = ({ event, onClose }: { event: FlatEventSchedule | null; onClo
                 </p>
               </div>
             </div>
-            
+
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -166,81 +161,83 @@ const EventModal = ({ event, onClose }: { event: FlatEventSchedule | null; onClo
         {/* Tabs */}
         <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="flex gap-4 px-6">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`py-3 px-2 font-medium text-sm transition-colors relative ${
-                activeTab === 'all'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              All Activities
-              {activeTab === 'all' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`py-3 px-2 font-medium text-sm transition-colors relative ${
-                activeTab === 'upcoming'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Upcoming
-              {activeTab === 'upcoming' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`py-3 px-2 font-medium text-sm transition-colors relative ${
-                activeTab === 'completed'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Completed
-              {activeTab === 'completed' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
-              )}
-            </button>
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`py-3 px-2 font-medium text-sm transition-colors relative whitespace-nowrap ${
+                  activeTab === tab.key
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-3">
-            {getActivitiesForTab().map((activity) => (
-              <div
-                key={activity.id}
-                className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {activity.title}
-                  </h4>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    activity.status === 'completed'
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  }`}>
-                    {activity.status === 'completed' ? 'Completed' : 'Upcoming'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {activity.description}
-                </p>
-                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
-                  <span>🕐 {activity.time}</span>
-                  <span>📅 {activity.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {activitiesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
+              <svg className="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <p className="text-sm">No activities found</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map((activity, idx) => {
+                const categoryLabel = ACTIVITY_CATEGORY_MAP[activity.activityCategory] ?? 'Other'
+                return (
+                  <div
+                    key={idx}
+                    className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                  >
+                    {/* Top row: name + status badge */}
+                    <div className="flex items-start justify-between mb-2 gap-2">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        {activity.ActivityName}
+                      </h4>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
+                          activity.status === 'completed'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        }`}
+                      >
+                        {activity.status === 'completed' ? '✅ Completed' : '⏳ Upcoming'}
+                      </span>
+                    </div>
+
+                    {/* Category pill */}
+                    <div className="mb-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {categoryLabel}
+                      </span>
+                    </div>
+
+                    {/* Time & Date info */}
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                      <span>📅 {activity.activityDate}</span>
+                      <span>🕐 {formatDisplayTime(activity.startTime)} – {formatDisplayTime(activity.endTime)}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end gap-3">
           <button
             onClick={onClose}
@@ -248,14 +245,13 @@ const EventModal = ({ event, onClose }: { event: FlatEventSchedule | null; onClo
           >
             Close
           </button>
-          <button className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Register Now
-          </button>
         </div>
       </div>
     </div>
   )
 }
+
+// ── Main EventSchedule ────────────────────────────────────────────
 
 const EventSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -273,8 +269,8 @@ const EventSchedule = () => {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const goToPreviousWeek = () => setWeekStart(subWeeks(weekStart, 1))
-  const goToNextWeek = () => setWeekStart(addWeeks(weekStart, 1))
-  const goToToday = () => {
+  const goToNextWeek   = () => setWeekStart(addWeeks(weekStart, 1))
+  const goToToday      = () => {
     const t = new Date()
     setWeekStart(t)
     setSelectedDate(t)
@@ -314,7 +310,7 @@ const EventSchedule = () => {
               </svg>
             </button>
             <span className="text-lg font-medium text-gray-700 dark:text-gray-200 min-w-40 text-center">
-              {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
+              {format(weekDays[0], 'MMM d')} – {format(weekDays[6], 'MMM d, yyyy')}
             </span>
             <button onClick={goToNextWeek} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
               <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +341,7 @@ const EventSchedule = () => {
           </button>
         </div>
 
-        {/* Calendar Grid — no time rows, just date columns */}
+        {/* Calendar Grid */}
         <div className="flex-1 grid grid-cols-7 gap-2 min-h-0 overflow-y-auto">
           {weekDays.map((day, index) => {
             const dayEvents = getEventsForDate(day)
@@ -385,12 +381,11 @@ const EventSchedule = () => {
                           onClick={() => setSelectedEvent(event)}
                           className={`rounded-lg shadow-sm border-2 p-2 transition-all cursor-pointer ${typeInfo.cardColor}`}
                         >
-                          {/* Type badge */}
+                          {/* Type badge + time */}
                           <div className="flex items-center justify-between mb-1">
                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white ${typeInfo.dotColor}`}>
                               {typeInfo.label}
                             </span>
-                            {/* Event time inside card */}
                             <span className="text-[10px] font-medium text-gray-600 dark:text-gray-300">
                               🕐 {formatDisplayTime(event.eventTime)}
                             </span>
@@ -429,12 +424,18 @@ const EventSchedule = () => {
 
                           {/* Actions */}
                           <div className="flex items-center justify-end space-x-1 mt-2">
-                            <button className="p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded transition-colors">
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded transition-colors"
+                            >
                               <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                               </svg>
                             </button>
-                            <button className="p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded transition-colors">
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded transition-colors"
+                            >
                               <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
