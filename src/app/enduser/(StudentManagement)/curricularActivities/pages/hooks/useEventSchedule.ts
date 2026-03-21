@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
-import { EventScheduleResponse,FlatEventSchedule } from "../types/Ievent";
+import { ActivityByEventResponse, EventScheduleResponse, FlatEventSchedule } from "../types/Ievent";
 
 export const eventScheduleQueryKey = "EventSchedule";
 
@@ -19,8 +19,6 @@ export const useScheduleEvents = () => {
       eventsList.forEach((listItem, listIndex) => {
         const details = listItem.eventsDetails;
         Object.entries(details).forEach(([dateStr, item], entryIndex) => {
-
-          // If dateStr is invalid like "string", fall back to today
           let eventDate: Date;
           if (!dateStr || dateStr === "string") {
             eventDate = today;
@@ -35,6 +33,7 @@ export const useScheduleEvents = () => {
 
           flat.push({
             id: `${listIndex}-${entryIndex}-${dateStr}`,
+            eventsId: item.id, // real event id for ActivityByEvents API
             date: eventDate,
             title: item.title,
             descriptions: item.descriptions,
@@ -52,5 +51,21 @@ export const useScheduleEvents = () => {
 
       return flat;
     },
+  });
+};
+
+// ── Activity by Event hook ────────────────────────────────────────
+
+export const useActivitiesByEvent = (eventsId: string | null) => {
+  return useQuery({
+    queryKey: ["ActivitiesByEvent", eventsId],
+    queryFn: async () => {
+      const response = await api.get<ActivityByEventResponse>(
+        `/api/CocurricularActivities/ActivityByEvents?eventsId=${eventsId}`
+      );
+      return response.data?.Items ?? [];
+    },
+    enabled: !!eventsId, // only fetch when we have an id
+    staleTime: 2 * 60 * 1000,
   });
 };
