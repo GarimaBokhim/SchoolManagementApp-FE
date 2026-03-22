@@ -21,9 +21,27 @@ const paymentMethods: Record<number, string> = {
 
 const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: schools } = useGetAllSchool()
-
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
+
+
+  const schoolId = useMemo(() => {
+    try {
+      const storedUser = localStorage.getItem('userDetails')
+      if (!storedUser) return ''
+      const parsedUser = JSON.parse(storedUser)
+      return parsedUser.schoolId ?? ''
+    } catch {
+      return ''
+    }
+  }, [])
+
+  // Match school by id instead of always picking the first one
+  const schoolName = useMemo(() => {
+    if (!schools?.Items?.length) return ''
+    const matched = schools.Items.find((s) => s.id === schoolId)
+    return matched?.name ?? schools.Items[0]?.name ?? ''
+  }, [schools, schoolId])
 
   const isReady = schools?.Items?.length && students?.Items?.length && classData
 
@@ -33,9 +51,6 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     }
   }, [isReady, onReady])
 
-  const schoolName = schools?.Items?.[0]?.name ?? ''
-
-  // Full name — firstName + middleName + lastName  fixed bug 
   const studentName = useMemo(() => {
     const student = students?.Items?.find((s) => s.id === data.studentid)
     if (!student) return '-'

@@ -1,17 +1,16 @@
 'use client'
 
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Printer } from 'lucide-react'
 import { useGetExamById } from '../hooks'
-import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useGetClassById } from '../../Class/hooks'
 import AdmitCard from './Admitcard'
 import { useGetAllParents } from '@/app/enduser/(StudentManagement)/_Parent/hooks'
 import { IParent } from '@/app/enduser/(StudentManagement)/_Parent/types/IParents'
-
 
 type Props = {
   ExamId: string
@@ -22,14 +21,22 @@ const PrintAdmitCardsPage = ({ ExamId }: Props) => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [isOpen, setIsOpen] = useState(false)
 
-  // ✅ All hooks at top level
   const { data: exam } = useGetExamById(ExamId)
   const { data: students } = useGetStudentByClass(exam?.classId as string)
-
-  // ✅ Lifted up here — single API call for school, class and parents
-  const { data: schoolDetail } = useGetAllSchool()
   const { data: classDetail } = useGetClassById(exam?.classId as string)
   const { data: allParents } = useGetAllParents()
+
+  const schoolId = useMemo(() => {
+    try {
+      const storedUser = localStorage.getItem('userDetails')
+      if (!storedUser) return null
+      return JSON.parse(storedUser).schoolId ?? null
+    } catch {
+      return null
+    }
+  }, [])
+
+  const { data: matchedSchool } = useGetSchoolById(schoolId)
 
   const allStudentIds = students?.Items?.map((s) => s.id as string) ?? []
   const isAllSelected =
@@ -67,7 +74,6 @@ const PrintAdmitCardsPage = ({ ExamId }: Props) => {
     setSelectedStudents([])
   }
 
-  // ✅ Helper to find parent for a student
   const getParentForStudent = (parentId: string): IParent | null => {
     return allParents?.Items?.find((p) => p.id === parentId) ?? null
   }
@@ -137,7 +143,7 @@ const PrintAdmitCardsPage = ({ ExamId }: Props) => {
                   <AdmitCard
                     student={student}
                     exam={exam}
-                    schoolDetail={schoolDetail}
+                    schoolDetail={matchedSchool}
                     classDetail={classDetail}
                     parent={getParentForStudent(student.parentId)}
                   />
@@ -158,7 +164,7 @@ const PrintAdmitCardsPage = ({ ExamId }: Props) => {
               <AdmitCard
                 student={student}
                 exam={exam!}
-                schoolDetail={schoolDetail}
+                schoolDetail={matchedSchool}
                 classDetail={classDetail}
                 parent={getParentForStudent(student.parentId)}
               />
