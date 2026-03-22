@@ -1,20 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
 
-import React, { forwardRef, useEffect, useState } from 'react'
+import React, { forwardRef } from 'react'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
 import { IExam } from '../types/IExams'
 import { IParent } from '@/app/enduser/(StudentManagement)/_Parent/types/IParents'
-
-
-type SchoolDetail = {
-  Items: {
-    name: string
-    address: string
-    contactNumber: string
-    website?: string
-  }[]
-}
+import { ISchool } from '@/app/admin/Setup/School/types/ISchool' // adjust path as needed
 
 type ClassDetail = {
   name: string
@@ -23,7 +14,7 @@ type ClassDetail = {
 type AdmitCardProps = {
   student: IStudent
   exam: IExam
-  schoolDetail?: SchoolDetail
+  schoolDetail?: ISchool | null  // ✅ now matches exactly what PrintAdmitCardsPage passes
   classDetail?: ClassDetail
   parent?: IParent | null
 }
@@ -42,17 +33,6 @@ const formatDate = (date: Date | string | undefined): string => {
 
 const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
   ({ student, exam, schoolDetail, classDetail, parent }, ref) => {
-    const [institutionId, setInstitutionId] = useState<string | null>(null)
-
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        const id = localStorage.getItem('institutionId')
-        setInstitutionId(id)
-      }
-    }, [])
-
-    const school = schoolDetail?.Items?.[0]
-
     return (
       <div
         ref={ref}
@@ -62,10 +42,10 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
         <div className="relative h-[80px] bg-blue-900 text-white rounded-t-md">
           <div className="text-center pt-4">
             <h1 className="text-xl font-extrabold text-yellow-400">
-              {school?.name ?? '-'}
+              {schoolDetail?.name ?? '-'}
             </h1>
-            <p className="text-xs">{school?.address ?? '-'}</p>
-            <p className="text-xs">{school?.contactNumber ?? '-'}</p>
+            <p className="text-xs">{schoolDetail?.address ?? '-'}</p>
+            <p className="text-xs">{schoolDetail?.contactNumber ?? '-'}</p>
           </div>
         </div>
 
@@ -145,8 +125,6 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
             />
           </div>
         </div>
-
-      
       </div>
     )
   }
