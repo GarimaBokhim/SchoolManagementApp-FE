@@ -1,12 +1,36 @@
-// src/app/crm/applications/followups/pages/AddFollowUpModal.tsx
-
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { X } from 'lucide-react'
 import { AddFollowUpPayload } from '../types/IFollowUps'
 import { useFollowUpMutations } from '../hooks/UseFollowMutation'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+
+interface LeadOption {
+  userId: string
+  fullName: string
+}
+
+interface LeadApiResponse {
+  Items: LeadOption[]
+}
+
+// Fetch all leads for the combobox
+const useLeadOptions = () => {
+  return useQuery({
+    queryKey: ['LeadOptionsForFollowUp'],
+    queryFn: async (): Promise<LeadOption[]> => {
+      const response = await api.get<LeadApiResponse>(
+        '/api/Enrolments/AllInquiry'
+      )
+      return response.data?.Items ?? []
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}
 
 interface Props {
   isOpen: boolean
@@ -24,18 +48,22 @@ const FOLLOW_UP_STATUS_OPTIONS = [
 
 const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props) => {
   const { isAdding, handleAdd } = useFollowUpMutations(fetchFollowUps)
+  const { data: leadOptions = [], isLoading: leadsLoading } = useLeadOptions()
+
+  const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null)
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<AddFollowUpPayload>({
     defaultValues: {
       leadId: '',
       startTime: '',
       endTime: '',
-      followUpDate: new Date().toISOString(),
+      followUpDate: '',
       notes: '',
       followUpStatus: 1,
     },
@@ -43,17 +71,18 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
 
   const handleClose = () => {
     reset()
+    setSelectedLead(null)
     onClose()
   }
 
   const onFormSubmit = async (data: AddFollowUpPayload) => {
-    // Combine date input with time to form ISO string
     const success = await handleAdd({
       ...data,
       followUpDate: new Date(data.followUpDate).toISOString(),
     })
     if (success) {
       reset()
+      setSelectedLead(null)
       onSuccess()
     }
   }
@@ -86,17 +115,35 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
 
-          {/* Lead ID */}
+          {/* Lead — Separate label with AppCombobox */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Lead ID <span className="text-red-500">*</span>
+              Lead <span className="text-red-500">*</span>
             </label>
-            <input
-              {...register('leadId', { required: 'Lead ID is required' })}
-              placeholder="Enter lead ID"
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            <Controller
+              name="leadId"
+              control={control}
+              rules={{ required: 'Lead is required' }}
+              render={({ field }) => (
+                <AppCombobox<LeadOption>
+                  name="leadId"
+                  label="" // Empty label prevents floating label behavior
+                  required
+                  options={leadsLoading ? [] : leadOptions}
+                  selected={selectedLead ?? undefined}
+                  getLabel={(opt) => opt.fullName}
+                  getValue={(opt) => opt.userId}
+                  placeholder={leadsLoading ? 'Loading leads...' : 'Search lead...'} // Placeholder text
+                  onSelect={(opt) => {
+                    setSelectedLead(opt)
+                    field.onChange(opt ? opt.userId : '')
+                  }}
+                />
+              )}
             />
-            {errors.leadId && <p className="text-xs text-red-500">{errors.leadId.message}</p>}
+            {errors.leadId && (
+              <p className="text-xs text-red-500">{errors.leadId.message}</p>
+            )}
           </div>
 
           {/* Follow Up Date */}
@@ -108,8 +155,11 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
               type="date"
               {...register('followUpDate', { required: 'Follow up date is required' })}
               className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Select date"
             />
-            {errors.followUpDate && <p className="text-xs text-red-500">{errors.followUpDate.message}</p>}
+            {errors.followUpDate && (
+              <p className="text-xs text-red-500">{errors.followUpDate.message}</p>
+            )}
           </div>
 
           {/* Start Time & End Time */}
@@ -122,8 +172,11 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
                 type="time"
                 {...register('startTime', { required: 'Start time is required' })}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Select start time"
               />
-              {errors.startTime && <p className="text-xs text-red-500">{errors.startTime.message}</p>}
+              {errors.startTime && (
+                <p className="text-xs text-red-500">{errors.startTime.message}</p>
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -133,8 +186,11 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
                 type="time"
                 {...register('endTime', { required: 'End time is required' })}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Select end time"
               />
-              {errors.endTime && <p className="text-xs text-red-500">{errors.endTime.message}</p>}
+              {errors.endTime && (
+                <p className="text-xs text-red-500">{errors.endTime.message}</p>
+              )}
             </div>
           </div>
 
