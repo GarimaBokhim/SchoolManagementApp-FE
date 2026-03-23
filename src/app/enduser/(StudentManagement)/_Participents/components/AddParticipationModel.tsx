@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { Toast } from '@/components/Toast/toast'
 import { useAddParticipation, useGetAllActivitiesDropdown } from '../../_Activities/hooks'
 import { AddParticipationPayload } from '../../_Activities/types/IActivities'
-
+import { useGetAllStudents } from '../../Student/hooks'
 interface Props {
   visible: boolean
   onClose: () => void
@@ -19,9 +19,16 @@ interface Props {
 const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<any>(null)
+  const [selectedStudent, setSelectedStudent] = useState<any>(null)
 
-  const { mutateAsync: addParticipation } = useAddParticipation() 
-  const { data: activities = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
+  const { mutateAsync: addParticipation } = useAddParticipation()
+  const { data: activitiesData = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
+
+  // useGetAllStudents returns IPaginationResponse<IStudent>, so we pull .Items (or .data depending on your shape)
+  const { data: studentsData, isLoading: studentsLoading } = useGetAllStudents()
+
+  // Normalise to a flat array — adjust the key if your response uses `.data` instead of `.Items`
+  const students = (studentsData as any)?.Items ?? (studentsData as any)?.data ?? []
 
   const {
     register,
@@ -37,6 +44,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
   const handleClose = () => {
     reset()
     setSelectedActivity(null)
+    setSelectedStudent(null)
     onClose()
   }
 
@@ -47,6 +55,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
       toast.success('Participation added successfully!')
       reset()
       setSelectedActivity(null)
+      setSelectedStudent(null)
       onSuccess()
     } catch {
       Toast.error('Error adding participation.')
@@ -54,6 +63,10 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
       setIsSubmitting(false)
     }
   }
+
+  // Helper to build a student's full display name
+  const getStudentLabel = (s: any) =>
+    [s?.firstName, s?.middleName, s?.lastName].filter(Boolean).join(' ')
 
   if (!visible) return null
 
@@ -83,17 +96,49 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
 
-          {/* Student ID */}
+          {/* Student — Combobox */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Student ID <span className="text-red-500">*</span>
+              Student <span className="text-red-500">*</span>
             </label>
-            <input
-              {...register('studentId', { required: 'Student ID is required' })}
-              placeholder="Enter student ID"
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            {errors.studentId && <p className="text-xs text-red-500">{errors.studentId.message}</p>}
+            {studentsLoading ? (
+              <div className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] text-gray-400">
+                Loading students...
+              </div>
+            ) : (
+              <Controller
+                name="studentId"
+                control={control}
+                rules={{ required: 'Student is required' }}
+                render={() => (
+                  <AppCombobox
+                    value={selectedStudent ? getStudentLabel(selectedStudent) : ''}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label=""
+                    name="studentId"
+                    form={null}
+                    options={students}
+                    selected={selectedStudent}
+                    onSelect={(student) => {
+                      setSelectedStudent(student)
+                      setValue('studentId', student?.id ?? '', { shouldValidate: true })
+                    }}
+                    onFocus={() => {}}
+                    getLabel={getStudentLabel}
+                    getValue={(s) => s?.id ?? ''}
+                    renderOptionExtra={(s) => (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {s?.registrationNumber ?? s?.id}
+                      </div>
+                    )}
+                  />
+                )}
+              />
+            )}
+            {errors.studentId && (
+              <p className="text-xs text-red-500">{errors.studentId.message}</p>
+            )}
           </div>
 
           {/* Activity */}
@@ -118,7 +163,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                     label=""
                     name="activityId"
                     form={null}
-                    options={activities}
+                    options={activitiesData}
                     selected={selectedActivity}
                     onSelect={(activity) => {
                       setSelectedActivity(activity)
@@ -134,7 +179,9 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                 )}
               />
             )}
-            {errors.activityId && <p className="text-xs text-red-500">{errors.activityId.message}</p>}
+            {errors.activityId && (
+              <p className="text-xs text-red-500">{errors.activityId.message}</p>
+            )}
           </div>
 
           {/* Award Position */}
@@ -152,7 +199,9 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
               })}
               className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            {errors.awardPosition && <p className="text-xs text-red-500">{errors.awardPosition.message}</p>}
+            {errors.awardPosition && (
+              <p className="text-xs text-red-500">{errors.awardPosition.message}</p>
+            )}
           </div>
 
           {/* Footer */}
