@@ -10,6 +10,20 @@ import { Toast } from '@/components/Toast/toast'
 import { useAddParticipation, useGetAllActivitiesDropdown } from '../../_Activities/hooks'
 import { AddParticipationPayload } from '../../_Activities/types/IActivities'
 import { useGetAllStudents } from '../../Student/hooks'
+
+const AWARD_POSITION_OPTIONS = [
+  { value: 1, label: 'First Place' },
+  { value: 2, label: 'Second Place' },
+  { value: 3, label: 'Third Place' },
+  { value: 4, label: 'Runner Up' },
+  { value: 5, label: 'Honorable Mention' },
+  { value: 6, label: 'Gold Standard' },
+  { value: 7, label: 'Creative Excellence' },
+  { value: 8, label: 'Best Team Leader' },
+  { value: 9, label: 'Active Participant' },
+  { value: 10, label: 'Outstanding Efforts' },
+]
+
 interface Props {
   visible: boolean
   onClose: () => void
@@ -20,6 +34,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<any>(null)
   const [selectedStudent, setSelectedStudent] = useState<any>(null)
+  const [selectedAwardPosition, setSelectedAwardPosition] = useState<any>(null)
 
   const { mutateAsync: addParticipation } = useAddParticipation()
   const { data: activitiesData = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
@@ -45,6 +60,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
     reset()
     setSelectedActivity(null)
     setSelectedStudent(null)
+    setSelectedAwardPosition(null)
     onClose()
   }
 
@@ -56,6 +72,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
       reset()
       setSelectedActivity(null)
       setSelectedStudent(null)
+      setSelectedAwardPosition(null)
       onSuccess()
     } catch {
       Toast.error('Error adding participation.')
@@ -127,11 +144,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                     onFocus={() => {}}
                     getLabel={getStudentLabel}
                     getValue={(s) => s?.id ?? ''}
-                    renderOptionExtra={(s) => (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {s?.registrationNumber ?? s?.id}
-                      </div>
-                    )}
+                    renderOptionExtra={() => <></>} // Return empty fragment instead of null
                   />
                 )}
               />
@@ -141,7 +154,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
             )}
           </div>
 
-          {/* Activity */}
+          {/* Activity — Combobox */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity <span className="text-red-500">*</span>
@@ -172,9 +185,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                     onFocus={() => {}}
                     getLabel={(a) => a?.name ?? ''}
                     getValue={(a) => a?.id ?? ''}
-                    renderOptionExtra={(a) => (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{a.id}</div>
-                    )}
+                    renderOptionExtra={() => <></>} // Return empty fragment instead of null
                   />
                 )}
               />
@@ -184,20 +195,35 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
             )}
           </div>
 
-          {/* Award Position */}
+          {/* Award Position — Combobox with enum names */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Award Position <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              min={1}
-              {...register('awardPosition', {
-                required: 'Award position is required',
-                valueAsNumber: true,
-                min: { value: 1, message: 'Position must be at least 1' },
-              })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            <Controller
+              name="awardPosition"
+              control={control}
+              rules={{ required: 'Award position is required' }}
+              render={() => (
+                <AppCombobox
+                  value={selectedAwardPosition?.label || ''}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label=""
+                  name="awardPosition"
+                  form={null}
+                  options={AWARD_POSITION_OPTIONS}
+                  selected={selectedAwardPosition}
+                  onSelect={(position) => {
+                    setSelectedAwardPosition(position)
+                    setValue('awardPosition', position?.value ?? 1, { shouldValidate: true })
+                  }}
+                  onFocus={() => {}}
+                  getLabel={(p) => p?.label ?? ''}
+                  getValue={(p) => p?.value ?? ''}
+                  renderOptionExtra={() => <></>} // Return empty fragment instead of null
+                />
+              )}
             />
             {errors.awardPosition && (
               <p className="text-xs text-red-500">{errors.awardPosition.message}</p>

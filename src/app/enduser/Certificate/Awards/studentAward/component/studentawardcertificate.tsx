@@ -13,14 +13,14 @@ interface Props {
 }
 
 const StudentAwardCertificate: React.FC<Props> = ({ visible, awardId, onClose }) => {
-  const { data: awardData } = useGetStudentAwardById(awardId);
+  const { data: awardData, isLoading: awardLoading } = useGetStudentAwardById(awardId);
   const { data: allschool } = useGetAllSchool();
   const { data: allstudent } = useGetAllStudents();
-  const { data: alltemplate } = useGetAllTemplate();
+  const { data: alltemplate, isLoading: templateLoading } = useGetAllTemplate();
 
-  const school = allschool?.Items.find((s) => s.id === awardData?.schoolId);
-  const student = allstudent?.Items.find((s) => s.id === awardData?.studentId);
-  const template = alltemplate?.Items.find((t) => t.id === awardData?.certificateTemplateId);
+  const school = allschool?.Items?.find((s) => s.id === awardData?.schoolId);
+  const student = allstudent?.Items?.find((s) => s.id === awardData?.studentId);
+  const template = alltemplate?.Items?.find((t) => t.id === awardData?.certificateTemplateId);
 
   const schoolName = school?.name;
   const schoolAddress = school?.address;
@@ -30,12 +30,16 @@ const StudentAwardCertificate: React.FC<Props> = ({ visible, awardId, onClose })
     .join(" ");
 
   // ── Award title logic ──────────────────────────────────────────────────────
-  // If the award has its own awardTitle (entered at creation), use that.
-  // Otherwise fall back to the template's templateSubject.
-  const awardTitle =
-    awardData?.awardTitle?.trim()
-      ? awardData.awardTitle
-      : template?.templateSubject ?? "";
+  // Wait for both awardData and template to finish loading before resolving.
+  // Priority: awardTitle entered at creation → templateSubject → fallback label
+  const isResolvingTitle = awardLoading || templateLoading;
+  const awardTitle = awardData?.awardTitle?.trim()
+    ? awardData.awardTitle
+    : template?.templateSubject?.trim()
+    ? template.templateSubject
+    : isResolvingTitle
+    ? null          // still loading — render a placeholder
+    : "Award Certificate"; // final fallback if both are empty
   // ──────────────────────────────────────────────────────────────────────────
 
   const handlePrint = () => {
@@ -115,10 +119,10 @@ const StudentAwardCertificate: React.FC<Props> = ({ visible, awardId, onClose })
             <p className="text-md mt-1 font-semibold">({schoolContact})</p>
           </header>
 
-          {/* Title — from awardTitle if set, else from templateSubject */}
+          {/* Title — from awardTitle if set, else from templateSubject, else fallback */}
           <div className="flex justify-center mb-6">
-            <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl">
-              {awardTitle}
+            <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl min-w-[200px] text-center">
+              {awardTitle ?? <span className="opacity-50 text-2xl">Loading...</span>}
             </h1>
           </div>
 
