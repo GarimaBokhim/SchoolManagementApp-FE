@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useState } from "react";
-import { Tag, Search, Filter, RotateCcw, CheckCircle, XCircle, Plus } from "lucide-react";
+import { Tag, Search, Filter, RotateCcw, CheckCircle, XCircle, Plus, Eye } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -31,7 +30,7 @@ const AllDocumentTypesForm = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [params, setParams] = useState("");
   const formRef = useRef<DateRangeFilterRef>(null);
-  const pageSize = 9;
+  const pageSize = 10;
 
   const form = useForm<FilterFormData>({
     defaultValues: { search: "", startDate: "", endDate: "" },
@@ -105,8 +104,6 @@ const AllDocumentTypesForm = () => {
 
   const docTypes = data?.Items || [];
   const totalPages = data?.TotalPages || 1;
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedDocTypes = docTypes.slice(startIndex, startIndex + pageSize);
 
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
@@ -123,13 +120,17 @@ const AllDocumentTypesForm = () => {
             <h1 className="text-xl font-semibold">All Document Types</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
-                type="button" text="Filter" icon={<Filter size={14} />}
+                type="button" 
+                text="Filter" 
+                icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {canAdd && (
                 <ButtonElement
-                  icon={<Plus size={18} />} type="button" text="Add New"
+                  icon={<Plus size={18} />} 
+                  type="button" 
+                  text="Add New"
                   onClick={() => setIsAddModalOpen(true)}
                   className="!font-semibold"
                 />
@@ -139,98 +140,124 @@ const AllDocumentTypesForm = () => {
 
           {/* Filter Panel */}
           {openFilter && (
-            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
-              <form onSubmit={form.handleSubmit(onFilterSubmit)} className="flex flex-wrap items-end gap-4 md:gap-6">
-                <DateRangeFilter ref={formRef} form={form} onSubmit={onFilterSubmit} setParams={setParams} />
-                <div className="flex flex-1 items-end gap-2 min-w-[200px]">
-                  <div className="flex-1 flex flex-col gap-1">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <form
+                onSubmit={form.handleSubmit(onFilterSubmit)}
+                className="flex flex-wrap items-end gap-4 md:gap-6"
+              >
+                <DateRangeFilter
+                  ref={formRef}
+                  form={form}
+                  onSubmit={onFilterSubmit}
+                  setParams={setParams}
+                />
+                <div className="flex-1 min-w-[240px]">
+                  <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search Document Types</label>
                     <div className="relative">
-                      <input type="text" placeholder="Search by name..." {...form.register("search")} className={inputClass} />
+                      <input 
+                        type="text" 
+                        placeholder="Search by name..." 
+                        {...form.register("search")} 
+                        className={inputClass} 
+                      />
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     </div>
                   </div>
-                  <ButtonElement type="submit" text="Filter" icon={<Filter size={14} />} className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150" />
-                  <ButtonElement type="button" text="Clear" icon={<RotateCcw size={14} />} onClick={handleClearFilters} className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150" />
+                </div>
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={handleClearFilters}
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
                 </div>
               </form>
             </div>
           )}
 
-          {/* Cards Grid */}
-          <div className="px-4 pb-4">
-            {docTypes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedDocTypes.map((dt: IDocumentType) => (
-                  <div key={dt.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
-                    <div className="p-5 flex flex-col h-full">
-
-                      {/* Title */}
-                      <div className="flex items-start gap-2 mb-3">
-                        <Tag size={20} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
-                          {dt.name}
-                        </h3>
-                      </div>
-
-                      {/* Status */}
-                      <div className={`flex items-center justify-center gap-2 p-2 rounded-lg border mb-3 ${dt.isActive
-                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
-                        : "text-gray-500 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                      }`}>
-                        {dt.isActive ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                        <p className="text-sm font-semibold">{dt.isActive ? "Active" : "Inactive"}</p>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 gap-2 mb-4 flex-grow">
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Created</p>
-                          <p className="text-xs font-medium text-gray-900 dark:text-white">
-                            {new Date(dt.createdAt).toLocaleDateString()}
-                          </p>
+          {/* Table */}
+          <div className="overflow-x-auto relative">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
+                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Description</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Created At</th>
+                  <th className="px-4 py-3 text-left">Modified At</th>
+                  <th className="px-4 py-3 text-center w-[80px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docTypes.length > 0 ? (
+                  docTypes.map((dt: IDocumentType, index: number) => (
+                    <tr
+                      key={dt.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                    >
+                      <td className="py-3 px-4">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        <div className="flex items-center gap-2">
+                          <Tag size={16} className="text-emerald-600 dark:text-emerald-400" />
+                          <span>{dt.name}</span>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Modified</p>
-                          <p className="text-xs font-medium text-gray-900 dark:text-white">
-                            {dt.modifiedAt && dt.modifiedAt !== "0001-01-01T00:00:00"
-                              ? new Date(dt.modifiedAt).toLocaleDateString()
-                              : "—"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <ButtonElement
-                        icon={<Search size={14} />} text="View Details"
-                        onClick={() => console.log("View doc type:", dt.id)}
-                        className="w-full !bg-blue-500 hover:!bg-blue-600 !text-white !text-xs !py-2 mt-2"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
-                      <th className="px-4 py-3 text-left">S.N</th>
-                      <th className="px-4 py-3 text-left">Name</th>
-                      <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">Created At</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colSpan={5} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
-                        No document types found.
+                      </td>
+                      <td className="py-3 px-4">
+                        {dt.description || "-"}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                            dt.isActive
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                              : "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                          }`}
+                        >
+                          {dt.isActive ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                          {dt.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {new Date(dt.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        {dt.modifiedAt && dt.modifiedAt !== "0001-01-01T00:00:00"
+                          ? new Date(dt.modifiedAt).toLocaleDateString()
+                          : "-"}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => console.log("View doc type:", dt.id)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
                       </td>
                     </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
+                      <Tag size={48} className="mx-auto mb-3 text-gray-400" />
+                      No document types found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -240,7 +267,9 @@ const AllDocumentTypesForm = () => {
             <Pagination
               form={paginationForm}
               pagination={{
-                currentPage, firstPage: 1, lastPage: totalPages,
+                currentPage, 
+                firstPage: 1, 
+                lastPage: totalPages,
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}

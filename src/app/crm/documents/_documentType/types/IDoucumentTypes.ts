@@ -1,4 +1,5 @@
 export interface IDocumentType {
+  description: string;
   id: string;
   name: string;
   isActive: boolean;
