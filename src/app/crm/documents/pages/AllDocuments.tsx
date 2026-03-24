@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
-import AllDocument from '../page/All'
-import AllDocumentType from '../page/AllDoucumetType'
+import AllDocument from '../_document/pages/All'
+import AllDocumentType from '../_documentType/page/All'
 
 const AllDocuments = () => {
   const tabs = [

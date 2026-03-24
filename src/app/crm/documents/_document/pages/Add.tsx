@@ -3,7 +3,7 @@
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { AddDocumentForm } from '../components/AddDocumentForm'
-import { IDocumentFormData } from '../types/IDocuments'
+import { IDocumentFormData } from '../model/IDocuments'
 
 interface AddDocumentModalProps {
   isOpen: boolean

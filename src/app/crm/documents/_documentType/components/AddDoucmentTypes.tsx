@@ -3,14 +3,14 @@
 import React, { useState } from 'react'
 import { X, Save } from 'lucide-react'
 import { UseFormReturn } from 'react-hook-form'
-import { useAddDocumentType } from '../hooks'
+import { useAddDocumentType } from '../../hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
 
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { IDocumentTypeFormData } from '../types/IDoucumentTypes'
-import { ICountry } from '../../university/univer-sity/types/ICountry'
-import { useGetAllCountries } from '../../university/univer-sity/hooks'
+import { ICountry } from '../../../university/univer-sity/types/ICountry'
+import { useGetAllCountries } from '../../../university/univer-sity/hooks'
 
 interface AddDocumentTypeFormProps {
   form: UseFormReturn<IDocumentTypeFormData>

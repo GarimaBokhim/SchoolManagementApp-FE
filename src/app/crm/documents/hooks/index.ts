@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IDocument, IDocumentFormData } from "../types/IDocuments";
-import { IDocumentType, IDocumentTypeFormData } from "../types/IDoucumentTypes";
+import { IDocument, IDocumentFormData } from "../_document/model/IDocuments";
+import { IDocumentType, IDocumentTypeFormData } from "../_documentType/types/IDoucumentTypes";
 import { IApplicant } from "../types/IApplicants";
 
 

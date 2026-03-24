@@ -9,15 +9,15 @@ import {
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { useGetAllDocuments } from "../hooks";
+import { useGetAllDocuments } from "../../hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddDocumentModal from "../pages/AddDocumentModel";
+import AddDocumentModal from "../pages/Add";
 import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { IDocument } from "../types/IDocuments";
+import { IDocument } from "../model/IDocuments";
 
 interface FilterFormData {
   search: string;

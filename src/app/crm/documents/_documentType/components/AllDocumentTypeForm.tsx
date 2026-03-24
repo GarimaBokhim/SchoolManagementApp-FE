@@ -6,15 +6,15 @@ import { Tag, Search, Filter, RotateCcw, CheckCircle, XCircle, Plus } from "luci
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { useGetAllDocumentTypes } from "../hooks";
+import { useGetAllDocumentTypes } from "../../hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddDocumentTypeModal from "../pages/AddDocumentType";
 import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { IDocumentType } from "../types/IDoucumentTypes";
+import AddDocumentTypeModal from "../page/Add";
 
 interface FilterFormData {
   search: string;
