@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Tag, Search, Filter, RotateCcw, CheckCircle, XCircle, Plus, Eye } from "lucide-react";
+import { Tag, Search, Filter, RotateCcw, CheckCircle, XCircle, Plus, MoreVertical } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -191,10 +191,7 @@ const AllDocumentTypesForm = () => {
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Description</th>
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Created At</th>
-                  <th className="px-4 py-3 text-left">Modified At</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
                 </tr>
               </thead>
@@ -209,13 +206,7 @@ const AllDocumentTypesForm = () => {
                         {(currentPage - 1) * pageSize + index + 1}
                       </td>
                       <td className="py-3 px-4 font-medium">
-                        <div className="flex items-center gap-2">
-                          <Tag size={16} className="text-emerald-600 dark:text-emerald-400" />
-                          <span>{dt.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        {dt.description || "-"}
+                        <span>{dt.name}</span>
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -229,28 +220,20 @@ const AllDocumentTypesForm = () => {
                           {dt.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
-                        {new Date(dt.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        {dt.modifiedAt && dt.modifiedAt !== "0001-01-01T00:00:00"
-                          ? new Date(dt.modifiedAt).toLocaleDateString()
-                          : "-"}
-                      </td>
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => console.log("View doc type:", dt.id)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-                          title="View Details"
+                          onClick={() => console.log("Actions menu for doc type:", dt.id)}
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                          title="Actions"
                         >
-                          <Eye size={18} />
+                          <MoreVertical size={18} />
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={4} className="p-8 text-center text-gray-500 dark:text-gray-400">
                       <Tag size={48} className="mx-auto mb-3 text-gray-400" />
                       No document types found
                     </td>

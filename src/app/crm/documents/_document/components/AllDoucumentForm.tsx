@@ -1,14 +1,16 @@
+// app/crm/documents/components/AllDocumentsForm.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import {
   FileText, Search, User, Filter, RotateCcw,
-  CheckCircle, Clock, XCircle, ExternalLink, Plus, Eye,
+  CheckCircle, Clock, XCircle, ExternalLink, Plus, MoreVertical,
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { useGetAllDocuments } from "../../hooks";
+import { useGetAllDocuments, useGetAllApplicants } from "../../hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
@@ -58,7 +60,19 @@ const AllDocumentsForm = () => {
   });
 
   const { data, isLoading, error, refetch } = useGetAllDocuments(params);
+  const { data: applicants, isLoading: applicantsLoading } = useGetAllApplicants();
   const { handleError, clearError } = useErrorHandler();
+
+  // Create a mapping of applicant ID to applicant name
+  const applicantMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (applicants) {
+      applicants.forEach((applicant: any) => {
+        map.set(applicant.id, applicant.fullName);
+      });
+    }
+    return map;
+  }, [applicants]);
 
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
@@ -111,7 +125,7 @@ const AllDocumentsForm = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || applicantsLoading) {
     return (
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
@@ -129,6 +143,11 @@ const AllDocumentsForm = () => {
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
     dark:text-white text-sm appearance-none`;
+
+  // Function to get applicant name by ID
+  const getApplicantName = (applicantId: string) => {
+    return applicantMap.get(applicantId) || applicantId || "-";
+  };
 
   return (
     <>
@@ -178,7 +197,7 @@ const AllDocumentsForm = () => {
                     <div className="relative">
                       <input 
                         type="text" 
-                        placeholder="Search by applicant ID..." 
+                        placeholder="Search by applicant name or ID..." 
                         {...form.register("search")} 
                         className={inputClass} 
                       />
@@ -211,14 +230,13 @@ const AllDocumentsForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Applicant ID</th>
+                  <th className="px-4 py-3 text-left">Applicant Name</th>
                   <th className="px-4 py-3 text-left">Document Type</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-left">Active</th>
-                  <th className="px-4 py-3 text-left">Created At</th>
                   <th className="px-4 py-3 text-left">Document Link</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {documents.length > 0 ? (
@@ -228,6 +246,7 @@ const AllDocumentsForm = () => {
                       color: "bg-gray-100 text-gray-700 dark:bg-gray-700/50 dark:text-gray-400", 
                       icon: <FileText size={14} /> 
                     };
+                    const applicantName = getApplicantName(doc.applicantId);
                     return (
                       <tr
                         key={doc.id}
@@ -237,7 +256,12 @@ const AllDocumentsForm = () => {
                           {(currentPage - 1) * pageSize + index + 1}
                         </td>
                         <td className="py-3 px-4 font-medium">
-                          {doc.applicantId}
+                          <div className="flex items-center gap-2">
+                          
+                            <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                              {applicantName}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           {doc.documentTypeId || "-"}
@@ -260,9 +284,6 @@ const AllDocumentsForm = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          {new Date(doc.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
                           {doc.docLink ? (
                             <a
                               href={doc.docLink.startsWith("http") ? doc.docLink : `https://${doc.docLink}`}
@@ -279,11 +300,11 @@ const AllDocumentsForm = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <button
-                            onClick={() => console.log("View doc:", doc.id)}
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-                            title="View Details"
+                            onClick={() => console.log("Actions menu for doc:", doc.id)}
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                            title="Actions"
                           >
-                            <Eye size={18} />
+                            <MoreVertical size={18} />
                           </button>
                         </td>
                       </tr>
@@ -291,7 +312,7 @@ const AllDocumentsForm = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
                       <FileText size={48} className="mx-auto mb-3 text-gray-400" />
                       No documents found
                     </td>
