@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import AllUniversity from '../univer-sity/pages/All'
+import AllUniversity from '../_university/pages/All'
 import AllCourse from '../courses/pages/All'
 import AllIntake from '../intake/pages/All'
 
@@ -11,7 +11,7 @@ const AllAcademicsProgram = () => {
     { id: 'intake', label: 'Intake', color: 'gray' },
   ]
 
-  const [activeTab, setActiveTab] = useState<string>('university')
+  const [activeTab, setActiveTab] = useState<string>('university')    
 
   const renderContent = () => {
     switch (activeTab) {

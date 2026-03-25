@@ -17,8 +17,8 @@ import { api } from "@/utils/instance";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddCourseModal from "./Add";
-import { useGetAllUniversities } from "../../univer-sity/hooks";
-import { IUniversity } from "../../univer-sity/types/IUniversity";
+import { useGetAllUniversities } from "../../_university/hooks";
+import { IUniversity } from "../../_university/types/IUniversity";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
