@@ -6,8 +6,8 @@ import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { IUniversity } from '../../univer-sity/types/IUniversity';
-import {  useGetUniversities } from '../../univer-sity/hooks';
+import { IUniversity } from '../../_university/types/IUniversity';
+import {  useGetUniversities } from '../../_university/hooks';
 
 
 interface CourseFormData {

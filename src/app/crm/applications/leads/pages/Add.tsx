@@ -7,7 +7,7 @@ import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { useGetAllCountries } from '@/app/crm/university/univer-sity/hooks';
+import { useGetAllCountries } from '@/app/crm/university/_university/hooks';
 import { useGetCoursesByUniversity, useGetUniversitiesByCountry } from '../hooks/cascadingHooks';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

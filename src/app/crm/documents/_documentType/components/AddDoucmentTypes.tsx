@@ -9,8 +9,8 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { IDocumentTypeFormData } from '../types/IDoucumentTypes'
-import { ICountry } from '../../../university/univer-sity/types/ICountry'
-import { useGetAllCountries } from '../../../university/univer-sity/hooks'
+import { ICountry } from '../../../university/_university/types/ICountry'
+import { useGetAllCountries } from '../../../university/_university/hooks'
 
 interface AddDocumentTypeFormProps {
   form: UseFormReturn<IDocumentTypeFormData>
