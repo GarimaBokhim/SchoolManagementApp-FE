@@ -1,16 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
-import { X, Save } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { X, Save, UploadCloud, FileText, XCircle } from 'lucide-react'
 import { UseFormReturn } from 'react-hook-form'
-import { useAddDocument, useGetAllApplicants, useGetAllDocumentTypes } from '../../hooks'
+import { useGetAllApplicants, useGetAllDocumentTypes } from '../../hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
-
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { IDocumentFormData } from '../model/IDocuments'
 import { IApplicant } from '../../types/IApplicants'
 import { IDocumentType } from '../../_documentType/types/IDoucumentTypes'
+import { useAddDocument } from '../hooks'
 
 interface AddDocumentFormProps {
   form: UseFormReturn<IDocumentFormData>
@@ -18,18 +18,7 @@ interface AddDocumentFormProps {
   onSuccess?: () => void
 }
 
-const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
-  bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
-  focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-  placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm`
-
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`
-
-const DOCUMENT_STATUS_OPTIONS = [
-  { label: 'Pending', value: 1 },
-  { label: 'Approved', value: 2 },
-  { label: 'Rejected', value: 3 },
-]
 
 export const AddDocumentForm: React.FC<AddDocumentFormProps> = ({
   form, onClose, onSuccess,
@@ -38,23 +27,49 @@ export const AddDocumentForm: React.FC<AddDocumentFormProps> = ({
   const [error, setError] = useState<string | null>(null)
   const [selectedApplicant, setSelectedApplicant] = useState<IApplicant | null>(null)
   const [selectedDocType, setSelectedDocType] = useState<IDocumentType | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const { handleError, clearError } = useErrorHandler()
   const { mutateAsync: addDocument } = useAddDocument()
   const { data: applicants } = useGetAllApplicants()
   const { data: docTypes } = useGetAllDocumentTypes()
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setSelectedFile(file)
+    form.setValue('docFile', file)
+    setError(null)
+  }
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null)
+    form.setValue('docFile', null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const handleSubmit = async (data: IDocumentFormData) => {
     clearError()
     if (!data.applicantId) { setError('Please select an applicant.'); return }
     if (!data.documentTypeId) { setError('Please select a document type.'); return }
+    if (!data.docFile) { setError('Please upload a document file.'); return }
+
     setIsSubmitting(true)
     setError(null)
+
     try {
-      await addDocument(data)
+      const formData = new FormData()
+      formData.append('applicantId', data.applicantId)
+      formData.append('documentTypeId', data.documentTypeId)
+      formData.append('docFile', data.docFile)
+
+      await addDocument(formData)
       toast.success('Document added successfully!')
       form.reset()
       setSelectedApplicant(null)
       setSelectedDocType(null)
+      setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       onSuccess?.()
       onClose()
     } catch (err) {
@@ -88,7 +103,8 @@ export const AddDocumentForm: React.FC<AddDocumentFormProps> = ({
           Document Information
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-6">
+
           {/* Applicant */}
           <div className="flex flex-col gap-1">
             <label className={labelClass}>
@@ -122,9 +138,11 @@ export const AddDocumentForm: React.FC<AddDocumentFormProps> = ({
               label="Select Document Type"
               name="documentTypeId"
               form={form}
-              options={(docTypes as { Items: IDocumentType[] } | IDocumentType[] | undefined) instanceof Array
-                ? docTypes as unknown as IDocumentType[]
-                : (docTypes as { Items?: IDocumentType[] } | undefined)?.Items ?? []}
+              options={
+                Array.isArray(docTypes)
+                  ? docTypes as unknown as IDocumentType[]
+                  : (docTypes as { Items?: IDocumentType[] } | undefined)?.Items ?? []
+              }
               selected={selectedDocType}
               dropDownWidth="w-full"
               dropdownPositionClass="absolute"
@@ -144,20 +162,75 @@ export const AddDocumentForm: React.FC<AddDocumentFormProps> = ({
             />
           </div>
 
-          {/* Document Status */}
-          <div className="flex flex-col gap-1">
+          {/* File Upload — full width */}
+          <div className="flex flex-col gap-1 md:col-span-2">
             <label className={labelClass}>
-              Document Status <span className="text-red-500">*</span>
+              Document File <span className="text-red-500">*</span>
             </label>
-            <select
-              {...form.register('documentStatus', { valueAsNumber: true, required: true })}
-              className={inputClass}
-            >
-              <option value="">Select status...</option>
-              {DOCUMENT_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+
+            {/* Hidden native file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {/* Drop zone / click area */}
+            {!selectedFile ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-2 w-full border-2 border-dashed 
+                           border-gray-300 dark:border-gray-600 rounded-xl p-8 
+                           hover:border-emerald-500 dark:hover:border-emerald-400 
+                           hover:bg-emerald-50 dark:hover:bg-emerald-900/10 
+                           transition-colors duration-200 cursor-pointer group"
+              >
+                <UploadCloud
+                  size={36}
+                  className="text-gray-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"
+                />
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  Click to upload a document
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  PDF, DOC, DOCX, JPG, PNG, WEBP supported
+                </p>
+              </button>
+            ) : (
+              /* File preview row */
+              <div className="flex items-center gap-3 w-full border border-emerald-300 dark:border-emerald-700 
+                              bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-4 py-3">
+                <FileText size={24} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
+                    {selectedFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                {/* Change file */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex-shrink-0"
+                >
+                  Change
+                </button>
+                {/* Remove file */}
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="text-red-400 hover:text-red-500 flex-shrink-0"
+                  title="Remove file"
+                >
+                  <XCircle size={18} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

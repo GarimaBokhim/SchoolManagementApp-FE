@@ -286,7 +286,7 @@ const AllDocumentsForm = () => {
                         <td className="py-3 px-4">
                           {doc.docLink ? (
                             <a
-                              href={doc.docLink.startsWith("http") ? doc.docLink : `https://${doc.docLink}`}
+                           href={doc.docLink.startsWith("http") ? doc.docLink : `https://schoolapp.netraverselabs.com/${doc.docLink}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
