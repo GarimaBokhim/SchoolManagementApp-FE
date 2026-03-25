@@ -40,18 +40,6 @@ export const useGetAllDocuments = (queryParams?: string) => {
   });
 };
 
-export const useAddDocument = () => {
-  const queryClient = useQueryClient();
-  return useMutation<IDocument, Error, IDocumentFormData>({
-    mutationFn: async (data) => {
-      const response = await api.post(DocumentEndPoints.addDocument, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [documentQueryKey] });
-    },
-  });
-};
 
 // --- Document Types ---
 export const useGetAllDocumentTypes = (queryParams?: string) => {

@@ -1,53 +1,55 @@
-import { useForm } from "react-hook-form";
-import type { ILedgers } from "../types/ILedgers";
-import { useEffect } from "react";
-import AddLedgerForm from "../components/AddLedger";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { LedgerValidator } from "../validators";
+import { useForm } from 'react-hook-form'
+import type { ILedgers } from '../types/ILedgers'
+import { useEffect } from 'react'
+import AddLedgerForm from '../components/AddLedger'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { LedgerValidator } from '../validators'
 
 interface Props {
-  visible: boolean;
-  onClose?: () => void;
+  visible: boolean
+  onClose?: () => void
+
+  selectedSubLedgerGroup?: string
 }
 
-const AddL = ({ visible, onClose }: Props) => {
+const AddL = ({ visible, onClose, selectedSubLedgerGroup }: Props) => {
   const form = useForm<ILedgers>({
     resolver: yupResolver(LedgerValidator),
     defaultValues: {
-      id: "",
-      name: "",
-      address: "",
-      panNo: "",
-      phoneNumber: "",
-      maxCreditPeriod: "",
-      maxDuePeriod: "",
+      id: '',
+      name: '',
+      address: '',
+      panNo: '',
+      phoneNumber: '',
+      maxCreditPeriod: '',
+      maxDuePeriod: '',
       openingBalance: null,
-      subledgerGroupId: "",
+      subledgerGroupId: '',
     },
-  });
+  })
 
   useEffect(() => {
     if (visible) {
       form.reset({
-        id: "",
-        name: "",
-        address: "",
-        panNo: "",
-        phoneNumber: "",
-        maxCreditPeriod: "",
+        id: '',
+        name: '',
+        address: '',
+        panNo: '',
+        phoneNumber: '',
+        maxCreditPeriod: '',
         openingBalance: null,
-        maxDuePeriod: "",
-        subledgerGroupId: "",
-      });
+        maxDuePeriod: '',
+        subledgerGroupId: '',
+      })
     }
-  }, [visible, form]);
+  }, [visible, form])
 
   const handleFormClose = () => {
-    form.reset();
-    if (onClose) onClose();
-  };
+    form.reset()
+    if (onClose) onClose()
+  }
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <div
@@ -60,10 +62,14 @@ const AddL = ({ visible, onClose }: Props) => {
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
-        <AddLedgerForm form={form} onClose={handleFormClose} />
+        <AddLedgerForm
+          form={form}
+          onClose={handleFormClose}
+          selectedSubLedgerGroup={selectedSubLedgerGroup}
+        />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddL;
+export default AddL

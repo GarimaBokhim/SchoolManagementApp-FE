@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
-import { useGetAllUniversities } from "@/app/crm/university/univer-sity/hooks";
+import { useGetAllUniversities } from "@/app/crm/university/_university/hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddIntakeModal from "../pages/Add";

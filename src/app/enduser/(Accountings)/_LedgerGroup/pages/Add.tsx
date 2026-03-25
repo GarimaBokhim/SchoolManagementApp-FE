@@ -1,41 +1,42 @@
-import { useForm } from "react-hook-form";
-import type { ILedgerGroup } from "../types/ILedgerGroup";
-import { useEffect } from "react";
-import AddLedgerForm from "../components/AddLedgerGroup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { LedgerValidator } from "../validators";
+import { useForm } from 'react-hook-form'
+import type { ILedgerGroup } from '../types/ILedgerGroup'
+import { useEffect } from 'react'
+import AddLedgerForm from '../components/AddLedgerGroup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { LedgerValidator } from '../validators'
 
 interface Props {
-  visible: boolean;
-  onClose?: () => void;
+  visible: boolean
+  onClose?: () => void
+  selectedMaster?: string
 }
 
-const AddLedger = ({ visible, onClose }: Props) => {
+const AddLedger = ({ visible, onClose, selectedMaster }: Props) => {
   const form = useForm<ILedgerGroup>({
     resolver: yupResolver(LedgerValidator),
     defaultValues: {
-      id: "",
-      name: "",
-      masterId: "",
+      id: '',
+      name: '',
+      masterId: '',
     },
-  });
+  })
 
   useEffect(() => {
     if (visible) {
       form.reset({
-        id: "",
-        name: "",
-        masterId: "",
-      });
+        id: '',
+        name: '',
+        masterId: '',
+      })
     }
-  }, [visible, form]);
+  }, [visible, form])
 
   const handleFormClose = () => {
-    form.reset();
-    if (onClose) onClose();
-  };
+    form.reset()
+    if (onClose) onClose()
+  }
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <div
@@ -49,10 +50,14 @@ const AddLedger = ({ visible, onClose }: Props) => {
         w-[55%] h-[54%] overflow-y-auto 
         flex flex-col`}
       >
-        <AddLedgerForm form={form} onClose={handleFormClose} />
+        <AddLedgerForm
+          form={form}
+          onClose={handleFormClose}
+          selectedMaster={selectedMaster}
+        />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddLedger;
+export default AddLedger
