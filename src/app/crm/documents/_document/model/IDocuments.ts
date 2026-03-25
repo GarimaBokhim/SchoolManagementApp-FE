@@ -15,5 +15,5 @@ export interface IDocument {
 export interface IDocumentFormData {
   applicantId: string;
   documentTypeId: string;
-  documentStatus: number;
+  docFile: File | null;
 }
