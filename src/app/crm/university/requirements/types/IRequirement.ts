@@ -1,8 +1,7 @@
-// types/requirement.ts
-
 export interface IDocumentCheckListDTO {
   documenteTypeId: string;
   isRequired?: boolean;
+  id?: string; 
 }
 
 export interface IRequirement {
@@ -52,4 +51,8 @@ export interface CourseApiResponse {
 export interface IDocumentType {
   id: string;
   name: string;
+}
+
+export interface RequiredDocTypePayload {
+  dockCheckListId: string;
 }
