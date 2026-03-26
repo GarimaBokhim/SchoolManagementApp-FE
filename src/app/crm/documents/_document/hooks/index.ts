@@ -1,7 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IDocument } from "../model/IDocuments";
 import { DocumentEndPoints, documentQueryKey } from "../../hooks";
 import { api } from "@/utils/instance";
+import { IPaginationResponse } from "@/types/IPaginationResponse";
 
 export const useAddDocument = () => {
   const queryClient = useQueryClient();
@@ -15,5 +16,17 @@ export const useAddDocument = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [documentQueryKey] });
     },
+  });
+};
+export const useGetAllDocumentTypesList = () => {
+  return useQuery({
+    queryKey: ['DocumentTypesList'],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<{ id: string; name: string }>>(
+        '/api/AcademicPrograms/AllDocumentsType'
+      );
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };
