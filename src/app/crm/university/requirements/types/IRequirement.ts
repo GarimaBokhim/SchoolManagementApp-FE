@@ -1,11 +1,14 @@
+// types/requirement.ts
+
 export interface IDocumentCheckListDTO {
   documenteTypeId: string;
+  isRequired?: boolean;
 }
 
 export interface IRequirement {
   id: string;
   descriptions: string;
-  countryId: string;
+  countryId?: string;
   courseId: string;
   courseName?: string;
   createdAt?: string;
@@ -13,7 +16,8 @@ export interface IRequirement {
   modifiedAt?: string;
   modifiedBy?: string;
   isActive?: boolean;
-  documentsCheckListDTOs?: IDocumentCheckListDTO[];
+  schoolId?: string;
+  DocumentsCheckListDTOs?: IDocumentCheckListDTO[];
 }
 
 export interface IRequirementFormData {
@@ -28,4 +32,24 @@ export interface ICourse {
   title: string;
   code?: string;
   isActive?: boolean;
+}
+
+// API Response Types
+export interface ApiResponse {
+  Items: IRequirement[];
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
+}
+
+export interface CourseApiResponse {
+  Items: ICourse[];
+}
+
+export interface IDocumentType {
+  id: string;
+  name: string;
 }
