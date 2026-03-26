@@ -4,6 +4,7 @@ import { useState } from 'react'
 import AllDocument from '../_document/pages/All'
 import AllDocumentType from '../_documentType/page/All'
 import AllRequirementsForm from '../../university/requirements/components/AllRequirementsForm'
+import AllIntakeForm from '../../university/intake/components/AllIntakeForm'
 
 
 const AllDocuments = () => {
@@ -11,6 +12,7 @@ const AllDocuments = () => {
     { id: 'document', label: 'Documents' },
     { id: 'documentType', label: 'Document Types' },
     {id:'requirements', label:'Requirements'},
+      { id: 'intake', label: 'Intake', color: 'gray' },
   ]
 
   const [activeTab, setActiveTab] = useState<string>('document')
@@ -23,6 +25,8 @@ const AllDocuments = () => {
         return <AllDocumentType />
       case 'requirements':
         return <AllRequirementsForm/>
+      case 'intake':
+        return <AllIntakeForm/>
       default:
         return <AllDocument />
     }
