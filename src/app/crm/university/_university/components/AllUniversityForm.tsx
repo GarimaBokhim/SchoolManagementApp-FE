@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useState } from "react";
@@ -12,6 +11,9 @@ import {
   Globe,
   ExternalLink,
   Plus,
+  ChevronRight,
+  Building2,
+  TrendingUp,
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
@@ -42,8 +44,15 @@ const generateDescription = (university: IUniversity): string => {
   if (university.descriptions && university.descriptions !== "str") {
     return university.descriptions;
   }
-  return `${university.name} is a university in ${university.country} with global ranking #${university.globalRanking}.`;
+  return `${university.name} is a distinguished institution in ${university.country} holding global ranking #${university.globalRanking}.`;
 };
+
+// Soft color palette per card index for subtle variety
+const cardAccents = [
+  { dot: "bg-emerald-500", badge: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800", icon: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-100 dark:ring-emerald-900/30" },
+  { dot: "bg-blue-500", badge: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800", icon: "text-blue-600 dark:text-blue-400", ring: "ring-blue-100 dark:ring-blue-900/30" },
+  { dot: "bg-violet-500", badge: "bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800", icon: "text-violet-600 dark:text-violet-400", ring: "ring-violet-100 dark:ring-violet-900/30" },
+];
 
 const AllUniversityForm = () => {
   const { menuStatus } = usePermissions();
@@ -52,7 +61,7 @@ const AllUniversityForm = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [params, setParams] = useState("");           
+  const [params, setParams] = useState("");
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 9;
 
@@ -67,15 +76,9 @@ const AllUniversityForm = () => {
     clearError();
     try {
       const queryParams = [
-        formData.search
-          ? `search=${encodeURIComponent(formData.search)}`
-          : null,
-        formData.startDate
-          ? `startDate=${encodeURIComponent(formData.startDate)}`
-          : null,
-        formData.endDate
-          ? `endDate=${encodeURIComponent(formData.endDate)}`
-          : null,
+        formData.search ? `search=${encodeURIComponent(formData.search)}` : null,
+        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
       ]
         .filter(Boolean)
         .join("&");
@@ -95,7 +98,6 @@ const AllUniversityForm = () => {
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
     }
   };
 
@@ -118,16 +120,16 @@ const AllUniversityForm = () => {
     const isAuthError = (error as any)?.response?.status === 401;
     return (
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden p-8">
-          <div className="text-center py-16">
-            <GraduationCap size={64} className="mx-auto text-red-400 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-              {isAuthError ? "Authentication Required" : "Error loading universities"}
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              {isAuthError ? "Please log in to view universities." : "Please try again later."}
-            </p>
+        <div className="bg-white dark:bg-[#1e1e21] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-sm p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+            <GraduationCap size={32} className="text-red-400" />
           </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            {isAuthError ? "Authentication Required" : "Failed to load"}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {isAuthError ? "Please log in to view universities." : "Something went wrong. Please try again."}
+          </p>
         </div>
       </div>
     );
@@ -136,9 +138,38 @@ const AllUniversityForm = () => {
   if (isLoading) {
     return (
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden p-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="bg-white dark:bg-[#1e1e21] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-sm overflow-hidden">
+          {/* Skeleton header */}
+          <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700/50">
+            <div className="h-6 w-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-9 w-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="h-9 w-24 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          {/* Skeleton cards */}
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-gray-100 dark:border-gray-700/50 p-5 space-y-3 animate-pulse">
+                <div className="flex gap-3 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/2" />
+                  </div>
+                </div>
+                <div className="h-8 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                <div className="space-y-1.5">
+                  <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-4/5" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-14 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-14 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                </div>
+                <div className="h-8 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -150,45 +181,68 @@ const AllUniversityForm = () => {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedUniversities = universities.slice(startIndex, startIndex + pageSize);
 
-  const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
-    dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
-    dark:text-white text-sm appearance-none`;
+  const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#2a2a2e] border border-gray-200
+    dark:border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40
+    focus:border-emerald-500 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500
+    transition-all duration-150`;
 
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#1e1e21] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-sm overflow-hidden">
 
-          {/* Header */}
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-            <h1 className="text-xl font-semibold">All Universities</h1>
-            <div className="flex items-center space-x-3">
-              <ButtonElement
+          {/* ── Header ── */}
+          <div className="flex w-full justify-between items-center px-5 py-4 border-b border-gray-100 dark:border-gray-700/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                <Building2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">
+                  All Universities
+                </h1>
+                {universities.length > 0 && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {universities.length} institution{universities.length !== 1 ? "s" : ""} found
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
                 type="button"
-                text="Filter"
-                icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-emerald-600 hover:!bg-emerald-700"
-              />
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-all duration-150
+                  ${openFilter
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30"
+                    : "bg-white dark:bg-[#2a2a2e] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600/50 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`}
+              >
+                <Filter size={14} />
+                Filter
+              </button>
               {canAdd && (
-                <ButtonElement
-                  icon={<Plus size={18} />}
+                <button
                   type="button"
-                  text="Add New"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="!font-semibold"
-                />
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold
+                    bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600
+                    shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30 transition-all duration-150"
+                >
+                  <Plus size={15} />
+                  Add New
+                </button>
               )}
             </div>
           </div>
 
-          {/* Filter Panel */}
+          {/* ── Filter Panel ── */}
           {openFilter && (
-            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="mx-5 my-4 bg-gray-50 dark:bg-[#25252a] rounded-xl border border-gray-200 dark:border-gray-700/50 p-4">
               <form
                 onSubmit={form.handleSubmit(onFilterSubmit)}
-                className="flex flex-wrap items-end gap-4 md:gap-6"
+                className="flex flex-wrap items-end gap-3"
               >
                 <DateRangeFilter
                   ref={formRef}
@@ -196,173 +250,192 @@ const AllUniversityForm = () => {
                   onSubmit={onFilterSubmit}
                   setParams={setParams}
                 />
-
                 <div className="flex flex-1 items-end gap-2 min-w-[200px]">
-                  <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Search Universities
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Search
                     </label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Search by name or location..."
+                        placeholder="Name or location..."
                         {...form.register("search")}
                         className={inputClass}
                       />
-                      <Search
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        size={16}
-                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                     </div>
                   </div>
-                  <ButtonElement
+                  <button
                     type="submit"
-                    text="Filter"
-                    icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-                  />
-                  <ButtonElement
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                      bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-150"
+                  >
+                    <Filter size={14} />
+                    Apply
+                  </button>
+                  <button
                     type="button"
-                    text="Clear"
-                    icon={<RotateCcw size={14} />}
                     onClick={handleClearFilters}
-                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
-                  />
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                      bg-white dark:bg-[#2a2a2e] text-gray-600 dark:text-gray-300
+                      border border-gray-200 dark:border-gray-600/50
+                      hover:border-gray-400 transition-all duration-150"
+                  >
+                    <RotateCcw size={14} />
+                    Clear
+                  </button>
                 </div>
               </form>
             </div>
           )}
 
-          {/* University Cards Grid */}
-          <div className="px-4 pb-4">
+          {/* ── Cards Grid ── */}
+          <div className="px-5 pb-5">
             {universities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedUniversities.map((university: IUniversity) => (
-                  <div
-                    key={university.id}
-                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
-                  >
-                    <div className="p-5 flex flex-col h-full">
-                      <div className="flex items-start gap-2 mb-3">
-                        <GraduationCap
-                          size={20}
-                          className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5"
-                        />
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
-                          {university.name}
-                        </h3>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {paginatedUniversities.map((university: IUniversity, index: number) => {
+                  const accent = cardAccents[index % cardAccents.length];
+                  return (
+                    <div
+                      key={university.id}
+                      className={`group relative bg-white dark:bg-[#252528] border border-gray-200 dark:border-gray-700/50
+                        rounded-2xl hover:shadow-lg hover:shadow-gray-100 dark:hover:shadow-black/20
+                        hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col`}
+                    >
+                      {/* Top accent bar */}
+                      <div className={`h-0.5 w-full ${accent.dot} opacity-60`} />
 
-                      <div className="mb-3">
-                        {/* ✅ FIX: justify-center centers all three items; ml-auto removed from button */}
-                        <div className="flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                          <MapPin
-                            size={16}
-                            className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
-                          />
-                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
-                            {generateLocation(university)}
-                          </p>
+                      <div className="p-5 flex flex-col h-full">
+
+                        {/* ── Card Header ── */}
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className={`w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 ring-2 ${accent.ring}
+                            flex items-center justify-center flex-shrink-0`}>
+                            <GraduationCap size={18} className={accent.icon} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug">
+                              {university.name}
+                            </h3>
+                          </div>
+                        </div>
+
+                        {/* ── Location badge ── */}
+                        <div className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl border mb-3 ${accent.badge}`}>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <MapPin size={13} className="flex-shrink-0" />
+                            <span className="text-xs font-medium truncate">
+                              {generateLocation(university)}
+                            </span>
+                          </div>
                           {canAdd && (
                             <button
                               type="button"
-                              onClick={() => {
-                                console.log("Add country for university:", university.id);
-                              }}
-                              className="p-1 border border-emerald-600 dark:border-emerald-400 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors duration-150 flex-shrink-0"
+                              onClick={() => console.log("Add country for university:", university.id)}
                               title="Add Country"
+                              className="w-5 h-5 rounded-md border border-current flex items-center justify-center
+                                hover:bg-white/50 dark:hover:bg-black/20 transition-colors flex-shrink-0"
                             >
-                              <Plus size={14} className="text-emerald-600 dark:text-emerald-400" />
+                              <Plus size={11} />
                             </button>
                           )}
                         </div>
-                      </div>
 
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-grow">
-                        {generateDescription(university)}
-                      </p>
+                        {/* ── Description ── */}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-4 flex-grow">
+                          {generateDescription(university)}
+                        </p>
 
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-                          <Award
-                            size={14}
-                            className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1"
-                          />
-                          <p className="text-xs font-medium text-gray-900 dark:text-white">
-                            Rank #{university.globalRanking || "N/A"}
-                          </p>
+                        {/* ── Stats row ── */}
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2.5 flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1">
+                              <Award size={12} className={accent.icon} />
+                              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">Rank</span>
+                            </div>
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                              #{university.globalRanking || "N/A"}
+                            </span>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2.5 flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1">
+                              <Globe size={12} className={accent.icon} />
+                              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">Country</span>
+                            </div>
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate max-w-full">
+                              {university.country || "N/A"}
+                            </span>
+                          </div>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-                          <Globe
-                            size={14}
-                            className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1"
-                          />
-                          <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                            {university.country || "N/A"}
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        {university.website && university.website !== "str" && (
-                          <a
-                            href={
-                              university.website.startsWith("http")
-                                ? university.website
-                                : `https://${university.website}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
+                        {/* ── Footer ── */}
+                        <div className="space-y-2 mt-auto">
+                          {university.website && university.website !== "str" && (
+                            <a
+                              href={university.website.startsWith("http") ? university.website : `https://${university.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs text-blue-500 dark:text-blue-400 hover:underline truncate"
+                            >
+                              <ExternalLink size={11} className="flex-shrink-0" />
+                              <span className="truncate">{university.website}</span>
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleViewDetails(university.id)}
+                            className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl
+                              text-xs font-semibold border transition-all duration-150
+                              bg-white dark:bg-[#1e1e21] text-gray-700 dark:text-gray-200
+                              border-gray-200 dark:border-gray-600/50
+                              hover:bg-gray-50 dark:hover:bg-gray-700/50
+                              group-hover:border-gray-300 dark:group-hover:border-gray-500`}
                           >
-                            <ExternalLink size={12} />
-                            <span className="truncate">{university.website}</span>
-                          </a>
-                        )}
-                        <ButtonElement
-                          icon={<Search size={14} />}
-                          text="View Details"
-                          onClick={() => handleViewDetails(university.id)}
-                          className="w-full !bg-blue-500 hover:!bg-blue-600 !text-white !text-xs !py-2 mt-2"
-                        />
+                            <Search size={12} />
+                            View Details
+                            <ChevronRight size={12} className="ml-auto opacity-50 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
-                      <th className="px-4 py-3 text-left">S.N</th>
-                      <th className="px-4 py-3 text-left">University Name</th>
-                      <th className="px-4 py-3 text-left hidden md:table-cell">Location</th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">Global Rank</th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">Website</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colSpan={6} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
-                        No universities found.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              /* ── Empty state ── */
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-700/30 flex items-center justify-center mb-4">
+                  <Building2 size={28} className="text-gray-300 dark:text-gray-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">
+                  No universities found
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs">
+                  Try adjusting your filters or add a new university to get started.
+                </p>
+                {canAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
+                      bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-150"
+                  >
+                    <Plus size={15} />
+                    Add First University
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Pagination */}
+        {/* ── Pagination ── */}
         {universities.length > 0 && totalPages > 1 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
               pagination={{
-                currentPage: currentPage,
+                currentPage,
                 firstPage: 1,
                 lastPage: totalPages,
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,

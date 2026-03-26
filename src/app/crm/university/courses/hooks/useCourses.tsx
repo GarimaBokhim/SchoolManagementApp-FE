@@ -59,7 +59,6 @@ export const useCourses = (): UseCoursesReturn => {
     }
   }, [universities]);
 
-  // ✅ new — fetch all courses from GetAllCourse (for combobox/dropdowns)
   const fetchGetAllCourses = useCallback(async () => {
     try {
       const response = await api.get('/api/AcademicPrograms/GetAllCourse');
