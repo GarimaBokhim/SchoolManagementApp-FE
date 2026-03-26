@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { IRequirementFormData } from '../types/IRequirement';
 import { AddRequirementForm } from '../components/AddRequirementForm';
+import { useCourses } from '../../courses/hooks/useCourses';
 
 interface AddRequirementModalProps {
   isOpen: boolean;
@@ -17,10 +17,14 @@ const AddRequirementModal: React.FC<AddRequirementModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { allCourses } = useCourses();
+
   const form = useForm<IRequirementFormData>({
     defaultValues: {
       descriptions: '',
+      countryId: '',
       courseId: '',
+      documentsCheckListDTOs: [],
     },
   });
 
@@ -46,6 +50,7 @@ const AddRequirementModal: React.FC<AddRequirementModalProps> = ({
       >
         <AddRequirementForm
           form={form}
+          courses={allCourses}
           onClose={handleOnClose}
           onSuccess={onSuccess}
         />
