@@ -8,17 +8,15 @@ import {
   Circle as Dot,
   FolderClosed,
 } from 'lucide-react'
+import { IChart, ISubLedgerGroupResponse } from '../types/Ichartofaccount'
+import AddL from '../../Ledger/pages/Add'
+import Add from '../../journal/pages/Add'
+import AddSubLedger from '../../_SubLedgerGroup/pages/Add'
 
-import { IChart, ISubLedgerGroupResponse } from '../types/IChartOfAccount'
-import AddL from '../../ledger/pages/Add'
-import AddSubLedgerGroup from '../../SubLedgerrGroup/pages/Add'
-import Add from '../../ledgerGroup/pages/Add'
 const MasterContainer = () => {
   const { data: allMasters } = useGetChartOfAccount() as {
     data: IChart[]
   }
-  const [selectedLedgerGroup, setSelectedLedgerGroup] = useState('')
-  const [selectedMaster, setSelectedMaster] = useState('')
   const [selectedSubLedgerGroup, setSelectedSubLedgerGroup] = useState('')
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {}
@@ -46,7 +44,6 @@ const MasterContainer = () => {
   ) => {
     e.preventDefault()
     e.stopPropagation()
-    setSelectedMaster(selectedMaster)
     setShowAddLedgerGroupForm(true)
   }
   const inputRefForLedgerGroup = useRef<HTMLInputElement>(null)
@@ -66,7 +63,6 @@ const MasterContainer = () => {
   ) => {
     e.preventDefault()
     e.stopPropagation()
-    setSelectedLedgerGroup(selectedLedgerGroupId)
     setSubLedgerGroupIdAdded(true)
     setShowAddSubLedgerGroupForm(true)
   }
@@ -279,21 +275,12 @@ const MasterContainer = () => {
       )}
       {showAddSubLedgerGroupForm && (
         <div className="fixed inset-0 ml-[13.7%] bg-[#FBFBFB] bg-opacity-70 flex items-center justify-center z-[100]">
-          <AddSubLedgerGroup
-            visible
-            onClose={handleCloseAddSubLedgerGroupForm}
-            ledgerIsAdded={subLedgerGroupIdAdded}
-            selectedLedgerGroup={selectedLedgerGroup}
-          />
+          <AddSubLedger visible onClose={handleCloseAddSubLedgerGroupForm} />
         </div>
       )}
       {showAddLedgerGroupForm && (
         <div className="fixed inset-0 ml-[13.7%] bg-[#FBFBFB] bg-opacity-70 flex items-center justify-center z-[100]">
-          <Add
-            visible
-            onClose={handleCloseAddLedgerGroup}
-            selectedMaster={selectedMaster}
-          />
+          <Add visible onClose={handleCloseAddLedgerGroup} />
         </div>
       )}
     </div>
