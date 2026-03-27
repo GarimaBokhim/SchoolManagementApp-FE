@@ -96,3 +96,13 @@ export const useGetUniversities = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+export const useGetAllCourses = () => {
+  return useQuery({
+    queryKey: ['AllCourses'],
+    queryFn: async () => {
+      const response = await api.get('/api/AcademicPrograms/GetAllCourse');
+      return response.data?.Items ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};

@@ -1,4 +1,4 @@
-// src/app/crm/applications/leads/types/ILeads.tsx
+// src/app/crm/applications/leads/types/ILeads.ts
 
 export interface Lead {
   id: string;
@@ -63,17 +63,6 @@ export interface UserProfileResponse {
   LastPage: number;
 }
 
-export interface ConvertToApplicantPayload {
-  userId: string;
-  passportNo: string;
-  targetCountry: string;
-}
-
-export interface ConvertToApplicantData {
-  passportNo: string;
-  targetCountry: string;
-}
-
 export interface FilterFormData {
   startDate: string;
   endDate: string;
@@ -86,7 +75,24 @@ export interface SearchParam {
   isPagination: boolean;
 }
 
-// ── Convert modal props ──
+// ── Updated payload matching new API schema ──
+export interface ConvertToApplicantPayload {
+  userId: string;
+  passportNo: string;
+  countryId: string;
+  universityId: string;
+  courseId: string;
+}
+
+// ── Form data (without userId) ──
+export interface ConvertToApplicantData {
+  passportNo: string;
+  countryId: string;
+  universityId: string;
+  courseId: string;
+}
+
+// ── Convert form props ──
 export interface ConvertToApplicantFormProps {
   selectedLead: SelectedLead;
   conversionData?: ConvertToApplicantData;

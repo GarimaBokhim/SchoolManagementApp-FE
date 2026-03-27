@@ -65,7 +65,10 @@ const useRequirements = (): UseRequirementsReturn => {
         modifiedBy: item.modifiedBy,
         isActive: item.isActive,
         schoolId: item.schoolId,
-        DocumentsCheckListDTOs: item.DocumentsCheckListDTOs || []
+        DocumentsCheckListDTOs: (item.DocumentsCheckListDTOs || []).map((d: any) => ({
+          documenteTypeId: d.documenteTypeId,
+          isRequired: d.isRequired || false
+        }))
       }));
       
       setRequirements(mappedItems);
@@ -90,7 +93,7 @@ const useRequirements = (): UseRequirementsReturn => {
   };
 
   const handleToggleRequired = async (doc: IDocumentCheckListDTO, requirementId: string) => {
-    if (!doc.id) {
+    if (!doc.documenteTypeId) {
       toast.error("Document checklist ID not found");
       return;
     }
@@ -98,14 +101,14 @@ const useRequirements = (): UseRequirementsReturn => {
     try {
       if (doc.isRequired) {
         // If currently required, make it non-required
-        await api.post("/api/AcademicPrograms/NonRequiredDocType", {
-          dockCheckListId: doc.id
+        await api.put("/api/AcademicPrograms/NonRequiredDocType", {
+          dockCheckListId: doc.documenteTypeId
         });
         toast.success("Document marked as optional");
       } else {
         // If currently non-required, make it required
-        await api.post("/api/AcademicPrograms/RequiredDocType", {
-          dockCheckListId: doc.id
+        await api.put("/api/AcademicPrograms/RequiredDocType", {
+          dockCheckListId: doc.documenteTypeId
         });
         toast.success("Document marked as required");
       }
