@@ -1,11 +1,11 @@
-import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import AllDocuments from "./pages/AllDocuments";
+import CrmLayoutWrapper from "../layout/crmLayoutWrapper";
 
 
 export default function DocumentsPage() {
   return (
-    <LayoutWrapper title="Documents">
+    <CrmLayoutWrapper title="Documents">
       <AllDocuments />
-    </LayoutWrapper>
+    </CrmLayoutWrapper>
   );
 }

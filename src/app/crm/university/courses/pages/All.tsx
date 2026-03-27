@@ -89,7 +89,6 @@ const AllCourseForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
 
-  // ✅ Now accepts queryParams and sends them to the API
   const fetchCourses = async (queryParams?: string) => {
     setLoadingCourses(true);
     try {
@@ -145,7 +144,7 @@ const AllCourseForm = () => {
       await toast.promise(
         (async () => {
           setParams(fullQuery);
-          await fetchCourses(fullQuery); // ✅ params now actually sent to API
+          await fetchCourses(fullQuery);
         })(),
         {
           loading: "Fetching data...",
@@ -163,7 +162,7 @@ const AllCourseForm = () => {
     form.reset({ search: "", startDate: "", endDate: "" });
     setParams("");
     formRef.current?.handleClear();
-    fetchCourses(); // no params = fetch all
+    fetchCourses();
   };
 
   const handleViewDetails = (_courseId: string) =>
@@ -172,7 +171,7 @@ const AllCourseForm = () => {
     Toast.success("Application started!");
 
   const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
-    dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
+    dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A53C3] 
     dark:text-white text-sm appearance-none`;
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -196,7 +195,10 @@ const AllCourseForm = () => {
     return (
       <div className="p-4 sm:p-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"
+            style={{ borderColor: "#0A53C3" }}
+          ></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">
             Loading courses...
           </p>
@@ -220,7 +222,8 @@ const AllCourseForm = () => {
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-emerald-600 hover:!bg-emerald-700"
+                className="!text-white !border-0"
+                style={{ backgroundColor: "#0A53C3" }}
               />
               {canAdd && (
                 <ButtonElement
@@ -228,7 +231,8 @@ const AllCourseForm = () => {
                   type="button"
                   text="Add New"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="!font-semibold"
+                  className="!font-semibold !text-white !border-0"
+                  style={{ backgroundColor: "#0A53C3" }}
                 />
               )}
             </div>
@@ -241,7 +245,6 @@ const AllCourseForm = () => {
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
               >
-                {/* Date Range Quick Filters — Yesterday / 7 Days / This Month / This Year */}
                 <DateRangeFilter
                   ref={formRef}
                   form={form}
@@ -249,7 +252,6 @@ const AllCourseForm = () => {
                   setParams={setParams}
                 />
 
-                {/* Search input + Filter/Clear buttons on the same row */}
                 <div className="flex flex-1 items-end gap-2 min-w-[200px]">
                   <div className="flex-1 flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -272,7 +274,8 @@ const AllCourseForm = () => {
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                    className="!text-white !border-0 transition-all duration-150"
+                    style={{ backgroundColor: "#0A53C3" }}
                   />
                   <ButtonElement
                     type="button"
@@ -295,12 +298,19 @@ const AllCourseForm = () => {
                     key={course.id}
                     className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
                   >
+                    {/* Card top accent bar */}
+                    <div
+                      className="h-1 w-full"
+                      style={{ backgroundColor: "#0A53C3" }}
+                    />
+
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2 flex-1">
                           <GraduationCap
                             size={18}
-                            className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                            className="flex-shrink-0"
+                            style={{ color: "#0A53C3" }}
                           />
                           <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
                             {course.title}
@@ -309,19 +319,32 @@ const AllCourseForm = () => {
                       </div>
 
                       <div className="mb-3">
-                        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                        <div
+                          className="flex items-center gap-2 p-2 rounded-lg border"
+                          style={{
+                            backgroundColor: "#EBF1FB",
+                            borderColor: "#C2D5F5",
+                          }}
+                        >
                           <Building2
                             size={16}
-                            className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                            className="flex-shrink-0"
+                            style={{ color: "#0A53C3" }}
                           />
-                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 line-clamp-1">
+                          <p
+                            className="text-sm font-semibold line-clamp-1"
+                            style={{ color: "#0A53C3" }}
+                          >
                             {getUniversityName(course.universityId)}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between mb-4">
-                        <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        <div
+                          className="text-sm font-semibold"
+                          style={{ color: "#0A53C3" }}
+                        >
                           {formatCurrency(course.tuationFee, course.currency)}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -335,13 +358,15 @@ const AllCourseForm = () => {
                           icon={<Eye size={14} />}
                           text="View Details"
                           onClick={() => handleViewDetails(course.id)}
-                          className="flex-1 !bg-blue-500 hover:!bg-blue-600 !text-white !text-xs !py-2"
+                          className="flex-1 !text-white !text-xs !py-2 !border-0"
+                          style={{ backgroundColor: "#3B82F6" }}
                         />
                         <ButtonElement
                           icon={<Send size={14} />}
                           text="Apply Now"
                           onClick={() => handleApplyNow(course.id)}
-                          className="flex-1 !bg-emerald-600 hover:!bg-emerald-700 !text-white !text-xs !py-2"
+                          className="flex-1 !text-white !text-xs !py-2 !border-0"
+                          style={{ backgroundColor: "#0A53C3" }}
                         />
                       </div>
                     </div>
@@ -352,18 +377,30 @@ const AllCourseForm = () => {
               <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
                 <table className="min-w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
+                    <tr
+                      className="uppercase font-semibold border-b text-white"
+                      style={{ backgroundColor: "#0A53C3" }}
+                    >
                       <th className="px-4 py-3 text-left">S.N</th>
                       <th className="px-4 py-3 text-left">Course Title</th>
-                      <th className="px-4 py-3 text-left hidden md:table-cell">University</th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">Study Level</th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">Tuition Fee</th>
+                      <th className="px-4 py-3 text-left hidden md:table-cell">
+                        University
+                      </th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">
+                        Study Level
+                      </th>
+                      <th className="px-4 py-3 text-left hidden lg:table-cell">
+                        Tuition Fee
+                      </th>
                       <th className="px-4 py-3 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td colSpan={6} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
+                      <td
+                        colSpan={6}
+                        className="p-4 text-center italic text-gray-500 dark:text-gray-400"
+                      >
                         No courses found.
                       </td>
                     </tr>
@@ -382,7 +419,6 @@ const AllCourseForm = () => {
           setIsAddModalOpen(false);
           fetchCourses();
         }}
-      
       />
     </>
   );
