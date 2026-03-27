@@ -1,10 +1,10 @@
-import { useGetCompanyById } from '@/app/enduser/accountant/company/hooks'
 import { useGetChartOfAccount } from '../hooks'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 
 const AllPrintChartOfAccountForm = () => {
   const { data: charts } = useGetChartOfAccount()
   const companyId = localStorage.getItem('companyId')
-  const { data: company } = useGetCompanyById(companyId)
+  const { data: company } = useGetSchoolById(companyId)
 
   const containerStyle = {
     backgroundColor: '#ffffff',
