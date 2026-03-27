@@ -1,11 +1,11 @@
-import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import Dashboard from "./components/dashboard";
+import CrmLayoutWrapper from "../layout/crmLayoutWrapper";
 
 export default function DashboardPageForcrm() {
   return (
-    <LayoutWrapper title="Dashboard"
+    <CrmLayoutWrapper title="Dashboard"
     >
       <Dashboard />
-    </LayoutWrapper>
+    </CrmLayoutWrapper>
   );
 }
