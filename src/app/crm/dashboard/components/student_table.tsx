@@ -1,16 +1,16 @@
 // src/components/StudentTable.tsx
-import React, { useState } from 'react';
-import { Eye, Edit, Phone, Mail, MoreVertical } from 'lucide-react';
-import { students } from '../data/mock_data';
+import React, { useState } from "react";
+import { Eye, Edit, Phone, Mail, MoreVertical } from "lucide-react";
+import { students } from "../data/mock_data";
 
-type StudentStatus = 'active' | 'pending' | 'rejected';
+type StudentStatus = "active" | "pending" | "rejected";
 type ApplicationStage =
-  | 'Visa Approved'
-  | 'Documentation'
-  | 'Offer Received'
-  | 'Visa Rejected'
-  | 'Under Review'
-  | 'Interview Scheduled';
+  | "Visa Approved"
+  | "Documentation"
+  | "Offer Received"
+  | "Visa Rejected"
+  | "Under Review"
+  | "Interview Scheduled";
 
 interface Student {
   id: number;
@@ -26,16 +26,23 @@ interface Student {
 }
 
 const StudentTable: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'rejected' | 'all'>('active');
+  const [activeTab, setActiveTab] = useState<
+    "active" | "pending" | "rejected" | "all"
+  >("active");
 
   const statusBadge = (status: StudentStatus) => {
     const styles: Record<StudentStatus, string> = {
-      active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      active:
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+      pending:
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+      rejected:
+        "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-200 dark:border-red-800",
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+      <span
+        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
+      >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -43,39 +50,66 @@ const StudentTable: React.FC = () => {
 
   const stageBadge = (stage: ApplicationStage) => {
     const colors: Record<ApplicationStage, string> = {
-      'Visa Approved': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-      Documentation: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      'Offer Received': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-      'Visa Rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      'Under Review': 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-      'Interview Scheduled': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+      "Visa Approved":
+        "bg-[#EBF1FB] text-[#0A53C3] dark:bg-[#0A53C3]/20 dark:text-[#5B8FE0] border border-[#C2D5F5] dark:border-[#0A53C3]/40",
+      Documentation:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
+      "Offer Received":
+        "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800",
+      "Visa Rejected":
+        "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-200 dark:border-red-800",
+      "Under Review":
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+      "Interview Scheduled":
+        "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800",
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors[stage] || 'bg-gray-100'}`}>
+      <span
+        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          colors[stage] || "bg-gray-100 text-gray-700"
+        }`}
+      >
         {stage}
       </span>
     );
   };
 
+  const tabs = ["active", "pending", "rejected", "all"] as const;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-[#161B27] rounded-xl shadow-sm border border-gray-200 dark:border-[#1E2A3E] overflow-hidden transition-colors duration-300">
       {/* Header & Tabs */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
+      <div className="p-5 border-b border-gray-100 dark:border-[#1E2A3E]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Student Applications</h2>
-            <p className="text-gray-500 dark:text-gray-400">Track and manage all student applications</p>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: "#0A53C3" }}
+              />
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                Student Applications
+              </h2>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 ml-[18px]">
+              Track and manage all student applications
+            </p>
           </div>
-          <div className="flex space-x-2">
-            {['active', 'pending', 'rejected', 'all'].map((tab) => (
+
+          {/* Tabs */}
+          <div className="flex items-center bg-gray-100 dark:bg-[#0D1117] rounded-lg p-1 gap-1">
+            {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab as typeof activeTab)}
-                className={`px-4 py-2 rounded-lg font-medium transition duration-200 ${
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                   activeTab === tab
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? "text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 }`}
+                style={
+                  activeTab === tab ? { backgroundColor: "#0A53C3" } : {}
+                }
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -87,49 +121,56 @@ const StudentTable: React.FC = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700/50">
+          <thead className="bg-gray-50 dark:bg-[#0D1117]/60">
             <tr>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Student
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Program & University
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Destination
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Status
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Application Stage
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Intake
-              </th>
-              <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">
-                Actions
-              </th>
+              {[
+                "Student",
+                "Program & University",
+                "Destination",
+                "Status",
+                "Application Stage",
+                "Intake",
+                "Actions",
+              ].map((col) => (
+                <th
+                  key={col}
+                  className="py-3 px-5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                >
+                  {col}
+                </th>
+              ))}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-100 dark:divide-[#1E2A3E]">
             {(students as Student[])
-              .filter((student) => activeTab === 'all' || student.status === activeTab)
+              .filter(
+                (student) =>
+                  activeTab === "all" || student.status === activeTab
+              )
               .map((student) => (
-                <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr
+                  key={student.id}
+                  className="hover:bg-[#EBF1FB]/40 dark:hover:bg-[#0A53C3]/5 transition-colors duration-150"
+                >
                   {/* Student */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold">
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-3">
+                      {/* Avatar with primary color */}
+                      <div
+                        className="h-9 w-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                        style={{ backgroundColor: "#0A53C3" }}
+                      >
                         {student.name
-                          .split(' ')
+                          .split(" ")
                           .map((n) => n[0])
-                          .join('')}
+                          .join("")}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800 dark:text-white">{student.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {student.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {student.location}, Nepal
                         </p>
                       </div>
@@ -137,54 +178,54 @@ const StudentTable: React.FC = () => {
                   </td>
 
                   {/* Program & University */}
-                  <td className="py-4 px-6">
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-white">{student.program}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{student.university}</p>
-                    </div>
+                  <td className="py-3.5 px-5">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {student.program}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {student.university}
+                    </p>
                   </td>
 
                   {/* Destination */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-800 dark:text-white">{student.country}</span>
-                    </div>
+                  <td className="py-3.5 px-5">
+                    <span className="text-sm text-gray-800 dark:text-gray-200">
+                      {student.country}
+                    </span>
                   </td>
 
                   {/* Status */}
-                  <td className="py-4 px-6">{statusBadge(student.status)}</td>
+                  <td className="py-3.5 px-5">{statusBadge(student.status)}</td>
 
                   {/* Stage */}
-                  <td className="py-4 px-6">{stageBadge(student.stage)}</td>
+                  <td className="py-3.5 px-5">{stageBadge(student.stage)}</td>
 
                   {/* Intake */}
-                  <td className="py-4 px-6">
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-white">{student.intake}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Applied: {student.applicationDate}
-                      </p>
-                    </div>
+                  <td className="py-3.5 px-5">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {student.intake}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Applied: {student.applicationDate}
+                    </p>
                   </td>
 
                   {/* Actions */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2">
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <Eye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <Edit className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <Phone className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <Mail className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                      </button>
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-1">
+                      {[Eye, Edit, Phone, Mail, MoreVertical].map(
+                        (IconComp, i) => (
+                          <button
+                            key={i}
+                            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 
+                              hover:text-[#0A53C3] dark:hover:text-[#5B8FE0]
+                              hover:bg-[#EBF1FB] dark:hover:bg-[#0A53C3]/10
+                              transition-all duration-150"
+                          >
+                            <IconComp className="h-3.5 w-3.5" />
+                          </button>
+                        )
+                      )}
                     </div>
                   </td>
                 </tr>
