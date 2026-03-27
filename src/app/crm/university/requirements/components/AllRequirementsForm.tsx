@@ -1,5 +1,3 @@
-// components/AllRequirementsForm.tsx
-
 "use client";
 
 import { useState, useRef, useMemo } from "react";
@@ -19,6 +17,7 @@ import useRequirements from "../hooks/UseRequirements";
 import { IDocumentCheckListDTO, IDocumentType, IRequirement } from "../types/IRequirement";
 import { useGetAllDocumentTypesList } from "@/app/crm/documents/_document/hooks";
 import { api } from "@/utils/instance";
+import { useGetAllCountries } from "../../_university/hooks";
 
 interface FilterFormData {
   search: string;
@@ -57,36 +56,26 @@ const ToggleSwitch = ({
 const DocumentToggleRow = ({
   doc,
   label,
-  documentTypeMap,
+  requirementId,
+  onToggleRequired,
 }: {
   doc: IDocumentCheckListDTO & { id: string };
   label: string;
-  documentTypeMap: Record<string, string>;
+  requirementId: string;
+  onToggleRequired: (doc: IDocumentCheckListDTO, requirementId: string) => Promise<void>;
 }) => {
-  // Initial state: toggle OFF (as per requirement)
-  const [isRequired, setIsRequired] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleToggle = async (val: boolean) => {
     setLoading(true);
     try {
-      if (val) {
-        // Toggle ON → RequiredDocType
-        await api.put("api/AcademicPrograms/RequiredDocType", {
-          dockCheckListId: doc.id,
-        });
-        toast.success(`${label} marked as required`);
-      } else {
-        // Toggle OFF → NonRequiredDocType
-        await api.put("api/AcademicPrograms/NonRequiredDocType", {
-          dockCheckListId: doc.id,
-        });
-        toast.success(`${label} marked as not required`);
-      }
-      setIsRequired(val);
+      const updatedDoc = {
+        ...doc,
+        isRequired: val
+      };
+      await onToggleRequired(updatedDoc, requirementId);
     } catch (error) {
       console.error("Failed to update document type requirement:", error);
-      toast.error("Failed to update. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -99,7 +88,7 @@ const DocumentToggleRow = ({
         {label}
       </span>
       <ToggleSwitch
-        checked={isRequired}
+        checked={doc.isRequired || false}
         onChange={handleToggle}
         disabled={loading}
       />
@@ -112,26 +101,30 @@ const RequirementCard = ({
   req,
   index,
   courseName,
+  countryName, // Add this prop
   canEdit,
   canDelete,
   onDelete,
   documentTypeMap,
+  onToggleRequired,
 }: {
   req: IRequirement;
   index: number;
   courseName: string;
+  countryName: string; // Add this
   canEdit: boolean;
   canDelete: boolean;
   onDelete: (id: string) => void;
   documentTypeMap: Record<string, string>;
+  onToggleRequired: (doc: IDocumentCheckListDTO, requirementId: string) => Promise<void>;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const docs: (IDocumentCheckListDTO & { id: string })[] =
     (req.DocumentsCheckListDTOs || []).map((d) => ({
       ...d,
-      // Use documenteTypeId as the id to send to the API
       id: d.documenteTypeId,
+      isRequired: d.isRequired || false,
     }));
 
   const getDocumentTypeName = (id: string) =>
@@ -141,24 +134,24 @@ const RequirementCard = ({
     <div className="bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col h-full">
       {/* Card Body */}
       <div className="p-4 flex flex-col gap-3">
-        {/* Top row */}
+        {/* Top row - Show country name instead of number */}
         <div className="flex items-start justify-between">
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-            #{index + 1}
+          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+            {countryName || "No Country"}
           </span>
 
           <div className="flex items-center gap-1">
-           {/* Edit Button - always visible */}
-<button
-  type="button"
-  onClick={() => toast("Edit functionality coming soon")}
-  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md transition"
->
-  <Edit size={12} />
-  Edit
-</button>
+            {/* Edit Button - always visible */}
+            <button
+              type="button"
+              onClick={() => toast("Edit functionality coming soon")}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md transition"
+            >
+              <Edit size={12} />
+              Edit
+            </button>
 
-            {/* Delete via dropdown (only if canDelete and no canEdit, or always show) */}
+            {/* Delete via dropdown (only if canDelete) */}
             {canDelete && (
               <div className="relative">
                 <button
@@ -216,7 +209,8 @@ const RequirementCard = ({
                 key={`doc-${doc.documenteTypeId}-${idx}`}
                 doc={doc}
                 label={getDocumentTypeName(doc.documenteTypeId)}
-                documentTypeMap={documentTypeMap}
+                requirementId={req.id}
+                onToggleRequired={onToggleRequired}
               />
             ))}
           </div>
@@ -240,10 +234,13 @@ const AllRequirementsForm = () => {
     defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
-  const { filtered, loading, courseMap, fetchRequirements, handleDelete } = useRequirements();
+  const { filtered, loading, courseMap, fetchRequirements, handleDelete, handleToggleRequired } = useRequirements();
   const { handleError, clearError } = useErrorHandler();
 
   const { data: documentTypes = [] } = useGetAllDocumentTypesList();
+  
+  // Fetch countries using the existing hook
+  const { data: countries = [], isLoading: countriesLoading } = useGetAllCountries();
 
   const documentTypeMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -252,6 +249,15 @@ const AllRequirementsForm = () => {
     });
     return map;
   }, [documentTypes]);
+
+  // Create a country map for quick lookup
+  const countryMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    countries.forEach((country: any) => {
+      map[country.id] = country.name;
+    });
+    return map;
+  }, [countries]);
 
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
@@ -364,7 +370,7 @@ const AllRequirementsForm = () => {
 
           {/* Card Grid */}
           <div className="p-4 sm:p-6">
-            {loading ? (
+            {loading || countriesLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="h-64 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
@@ -378,10 +384,12 @@ const AllRequirementsForm = () => {
                     req={req}
                     index={index}
                     courseName={courseMap[req.courseId] ?? "Unknown Course"}
+                    countryName={countryMap[req.countryId ?? ""] ?? "Unknown Country"}
                     canEdit={canEdit}
                     canDelete={canDelete}
                     onDelete={handleDelete}
                     documentTypeMap={documentTypeMap}
+                    onToggleRequired={handleToggleRequired}
                   />
                 ))}
               </div>
