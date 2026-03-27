@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useRef, useMemo } from "react";
-import { Filter, Plus, RotateCcw, BookOpen, FileText, CheckCircle, XCircle, MoreVertical, Edit, AlertCircle } from "lucide-react";
+import { Filter, Plus, RotateCcw, BookOpen, FileText, MoreVertical, Edit } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import useRequirements from "../hooks/UseRequirements";
 import { IDocumentCheckListDTO, IDocumentType, IRequirement } from "../types/IRequirement";
 import { useGetAllDocumentTypesList } from "@/app/crm/documents/_document/hooks";
+import { api } from "@/utils/instance";
 
 interface FilterFormData {
   search: string;
@@ -25,6 +26,88 @@ interface FilterFormData {
   endDate: string;
 }
 
+// ─── Toggle Switch Component ───────────────────────────────────────────────────
+const ToggleSwitch = ({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (val: boolean) => void;
+  disabled?: boolean;
+}) => (
+  <button
+    type="button"
+    disabled={disabled}
+    onClick={() => onChange(!checked)}
+    className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
+      ${checked ? "bg-emerald-500" : "bg-gray-300 dark:bg-gray-600"}
+      ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+    `}
+  >
+    <span
+      className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow transition duration-200 ease-in-out
+        ${checked ? "translate-x-4" : "translate-x-0"}
+      `}
+    />
+  </button>
+);
+
+// ─── Document Row with Toggle ──────────────────────────────────────────────────
+const DocumentToggleRow = ({
+  doc,
+  label,
+  documentTypeMap,
+}: {
+  doc: IDocumentCheckListDTO & { id: string };
+  label: string;
+  documentTypeMap: Record<string, string>;
+}) => {
+  // Initial state: toggle OFF (as per requirement)
+  const [isRequired, setIsRequired] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleToggle = async (val: boolean) => {
+    setLoading(true);
+    try {
+      if (val) {
+        // Toggle ON → RequiredDocType
+        await api.put("api/AcademicPrograms/RequiredDocType", {
+          dockCheckListId: doc.id,
+        });
+        toast.success(`${label} marked as required`);
+      } else {
+        // Toggle OFF → NonRequiredDocType
+        await api.put("api/AcademicPrograms/NonRequiredDocType", {
+          dockCheckListId: doc.id,
+        });
+        toast.success(`${label} marked as not required`);
+      }
+      setIsRequired(val);
+    } catch (error) {
+      console.error("Failed to update document type requirement:", error);
+      toast.error("Failed to update. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2">
+      <FileText size={12} className="text-gray-400 shrink-0" />
+      <span className="text-xs text-gray-600 dark:text-gray-400 flex-1 truncate">
+        {label}
+      </span>
+      <ToggleSwitch
+        checked={isRequired}
+        onChange={handleToggle}
+        disabled={loading}
+      />
+    </div>
+  );
+};
+
+// ─── Requirement Card ──────────────────────────────────────────────────────────
 const RequirementCard = ({
   req,
   index,
@@ -44,15 +127,15 @@ const RequirementCard = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Get documents from the correct property name (capital D)
-  const docs: IDocumentCheckListDTO[] = req.DocumentsCheckListDTOs || [];
-  const requiredDocs = docs.filter((d) => d.isRequired === true);
-  const optionalDocs = docs.filter((d) => d.isRequired !== true);
+  const docs: (IDocumentCheckListDTO & { id: string })[] =
+    (req.DocumentsCheckListDTOs || []).map((d) => ({
+      ...d,
+      // Use documenteTypeId as the id to send to the API
+      id: d.documenteTypeId,
+    }));
 
-  // Get document type name from the map
-  const getDocumentTypeName = (id: string) => {
-    return documentTypeMap[id] || `Unknown (${id.slice(-8)})`;
-  };
+  const getDocumentTypeName = (id: string) =>
+    documentTypeMap[id] || `Unknown (${id.slice(-8)})`;
 
   return (
     <div className="bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col h-full">
@@ -63,17 +146,20 @@ const RequirementCard = ({
           <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
             #{index + 1}
           </span>
-          <div className="flex items-center gap-2">
-            {req.isActive ? (
-              <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
-                <CheckCircle size={11} /> Active
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">
-                <XCircle size={11} /> Inactive
-              </span>
-            )}
-            {(canEdit || canDelete) && (
+
+          <div className="flex items-center gap-1">
+           {/* Edit Button - always visible */}
+<button
+  type="button"
+  onClick={() => toast("Edit functionality coming soon")}
+  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md transition"
+>
+  <Edit size={12} />
+  Edit
+</button>
+
+            {/* Delete via dropdown (only if canDelete and no canEdit, or always show) */}
+            {canDelete && (
               <div className="relative">
                 <button
                   type="button"
@@ -84,30 +170,16 @@ const RequirementCard = ({
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 top-7 w-36 bg-white dark:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
-                    {canEdit && (
-                      <button
-                        type="button"
-                        onClick={() => { 
-                          setMenuOpen(false); 
-                          toast("Edit functionality coming soon");
+                    <div className="px-1 py-1">
+                      <DeleteButton
+                        onConfirm={() => {
+                          setMenuOpen(false);
+                          onDelete(req.id);
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                      >
-                        <Edit size={13} /> Edit
-                      </button>
-                    )}
-                    {canDelete && (
-                      <div className="px-1 py-1">
-                        <DeleteButton
-                          onConfirm={() => { 
-                            setMenuOpen(false); 
-                            onDelete(req.id); 
-                          }}
-                          headerText={<span>Delete Requirement</span>}
-                          content="Are you sure you want to delete this requirement?"
-                        />
-                      </div>
-                    )}
+                        headerText={<span>Delete Requirement</span>}
+                        content="Are you sure you want to delete this requirement?"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -130,7 +202,7 @@ const RequirementCard = ({
         </div>
       </div>
 
-      {/* Document Checklist Section - Always visible, no expand/collapse */}
+      {/* Document Checklist Section */}
       <div className="border-t border-gray-100 dark:border-gray-700 mt-auto">
         {docs.length === 0 ? (
           <div className="flex items-center gap-2 px-4 py-3 text-xs text-gray-400 dark:text-gray-500 italic">
@@ -139,45 +211,14 @@ const RequirementCard = ({
           </div>
         ) : (
           <div className="px-4 py-3 flex flex-col gap-2">
-            {/* Required Documents List */}
-            {requiredDocs.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                {requiredDocs.map((doc, idx) => (
-                  <div
-                    key={`required-${doc.documenteTypeId}-${idx}`}
-                    className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2"
-                  >
-                    <AlertCircle size={12} className="text-amber-500 shrink-0" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 flex-1">
-                      {getDocumentTypeName(doc.documenteTypeId)}
-                    </span>
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold shrink-0">
-                      Required
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Optional Documents List */}
-            {optionalDocs.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                {optionalDocs.map((doc, idx) => (
-                  <div
-                    key={`optional-${doc.documenteTypeId}-${idx}`}
-                    className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2"
-                  >
-                    <FileText size={12} className="text-gray-400 shrink-0" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400 flex-1">
-                      {getDocumentTypeName(doc.documenteTypeId)}
-                    </span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
-                      Optional
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {docs.map((doc, idx) => (
+              <DocumentToggleRow
+                key={`doc-${doc.documenteTypeId}-${idx}`}
+                doc={doc}
+                label={getDocumentTypeName(doc.documenteTypeId)}
+                documentTypeMap={documentTypeMap}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -185,6 +226,7 @@ const RequirementCard = ({
   );
 };
 
+// ─── Main Component ────────────────────────────────────────────────────────────
 const AllRequirementsForm = () => {
   const { menuStatus } = usePermissions();
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus);
@@ -200,11 +242,9 @@ const AllRequirementsForm = () => {
 
   const { filtered, loading, courseMap, fetchRequirements, handleDelete } = useRequirements();
   const { handleError, clearError } = useErrorHandler();
-  
-  // Fetch document types for mapping IDs to names
+
   const { data: documentTypes = [] } = useGetAllDocumentTypesList();
 
-  // Create a map of document type ID to name for quick lookup
   const documentTypeMap = useMemo(() => {
     const map: Record<string, string> = {};
     documentTypes.forEach((type: IDocumentType) => {

@@ -11,7 +11,6 @@ const AllAcademicsProgram = () => {
     { id: 'course', label: 'Course', color: 'gray' },
    
   ]
-
   const [activeTab, setActiveTab] = useState<string>('university')    
 
   const renderContent = () => {
