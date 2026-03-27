@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Save, Plus, Trash2 } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { api } from '@/utils/instance';
@@ -46,16 +46,14 @@ export const AddRequirementForm: React.FC<AddRequirementFormProps> = ({
   // Watch the current documentsCheckListDTOs from form
   const docChecklist = form.watch('documentsCheckListDTOs') ?? [];
 
+  // Filter out already selected document types
+  const availableDocumentTypes = useMemo(() => {
+    const selectedIds = new Set(docChecklist.map(d => d.documenteTypeId));
+    return documentTypes.filter(doc => !selectedIds.has(doc.id));
+  }, [documentTypes, docChecklist]);
+
   const handleAddDocumentType = () => {
     if (!selectedDocType) return;
-
-    const alreadyAdded = docChecklist.some(
-      (d) => d.documenteTypeId === selectedDocType.id
-    );
-    if (alreadyAdded) {
-      toast.error('This document type is already added.');
-      return;
-    }
 
     form.setValue('documentsCheckListDTOs', [
       ...docChecklist,
@@ -220,62 +218,67 @@ export const AddRequirementForm: React.FC<AddRequirementFormProps> = ({
         </div>
 
         {/* Document Checklist */}
-        <div className="flex flex-col gap-2 mb-6">
+        <div className="flex flex-col gap-3 mb-6">
           <label className={labelClass}>Document Checklist</label>
 
-          {/* Add row */}
-          <div className="flex gap-2 items-center">
-            <div className="flex-1">
-              <AppCombobox
-                label="Select Document Type"
-                name="documentTypeSelector"
-                form={form}
-                options={documentTypes}
-                selected={selectedDocType}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                onSelect={(doc) => setSelectedDocType(doc)}
-                getLabel={(doc) => doc?.name ?? ''}
-                getValue={(doc) => doc?.id ?? ''}
-                placeholder="Search document type..."
-              />
-            </div>
+          {/* Document type selection field */}
+          <div className="w-full">
+            <AppCombobox
+              label="Select Document Type"
+              name="documentTypeSelector"
+              form={form}
+              options={availableDocumentTypes}
+              selected={selectedDocType}
+              dropDownWidth="w-full"
+              dropdownPositionClass="absolute"
+              onSelect={(doc) => setSelectedDocType(doc)}
+              getLabel={(doc) => doc?.name ?? ''}
+              getValue={(doc) => doc?.id ?? ''}
+              placeholder="Search document type..."
+            />
+          </div>
+
+          {/* Add button - now below the selection field */}
+          <div>
             <button
               type="button"
               onClick={handleAddDocumentType}
               disabled={!selectedDocType}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-green-600 hover:bg-green-700
                          text-white rounded-lg text-sm font-medium transition-colors
-                         disabled:bg-green-300 disabled:cursor-not-allowed shrink-0"
+                         disabled:bg-green-300 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
-              Add
+              Add Document Type
             </button>
           </div>
 
           {/* Added document types list */}
           {docChecklist.length > 0 && (
-            <ul className="flex flex-col gap-2 mt-1">
-              {docChecklist.map((doc, index) => (
-                <li
-                  key={doc.documenteTypeId}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg
-                             bg-gray-50 dark:bg-[#1f1f22] border border-gray-200 dark:border-gray-700 text-sm"
-                >
-                  <span className="text-gray-700 dark:text-gray-200">
-                    <span className="text-gray-400 dark:text-gray-500 mr-2">{index + 1}.</span>
-                    {getDocumentTypeName(doc.documenteTypeId)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveDocumentType(doc.documenteTypeId)}
-                    className="text-red-400 hover:text-red-600 transition-colors"
+            <div className="mt-2">
+              <label className={`${labelClass} mb-2`}>Added Documents</label>
+              <ul className="flex flex-col gap-2">
+                {docChecklist.map((doc, index) => (
+                  <li
+                    key={doc.documenteTypeId}
+                    className="flex items-center justify-between px-3 py-2 rounded-lg
+                               bg-gray-50 dark:bg-[#1f1f22] border border-gray-200 dark:border-gray-700 text-sm"
                   >
-                    <Trash2 size={15} />
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <span className="text-gray-700 dark:text-gray-200">
+                      <span className="text-gray-400 dark:text-gray-500 mr-2">{index + 1}.</span>
+                      {getDocumentTypeName(doc.documenteTypeId)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDocumentType(doc.documenteTypeId)}
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 

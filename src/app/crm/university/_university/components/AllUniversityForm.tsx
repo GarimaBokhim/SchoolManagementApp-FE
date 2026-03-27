@@ -252,9 +252,6 @@ const AllUniversityForm = () => {
                 />
                 <div className="flex flex-1 items-end gap-2 min-w-[200px]">
                   <div className="flex-1 flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      Search
-                    </label>
                     <div className="relative">
                       <input
                         type="text"

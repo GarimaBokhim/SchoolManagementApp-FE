@@ -66,7 +66,6 @@ export const FollowUpTable = ({
             <th className="px-4 py-3 text-left">End Time</th>
             <th className="px-4 py-3 text-left">Notes</th>
             <th className="px-4 py-3 text-left">Status</th>
-            <th className="px-4 py-3 text-left">Created At</th>
           </tr>
         </thead>
         <tbody>
@@ -96,7 +95,6 @@ export const FollowUpTable = ({
                 <td className="py-1 px-4">
                   <StatusBadge status={followUp.followUpStatus} />
                 </td>
-                <td className="py-1 px-4">{formatDate(followUp.createdAt)}</td>
               </tr>
             ))
           ) : (

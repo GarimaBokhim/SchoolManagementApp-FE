@@ -1,9 +1,7 @@
-// hooks/UseRequirements.ts
-
 import { useState, useEffect } from "react";
 import { api } from "@/utils/instance";
 import toast from "react-hot-toast";
-import { ApiResponse, CourseApiResponse, IRequirement } from "../types/IRequirement";
+import { ApiResponse, CourseApiResponse, IRequirement, IDocumentCheckListDTO } from "../types/IRequirement";
 
 interface UseRequirementsReturn {
   requirements: IRequirement[];
@@ -12,6 +10,7 @@ interface UseRequirementsReturn {
   courseMap: Record<string, string>;
   fetchRequirements: (queryParams?: string) => Promise<void>;
   handleDelete: (id: string) => Promise<void>;
+  handleToggleRequired: (doc: IDocumentCheckListDTO, requirementId: string) => Promise<void>;
 }
 
 const useRequirements = (): UseRequirementsReturn => {
@@ -90,6 +89,36 @@ const useRequirements = (): UseRequirementsReturn => {
     }
   };
 
+  const handleToggleRequired = async (doc: IDocumentCheckListDTO, requirementId: string) => {
+    if (!doc.id) {
+      toast.error("Document checklist ID not found");
+      return;
+    }
+
+    try {
+      if (doc.isRequired) {
+        // If currently required, make it non-required
+        await api.post("/api/AcademicPrograms/NonRequiredDocType", {
+          dockCheckListId: doc.id
+        });
+        toast.success("Document marked as optional");
+      } else {
+        // If currently non-required, make it required
+        await api.post("/api/AcademicPrograms/RequiredDocType", {
+          dockCheckListId: doc.id
+        });
+        toast.success("Document marked as required");
+      }
+      
+      // Refresh the requirements list to get updated data
+      await fetchRequirements();
+    } catch (error) {
+      console.error("Failed to toggle document requirement:", error);
+      toast.error("Failed to update document requirement status");
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -105,7 +134,8 @@ const useRequirements = (): UseRequirementsReturn => {
     loading, 
     courseMap, 
     fetchRequirements, 
-    handleDelete 
+    handleDelete,
+    handleToggleRequired
   };
 };
 
