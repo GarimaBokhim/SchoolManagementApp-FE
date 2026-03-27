@@ -3,11 +3,11 @@
 import React from "react";
 import { dashboardStats } from "../data/mock_data";
 import StatsCard from "./stats_card";
-import QuickActions from "@/app/enduser/dashboard/components/quickActions";
 import StudentDestinations from "./student_destination";
 import UpcomingDeadlines from "./upcomming_deadline";
 import PopularPrograms from "./popular_programs";
 import StudentTable from "./student_table";
+import QuickActions from "./quickActionscrm";
 
 const Dashboard: React.FC = () => {
   return (
@@ -39,8 +39,6 @@ const Dashboard: React.FC = () => {
         <UpcomingDeadlines />
         <StudentDestinations />
       </div>
-
-     
     </div>
   );
 };
