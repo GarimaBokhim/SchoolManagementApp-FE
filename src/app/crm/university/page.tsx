@@ -1,10 +1,10 @@
-import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
+import CrmLayoutWrapper from "../layout/crmLayoutWrapper";
 import AllAcademicsProgram from "./page/All";
 
 export default function DashboardPageForAdmin() {
   return (
-    <LayoutWrapper title="Academic Programs">
+    <CrmLayoutWrapper title="Academic Programs">
       <AllAcademicsProgram />
-    </LayoutWrapper>
+    </CrmLayoutWrapper>
   );
 }
