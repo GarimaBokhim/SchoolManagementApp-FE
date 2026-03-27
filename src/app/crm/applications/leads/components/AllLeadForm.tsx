@@ -4,7 +4,7 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import {
-  Filter, Plus, RotateCcw, Search,
+  Filter, Plus, RotateCcw,
   Users, MoreVertical, Edit, Trash, Eye, User,
 } from 'lucide-react'
 import { usePermissions } from '@/context/auth/PermissionContext'
@@ -24,8 +24,9 @@ import {
   Lead,
   ConvertToApplicantPayload,
   SearchParam,
-  FilterFormData,
 } from '@/app/crm/applications/leads/types/ILeads'
+
+// ─── Action Menu ─────────────────────────────────────────────────────────────
 interface ActionMenuProps {
   lead: Lead;
   onView: (lead: Lead) => void;
@@ -36,63 +37,63 @@ interface ActionMenuProps {
   canDelete?: boolean;
 }
 
-const ActionMenu = ({ 
-  lead, 
-  onView, 
-  onEdit, 
-  onConvert, 
-  onDelete, 
-  canEdit = true, 
-  canDelete = true 
+const ActionMenu = ({
+  lead,
+  onView,
+  onEdit,
+  onConvert,
+  onDelete,
+  canEdit = true,
+  canDelete = true,
 }: ActionMenuProps) => {
-  const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false)
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const calculatePosition = useCallback(() => {
-    if (!buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const menuHeight = 160;
-    const menuWidth = 180;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpward = spaceBelow < menuHeight + 8;
+    if (!buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    const menuHeight = 160
+    const menuWidth = 180
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUpward = spaceBelow < menuHeight + 8
     setMenuStyle({
       position: 'fixed',
       right: window.innerWidth - rect.right,
       top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
       width: menuWidth,
       zIndex: 9999,
-    });
-  }, []);
+    })
+  }, [])
 
   const toggle = () => {
-    if (!open) calculatePosition();
-    setOpen(prev => !prev);
-  };
+    if (!open) calculatePosition()
+    setOpen((prev) => !prev)
+  }
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return
     const handle = (e: MouseEvent) => {
       if (
         menuRef.current && !menuRef.current.contains(e.target as Node) &&
         buttonRef.current && !buttonRef.current.contains(e.target as Node)
-      ) setOpen(false);
-    };
-    document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [open]);
+      ) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
 
   useEffect(() => {
-    if (!open) return;
-    const update = () => calculatePosition();
-    window.addEventListener('scroll', update, true);
-    window.addEventListener('resize', update);
+    if (!open) return
+    const update = () => calculatePosition()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
     return () => {
-      window.removeEventListener('scroll', update, true);
-      window.removeEventListener('resize', update);
-    };
-  }, [open, calculatePosition]);
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open, calculatePosition])
 
   return (
     <div className="flex justify-center">
@@ -112,31 +113,31 @@ const ActionMenu = ({
           className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
         >
           <button
-            onClick={() => { onView(lead); setOpen(false); }}
+            onClick={() => { onView(lead); setOpen(false) }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <Eye size={14} /> View Details
           </button>
-          
+
           {canEdit && (
             <button
-              onClick={() => { onEdit(lead); setOpen(false); }}
+              onClick={() => { onEdit(lead); setOpen(false) }}
               className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
               <Edit size={14} /> Edit
             </button>
           )}
-          
+
           <button
-            onClick={() => { onConvert(lead); setOpen(false); }}
+            onClick={() => { onConvert(lead); setOpen(false) }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <User size={14} /> Convert to Applicant
           </button>
-          
+
           {canDelete && (
             <button
-              onClick={() => { onDelete(lead.id); setOpen(false); }}
+              onClick={() => { onDelete(lead.id); setOpen(false) }}
               className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
             >
               <Trash size={14} /> Delete
@@ -145,8 +146,8 @@ const ActionMenu = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 // ─── Enrolment Type Badge ────────────────────────────────────────────────────
 const getEnrolmentTypeBadge = (type: number) => {
@@ -161,19 +162,19 @@ const getEnrolmentTypeBadge = (type: number) => {
 // ─── Main Component ──────────────────────────────────────────────────────────
 const AllLeadsForm = () => {
 
-  // ─── Permissions ────────────────────────────────────────────────────────────
+  // ─── Permissions ─────────────────────────────────────────────────────────────
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
-  // ─── Refs ────────────────────────────────────────────────────────────────────
+  // ─── Refs ─────────────────────────────────────────────────────────────────────
   const dateFilterRef = useRef<DateRangeFilterRef>(null)
 
-  // ─── Pagination ──────────────────────────────────────────────────────────────
+  // ─── Pagination ───────────────────────────────────────────────────────────────
   const paginationForm = useForm<SearchParam>({
     defaultValues: { pageSize: 10, pageIndex: 1, isPagination: true },
   })
 
-  // ─── Data ────────────────────────────────────────────────────────────────────
+  // ─── Data ─────────────────────────────────────────────────────────────────────
   const {
     leads,
     loading,
@@ -186,7 +187,7 @@ const AllLeadsForm = () => {
     fetchLeads,
   } = useLeads()
 
-  // ─── Filters ─────────────────────────────────────────────────────────────────
+  // ─── Filters ──────────────────────────────────────────────────────────────────
   const {
     openFilter,
     setOpenFilter,
@@ -199,25 +200,35 @@ const AllLeadsForm = () => {
     onClearClick,
   } = useLeadFilters(setParams, setPaginationParams)
 
-  // ─── Mutations ───────────────────────────────────────────────────────────────
+  // ─── Mutations ────────────────────────────────────────────────────────────────
   const { convertingId, handleDelete, handleConvert } = useLeadMutations(fetchLeads)
 
-  // ─── Modal State ─────────────────────────────────────────────────────────────
+  // ─── Modal State ──────────────────────────────────────────────────────────────
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false)
   const [showConvertModal, setShowConvertModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+
+  // ── Updated payload shape ──
   const [conversionData, setConversionData] = useState<ConvertToApplicantPayload>({
     userId: '',
     passportNo: '',
-    targetCountry: '',
+    countryId: '',
+    universityId: '',
+    courseId: '',
   })
 
-  // ─── Handlers ────────────────────────────────────────────────────────────────
+  // ─── Handlers ─────────────────────────────────────────────────────────────────
   const handleConvertClick = (lead: Lead) => {
     setSelectedLead(lead)
-    setConversionData({ userId: lead.userId, passportNo: '', targetCountry: '' })
+    setConversionData({
+      userId: lead.userId,
+      passportNo: '',
+      countryId: '',
+      universityId: '',
+      courseId: '',
+    })
     setShowConvertModal(true)
   }
 
@@ -227,9 +238,7 @@ const AllLeadsForm = () => {
   }
 
   const handleEditLead = (lead: Lead) => {
-    // Handle edit functionality
     console.log('Edit lead:', lead)
-    // You can open an edit modal here if needed
   }
 
   const handleConversionInputChange = (
@@ -256,7 +265,7 @@ const AllLeadsForm = () => {
     setIsAddLeadModalOpen(false)
   }
 
-  // ─── Error State ─────────────────────────────────────────────────────────────
+  // ─── Error State ──────────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="p-4 sm:p-6">
@@ -267,16 +276,14 @@ const AllLeadsForm = () => {
             <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
               Error loading leads
             </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              {error}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">{error}</p>
           </div>
         </div>
       </div>
     )
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <>
       <Toaster position="top-right" />
@@ -321,7 +328,7 @@ const AllLeadsForm = () => {
 
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
-                    value={selectedProfile?.fullName || ""}
+                    value={selectedProfile?.fullName || ''}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
                     label="Search Users"
@@ -330,9 +337,9 @@ const AllLeadsForm = () => {
                     options={searchResults}
                     selected={selectedProfile}
                     onSelect={handleProfileSelected}
-                    onFocus={() => fetchUsers("")}
-                    getLabel={(profile) => profile?.fullName ?? ""}
-                    getValue={(profile) => profile?.id ?? ""}
+                    onFocus={() => fetchUsers('')}
+                    getLabel={(profile) => profile?.fullName ?? ''}
+                    getValue={(profile) => profile?.id ?? ''}
                   />
                 </div>
 
@@ -369,7 +376,7 @@ const AllLeadsForm = () => {
                   <th className="px-4 py-3 text-left">Completion Year</th>
                   <th className="px-4 py-3 text-left">Enrollment Type</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {loading ? (
