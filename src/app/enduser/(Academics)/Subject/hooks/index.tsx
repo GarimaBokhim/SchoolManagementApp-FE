@@ -147,10 +147,10 @@ export const useGetSubjectByClassId = (classId: string) => {
     queryKey: [queryKeyForClassID, classId],
     queryFn: async (): Promise<ISubjectByClass[]> => {
       if (!classId) {
-        throw new Error("Id is required to get a IssuedCertificate");
+        throw new Error("Id is required to get a Subject");
       }
       const response = await api.get<ISubjectByClass[]>(
-        `${SubjectEndPoints.getSubjectByClass}/${classId}`
+        `${SubjectEndPoints.getSubjectByClass}?classId=${classId}` 
       );
       return response.data;
     },
