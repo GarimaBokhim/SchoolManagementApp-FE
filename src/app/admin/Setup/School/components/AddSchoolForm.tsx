@@ -21,17 +21,29 @@ type Props = {
 
 const AddSchoolForm = ({ form, onClose }: Props) => {
   const addSchool = useAddSchool()
-  const [institutionId, setInstitutionId] = useState('')
   const { data: institution } = useGetAllInstitution()
   const { data: fiscalYear } = useGetAllFiscalYear()
   const { data: academicYear } = useGetAllAcademicYear()
-  const [fiscalYearId, setFiscalYearId] = useState('')
-  const [academicYearId, setAcademicYearId] = useState('')
   const { handleError, clearError } = useErrorHandler()
+
+  const [schoolLogo, setSchoolLogo] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Handle form submission
   const onSubmit: SubmitHandler<ISchool> = async (data) => {
     clearError()
     try {
-      await toast.promise(addSchool.mutateAsync(data), {
+      const formData = new FormData()
+      Object.entries(data).forEach(([key, value]) => {
+        if (value === null || value === undefined) return
+        if (key === 'logoUrl' && value instanceof File) {
+          formData.append('logoUrl', value)
+        } else {
+          formData.append(key, value.toString())
+        }
+      })
+
+      await toast.promise(addSchool.mutateAsync(formData), {
         loading: 'Adding School...',
         success: 'Successfully added School',
       })
@@ -41,288 +53,110 @@ const AddSchoolForm = ({ form, onClose }: Props) => {
       Toast.error(errorMsg)
     }
   }
-  const [schoollogo, setschoollogo] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // File selection
   const handleImageClick = () => fileInputRef.current?.click()
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      form.setValue('logoUrl', file)
       const reader = new FileReader()
-      reader.onloadend = () => setschoollogo(reader.result as string)
+      reader.onloadend = () => setSchoolLogo(reader.result as string)
       reader.readAsDataURL(file)
     }
   }
-  // const handleSelectFiscalYear = (id: string) => {
-  //   form.setValue("fiscalYearId", id);
-  // };
-
-  const handleSelectInstitution = (id: string) => {
-    form.setValue('institutionId', id)
-  }
 
   return (
-    <div
-      id="container"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 bg-opacity-50 backdrop-blur-sm overflow-y-auto ml-56 md:ml-64 sm:ml-16 "
-    >
-      <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%] bg-white rounded-xl shadow-2xl p-4 sm:p-6 m-4">
-        <div className="w-full">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-base sm:text-lg font-semibold">Add School</h1>
-              <button
-                type="button"
-                onClick={onClose}
-                className="text-red-400 hover:text-red-500 transition-colors"
-              >
-                <X strokeWidth={3} />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div className="space-y-4">
-                <InputElement
-                  label="Name"
-                  layout="column"
-                  form={form}
-                  name="name"
-                  placeholder="Enter Company name"
-                  customStyle="w-full"
-                />
-                <InputElement
-                  label="Address"
-                  layout="column"
-                  form={form}
-                  name="address"
-                  placeholder="Enter Address"
-                  customStyle="w-full placeholder:text-gray-300"
-                />
-                <InputElement
-                  label="Email"
-                  layout="column"
-                  form={form}
-                  name="email"
-                  type="email"
-                  placeholder="Enter email"
-                  customStyle="w-full"
-                />
-                <InputElement
-                  label="Short Name"
-                  layout="column"
-                  form={form}
-                  name="shortName"
-                  placeholder="Enter short name"
-                  customStyle="w-full"
-                />
-                <InputElement
-                  label="Contact Number"
-                  layout="column"
-                  form={form}
-                  name="contactNumber"
-                  placeholder="Enter Contact Number"
-                  customStyle="w-full"
-                />
-                <InputElement
-                  label="Contact Person"
-                  layout="column"
-                  form={form}
-                  name="contactPerson"
-                  placeholder="Enter Contact Person"
-                  customStyle="w-full"
-                />
-                <InputElement
-                  label="Pan"
-                  layout="column"
-                  form={form}
-                  name="pan"
-                  placeholder="Enter Pan"
-                  customStyle="w-full"
-                />
-              </div>
-              <div className="space-y-4">
-                <div className="flex-shrink-0 flex flex-col items-center justify-center">
-                  <div
-                    onClick={handleImageClick}
-                    className="w-24 h-24   bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
-                  >
-                    {schoollogo ? (
-                      <img
-                        src={schoollogo}
-                        alt="School Logo"
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-sm">
-                        Click to add
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
-                <AppCombobox
-                  required
-                  value={institutionId}
-                  form={form}
-                  name="institutionId"
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute z-50"
-                  label="Institution"
-                  options={institution?.Items}
-                  selected={
-                    institution?.Items.find((g) => g.id === institutionId) ||
-                    null
-                  }
-                  onSelect={(group) => {
-                    if (group) {
-                      setInstitutionId(group.id || '')
-                      handleSelectInstitution(group.id || '')
-                    } else {
-                      setInstitutionId('')
-                    }
-                  }}
-                  getLabel={(g) => g?.name || ''}
-                  getValue={(g) => g?.id ?? ''}
-                />
-                <AppCombobox
-                  required
-                  value={fiscalYearId}
-                  form={form}
-                  name="fiscalYearId"
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute z-50"
-                  label="Fiscal Year"
-                  options={fiscalYear?.Items}
-                  selected={
-                    fiscalYear?.Items.find((g) => g.Id === fiscalYearId) || null
-                  }
-                  onSelect={(group) => {
-                    if (group) {
-                      setFiscalYearId(group.Id || '')
-                    } else {
-                      setFiscalYearId('')
-                    }
-                  }}
-                  getLabel={(g) => g?.FyName || ''}
-                  getValue={(g) => g?.Id ?? ''}
-                />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm overflow-y-auto ml-56 md:ml-64 sm:ml-16">
+      <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[50%] xl:max-w-[40%] bg-white rounded-xl shadow-2xl p-6 m-4">
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-lg font-semibold">Add School</h1>
+            <button type="button" onClick={onClose} className="text-red-400 hover:text-red-500">
+              <X strokeWidth={3} />
+            </button>
+          </div>
 
-                <AppCombobox
-                  required
-                  value={academicYearId}
-                  form={form}
-                  name="academicYearId"
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute z-50"
-                  label="Academics Year"
-                  options={academicYear?.Items}
-                  selected={
-                    academicYear?.Items.find((g) => g.Id === academicYearId) ||
-                    null
-                  }
-                  onSelect={(group) => {
-                    if (group) {
-                      setAcademicYearId(group.Id || '')
-                    } else {
-                      setAcademicYearId('')
-                    }
-                  }}
-                  getLabel={(g) => g?.Name || ''}
-                  getValue={(g) => g?.Id ?? ''}
-                />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left column: Inputs */}
+            <div className="space-y-4">
+              <InputElement label="Name" layout="column" form={form} name="name" placeholder="Enter School name" />
+              <InputElement label="Address" layout="column" form={form} name="address" placeholder="Enter Address" />
+              <InputElement label="Email" layout="column" form={form} name="email" type="email" placeholder="Enter Email" />
+              <InputElement label="Short Name" layout="column" form={form} name="shortName" placeholder="Enter Short Name" />
+              <InputElement label="Contact Number" layout="column" form={form} name="contactNumber" placeholder="Enter Contact Number" />
+              <InputElement label="Contact Person" layout="column" form={form} name="contactPerson" placeholder="Enter Contact Person" />
+              <InputElement label="Pan" layout="column" form={form} name="pan" placeholder="Enter Pan" />
+            </div>
 
-                {/* <div className="flex items-center">
-                  <InputElement
-                    label=""
-                    layout="column"
-                    form={form}
-                    inputTypeCheckBox="checkbox"
-                    name="isEnable"
-                    customStyle="!border-0 after:!content-none"
-                  />
-                  <p className="ml-3 text-sm sm:text-base">Is Enable</p>
+            {/* Right column: File & Comboboxes */}
+            <div className="space-y-4">
+              {/* Logo Upload */}
+              <div className="flex flex-col items-center">
+                <div
+                  onClick={handleImageClick}
+                  className="w-24 h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
+                >
+                  {schoolLogo ? (
+                    <img src={schoolLogo} alt="School Logo" className="object-cover w-full h-full" />
+                  ) : (
+                    <span className="text-gray-400 text-sm">Click to add</span>
+                  )}
                 </div>
-                <div className="flex items-center">
-                  <InputElement
-                    label=""
-                    layout="column"
-                    form={form}
-                    inputTypeCheckBox="checkbox"
-                    name="isDeleted"
-                    customStyle="!border-0 after:!content-none"
-                  />
-                  <p className="ml-3 text-sm sm:text-base">Is Deleted</p>
-                </div> */}
-                {/* <div>
-                  <label className="text-sm text-slate-500 mb-1 block">
-                    Type For Purchase
-                  </label>
-                  <SelectElement
-                    form={form}
-                    name="billNumberGenerationTypeForPurchase"
-                    className="w-full"
-                    data={
-                      data?.map(({ name, value }) => ({
-                        label: name,
-                        value: value,
-                      })) || []
-                    }
-                  />
-                </div> */}
-                {/* <div>
-                  <label className="text-sm text-slate-500 mb-1 block">
-                    Bill Number Generation Type For Sales
-                  </label>
-                  <SelectElement
-                    form={form}
-                    name="billNumberGenerationTypeForSales"
-                    className="w-full"
-                    data={
-                      data?.map(({ name, value }) => ({
-                        label: name,
-                        value: value,
-                      })) || []
-                    }
-                  />
-                </div> */}
-                {/* <div className="flex mt-8">
-                  <AppCombobox
-                    required
-                    name="fiscalYearId"
-                    form={form}
-                    value={fiscalYearId}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute z-50"
-                    label="Fiscal Year"
-                    options={AllFiscalYear?.Items}
-                    selected={
-                      (AllFiscalYear?.Items ?? []).find(
-                        (g) => g.Id === fiscalYearId
-                      ) || null
-                    }
-                    onSelect={(group) => {
-                      if (group) {
-                        setFiscalYearId(group.Id || "");
-                        handleSelectFiscalYear(group.Id || "");
-                      } else {
-                        setFiscalYearId("");
-                      }
-                    }}
-                    getLabel={(g) => g?.FyName || ""}
-                    getValue={(g) => g?.Id ?? ""}
-                  />
-                </div> */}
+                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
               </div>
+
+              {/* Institution */}
+              <AppCombobox
+                required
+                form={form}
+                name="institutionId"
+                label="Institution"
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute z-50"
+                options={institution?.Items ?? []}
+                selected={institution?.Items.find((g) => g.id === form.watch('institutionId')) || null}
+                onSelect={(item) => form.setValue('institutionId', item?.id || '')}
+                getLabel={(g) => g?.name || ''}
+                getValue={(g) => g?.id ?? ''}
+              />
+
+              {/* Fiscal Year */}
+              <AppCombobox
+                required
+                form={form}
+                name="fiscalYearId"
+                label="Fiscal Year"
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute z-50"
+                options={fiscalYear?.Items ?? []}
+                selected={fiscalYear?.Items.find((g) => g.Id === form.watch('fiscalYearId')) || null}
+                onSelect={(item) => form.setValue('fiscalYearId', item?.Id || '')}
+                getLabel={(g) => g?.FyName || ''}
+                getValue={(g) => g?.Id ?? ''}
+              />
+
+              {/* Academic Year */}
+              <AppCombobox
+                required
+                form={form}
+                name="academicYearId"
+                label="Academic Year"
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute z-50"
+                options={academicYear?.Items ?? []}
+                selected={academicYear?.Items.find((g) => g.Id === form.watch('academicYearId')) || null}
+                onSelect={(item) => form.setValue('academicYearId', item?.Id || '')}
+                getLabel={(g) => g?.Name || ''}
+                getValue={(g) => g?.Id ?? ''}
+              />
             </div>
-            <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text="Submit" />
-            </div>
-          </form>
-        </div>
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <ButtonElement type="submit" text="Submit" />
+          </div>
+        </form>
       </div>
     </div>
   )

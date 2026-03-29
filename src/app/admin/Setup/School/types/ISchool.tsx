@@ -11,7 +11,7 @@ export interface ISchool {
   contactNumber: string
   contactPerson: string
   pan: string
-  imageUrl: string
+  logoUrl?: File | null
   isEnable: boolean
   isDeleted: boolean
   fyName: string
