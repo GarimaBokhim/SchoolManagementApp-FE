@@ -10,7 +10,7 @@ import { useAddExamResult } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { ChangeEvent, useState, useEffect } from 'react'
+import { ChangeEvent, useState } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSubjectByClassId } from '../../Subject/hooks'
@@ -32,16 +32,9 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   })
 
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null
-  )
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
-    [key: number]: string | null
-  }>({})
-  const [selectedFullMarks, setSelectedFullMarks] = useState<{
-    [key: number]: number
-  }>({})
-
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{ [key: number]: string | null }>({})
+  const [selectedFullMarks, setSelectedFullMarks] = useState<{ [key: number]: number | undefined }>({})
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>('')
 
   const { data: allExam } = useGetAllExams()
@@ -51,6 +44,10 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const handleClose = () => {
     form.reset()
     setSelectedClassId('')
+    setSelectedExamId(null)
+    setSelectedStudentId(null)
+    setSelectedSubjectIds({})
+    setSelectedFullMarks({})
     onClose()
   }
 
@@ -97,9 +94,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 dropdownPositionClass="absolute"
                 value={selectedExamId}
                 options={allExam?.Items ?? []}
-                selected={
-                  allExam?.Items?.find((e) => e.id === selectedExamId) || null
-                }
+                selected={allExam?.Items?.find((e) => e.id === selectedExamId) || null}
                 onSelect={(exam) => {
                   const id = exam?.id ?? ''
                   setSelectedExamId(id)
@@ -119,18 +114,13 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 dropdownPositionClass="absolute"
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
-                selected={
-                  allStudents?.Items.find((s) => s.id === selectedStudentId) ||
-                  null
-                }
+                selected={allStudents?.Items.find((s) => s.id === selectedStudentId) || null}
                 onSelect={(student) => {
                   const id = student?.id ?? ''
                   setSelectedStudentId(id)
                   form.setValue('studentId', id)
                 }}
-                getLabel={(s) =>
-                  `${s?.firstName ?? ''} ${s?.lastName ?? ''}`.trim()
-                }
+                getLabel={(s) => `${s?.firstName ?? ''} ${s?.lastName ?? ''}`.trim()}
                 getValue={(s) => s?.id ?? ''}
                 renderOptionExtra={(s) => (
                   <div>
@@ -168,38 +158,20 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     options={(allSubject ?? []).filter((subj) => {
                       const currentId = selectedSubjectIds[index]
                       const selectedIds = Object.values(selectedSubjectIds)
-                      return (
-                        subj.id === currentId || !selectedIds.includes(subj.id)
-                      )
+                      return subj.id === currentId || !selectedIds.includes(subj.id)
                     })}
-                    selected={
-                      allSubject?.find(
-                        (subj) => subj.id === selectedSubjectIds[index]
-                      ) || null
-                    }
+                    selected={allSubject?.find((subj) => subj.id === selectedSubjectIds[index]) || null}
                     onSelect={(subject) => {
                       const id = subject?.id ?? ''
-                      form.setValue(`marksObtained.${index}.subjectId`, id, {
-                        shouldValidate: true,
-                      })
-
                       const fullMarksValue = subject?.fullMarks ?? 0
 
-                      // Populate Full Marks in form
-                      form.setValue(
-                        `marksObtained.${index}.fullMarks`,
-                        fullMarksValue,
-                        { shouldValidate: true }
-                      )
+                      form.setValue(`marksObtained.${index}.subjectId`, id, { shouldValidate: true })
+                      form.setValue(`marksObtained.${index}.fullMarks`, fullMarksValue, { shouldValidate: true })
+                      // Reset marks obtained when subject changes
+                      form.setValue(`marksObtained.${index}.marksObtained`, 0, { shouldValidate: true })
 
-                      setSelectedFullMarks((prev) => ({
-                        ...prev,
-                        [index]: fullMarksValue,
-                      }))
-                      setSelectedSubjectIds((prev) => ({
-                        ...prev,
-                        [index]: id,
-                      }))
+                      setSelectedFullMarks((prev) => ({ ...prev, [index]: fullMarksValue }))
+                      setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
                     }}
                     getLabel={(s) => s?.subjectName ?? ''}
                     getValue={(s) => s?.id ?? ''}
@@ -213,11 +185,12 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       name={`marksObtained.${index}.marksObtained`}
                       inputType="number"
                       placeholder="Enter marks"
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      onBlur={(e: ChangeEvent<HTMLInputElement>) => {
                         const value = Number(e.target.value)
-                        const max = selectedFullMarks[index] ?? 0
-                        if (value > max) {
-                          alert(`Obtained Marks cannot exceed ${max}`)
+                        const max = selectedFullMarks[index]
+
+                        if (max !== undefined && value > max) {
+                          alert(`Obtained marks cannot exceed full marks (${max})`)
                           form.setValue(
                             `marksObtained.${index}.marksObtained`,
                             max,
@@ -270,7 +243,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
-                    fullMarks: 0, // Will be populated when subject is selected
+                    fullMarks: 0,
                   })
                 }
               />
