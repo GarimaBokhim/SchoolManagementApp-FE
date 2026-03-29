@@ -1,4 +1,3 @@
-// app/components/SchoolActivityReport.tsx
 'use client';
 
 import { useState } from 'react';
