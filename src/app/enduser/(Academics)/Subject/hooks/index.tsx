@@ -142,19 +142,24 @@ export const useFilterSubjectByDate = (params?: string) => {
   });
 };
 
-export const useGetSubjectByClassId = (classId: string) => {
+export const useGetSubjectByClassId = (classId?: string, examId?: string) => {
   return useQuery({
-    queryKey: [queryKeyForClassID, classId],
+    queryKey: [queryKeyForClassID, classId, examId],
     queryFn: async (): Promise<ISubjectByClass[]> => {
-      if (!classId) {
-        throw new Error("Id is required to get a Subject");
+      if (!classId && !examId) {
+        throw new Error("At least classId or examId is required to get Subjects");
       }
+
+      const params = new URLSearchParams();
+      if (classId) params.append("classId", classId);
+      if (examId) params.append("examId", examId);
+
       const response = await api.get<ISubjectByClass[]>(
-        `${SubjectEndPoints.getSubjectByClass}?classId=${classId}` 
+        `${SubjectEndPoints.getSubjectByClass}?${params.toString()}`
       );
       return response.data;
     },
-    enabled: !!classId,
+    enabled: !!classId || !!examId,
     staleTime: 0,
     retry: false,
   });

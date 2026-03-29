@@ -198,15 +198,15 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 </span>
                 {' '}DATE OF BIRTH:{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.dob || '2066-01-01'}
+                  {'2066-01-01'}
                 </span>
                 {' '}SYMBOL NO.:{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.symbolNo || StudentData?.rollNo || 'undefine'}
+                  { 'undefine'}
                 </span>
                 {' '}REGISTRATION NO.:{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.registrationNo || 'undefine'}
+                  {'undefine'}
                 </span>
                 {' '}GRADE:{' '}
                 <span className="font-bold text-black">
@@ -214,15 +214,15 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 </span>
                 {' '}SCHOOL:{' '}
                 <span className="font-bold text-black">
-                  {SchoolData?.name || StudentData?.schoolName || '-'}
+                  {SchoolData?.name || 'undefine'}
                 </span>
                 {' '}DISTRICT:{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.district || 'undefine'}
+                  {'undefine'}
                 </span>
                 {' '}PROVINCE:{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.province || 'No. 1'}
+                  {'undefine'}
                 </span>
                 {' '}IN THE ANNUAL BASIC EDUCATION EXAMINATION{' '}
                 <span className="font-bold text-black">
@@ -312,7 +312,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                       const subjectName =
                         allSubject?.Items.find((i) => i.Id === m.subjectId)
                           ?.name ||
-                        m.subjectName ||
+                        m.subjectId ||
                         '-'
                       const gradePoint =
                         m.GPA !== undefined && m.GPA !== null
@@ -346,13 +346,13 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                             className="p-2"
                             style={{ border: `1px solid ${blue}` }}
                           >
-                            {m.thGrade ?? '-'}
+                            {'-'}
                           </td>
                           <td
                             className="p-2"
                             style={{ border: `1px solid ${blue}` }}
                           >
-                            {m.prGrade ?? '-'}
+                            { '-'}
                           </td>
                           <td
                             className="p-2 font-medium"
@@ -370,7 +370,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                             className="p-2"
                             style={{ border: `1px solid ${blue}` }}
                           >
-                            {m.remarks || '-'}
+                            {'-'}
                           </td>
                         </tr>
                       )
