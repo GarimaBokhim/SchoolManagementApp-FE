@@ -10,8 +10,7 @@ interface PropsT {
   type?: "submit" | "reset" | "button";
   customStyle?: string;
   className?: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style?: React.CSSProperties; // i have added this for crm styling and it is optional so nothing to worry about for the use in the school management (nimesh)
   icon?: any;
 }
 
@@ -25,6 +24,7 @@ export const ButtonElement = ({
   customStyle,
   icon,
   className,
+  style, // ✅ destructured
 }: PropsT) => {
   const buttonIcon = isLoading ? (
     <Spinner key={"circle"} variant={"circle"} />
@@ -35,7 +35,8 @@ export const ButtonElement = ({
       disabled={disabled}
       type={type}
       onClick={handleClick || onClick}
-      className={`px-3 py-2 text-sm font-medium text-white rounded-md ${className}  ${customStyle} transition ${
+      style={style} // ✅ applied
+      className={`px-3 py-2 text-sm font-medium text-white rounded-md ${className} ${customStyle} transition ${
         disabled
           ? "bg-gray-400 cursor-not-allowed"
           : "bg-[#035BBA] hover:bg-[#4788CD]"

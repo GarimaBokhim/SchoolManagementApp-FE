@@ -1,10 +1,8 @@
-// app/crm/documents/components/AllDocumentsForm.tsx
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useState, useMemo } from "react";
 import {
-  FileText, Search, User, Filter, RotateCcw,
+  FileText, Search, Filter, RotateCcw,
   CheckCircle, Clock, XCircle, ExternalLink, Plus, MoreVertical,
 } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -19,6 +17,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
 import { IDocument } from "../model/IDocuments";
 import AddDocumentModal from "../pages/Add";
+import { useGetAllDocumentTypesList } from "../hooks";
 
 interface FilterFormData {
   search: string;
@@ -27,27 +26,29 @@ interface FilterFormData {
 }
 
 const STATUS_MAP: Record<number, { label: string; color: string; icon: React.ReactNode }> = {
-  1: { 
-    label: "Pending",  
-    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400", 
-    icon: <Clock size={14} /> 
+  1: {
+    label: "Pending",
+    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400",
+    icon: <Clock size={14} />,
   },
-  2: { 
-    label: "Approved", 
-    color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400", 
-    icon: <CheckCircle size={14} /> 
+  2: {
+    label: "Approved",
+    color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+    icon: <CheckCircle size={14} />,
   },
-  3: { 
-    label: "Rejected", 
-    color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400", 
-    icon: <XCircle size={14} /> 
+  3: {
+    label: "Rejected",
+    color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
+    icon: <XCircle size={14} />,
   },
 };
 
 const AllDocumentsForm = () => {
+  // ─── Permissions ─────────────────────────────────────────────────────────────
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
 
+  // ─── State ───────────────────────────────────────────────────────────────────
   const [openFilter, setOpenFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -55,15 +56,22 @@ const AllDocumentsForm = () => {
   const formRef = useRef<DateRangeFilterRef>(null);
   const pageSize = 10;
 
+  // ─── Forms ───────────────────────────────────────────────────────────────────
   const form = useForm<FilterFormData>({
     defaultValues: { search: "", startDate: "", endDate: "" },
   });
 
+  const paginationForm = useForm({
+    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
+  });
+
+  // ─── Data ────────────────────────────────────────────────────────────────────
   const { data, isLoading, error, refetch } = useGetAllDocuments(params);
   const { data: applicants, isLoading: applicantsLoading } = useGetAllApplicants();
+  const { data: documentTypes } = useGetAllDocumentTypesList();
   const { handleError, clearError } = useErrorHandler();
 
-  // Create a mapping of applicant ID to applicant name
+  // ─── Maps ────────────────────────────────────────────────────────────────────
   const applicantMap = useMemo(() => {
     const map = new Map<string, string>();
     if (applicants) {
@@ -74,6 +82,26 @@ const AllDocumentsForm = () => {
     return map;
   }, [applicants]);
 
+  const documentTypeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (documentTypes) {
+      documentTypes.forEach((dt) => {
+        map.set(dt.id, dt.name);
+      });
+    }
+    return map;
+  }, [documentTypes]);
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  const getApplicantName = (applicantId: string) => {
+    return applicantMap.get(applicantId) || applicantId || "-";
+  };
+
+  const getDocumentTypeName = (documentTypeId: string) => {
+    return documentTypeMap.get(documentTypeId) || documentTypeId || "-";
+  };
+
+  // ─── Handlers ────────────────────────────────────────────────────────────────
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
     try {
@@ -102,10 +130,7 @@ const AllDocumentsForm = () => {
     refetch();
   };
 
-  const paginationForm = useForm({
-    defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
-  });
-
+  // ─── Error State ─────────────────────────────────────────────────────────────
   if (error) {
     const isAuthError = (error as any)?.response?.status === 401;
     return (
@@ -125,12 +150,13 @@ const AllDocumentsForm = () => {
     );
   }
 
+  // ─── Loading State ────────────────────────────────────────────────────────────
   if (isLoading || applicantsLoading) {
     return (
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
           </div>
         </div>
       </div>
@@ -144,32 +170,29 @@ const AllDocumentsForm = () => {
     dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 
     dark:text-white text-sm appearance-none`;
 
-  // Function to get applicant name by ID
-  const getApplicantName = (applicantId: string) => {
-    return applicantMap.get(applicantId) || applicantId || "-";
-  };
-
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <Toaster position="top-right" />
+
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
-          {/* Header */}
+          {/* ── Header ── */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold">All Documents</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
-                type="button" 
-                text="Filter" 
+                type="button"
+                text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {canAdd && (
                 <ButtonElement
-                  icon={<Plus size={18} />} 
-                  type="button" 
+                  icon={<Plus size={18} />}
+                  type="button"
                   text="Add New"
                   onClick={() => setIsAddModalOpen(true)}
                   className="!font-semibold"
@@ -178,7 +201,7 @@ const AllDocumentsForm = () => {
             </div>
           </div>
 
-          {/* Filter Panel */}
+          {/* ── Filter Panel ── */}
           {openFilter && (
             <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
@@ -193,15 +216,20 @@ const AllDocumentsForm = () => {
                 />
                 <div className="flex-1 min-w-[240px]">
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search Documents</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Search Documents
+                    </label>
                     <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder="Search by applicant name or ID..." 
-                        {...form.register("search")} 
-                        className={inputClass} 
+                      <input
+                        type="text"
+                        placeholder="Search by applicant name or ID..."
+                        {...form.register("search")}
+                        className={inputClass}
                       />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={16}
+                      />
                     </div>
                   </div>
                 </div>
@@ -224,7 +252,7 @@ const AllDocumentsForm = () => {
             </div>
           )}
 
-          {/* Table */}
+          {/* ── Table ── */}
           <div className="overflow-x-auto relative">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
@@ -236,57 +264,66 @@ const AllDocumentsForm = () => {
                   <th className="px-4 py-3 text-left">Active</th>
                   <th className="px-4 py-3 text-left">Document Link</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {documents.length > 0 ? (
                   documents.map((doc: IDocument, index: number) => {
-                    const status = STATUS_MAP[doc.documentStatus] ?? { 
-                      label: "Unknown", 
-                      color: "bg-gray-100 text-gray-700 dark:bg-gray-700/50 dark:text-gray-400", 
-                      icon: <FileText size={14} /> 
+                    const status = STATUS_MAP[doc.documentStatus] ?? {
+                      label: "Unknown",
+                      color: "bg-gray-100 text-gray-700 dark:bg-gray-700/50 dark:text-gray-400",
+                      icon: <FileText size={14} />,
                     };
-                    const applicantName = getApplicantName(doc.applicantId);
                     return (
                       <tr
                         key={doc.id}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
+                        {/* S.N */}
                         <td className="py-3 px-4">
                           {(currentPage - 1) * pageSize + index + 1}
                         </td>
+
+                        {/* Applicant Name */}
                         <td className="py-3 px-4 font-medium">
-                          <div className="flex items-center gap-2">
-                          
-                            <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                              {applicantName}
-                            </span>
-                          </div>
+                          <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                            {getApplicantName(doc.applicantId)}
+                          </span>
                         </td>
+
+                        {/* Document Type Name */}
                         <td className="py-3 px-4">
-                          {doc.documentTypeId || "-"}
+                          {getDocumentTypeName(doc.documentTypeId)}
                         </td>
+
+                        {/* Status */}
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
                             {status.icon}
                             {status.label}
                           </span>
                         </td>
+
+                        {/* Active */}
                         <td className="py-3 px-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              doc.isActive
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                                : "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                            }`}
-                          >
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            doc.isActive
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                              : "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                          }`}>
                             {doc.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
+
+                        {/* Document Link */}
                         <td className="py-3 px-4">
                           {doc.docLink ? (
                             <a
-                              href={doc.docLink.startsWith("http") ? doc.docLink : `https://${doc.docLink}`}
+                              href={
+                                doc.docLink.startsWith("http")
+                                  ? doc.docLink
+                                  : `https://schoolapp.netraverselabs.com/${doc.docLink}`
+                              }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
@@ -298,9 +335,11 @@ const AllDocumentsForm = () => {
                             "-"
                           )}
                         </td>
+
+                        {/* Actions */}
                         <td className="py-3 px-4 text-center">
                           <button
-                            onClick={() => console.log("Actions menu for doc:", doc.id)}
+                            onClick={() => console.log("Actions for doc:", doc.id)}
                             className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
                             title="Actions"
                           >
@@ -323,14 +362,14 @@ const AllDocumentsForm = () => {
           </div>
         </div>
 
-        {/* Pagination */}
+        {/* ── Pagination ── */}
         {documents.length > 0 && totalPages > 1 && (
           <div className="mt-4">
             <Pagination
               form={paginationForm}
               pagination={{
-                currentPage, 
-                firstPage: 1, 
+                currentPage,
+                firstPage: 1,
                 lastPage: totalPages,
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
@@ -341,10 +380,14 @@ const AllDocumentsForm = () => {
         )}
       </div>
 
+      {/* ── Modal ── */}
       <AddDocumentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => { setIsAddModalOpen(false); refetch(); }}
+        onSuccess={() => { 
+          setIsAddModalOpen(false); 
+          refetch(); 
+        }}
       />
     </>
   );

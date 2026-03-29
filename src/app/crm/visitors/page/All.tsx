@@ -1,5 +1,3 @@
-// src/app/crm/visitors/Allvisitors.tsx (or wherever this file lives)
-
 'use client'
 
 import { useState } from 'react'

@@ -1,10 +1,10 @@
-import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import AllServices from "./pages/AllServices";
+import CrmLayoutWrapper from "../layout/crmLayoutWrapper";
 
 export default function DashboardPageForAdmin() {
   return (
-    <LayoutWrapper title="Services">
+    <CrmLayoutWrapper title="Services">
       <AllServices />
-    </LayoutWrapper>
+    </CrmLayoutWrapper>
   );
 }

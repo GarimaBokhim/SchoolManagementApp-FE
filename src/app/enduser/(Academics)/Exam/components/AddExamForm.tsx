@@ -33,11 +33,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
     const [selectedFullMarks, setSelectedFullMarks] = useState<{
     [key: number]: number;
   }>({});
- const { data: allSubjects } = useGetSubjectByClassId({
-  classId: selectedClass
-});
-
- console.log("Selected Class", allSubjects)
+ const { data: allSubjects } = useGetSubjectByClassId(selectedClass);
 
   const { fields, append, remove } = useFieldArray({
     name: "examSubjects",

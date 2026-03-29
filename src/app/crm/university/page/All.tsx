@@ -1,19 +1,17 @@
 'use client'
 import { useState } from 'react'
-import AllUniversity from '../univer-sity/pages/All'
+import AllUniversity from '../_university/pages/All'
 import AllCourse from '../courses/pages/All'
 import AllIntake from '../intake/pages/All'
-import AllRequirements from '../requirements/pages/all'
+import { id } from 'date-fns/locale'
 
 const AllAcademicsProgram = () => {
   const tabs = [
     { id: 'university', label: 'University', color: 'gray' },
     { id: 'course', label: 'Course', color: 'gray' },
-    { id: 'intake', label: 'Intake', color: 'gray' },
-    { id: 'requirements', label: 'Requirements', color: 'gray' },
+   
   ]
-
-  const [activeTab, setActiveTab] = useState<string>('university')
+  const [activeTab, setActiveTab] = useState<string>('university')    
 
   const renderContent = () => {
     switch (activeTab) {
@@ -27,18 +25,6 @@ const AllAcademicsProgram = () => {
         return (
           <div className="text-center">
             <AllCourse />
-          </div>
-        )
-      case 'intake':
-        return (
-          <div className="text-center">
-            <AllIntake />
-          </div>
-        )
-      case 'requirements':
-        return (
-          <div className="text-center">
-            <AllRequirements />
           </div>
         )
       default:

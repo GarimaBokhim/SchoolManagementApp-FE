@@ -1,11 +1,12 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import AllApplications from "./pages/AllApplications";
+import CrmLayoutWrapper from "../layout/crmLayoutWrapper";
 
 
 export default function DashboardPageForAdmin() {
   return (
-    <LayoutWrapper title="Applicants">
+    <CrmLayoutWrapper title="Applicants">
       <AllApplications />
-    </LayoutWrapper>
+    </CrmLayoutWrapper>
   );
 }

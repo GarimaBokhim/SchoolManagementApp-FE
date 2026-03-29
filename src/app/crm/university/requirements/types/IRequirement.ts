@@ -1,18 +1,29 @@
+export interface IDocumentCheckListDTO {
+  documenteTypeId: string;
+  isRequired?: boolean;
+  id?: string; 
+}
+
 export interface IRequirement {
   id: string;
   descriptions: string;
+  countryId?: string;
   courseId: string;
-  courseName?: string; // Optional for display purposes
+  courseName?: string;
   createdAt?: string;
   createdBy?: string;
   modifiedAt?: string;
   modifiedBy?: string;
   isActive?: boolean;
+  schoolId?: string;
+  DocumentsCheckListDTOs?: IDocumentCheckListDTO[];
 }
 
 export interface IRequirementFormData {
   descriptions: string;
+  countryId: string;
   courseId: string;
+  documentsCheckListDTOs: IDocumentCheckListDTO[];
 }
 
 export interface ICourse {
@@ -20,4 +31,28 @@ export interface ICourse {
   title: string;
   code?: string;
   isActive?: boolean;
+}
+
+// API Response Types
+export interface ApiResponse {
+  Items: IRequirement[];
+  TotalItems: number;
+  PageIndex: number;
+  pageSize: number;
+  TotalPages: number;
+  FirstPage: number;
+  LastPage: number;
+}
+
+export interface CourseApiResponse {
+  Items: ICourse[];
+}
+
+export interface IDocumentType {
+  id: string;
+  name: string;
+}
+
+export interface RequiredDocTypePayload {
+  dockCheckListId: string;
 }

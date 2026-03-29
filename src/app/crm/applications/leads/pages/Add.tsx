@@ -7,10 +7,8 @@ import { api } from '@/utils/instance';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { useGetAllCountries } from '@/app/crm/university/univer-sity/hooks';
+import { useGetAllCountries } from '@/app/crm/university/_university/hooks';
 import { useGetCoursesByUniversity, useGetUniversitiesByCountry } from '../hooks/cascadingHooks';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface EnumOption {
   id: number;
@@ -25,6 +23,13 @@ interface IdNameOption {
 interface IdTitleOption {
   id: string;
   title: string;
+}
+
+// Country selection with universities and courses
+interface CountrySelection {
+  country: IdNameOption;
+  universities: IdNameOption[];
+  coursesMap: Record<string, IdTitleOption[]>;
 }
 
 const GENDER_OPTIONS: EnumOption[] = [
@@ -48,8 +53,7 @@ const ENGLISH_PROFICIENCY_OPTIONS: EnumOption[] = [
   { id: 5, name: 'None' },
 ];
 
-// ── API payload shape ─────────────────────────────────────────────────────────
-
+// API payload shape
 interface InquiryPayload {
   fullName: string;
   email: string;
@@ -86,8 +90,7 @@ interface AddLeadModalProps {
   onSuccess?: () => void;
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
+// Styles
 const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
   bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
   focus:ring-2 focus:ring-green-500 focus:border-transparent
@@ -95,63 +98,8 @@ const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:bo
 
 const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`;
 
-// ── Single-select checkbox group (Country) ────────────────────────────────────
-
-interface SingleCheckboxGroupProps<T> {
-  items: T[];
-  selected: T | undefined;
-  getLabel: (item: T) => string;
-  getId: (item: T) => string;
-  onSelect: (item: T | undefined) => void;
-  loading?: boolean;
-  loadingText?: string;
-  emptyText?: string;
-}
-
-function SingleCheckboxGroup<T>({
-  items,
-  selected,
-  getLabel,
-  getId,
-  onSelect,
-  loading = false,
-  loadingText = 'Loading...',
-  emptyText = 'No options available',
-}: SingleCheckboxGroupProps<T>) {
-  if (loading) return <p className="text-sm text-gray-400 dark:text-gray-500">{loadingText}</p>;
-  if (items.length === 0) return <p className="text-sm text-gray-400 dark:text-gray-500">{emptyText}</p>;
-  return (
-    <div className="flex flex-wrap gap-x-6 gap-y-2">
-      {items.map((item) => {
-        const id = getId(item);
-        const isChecked = selected ? getId(selected) === id : false;
-        return (
-          <label key={id} className="flex items-center gap-2 cursor-pointer select-none group">
-            <input
-              type="checkbox"
-              checked={isChecked}
-              // single-select: checking same item deselects, checking new item replaces
-              onChange={() => onSelect(isChecked ? undefined : item)}
-              className="w-4 h-4 rounded accent-green-500 cursor-pointer"
-            />
-            <span className={`text-sm transition-colors
-              ${isChecked
-                ? 'text-green-600 dark:text-green-400 font-medium'
-                : 'text-gray-700 dark:text-gray-300 group-hover:text-green-600 dark:group-hover:text-green-400'
-              }`}
-            >
-              {getLabel(item)}
-            </span>
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Multi-select checkbox group (University / Course) ─────────────────────────
-
-interface MultiCheckboxGroupProps<T> {
+// Checkbox Group Component (same as your original)
+interface CheckboxGroupProps<T> {
   items: T[];
   selected: T[];
   getLabel: (item: T) => string;
@@ -162,7 +110,7 @@ interface MultiCheckboxGroupProps<T> {
   emptyText?: string;
 }
 
-function MultiCheckboxGroup<T>({
+function CheckboxGroup<T>({
   items,
   selected,
   getLabel,
@@ -171,7 +119,7 @@ function MultiCheckboxGroup<T>({
   loading = false,
   loadingText = 'Loading...',
   emptyText = 'No options available',
-}: MultiCheckboxGroupProps<T>) {
+}: CheckboxGroupProps<T>) {
   if (loading) return <p className="text-sm text-gray-400 dark:text-gray-500">{loadingText}</p>;
   if (items.length === 0) return <p className="text-sm text-gray-400 dark:text-gray-500">{emptyText}</p>;
   return (
@@ -202,13 +150,134 @@ function MultiCheckboxGroup<T>({
   );
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Country section with its universities and courses
+interface CountrySectionProps {
+  country: IdNameOption;
+  universities: IdNameOption[];
+  selectedUniversities: IdNameOption[];
+  coursesMap: Record<string, IdTitleOption[]>;
+  onUniversityToggle: (university: IdNameOption) => void;
+  onCourseToggle: (universityId: string, course: IdTitleOption) => void;
+  onRemoveCountry: () => void;
+  universitiesLoading?: boolean;
+}
 
+const CountrySection: React.FC<CountrySectionProps> = ({
+  country,
+  universities,
+  selectedUniversities,
+  coursesMap,
+  onUniversityToggle,
+  onCourseToggle,
+  onRemoveCountry,
+  universitiesLoading = false,
+}) => {
+  return (
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 relative bg-gray-50 dark:bg-gray-800/30">
+      <button
+        type="button"
+        onClick={onRemoveCountry}
+        className="absolute top-3 right-3 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+      >
+        <X size={18} />
+      </button>
+      
+      <div className="flex flex-col gap-5">
+        {/* Country Header */}
+        <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            Country:
+          </span>
+          <span className="text-base font-semibold text-green-600 dark:text-green-400">
+            {country.name}
+          </span>
+        </div>
+
+        {/* Universities */}
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>
+            Universities
+            <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+              — Select one or more
+            </span>
+          </label>
+          <CheckboxGroup<IdNameOption>
+            items={universities}
+            selected={selectedUniversities}
+            getLabel={(u) => u.name}
+            getId={(u) => u.id}
+            onToggle={onUniversityToggle}
+            loading={universitiesLoading}
+            loadingText={`Loading universities for ${country.name}...`}
+            emptyText={`No universities available for ${country.name}`}
+          />
+        </div>
+
+        {/* Courses per university */}
+        {selectedUniversities.map((uni) => (
+          <div key={uni.id} className="ml-6 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col gap-2">
+              <label className="block mb-1.5 text-sm font-medium text-gray-600 dark:text-gray-400">
+                Courses
+                <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+                  — {uni.name}
+                </span>
+              </label>
+              <UniversityCourses
+                universityId={uni.id}
+                universityName={uni.name}
+                selectedCourses={coursesMap[uni.id] ?? []}
+                onToggle={(course) => onCourseToggle(uni.id, course)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Per-university course selector component
+interface UniversityCoursesProps {
+  universityId: string;
+  universityName: string;
+  selectedCourses: IdTitleOption[];
+  onToggle: (course: IdTitleOption) => void;
+}
+
+const UniversityCourses: React.FC<UniversityCoursesProps> = ({
+  universityId,
+  universityName,
+  selectedCourses,
+  onToggle,
+}) => {
+  const { data: courses = [], isLoading } = useGetCoursesByUniversity(universityId);
+
+  if (isLoading) {
+    return <p className="text-sm text-gray-400 dark:text-gray-500">Loading courses for {universityName}...</p>;
+  }
+  
+  if (courses.length === 0) {
+    return <p className="text-sm text-gray-400 dark:text-gray-500">No courses available for {universityName}</p>;
+  }
+
+  return (
+    <CheckboxGroup<IdTitleOption>
+      items={courses}
+      selected={selectedCourses}
+      getLabel={(c) => c.title}
+      getId={(c) => c.id}
+      onToggle={onToggle}
+    />
+  );
+};
+
+// Main Component
 const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Personal fields ───────────────────────────────────────────────────────
+  // Personal fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -216,80 +285,131 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
   const [permanentAddress, setPermanentAddress] = useState('');
   const [selectedGender, setSelectedGender] = useState<EnumOption | undefined>(GENDER_OPTIONS[0]);
 
-  // ── Academic fields ───────────────────────────────────────────────────────
+  // Academic fields
   const [selectedEducationLevel, setSelectedEducationLevel] = useState<EnumOption | undefined>(EDUCATION_LEVEL_OPTIONS[0]);
   const [completionYear, setCompletionYear] = useState('');
   const [currentGpa, setCurrentGpa] = useState('');
   const [previousAcademicQualification, setPreviousAcademicQualification] = useState('');
   const [source, setSource] = useState('');
 
-  // ── English proficiency fields ────────────────────────────────────────────
+  // English proficiency fields
   const [selectedEnglishProficiency, setSelectedEnglishProficiency] = useState<EnumOption | undefined>(ENGLISH_PROFICIENCY_OPTIONS[0]);
   const [bandScore, setBandScore] = useState('');
   const [languageRemarks, setLanguageRemarks] = useState('');
 
-  // ── Skill / Training fields ───────────────────────────────────────────────
+  // Skill / Training fields
   const [skillOrTrainingName, setSkillOrTrainingName] = useState('');
   const [institutionName, setInstitutionName] = useState('');
   const [trainingRemarks, setTrainingRemarks] = useState('');
   const [trainingStartDate, setTrainingStartDate] = useState('');
   const [trainingEndDate, setTrainingEndDate] = useState('');
 
-  // ── Interested Program ────────────────────────────────────────────────────
-  // Country: single select
-  const [selectedCountry, setSelectedCountry] = useState<IdNameOption | undefined>(undefined);
-  // Universities: multi-select array
-  const [selectedUniversities, setSelectedUniversities] = useState<IdNameOption[]>([]);
-  // Courses per university: map of universityId → selected course ids
-  const [selectedCoursesMap, setSelectedCoursesMap] = useState<Record<string, IdTitleOption[]>>({});
+  // Interested Program - Multiple countries
+  const [selectedCountries, setSelectedCountries] = useState<IdNameOption[]>([]);
+  const [countrySelections, setCountrySelections] = useState<CountrySelection[]>([]);
+  const [universitiesData, setUniversitiesData] = useState<Record<string, IdNameOption[]>>({});
 
-  // ── Feedback ──────────────────────────────────────────────────────────────
+  // Feedback
   const [feedBackOrSuggestion, setFeedBackOrSuggestion] = useState('');
 
   const comboForm = useForm({
     defaultValues: { gender: 1, educationLevel: 1, englishProficiency: 1 },
   });
 
-  // ── Cascading data ────────────────────────────────────────────────────────
+  // Cascading data
   const { data: countries = [], isLoading: countriesLoading } = useGetAllCountries();
-  const { data: universities = [], isLoading: universitiesLoading } =
-    useGetUniversitiesByCountry(selectedCountry?.id ?? null);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleCountrySelect = (country: IdNameOption | undefined) => {
-    setSelectedCountry(country);
-    // Reset universities and all courses when country changes
-    setSelectedUniversities([]);
-    setSelectedCoursesMap({});
+  // Fetch universities for a specific country when needed
+  const fetchUniversitiesForCountry = async (countryId: string) => {
+    if (universitiesData[countryId]) return;
+    
+    try {
+      const response = await api.get(`/api/AcademicPrograms/UniversityByCountry/${countryId}`);
+      const universities = response.data?.Items ?? [];
+      setUniversitiesData(prev => ({ ...prev, [countryId]: universities }));
+    } catch (error) {
+      console.error('Failed to fetch universities:', error);
+    }
   };
 
-  const handleUniversityToggle = (university: IdNameOption) => {
-    setSelectedUniversities((prev) => {
-      const exists = prev.some((u) => u.id === university.id);
+  // Handle country selection/deselection
+  const handleCountryToggle = (country: IdNameOption) => {
+    const isSelected = selectedCountries.some(c => c.id === country.id);
+    
+    if (isSelected) {
+      // Remove country
+      setSelectedCountries(prev => prev.filter(c => c.id !== country.id));
+      setCountrySelections(prev => prev.filter(s => s.country.id !== country.id));
+    } else {
+      // Add country
+      setSelectedCountries(prev => [...prev, country]);
+      setCountrySelections(prev => [
+        ...prev,
+        {
+          country,
+          universities: [],
+          coursesMap: {},
+        },
+      ]);
+      fetchUniversitiesForCountry(country.id);
+    }
+  };
+
+  const handleRemoveCountry = (countryId: string) => {
+    setSelectedCountries(prev => prev.filter(c => c.id !== countryId));
+    setCountrySelections(prev => prev.filter(s => s.country.id !== countryId));
+  };
+
+  const handleUniversityToggle = (countryId: string, university: IdNameOption) => {
+    setCountrySelections(prev => {
+      const index = prev.findIndex(s => s.country.id === countryId);
+      if (index === -1) return prev;
+      
+      const updated = [...prev];
+      const selection = updated[index];
+      const exists = selection.universities.some(u => u.id === university.id);
+      
       if (exists) {
-        // Remove university and clear its courses
-        setSelectedCoursesMap((map) => {
-          const updated = { ...map };
-          delete updated[university.id];
-          return updated;
-        });
-        return prev.filter((u) => u.id !== university.id);
+        // Remove university and its courses
+        const updatedUniversities = selection.universities.filter(u => u.id !== university.id);
+        const updatedCoursesMap = { ...selection.coursesMap };
+        delete updatedCoursesMap[university.id];
+        updated[index] = {
+          ...selection,
+          universities: updatedUniversities,
+          coursesMap: updatedCoursesMap,
+        };
+      } else {
+        // Add university
+        updated[index] = {
+          ...selection,
+          universities: [...selection.universities, university],
+        };
       }
-      return [...prev, university];
+      return updated;
     });
   };
 
-  const handleCourseToggle = (universityId: string, course: IdTitleOption) => {
-    setSelectedCoursesMap((prev) => {
-      const current = prev[universityId] ?? [];
-      const exists = current.some((c) => c.id === course.id);
-      return {
-        ...prev,
-        [universityId]: exists
-          ? current.filter((c) => c.id !== course.id)
-          : [...current, course],
+  const handleCourseToggle = (countryId: string, universityId: string, course: IdTitleOption) => {
+    setCountrySelections(prev => {
+      const index = prev.findIndex(s => s.country.id === countryId);
+      if (index === -1) return prev;
+      
+      const updated = [...prev];
+      const selection = updated[index];
+      const currentCourses = selection.coursesMap[universityId] ?? [];
+      const exists = currentCourses.some(c => c.id === course.id);
+      
+      updated[index] = {
+        ...selection,
+        coursesMap: {
+          ...selection.coursesMap,
+          [universityId]: exists
+            ? currentCourses.filter(c => c.id !== course.id)
+            : [...currentCourses, course],
+        },
       };
+      return updated;
     });
   };
 
@@ -313,9 +433,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setTrainingRemarks('');
     setTrainingStartDate('');
     setTrainingEndDate('');
-    setSelectedCountry(undefined);
-    setSelectedUniversities([]);
-    setSelectedCoursesMap({});
+    setSelectedCountries([]);
+    setCountrySelections([]);
+    setUniversitiesData({});
     setFeedBackOrSuggestion('');
     comboForm.reset({ gender: 1, educationLevel: 1, englishProficiency: 1 });
     setError(null);
@@ -333,19 +453,14 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setIsSubmitting(true);
     setError(null);
 
-    // Build nested payload: one country → many universities → each with their course ids
-    const countriesPayload: InquiryPayload['countries'] =
-      selectedCountry
-        ? [
-            {
-              countryId: selectedCountry.id,
-              universities: selectedUniversities.map((uni) => ({
-                universityId: uni.id,
-                courseIds: (selectedCoursesMap[uni.id] ?? []).map((c) => c.id),
-              })),
-            },
-          ]
-        : [];
+    // Build nested payload for multiple countries
+    const countriesPayload: InquiryPayload['countries'] = countrySelections.map(selection => ({
+      countryId: selection.country.id,
+      universities: selection.universities.map(uni => ({
+        universityId: uni.id,
+        courseIds: (selection.coursesMap[uni.id] ?? []).map(c => c.id),
+      })),
+    }));
 
     const payload: InquiryPayload = {
       fullName,
@@ -404,8 +519,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
 
   if (!isOpen) return null;
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
+  // Render
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center
@@ -426,8 +540,8 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add New Inquiry
             </h1>
-            <button type="button" onClick={handleClose} className="text-red-400 text-2xl hover:text-red-500">
-              <X strokeWidth={3} />
+            <button type="button" onClick={handleClose} className="text-gray-400 hover:text-red-500 transition-colors">
+              <X size={24} strokeWidth={2} />
             </button>
           </div>
 
@@ -441,12 +555,11 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
 
           <form id="addLeadModalForm" onSubmit={handleSubmit}>
 
-            {/* ── Personal Information ───────────────────────────────── */}
+            {/* Personal Information */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Personal Information
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
-
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Full Name <span className="text-red-500">*</span></label>
                 <input type="text" required placeholder="Enter full name"
@@ -488,15 +601,13 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 <input type="text" placeholder="Enter permanent address"
                   value={permanentAddress} onChange={e => setPermanentAddress(e.target.value)} className={inputClass} />
               </div>
-
             </div>
 
-            {/* ── Academic Information ───────────────────────────────── */}
+            {/* Academic Information */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Academic Information
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
-
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Education Level <span className="text-red-500">*</span></label>
                 <AppCombobox
@@ -532,15 +643,13 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 <input type="text" required placeholder="e.g. Website, Referral, Social Media..."
                   value={source} onChange={e => setSource(e.target.value)} className={inputClass} />
               </div>
-
             </div>
 
-            {/* ── English Proficiency ────────────────────────────────── */}
+            {/* English Proficiency */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               English Proficiency
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
-
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Proficiency Type</label>
                 <AppCombobox
@@ -564,15 +673,13 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 <input type="text" placeholder="Any remarks about language proficiency"
                   value={languageRemarks} onChange={e => setLanguageRemarks(e.target.value)} className={inputClass} />
               </div>
-
             </div>
 
-            {/* ── Skill / Training ───────────────────────────────────── */}
+            {/* Skill / Training */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Skill / Training
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
-
               <div className="flex flex-col gap-1">
                 <label className={labelClass}>Skill / Training Name</label>
                 <input type="text" placeholder="e.g., Web Development"
@@ -602,65 +709,49 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 <input type="date"
                   value={trainingEndDate} onChange={e => setTrainingEndDate(e.target.value)} className={inputClass} />
               </div>
-
             </div>
 
-            {/* ── Interested Program ─────────────────────────────────── */}
+            {/* Interested Program - Multiple Countries with Checkboxes */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Interested Program
             </p>
-            <div className="mb-6 space-y-4">
-
-              {/* Country — single select */}
-              <div className="flex flex-col gap-2">
-                <label className={labelClass}>Country</label>
-                <SingleCheckboxGroup<IdNameOption>
-                  items={countries}
-                  selected={selectedCountry}
-                  getLabel={(c) => c.name}
-                  getId={(c) => c.id}
-                  onSelect={handleCountrySelect}
-                  loading={countriesLoading}
-                  loadingText="Loading countries..."
-                  emptyText="No countries available"
-                />
-              </div>
-
-              {/* Universities — multi select, shown after country picked */}
-              {selectedCountry && (
-                <div className="flex flex-col gap-2">
-                  <label className={labelClass}>
-                    University
-                    <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
-                      — {selectedCountry.name}
-                    </span>
-                  </label>
-                  <MultiCheckboxGroup<IdNameOption>
-                    items={universities}
-                    selected={selectedUniversities}
-                    getLabel={(u) => u.name}
-                    getId={(u) => u.id}
-                    onToggle={handleUniversityToggle}
-                    loading={universitiesLoading}
-                    loadingText="Loading universities..."
-                    emptyText="No universities available for this country"
-                  />
-                </div>
-              )}
-
-              {/* Courses per university — multi select, one block per selected university */}
-              {selectedUniversities.map((uni) => (
-                <UniversityCourses
-                  key={uni.id}
-                  university={uni}
-                  selectedCourses={selectedCoursesMap[uni.id] ?? []}
-                  onToggle={(course) => handleCourseToggle(uni.id, course)}
-                />
-              ))}
-
+            
+            {/* Countries as checkboxes (matching original styling) */}
+            <div className="flex flex-col gap-2 mb-6">
+              <label className={labelClass}>
+                Countries
+                <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+                  — Select one or more countries
+                </span>
+              </label>
+              <CheckboxGroup<IdNameOption>
+                items={countries}
+                selected={selectedCountries}
+                getLabel={(c) => c.name}
+                getId={(c) => c.id}
+                onToggle={handleCountryToggle}
+                loading={countriesLoading}
+                loadingText="Loading countries..."
+                emptyText="No countries available"
+              />
             </div>
+            
+            {/* Display each selected country's universities and courses */}
+            {countrySelections.map((selection) => (
+              <CountrySection
+                key={selection.country.id}
+                country={selection.country}
+                universities={universitiesData[selection.country.id] || []}
+                selectedUniversities={selection.universities}
+                coursesMap={selection.coursesMap}
+                onUniversityToggle={(uni) => handleUniversityToggle(selection.country.id, uni)}
+                onCourseToggle={(uniId, course) => handleCourseToggle(selection.country.id, uniId, course)}
+                onRemoveCountry={() => handleRemoveCountry(selection.country.id)}
+                universitiesLoading={!universitiesData[selection.country.id]}
+              />
+            ))}
 
-            {/* ── Feedback ───────────────────────────────────────────── */}
+            {/* Feedback or Suggestions */}
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Feedback or Suggestions
             </p>
@@ -689,44 +780,6 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
           </form>
         </fieldset>
       </div>
-    </div>
-  );
-};
-
-// ── Per-university course selector ────────────────────────────────────────────
-// Separate component so each university fetches its own courses independently.
-
-interface UniversityCoursesProps {
-  university: IdNameOption;
-  selectedCourses: IdTitleOption[];
-  onToggle: (course: IdTitleOption) => void;
-}
-
-const UniversityCourses: React.FC<UniversityCoursesProps> = ({
-  university,
-  selectedCourses,
-  onToggle,
-}) => {
-  const { data: courses = [], isLoading } = useGetCoursesByUniversity(university.id);
-
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-        Course
-        <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
-          — {university.name}
-        </span>
-      </label>
-      <MultiCheckboxGroup<IdTitleOption>
-        items={courses}
-        selected={selectedCourses}
-        getLabel={(c) => c.title}
-        getId={(c) => c.id}
-        onToggle={onToggle}
-        loading={isLoading}
-        loadingText={`Loading courses for ${university.name}...`}
-        emptyText={`No courses available for ${university.name}`}
-      />
     </div>
   );
 };
