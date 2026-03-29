@@ -25,6 +25,8 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const { data: allClass } = useGetAllClass();
 
   const [selectedClass, setSelectedClass] = useState<string | undefined>("");
+
+ 
     const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
     [key: number]: string | null;
   }>({});

@@ -3,7 +3,7 @@ import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IStudent } from "../types/IStudents";
 const StudentEndPoints = {
-  getAllStudents: "/api/Student/all-Students",
+  getAllStudents: "/api/Student/StudentFromRegistration",
   createStudents: "/api/Student/AddStudents",
   removeStudents: "/api/Student/DeleteStudents",
   updateStudents: "/api/Student/UpdateStudents",

@@ -157,6 +157,7 @@ export const useGetSubjectByClassId = (classId?: string, examId?: string) => {
       const response = await api.get<ISubjectByClass[]>(
         `${SubjectEndPoints.getSubjectByClass}?${params.toString()}`
       );
+
       return response.data;
     },
     enabled: !!classId || !!examId,
