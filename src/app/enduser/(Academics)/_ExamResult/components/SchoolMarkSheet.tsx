@@ -1,4 +1,5 @@
 'use client'
+
 import { X } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
 import { useGetAllSubjects } from '../../Subject/hooks'
@@ -6,8 +7,7 @@ import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hoo
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useRef, useEffect } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
-import { useGetAllClass, useGetClassById } from '../../Class/hooks'
-import { IClass } from '../../Class/types/IClass'
+import { useGetClassById } from '../../Class/hooks'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
 
@@ -41,6 +41,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const ExamName = allExam?.Items.find(
     (exam: IExam) => exam.id === examId
   )?.name
+
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       onClose()
@@ -57,14 +58,23 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const handlePrint = () => {
     const content = document.getElementById('marksheet')?.outerHTML
     if (!content) return
-
     const printWindow = window.open('', '', 'width=900,height=1000')
     printWindow?.document.write(`
   <html>
     <head>
       <title>Marksheet</title>
       <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
       <style>
+        * {
+          font-family: 'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif;
+        }
+        
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        
         @media print {
           @page { size: A4 portrait; margin: 0 !important; }
           body { margin: 0; padding: 0; }
@@ -83,28 +93,89 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
     printWindow?.print()
   }
 
+  const getGradePointValue = (grade: string): number => {
+    const gradeMap: { [key: string]: number } = {
+      'A+': 4.0,
+      A: 3.6,
+      'B+': 3.2,
+      B: 2.8,
+      'C+': 2.4,
+      C: 2.0,
+      'D+': 1.6,
+      D: 1.6,
+      NG: 0,
+    }
+    return gradeMap[grade] ?? 0
+  }
+
+  const calculateGPA = (): string => {
+    if (!data?.MarksWithGrades || data.MarksWithGrades.length === 0) return '-'
+    const total = data.MarksWithGrades.reduce((sum, m) => {
+      const gp =
+        m.GPA !== undefined && m.GPA !== null
+          ? parseFloat(m.GPA)
+          : getGradePointValue(m.grade)
+      return sum + gp
+    }, 0)
+    return (total / data.MarksWithGrades.length).toFixed(2)
+  }
+
+  const gpa = calculateGPA()
+  const today = new Date().toISOString().split('T')[0]
+  const blue = '#080ccb'
+  const headerBg = '#e6e7ff'
+  const headerColor = '#080ccb'
+
   return (
-    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0  bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
+    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
       <div
         ref={modalRef}
-        className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
+        className="bg-white w-full sm:w-[90%] max-w-[1000px] rounded-md p-4 shadow-xl overflow-y-auto max-h-[95vh]"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Print Marksheet</h2>{' '}
-          <button onClick={onClose} className="text-red-500 text-xl">
-            <X />{' '}
-          </button>{' '}
-        </div>
         <div
           id="marksheet"
-          className="bg-white shadow-2xl mx-auto border-2 text-sky-600 p-4 sm:p-6"
-          style={{ backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}
+          className="bg-white shadow-2xl mx-auto border-2 text-gray-800 p-4 sm:p-6"
+          style={{ fontFamily: "'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif" }}
         >
-          <div className="border-4 border-sky-500 p-3 sm:p-5">
+          <div className="p-3 sm:p-5">
+
+            {/* ── HEADER ── */}
             <header className="pb-4 mb-2 relative">
-              <div className="flex items-start justify-center w-full">
+              <div className="flex items-center justify-center w-full relative min-h-[130px]">
+
+                {/* Left: School Logo */}
+                <div className="absolute left-0 top-0 w-24 h-24 flex items-center justify-center">
+                  <img
+                    src="/assets/nepal.png"
+                    alt="School Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+
+                {/* Center: School Info */}
+                <div className="text-center flex-1 px-28">
+                  <div className="text-sm font-semibold">नेपाल सरकार</div>
+                  <div className="text-sm font-medium">Government of Nepal</div>
+                  <div className="text-lg font-bold text-red-600">
+                    {SchoolData?.name || 'नमुना नगरपालिका'}
+                  </div>
+                  <div className="text-sm font-medium">
+                    {SchoolData?.address || 'Model Municipality'}
+                  </div>
+                  <div className="text-sm font-semibold mt-1">
+                    स्थानीय परीक्षा बोर्ड
+                  </div>
+                  <div className="text-sm font-semibold">
+                    Local Examination Board
+                  </div>
+                  <div className="text-xl font-bold mt-2 underline tracking-wide">
+                    GRADE SHEET
+                  </div>
+                </div>
+
+                {/* Right: Student Photo */}
                 {StudentData?.studentImg && (
-                  <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                  <div className="absolute right-0 top-0 w-28 h-[130px] border border-gray-400 flex items-center justify-center overflow-hidden bg-gray-50">
                     <img
                       src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
                       alt="Student Image"
@@ -112,160 +183,329 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                     />
                   </div>
                 )}
-
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
-                  <p className="text-sm">{SchoolData?.address}</p>
-                  <p className="font-semibold mt-2 underline">{ExamName}</p>
-                  <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
-                </div>
               </div>
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
-              <p className="flex">
-                <strong>Name:</strong> {StudentData?.firstName}{' '}
-                {StudentData?.lastName}
-              </p>
+            {/* ── STUDENT INFO ── */}
+            <div
+              className="text-sm mb-4 mt-3 leading-7 text-justify px-1"
+              style={{ color: blue }}
+            >
               <p>
-                <strong>Section:</strong> {StudentData?.classSectionId}
-              </p>
-              <p className="flex">
-                <strong>Class:</strong>
-                {allclass?.name}
-              </p>
-              <p>
-                <strong>Roll No:</strong>
+                THE GRADE(S) SECURED BY{' '}
+                <span className="font-bold text-black">
+                  {StudentData?.firstName} {StudentData?.lastName}
+                </span>
+                {' '}DATE OF BIRTH:{' '}
+                <span className="font-bold text-black">
+                  {'2066-01-01'}
+                </span>
+                {' '}SYMBOL NO.:{' '}
+                <span className="font-bold text-black">
+                  { 'undefine'}
+                </span>
+                {' '}REGISTRATION NO.:{' '}
+                <span className="font-bold text-black">
+                  {'undefine'}
+                </span>
+                {' '}GRADE:{' '}
+                <span className="font-bold text-black">
+                  {allclass?.name || 'Eight'}
+                </span>
+                {' '}SCHOOL:{' '}
+                <span className="font-bold text-black">
+                  {SchoolData?.name || 'undefine'}
+                </span>
+                {' '}DISTRICT:{' '}
+                <span className="font-bold text-black">
+                  {'undefine'}
+                </span>
+                {' '}PROVINCE:{' '}
+                <span className="font-bold text-black">
+                  {'undefine'}
+                </span>
+                {' '}IN THE ANNUAL BASIC EDUCATION EXAMINATION{' '}
+                <span className="font-bold text-black">
+                  {ExamName ? ExamName.toUpperCase() : ''}
+                </span>
+                {' '}ARE GIVEN BELOW:
               </p>
             </div>
 
-            <table className="w-full border text-sm table-auto">
+            {/* ── SUBJECTS TABLE ── */}
+            <table
+              className="w-full border-collapse text-sm mb-4"
+              style={{ border: `1px solid ${blue}` }}
+            >
               <thead>
-                <tr className="text-center font-semibold">
-                  <th className="border border-sky-500 p-1 w-10">S.N</th>
-                  <th className="border border-sky-500 p-1">Subjects</th>
-                  <th className="border border-sky-500 p-1">Grade</th>
-                  <th className="border border-sky-500 p-1">GPA</th>
-                  <th className="border border-sky-500 p-1 w-24">
-                    Marks Obtained
+                {/* Row 1 */}
+                <tr style={{ backgroundColor: headerBg, color: headerColor }}>
+                  <th
+                    rowSpan={2}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '40px' }}
+                  >
+                    SN
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}` }}
+                  >
+                    SUBJECTS
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '80px' }}
+                  >
+                    CREDIT HOURS
+                  </th>
+                  <th
+                    colSpan={3}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}` }}
+                  >
+                    OBTAINED GRADE
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '90px' }}
+                  >
+                    GRADE POINT
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '80px' }}
+                  >
+                    REMARKS
+                  </th>
+                 </tr>
+                {/* Row 2: sub-columns */}
+                <tr style={{ backgroundColor: headerBg, color: headerColor }}>
+                  <th
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '55px' }}
+                  >
+                    TH
+                  </th>
+                  <th
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '55px' }}
+                  >
+                    PR
+                  </th>
+                  <th
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}`, width: '65px' }}
+                  >
+                    FINAL
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {data?.MarksWithGrades?.map((m, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="border border-sky-500 p-1">{index + 1}</td>
-                    <td className="border border-sky-500 p-1 text-left px-2">
-                      {
+                {/* Dynamic rows — white background, blue text */}
+                {data?.MarksWithGrades && data.MarksWithGrades.length > 0
+                  ? data.MarksWithGrades.map((m, index) => {
+                      const subjectName =
                         allSubject?.Items.find((i) => i.Id === m.subjectId)
-                          ?.name
-                      }
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.grade || '-'}
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.GPA || '-'}
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.marksObtained}
-                    </td>
-                  </tr>
-                ))}
+                          ?.name ||
+                        m.subjectId ||
+                        '-'
+                      const gradePoint =
+                        m.GPA !== undefined && m.GPA !== null
+                          ? m.GPA
+                          : getGradePointValue(m.grade)
+                      return (
+                        <tr
+                          key={index}
+                          className="text-center"
+                          style={{ backgroundColor: '#ffffff', color: blue }}
+                        >
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {index + 1}
+                          </td>
+                          <td
+                            className="p-2 text-left px-3"
+                            style={{ border: `1px solid ${blue}`, color: blue }}
+                          >
+                            {subjectName}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            4
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {'-'}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            { '-'}
+                          </td>
+                          <td
+                            className="p-2 font-medium"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {m.grade || '-'}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {gradePoint}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {'-'}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  : /* Placeholder rows */
+                    [
+                      'Nepali',
+                      'English',
+                      'Mathematics',
+                      'Social Studies and Population Education',
+                      'Science and Environment',
+                      'Health and Physical Education',
+                      'Moral Education',
+                      'Occupation, Business & Technology Education',
+                      'Local Subject (Computer)',
+                    ].map((subject, index) => (
+                      <tr
+                        key={index}
+                        className="text-center"
+                        style={{ backgroundColor: '#ffffff', color: blue }}
+                      >
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          {index + 1}
+                        </td>
+                        <td
+                          className="p-2 text-left px-3"
+                          style={{ border: `1px solid ${blue}`, color: blue }}
+                        >
+                          {subject}
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          4
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                      </tr>
+                    ))}
+
+                {/* ── GPA ROW (light blue bg like header) ── */}
+                <tr style={{ backgroundColor: headerBg, color: headerColor }}>
+                  <td
+                    colSpan={6}
+                    className="p-2 text-right font-bold"
+                    style={{ border: `1px solid ${blue}` }}
+                  >
+                    GRADE POINT AVERAGE (GPA):
+                  </td>
+                  <td
+                    className="p-2 text-center font-bold"
+                    style={{ border: `1px solid ${blue}` }}
+                  >
+                    {gpa}
+                  </td>
+                  <td
+                    className="p-2"
+                    style={{ border: `1px solid ${blue}` }}
+                  />
+                </tr>
               </tbody>
             </table>
 
-            <div className="mt-2 text-sm w-full flex flex-col sm:flex-row border border-sky-500">
-              <table className="w-full sm:w-[70%] table-auto">
-                <thead>
-                  <tr className="text-center font-semibold">
-                    <th className="border-b border-r p-1 border-sky-500">
-                      GRADE
-                    </th>
-                    <th className="border-b border-x p-1 border-sky-500">A+</th>
-                    <th className="border-b border-x p-1 border-sky-500">A</th>
-                    <th className="border-b border-x p-1 border-sky-500">B+</th>
-                    <th className="border-b border-x p-1 border-sky-500">B</th>
-                    <th className="border-b border-x p-1 border-sky-500">C+</th>
-                    <th className="border-b border-x p-1 border-sky-500">C</th>
-                    <th className="border-b border-x p-1 border-sky-500">D</th>
-                    <th className="border-b border-x p-1 border-sky-500">NG</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="text-center">
-                    <td className="font-semibold">GRADE POINT</td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      4.0
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      3.6
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      3.2
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.8
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.4
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.0
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      1.6
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">-</td>
-                  </tr>
-                </tbody>
-              </table>
+            {/* ── FOOTER ── */}
+            <div
+              className="mt-4 pt-2 text-xs"
+              style={{ color: blue }}
+            >
+              <div className="flex justify-between items-start gap-4">
 
-              <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
-                <p className=" inline-block px-2">OBT.MARKS :</p>
-                <strong>{data?.totalObtainedMarks}</strong>
-                <div>
-                  <p className=" inline-block px-2">GPA :</p>
-                  <strong>{data?.GPA}</strong>
-                  <strong>({data?.grade})</strong>
+                {/* Left: Notes + Checked By + Date */}
+                <div className="flex flex-col gap-1 text-xs">
+                  <p>1. One Credit Hour Equals 32 Clock Hours</p>
+                  <p>2. TH: Theory &nbsp;&nbsp; Pr: Practical</p>
+                  <p>3. Abs / Ab*: Absent</p>
+                  <p className="ml-4">T*: Theory Grade Missing</p>
+                  <p className="ml-4">P*: Practical Grade Missing</p>
+
+                  <div className="mt-6">
+                    <p className="font-semibold">Checked By</p>
+                  </div>
+
+                  <p className="mt-8">
+                    <span className="font-semibold">Date of Issue:</span>{' '}
+                    {today}
+                  </p>
                 </div>
+
+                {/* Right: Education Officer */}
+                <div className="flex flex-col items-end justify-end mt-auto">
+                  <p className="font-semibold">EDUCATION OFFICER</p>
+                </div>
+
               </div>
             </div>
 
-            <div className="mt-5 text-sm">
-              <p className="flex">
-                <strong>Remarks:</strong> {data?.remarks}
-              </p>
-              <p className="flex">
-                <strong>DATE OF ISSUE:</strong>
-                {data?.createdAt &&
-                  new Date(data?.createdAt).toISOString().split('T')[0]}
-              </p>
-              <p className="flex justify-end gap-4">
-                <strong>
-                  Total Running Days: {allattendencecount?.totalRunningDays}
-                </strong>
-                <strong>
-                  Total Absent Days {allattendencecount?.totalAbsentDays}
-                </strong>
-                <strong>
-                  {' '}
-                  Total Present Days {allattendencecount?.totalPresentDays}
-                </strong>
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-between mt-20 text-center font-semibold gap-4 sm:gap-0">
-              <p>Exam Controller</p>
-              <p>Class Teacher</p>
-              <p>Principal</p>
-            </div>
           </div>
         </div>
+
         <div className="flex justify-end mt-4">
           <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-blue-700 text-white rounded"
+            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition"
           >
             Print Marksheet
           </button>
