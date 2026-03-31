@@ -22,6 +22,9 @@ import {
   ActivityCategoryLabel,
   ActivityCategoryBadgeClass,
 } from "../types/Icocurricular";
+import { useGetAllClasses } from "@/app/enduser/(StudentManagement)/_Activities/hooks";
+import { IClass } from "@/app/enduser/(StudentManagement)/_Activities/types/IActivities";
+
 
 type SearchParam = {
   pageSize: number;
@@ -31,7 +34,6 @@ type SearchParam = {
 
 const PAGE_SIZE = 10;
 
-// Returns "YYYY-MM" key from a date string — used for grouping
 const getMonthKey = (dateString: string): string => {
   const d = new Date(dateString);
   const y = d.getFullYear();
@@ -39,7 +41,6 @@ const getMonthKey = (dateString: string): string => {
   return `${y}-${m}`;
 };
 
-// Human-readable label for a "YYYY-MM" key
 const getMonthLabel = (key: string): string => {
   const [year, month] = key.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
@@ -48,6 +49,7 @@ const getMonthLabel = (key: string): string => {
 
 const AllCoCurricularForm = () => {
   const { data, isLoading } = useGetCoCurricularReport();
+  const { data: classes, isLoading: classesLoading } = useGetAllClasses();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -65,6 +67,23 @@ const AllCoCurricularForm = () => {
   };
 
   const handleSubmit = useForm<SearchParam>({ defaultValues: {} });
+
+  // Build class ID → name lookup map
+  const classMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (classes ?? []).forEach((cls: IClass) => {
+      map[cls.id] = cls.name;
+    });
+    return map;
+  }, [classes]);
+
+  // Resolve an array of class IDs to names, fallback to ID if not found
+  const resolveClassNames = (classIds: string[]): string => {
+    if (!classIds || classIds.length === 0) return "All Classes";
+    return classIds
+      .map((id) => classMap[id] ?? id)
+      .join(", ");
+  };
 
   // Flatten all events+activities into rows
   const allRows = useMemo(() => {
@@ -172,7 +191,7 @@ const AllCoCurricularForm = () => {
       Category: getCategoryLabel(row.activity.ActivityCategory),
       Date: new Date(row.activityDate).toLocaleDateString("en-US"),
       Participants: row.activity.Participants,
-      "Class IDs": row.activity.ClassIds?.join(", ") || "N/A",
+      Classes: resolveClassNames(row.activity.ClassIds ?? []),
     }));
     const headers = Object.keys(csvData[0]);
     const csvContent = [
@@ -399,7 +418,26 @@ const AllCoCurricularForm = () => {
                             {row.activity.Participants}
                           </td>
                           <td className="border border-gray-300 p-3 text-sm">
-                            {row.activity.ClassIds?.join(", ") || "All Classes"}
+                            {classesLoading ? (
+                              <span className="text-gray-400 italic">Loading...</span>
+                            ) : (
+                              <div className="flex flex-wrap gap-1">
+                                {row.activity.ClassIds && row.activity.ClassIds.length > 0 ? (
+                                  row.activity.ClassIds.map((id, i) => (
+                                    <span key={id}>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                        {classMap[id] ?? id}
+                                      </span>
+                                      {i < row.activity.ClassIds.length - 1 && (
+                                        <span className="text-gray-400 text-xs mx-0.5">,</span>
+                                      )}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-gray-400 italic">All Classes</span>
+                                )}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );

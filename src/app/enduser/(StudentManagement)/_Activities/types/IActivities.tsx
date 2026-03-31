@@ -1,8 +1,10 @@
 export interface Activity {
   id: string
   name: string
+  descriptions: string
   activityCategory: number
   eventId: string
+  classIds: string[]
   isActive: boolean
   schoolId: string
   createdBy: string
@@ -26,11 +28,13 @@ export interface Participation {
 
 export interface AddActivityPayload {
   name: string
+  descriptions: string
   activityCategory: number
   eventId: string
   startTime: string
   endTime: string
   activityDate: string
+  classIds: string[]
 }
 
 export interface AddParticipationPayload {
@@ -42,4 +46,19 @@ export interface AddParticipationPayload {
 export interface IFilterActivityByDate {
   startDate: string
   endDate: string
+}
+
+export interface IClassSubject {
+  id: string
+  name: string
+  code: string
+  creditHours: number
+  description: string
+  classId: string
+}
+
+export interface IClass {
+  id: string
+  name: string
+  subjects: IClassSubject[]
 }
