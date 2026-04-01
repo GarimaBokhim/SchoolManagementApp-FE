@@ -16,12 +16,13 @@ import QuickActions from "./quickActions";
 
 const Dashboard: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useRouter();
 
-  const { data: allNotice } = useGetAllNotices();
-  const { data: students } = useGetAllStudents();
-  const { data: staffs } = useGetAllAcademicTeams();
-  const { data: school } = useGetAllSchool();
+  const { data: allNotice, isLoading: noticesLoading } = useGetAllNotices();
+  const { data: students, isLoading: studentsLoading } = useGetAllStudents();
+  const { data: staffs, isLoading: staffsLoading } = useGetAllAcademicTeams();
+  const { data: school, isLoading: schoolLoading } = useGetAllSchool();
 
   useEffect(() => {
     const userDetailsString = localStorage.getItem("userDetails");
@@ -37,7 +38,21 @@ const Dashboard: React.FC = () => {
 
     const token = localStorage.getItem("token");
     if (!token) navigate.push("/");
+    
+    setIsLoading(false);
   }, [navigate]);
+
+  // Show loading state while data is being fetched
+  if (isLoading || studentsLoading || staffsLoading || schoolLoading || noticesLoading) {
+    return (
+      <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A] min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const cards = [
     {
@@ -52,26 +67,32 @@ const Dashboard: React.FC = () => {
       cardIcon: <BriefcaseBusiness className="text-orange-400 text-4xl" />,
     },
     {
-      cardHead: "Total School",
+      cardHead: "Total Schools",
       cardStats: String(school?.TotalItems ?? 0),
-      cardStyle: "!bg-orange-500/30",
-      cardIcon: <BriefcaseBusiness className="text-orange-400 text-4xl" />,
+      cardStyle: "!bg-blue-500/30",
+      cardIcon: <BriefcaseBusiness className="text-blue-400 text-4xl" />,
     },
   ];
 
   return (
     <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="p-6 flex flex-col gap-6">
+        {/* Top header section - only render when schoolId is available */}
+        {schoolId && <SchoolInfoCard schoolId={schoolId} />}
+        
+        {/* Show message if no school is selected */}
+        {!schoolId && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+            <p className="text-yellow-800 dark:text-yellow-200">
+              No school selected. Please select a school to view details.
+            </p>
+          </div>
+        )}
 
-        {/* ✅ Top header section */}
-        <SchoolInfoCard schoolId={schoolId} />
-
-        {/* ✅ QuickActions now appears right below the header */}
         <QuickActions />
-
         <StatCard cards={cards} />
 
-        {/* ✅ Charts — reduced height from h-[28rem] to h-[22rem] */}
+        {/* Charts */}
         <div className="flex gap-6 h-[22rem]">
           <div className="w-[70%]">
             <BarChartSection />
@@ -127,22 +148,28 @@ const Dashboard: React.FC = () => {
                 </h3>
 
                 <div className="space-y-3 overflow-y-auto max-h-[13rem] pr-2">
-                  {allNotice?.map((n, i) => (
-                    <div
-                      key={i}
-                      className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]"
-                    >
-                      <h4 className="text-sm font-semibold line-clamp-1">
-                        {n.title}
-                      </h4>
-                      <p className="text-xs mt-1 line-clamp-2">
-                        {n.shortDescription}
-                      </p>
-                      <span className="text-[10px] text-gray-400">
-                        {n.createdAt}
-                      </span>
-                    </div>
-                  ))}
+                  {allNotice && allNotice.length > 0 ? (
+                    allNotice.slice(0, 5).map((n, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]"
+                      >
+                        <h4 className="text-sm font-semibold line-clamp-1">
+                          {n.title}
+                        </h4>
+                        <p className="text-xs mt-1 line-clamp-2">
+                          {n.shortDescription}
+                        </p>
+                        <span className="text-[10px] text-gray-400">
+                          {n.createdAt}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                      No notices available
+                    </p>
+                  )}
                 </div>
               </div>
 

@@ -1,19 +1,28 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import React from "react";
 import { Toaster } from "react-hot-toast";
-import { ChevronLeft, ChevronRight, Users, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Download } from "lucide-react";
 import { useGetAttendanceReport, useGetAllStudents } from "../hooks";
 import { NEPALI_MONTHS, STATUS_CONFIG, IStudent } from "../types/Iattendance";
+import { AppCombobox } from "@/components/Input/ComboBox";
+import { useForm } from "react-hook-form";
+import { useGetAllClasses } from "@/app/enduser/(StudentManagement)/_Activities/hooks";
+import { Toast } from "@/components/Toast/toast";
 
 const AllAttendanceForm = () => {
   const [selectedMonth, setSelectedMonth] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [monthStartIndex, setMonthStartIndex] = useState<number>(0);
+
+  const form = useForm({ defaultValues: { classId: "" } });
 
   const { data: attendanceData, isLoading: isLoadingAttendance } =
     useGetAttendanceReport(selectedMonth);
   const { data: studentData, isLoading: isLoadingStudents } =
     useGetAllStudents();
+  const { data: allClasses } = useGetAllClasses();
 
   const studentMap = useMemo(() => {
     const map: Record<string, IStudent> = {};
@@ -57,95 +66,182 @@ const AllAttendanceForm = () => {
     );
   }, [students, searchTerm, studentMap]);
 
-  const overallSummary = useMemo(() => {
-    let totalPresent = 0, totalAbsent = 0, totalLate = 0;
-    students.forEach((s) => {
-      const { present, absent, late } = getSummary(s.Attendance);
-      totalPresent += present;
-      totalAbsent += absent;
-      totalLate += late;
-    });
-    return { totalPresent, totalAbsent, totalLate };
-  }, [students]);
-
   const isLoading = isLoadingAttendance || isLoadingStudents;
+
+  const selectedClass = allClasses?.find((c) => c.id === selectedClassId) ?? allClasses?.[0] ?? null;
+
+  // Get visible months (6 at a time)
+  const visibleMonths = useMemo(() => {
+    const monthsArray = Object.entries(NEPALI_MONTHS);
+    return monthsArray.slice(monthStartIndex, monthStartIndex + 6);
+  }, [monthStartIndex]);
+
+  const canGoPrev = monthStartIndex > 0;
+  const canGoNext = monthStartIndex + 6 < Object.keys(NEPALI_MONTHS).length;
+
+  const handlePrevMonths = () => {
+    setMonthStartIndex((prev) => Math.max(0, prev - 6));
+  };
+
+  const handleNextMonths = () => {
+    setMonthStartIndex((prev) => 
+      Math.min(Object.keys(NEPALI_MONTHS).length - 6, prev + 6)
+    );
+  };
+
+  // Export to CSV functionality
+  const handleExport = () => {
+    if (filteredStudents.length === 0) {
+      Toast.error("No data to export");
+      return;
+    }
+
+    const csvData = filteredStudents.map((student, index) => {
+      const fullName = getFullName(student.StudentId);
+      const summary = getSummary(student.Attendance);
+      const attendanceRate = days.length > 0
+        ? Math.round((summary.present / days.length) * 100)
+        : 0;
+
+      // Create a row with day-wise attendance
+      const dayAttendance: Record<string, string> = {};
+      days.forEach(({ key, day }) => {
+        const statusVal = student.Attendance[key]?.Status ?? "-";
+        const config = STATUS_CONFIG[statusVal] ?? STATUS_CONFIG["-"];
+        dayAttendance[`Day ${day}`] = config.label;
+      });
+
+      return {
+        "S.N.": index + 1,
+        "Student Name": fullName,
+        "Present": summary.present,
+        "Absent": summary.absent,
+        "Late": summary.late,
+        "No Data": summary.noData,
+        "Attendance Rate (%)": attendanceRate,
+        ...dayAttendance,
+      };
+    });
+
+    const headers = Object.keys(csvData[0]);
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map((row) =>
+        headers.map((h) => {
+          const value = row[h as keyof typeof row];
+          // Handle values that might contain commas or quotes
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `attendance_report_${NEPALI_MONTHS[selectedMonth]}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    Toast.success("Report exported successfully");
+  };
 
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6 space-y-4">
 
-        {/* Top bar */}
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm p-4 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
-            Attendance Report
-          </h1>
+        {/* Top bar with controls */}
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Left side: Class and Search */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Class Combobox */}
+              <div className="w-48">
+                <AppCombobox
+                  value={selectedClassId || (allClasses?.[0]?.id ?? "")}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute z-50"
+                  label="Class"
+                  name="classId"
+                  form={form}
+                  options={allClasses ?? []}
+                  selected={selectedClass}
+                  onSelect={(cls) => {
+                    if (cls) {
+                      setSelectedClassId(cls.id);
+                      form.setValue("classId", cls.id);
+                    }
+                  }}
+                  getLabel={(c) => c?.name ?? ""}
+                  getValue={(c) => c?.id ?? ""}
+                />
+              </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search student..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-            />
-          </div>
-
-          {/* Month pills */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setSelectedMonth((m) => Math.max(1, m - 1))}
-              disabled={selectedMonth === 1}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <div className="flex gap-1 flex-wrap">
-              {Object.entries(NEPALI_MONTHS).map(([num, name]) => (
-                <button
-                  key={num}
-                  onClick={() => setSelectedMonth(Number(num))}
-                  className={`px-2.5 py-1 text-xs rounded-full font-medium transition ${
-                    selectedMonth === Number(num)
-                      ? "bg-blue-600 text-white shadow"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-[#444] dark:text-gray-300"
-                  }`}
-                >
-                  {name}
-                </button>
-              ))}
+              {/* Search field */}
+              <div className="relative w-48">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search student..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => setSelectedMonth((m) => Math.min(12, m + 1))}
-              disabled={selectedMonth === 12}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-blue-50 dark:bg-[#2f3a4a] rounded-xl p-3 border border-blue-100">
-            <p className="text-xs text-blue-500 font-medium uppercase tracking-wide flex items-center gap-1">
-              <Users size={11} /> Students
-            </p>
-            <p className="text-2xl font-bold text-blue-700 mt-1">{students.length}</p>
-          </div>
-          <div className="bg-emerald-50 dark:bg-[#2f3a3a] rounded-xl p-3 border border-emerald-100">
-            <p className="text-xs text-emerald-500 font-medium uppercase tracking-wide">Present</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{overallSummary.totalPresent}</p>
-          </div>
-          <div className="bg-red-50 dark:bg-[#3a2f2f] rounded-xl p-3 border border-red-100">
-            <p className="text-xs text-red-500 font-medium uppercase tracking-wide">Absent</p>
-            <p className="text-2xl font-bold text-red-600 mt-1">{overallSummary.totalAbsent}</p>
-          </div>
-          <div className="bg-yellow-50 dark:bg-[#3a3a2f] rounded-xl p-3 border border-yellow-100">
-            <p className="text-xs text-yellow-500 font-medium uppercase tracking-wide">Late</p>
-            <p className="text-2xl font-bold text-yellow-600 mt-1">{overallSummary.totalLate}</p>
+            {/* Right side: Export button and Month navigation */}
+            <div className="flex items-center gap-3">
+              {/* Export Button */}
+              <button
+                onClick={handleExport}
+                disabled={filteredStudents.length === 0}
+                className="flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download size={15} />
+                <span className="text-sm">Export</span>
+              </button>
+
+              {/* Month navigation with 6 visible months */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevMonths}
+                  disabled={!canGoPrev}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                
+                <div className="flex gap-1">
+                  {visibleMonths.map(([num, name]) => (
+                    <button
+                      key={num}
+                      onClick={() => setSelectedMonth(Number(num))}
+                      className={`px-2.5 py-1 text-xs rounded-full font-medium transition whitespace-nowrap ${
+                        selectedMonth === Number(num)
+                          ? "bg-blue-600 text-white shadow"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-[#444] dark:text-gray-300"
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={handleNextMonths}
+                  disabled={!canGoNext}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -181,7 +277,6 @@ const AllAttendanceForm = () => {
                         {fullName}
                       </span>
                     </div>
-                    {/* Attendance rate badge */}
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                         attendanceRate >= 75
@@ -195,7 +290,7 @@ const AllAttendanceForm = () => {
                     </span>
                   </div>
 
-                  {/* Day Grid — wraps naturally, no scroll */}
+                  {/* Day Grid */}
                   <div className="p-3">
                     <div className="flex flex-wrap gap-1">
                       {days.map(({ key, day }) => {

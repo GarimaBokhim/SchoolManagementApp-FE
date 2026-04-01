@@ -14,7 +14,7 @@ import {
 import { Toast } from "@/components/Toast/toast";
 import Pagination from "@/components/Pagination";
 import { useForm } from "react-hook-form";
-import { useGetCoCurricularReport } from "../hooks";
+import { useGetCoCurricularReport, useGetAllEvents } from "../hooks";
 import {
   IActivity,
   ICoCurricularEvent,
@@ -25,11 +25,16 @@ import {
 import { useGetAllClasses } from "@/app/enduser/(StudentManagement)/_Activities/hooks";
 import { IClass } from "@/app/enduser/(StudentManagement)/_Activities/types/IActivities";
 
-
 type SearchParam = {
   pageSize: number;
   pageIndex: number;
   isPagination: boolean;
+};
+
+type GroupedEvent = {
+  eventId: string;
+  activityDate: string;
+  activities: IActivity[];
 };
 
 const PAGE_SIZE = 10;
@@ -50,11 +55,11 @@ const getMonthLabel = (key: string): string => {
 const AllCoCurricularForm = () => {
   const { data, isLoading } = useGetCoCurricularReport();
   const { data: classes, isLoading: classesLoading } = useGetAllClasses();
+  const { data: allEvents, isLoading: eventsLoading } = useGetAllEvents();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentMonthKey, setCurrentMonthKey] = useState<string>("");
-
   const [paginationParams, setPaginationParams] = useState({
     pageSize: PAGE_SIZE,
     pageIndex: 1,
@@ -65,27 +70,20 @@ const AllCoCurricularForm = () => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-
   const handleSubmit = useForm<SearchParam>({ defaultValues: {} });
 
-  // Build class ID → name lookup map
   const classMap = useMemo(() => {
     const map: Record<string, string> = {};
-    (classes ?? []).forEach((cls: IClass) => {
-      map[cls.id] = cls.name;
-    });
+    (classes ?? []).forEach((cls: IClass) => { map[cls.id] = cls.name; });
     return map;
   }, [classes]);
 
-  // Resolve an array of class IDs to names, fallback to ID if not found
-  const resolveClassNames = (classIds: string[]): string => {
-    if (!classIds || classIds.length === 0) return "All Classes";
-    return classIds
-      .map((id) => classMap[id] ?? id)
-      .join(", ");
-  };
+  const eventMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (allEvents ?? []).forEach((ev) => { map[ev.id] = ev.title; });
+    return map;
+  }, [allEvents]);
 
-  // Flatten all events+activities into rows
   const allRows = useMemo(() => {
     if (!data?.Items) return [];
     const rows: { eventId: string; activityDate: string; activity: IActivity }[] = [];
@@ -97,50 +95,63 @@ const AllCoCurricularForm = () => {
     return rows;
   }, [data]);
 
-  // Build sorted list of unique month keys present in the data
   const availableMonthKeys = useMemo(() => {
     const keys = new Set<string>();
     allRows.forEach((row) => keys.add(getMonthKey(row.activityDate)));
     return Array.from(keys).sort();
   }, [allRows]);
 
-  // Once data loads, default to the most recent month
   useEffect(() => {
     if (availableMonthKeys.length > 0 && !currentMonthKey) {
       setCurrentMonthKey(availableMonthKeys[availableMonthKeys.length - 1]);
     }
   }, [availableMonthKeys, currentMonthKey]);
 
-  // Search + category filter (across ALL months)
   const filteredRows = useMemo(() => {
     return allRows.filter((row) => {
       const matchesSearch =
         searchTerm === "" ||
-        row.activity.ActivityName.toLowerCase().includes(searchTerm.toLowerCase());
+        row.activity.ActivityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (eventMap[row.eventId] ?? "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
         selectedCategory === "all" ||
         row.activity.ActivityCategory === Number(selectedCategory);
       return matchesSearch && matchesCategory;
     });
-  }, [allRows, searchTerm, selectedCategory]);
+  }, [allRows, searchTerm, selectedCategory, eventMap]);
 
-  // Further filter by selected month
   const monthFilteredRows = useMemo(() => {
     if (!currentMonthKey) return filteredRows;
-    return filteredRows.filter(
-      (row) => getMonthKey(row.activityDate) === currentMonthKey
-    );
+    return filteredRows.filter((row) => getMonthKey(row.activityDate) === currentMonthKey);
   }, [filteredRows, currentMonthKey]);
 
-  // Paginate
-  const monthPaginatedRows = useMemo(() => {
-    const start = (paginationParams.pageIndex - 1) * paginationParams.pageSize;
-    return monthFilteredRows.slice(start, start + paginationParams.pageSize);
-  }, [monthFilteredRows, paginationParams]);
+  // Group by event for rowspan — one group = one event = one S.N.
+  const monthGroupedEvents = useMemo((): GroupedEvent[] => {
+    const groups: GroupedEvent[] = [];
+    const seen = new Map<string, number>();
+    monthFilteredRows.forEach((row) => {
+      if (seen.has(row.eventId)) {
+        groups[seen.get(row.eventId)!].activities.push(row.activity);
+      } else {
+        seen.set(row.eventId, groups.length);
+        groups.push({
+          eventId: row.eventId,
+          activityDate: row.activityDate,
+          activities: [row.activity],
+        });
+      }
+    });
+    return groups;
+  }, [monthFilteredRows]);
 
-  const monthTotalPages = Math.ceil(
-    monthFilteredRows.length / paginationParams.pageSize
-  );
+  // Paginate by event (not by activity row)
+  const monthPaginatedEvents = useMemo(() => {
+    const start = (paginationParams.pageIndex - 1) * paginationParams.pageSize;
+    return monthGroupedEvents.slice(start, start + paginationParams.pageSize);
+  }, [monthGroupedEvents, paginationParams]);
+
+  const monthTotalPages = Math.ceil(monthGroupedEvents.length / paginationParams.pageSize);
+  const snOffset = (paginationParams.pageIndex - 1) * paginationParams.pageSize;
 
   const monthTotalParticipants = useMemo(
     () => monthFilteredRows.reduce((sum, r) => sum + r.activity.Participants, 0),
@@ -156,7 +167,6 @@ const AllCoCurricularForm = () => {
     return map;
   }, [monthFilteredRows]);
 
-  // Month navigation
   const currentMonthIndex = availableMonthKeys.indexOf(currentMonthKey);
   const goToPreviousMonth = () => {
     if (currentMonthIndex > 0) {
@@ -179,27 +189,28 @@ const AllCoCurricularForm = () => {
 
   const getCategoryBadgeClass = (category: ActivityCategory) =>
     ActivityCategoryBadgeClass[category] ?? "bg-gray-100 text-gray-700";
-
   const getCategoryLabel = (category: ActivityCategory) =>
     ActivityCategoryLabel[category] ?? "Unknown";
 
   const handleExport = () => {
-    if (monthPaginatedRows.length === 0) return;
-    const csvData = monthPaginatedRows.map((row, index) => ({
+    if (monthFilteredRows.length === 0) return;
+    const csvData = monthFilteredRows.map((row, index) => ({
       "S.N.": index + 1,
+      "Event Name": eventMap[row.eventId] ?? row.eventId,
       "Activity Name": row.activity.ActivityName,
       Category: getCategoryLabel(row.activity.ActivityCategory),
       Date: new Date(row.activityDate).toLocaleDateString("en-US"),
       Participants: row.activity.Participants,
-      Classes: resolveClassNames(row.activity.ClassIds ?? []),
+      Classes:
+        row.activity.ClassIds?.length > 0
+          ? row.activity.ClassIds.map((id) => classMap[id] ?? id).join(", ")
+          : "All Classes",
     }));
     const headers = Object.keys(csvData[0]);
     const csvContent = [
       headers.join(","),
       ...csvData.map((row) =>
-        headers
-          .map((h) => JSON.stringify(row[h as keyof typeof row] || ""))
-          .join(",")
+        headers.map((h) => JSON.stringify(row[h as keyof typeof row] || "")).join(",")
       ),
     ].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -215,31 +226,14 @@ const AllCoCurricularForm = () => {
   };
 
   const currentMonthLabel = currentMonthKey ? getMonthLabel(currentMonthKey) : "—";
+  const isPageLoading = isLoading || eventsLoading;
 
   return (
     <>
       <Toaster position="top-right" />
       <div className="w-full bg-white rounded-lg shadow-lg p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            School Activity Report
-          </h2>
-          <p className="text-center text-gray-600">
-            Co-curricular and Extra-curricular Activities Overview
-          </p>
-          <div className="text-center text-sm text-gray-500 mt-1">
-            {new Date().toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-        </div>
-
         {/* Controls */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-          {/* Month navigator */}
           <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               <Calendar className="w-4 h-4" />
@@ -263,13 +257,12 @@ const AllCoCurricularForm = () => {
             </div>
           </div>
 
-          {/* Search / filter / export */}
           <div className="flex flex-wrap gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search activities..."
+                placeholder="Search activities or events..."
                 className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
                 value={searchTerm}
                 onChange={(e) => {
@@ -278,7 +271,6 @@ const AllCoCurricularForm = () => {
                 }}
               />
             </div>
-
             <select
               className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={selectedCategory}
@@ -289,12 +281,9 @@ const AllCoCurricularForm = () => {
             >
               <option value="all">All Categories</option>
               {Object.entries(ActivityCategoryLabel).map(([val, label]) => (
-                <option key={val} value={val}>
-                  {label}
-                </option>
+                <option key={val} value={val}>{label}</option>
               ))}
             </select>
-
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -302,7 +291,6 @@ const AllCoCurricularForm = () => {
               <Download className="w-4 h-4" />
               <span>Export Report</span>
             </button>
-
             <button
               onClick={onClearClick}
               className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
@@ -316,155 +304,130 @@ const AllCoCurricularForm = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <p className="text-xs text-blue-500 font-medium uppercase tracking-wide">
-              Total Activities
-            </p>
-            <p className="text-2xl font-bold text-blue-700 mt-1">
-              {monthFilteredRows.length}
-            </p>
+            <p className="text-xs text-blue-500 font-medium uppercase tracking-wide">Total Activities</p>
+            <p className="text-2xl font-bold text-blue-700 mt-1">{monthFilteredRows.length}</p>
           </div>
           <div className="bg-green-50 rounded-lg p-3 border border-green-100">
-            <p className="text-xs text-green-500 font-medium uppercase tracking-wide">
-              Total Participants
-            </p>
-            <p className="text-2xl font-bold text-green-700 mt-1">
-              {monthTotalParticipants}
-            </p>
+            <p className="text-xs text-green-500 font-medium uppercase tracking-wide">Total Participants</p>
+            <p className="text-2xl font-bold text-green-700 mt-1">{monthTotalParticipants}</p>
           </div>
           <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
-            <p className="text-xs text-purple-500 font-medium uppercase tracking-wide">
-              Total Events
-            </p>
-            <p className="text-2xl font-bold text-purple-700 mt-1">
-              {data?.TotalItems ?? 0}
-            </p>
+            <p className="text-xs text-purple-500 font-medium uppercase tracking-wide">Total Events</p>
+            {/* Uses monthGroupedEvents.length so it counts actual events, not activity rows */}
+            <p className="text-2xl font-bold text-purple-700 mt-1">{monthGroupedEvents.length}</p>
           </div>
           <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
-            <p className="text-xs text-orange-500 font-medium uppercase tracking-wide">
-              Categories Active
-            </p>
-            <p className="text-2xl font-bold text-orange-700 mt-1">
-              {Object.keys(monthCategorySummary).length}
-            </p>
+            <p className="text-xs text-orange-500 font-medium uppercase tracking-wide">Categories Active</p>
+            <p className="text-2xl font-bold text-orange-700 mt-1">{Object.keys(monthCategorySummary).length}</p>
           </div>
         </div>
 
         {/* Table */}
-        {isLoading ? (
-          <div className="text-center text-gray-500 py-10">
-            Loading Activities...
-          </div>
+        {isPageLoading ? (
+          <div className="text-center text-gray-500 py-10">Loading Activities...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">
-                      S.N.
-                    </th>
-                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">
-                      Activity Name
-                    </th>
-                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">
-                      Category
-                    </th>
-                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">
-                      Date
-                    </th>
-                    <th className="border border-gray-300 p-3 text-center font-bold text-gray-700">
-                      Participants
-                    </th>
-                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">
-                      Classes
-                    </th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700 w-12">S.N.</th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">Event Name</th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">Activity Name</th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">Category</th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">Date</th>
+                    <th className="border border-gray-300 p-3 text-center font-bold text-gray-700">Participants</th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-700">Classes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {monthPaginatedRows.length > 0 ? (
-                    monthPaginatedRows.map((row, index) => {
-                      const globalIndex =
-                        (paginationParams.pageIndex - 1) *
-                          paginationParams.pageSize +
-                        index +
-                        1;
-                      return (
+                  {monthPaginatedEvents.length > 0 ? (
+                    monthPaginatedEvents.map((group, groupIndex) => {
+                      const eventTitle = eventMap[group.eventId] ?? null;
+                      const rowSpan = group.activities.length;
+                      const formattedDate = new Date(group.activityDate).toLocaleDateString("en-US", {
+                        year: "numeric", month: "short", day: "numeric",
+                      });
+
+                      return group.activities.map((activity, actIndex) => (
                         <tr
-                          key={`${row.eventId}-${index}`}
+                          key={`${group.eventId}-${actIndex}`}
                           className="hover:bg-gray-50 transition"
                         >
-                          <td className="border border-gray-300 p-3 text-center">
-                            {globalIndex}
+                          {/* S.N. — rowspan across all activities of this event */}
+                          {actIndex === 0 && (
+                            <td rowSpan={rowSpan} className="border border-gray-300 p-3 text-center text-sm align-middle font-medium bg-gray-50">
+                              {snOffset + groupIndex + 1}
+                            </td>
+                          )}
+
+                          {/* Event Name — rowspan */}
+                          {actIndex === 0 && (
+                            <td rowSpan={rowSpan} className="border border-gray-300 p-3 align-middle bg-gray-50">
+                              {eventTitle ? (
+                                <span className="font-semibold text-gray-800 text-sm">{eventTitle}</span>
+                              ) : (
+                                <span className="text-gray-400 italic text-xs">Unknown Event</span>
+                              )}
+                            </td>
+                          )}
+
+                          {/* Activity Name */}
+                          <td className="border border-gray-300 p-3 text-sm">
+                            {activity.ActivityName}
                           </td>
-                          <td className="border border-gray-300 p-3 font-medium">
-                            {row.activity.ActivityName}
-                          </td>
+
+                          {/* Category */}
                           <td className="border border-gray-300 p-3">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryBadgeClass(
-                                row.activity.ActivityCategory
-                              )}`}
-                            >
-                              {getCategoryLabel(row.activity.ActivityCategory)}
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryBadgeClass(activity.ActivityCategory)}`}>
+                              {getCategoryLabel(activity.ActivityCategory)}
                             </span>
                           </td>
-                          <td className="border border-gray-300 p-3">
-                            {new Date(row.activityDate).toLocaleDateString(
-                              "en-US",
-                              { year: "numeric", month: "short", day: "numeric" }
-                            )}
+
+                          {/* Date — rowspan */}
+                          {actIndex === 0 && (
+                            <td rowSpan={rowSpan} className="border border-gray-300 p-3 text-sm align-middle bg-gray-50">
+                              {formattedDate}
+                            </td>
+                          )}
+
+                          {/* Participants */}
+                          <td className="border border-gray-300 p-3 text-center font-semibold text-sm">
+                            {activity.Participants}
                           </td>
-                          <td className="border border-gray-300 p-3 text-center font-semibold">
-                            {row.activity.Participants}
-                          </td>
+
+                          {/* Classes */}
                           <td className="border border-gray-300 p-3 text-sm">
                             {classesLoading ? (
                               <span className="text-gray-400 italic">Loading...</span>
-                            ) : (
+                            ) : activity.ClassIds?.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
-                                {row.activity.ClassIds && row.activity.ClassIds.length > 0 ? (
-                                  row.activity.ClassIds.map((id, i) => (
-                                    <span key={id}>
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                                        {classMap[id] ?? id}
-                                      </span>
-                                      {i < row.activity.ClassIds.length - 1 && (
-                                        <span className="text-gray-400 text-xs mx-0.5">,</span>
-                                      )}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-gray-400 italic">All Classes</span>
-                                )}
+                                {activity.ClassIds.map((id) => (
+                                  <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                    {classMap[id] ?? id}
+                                  </span>
+                                ))}
                               </div>
+                            ) : (
+                              <span className="text-gray-400 italic text-xs">All Classes</span>
                             )}
                           </td>
                         </tr>
-                      );
+                      ));
                     })
                   ) : (
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="border border-gray-300 p-3 text-center text-gray-500 italic"
-                      >
+                      <td colSpan={7} className="border border-gray-300 p-3 text-center text-gray-500 italic">
                         No activities found for {currentMonthLabel}.
                       </td>
                     </tr>
                   )}
                 </tbody>
-                {monthPaginatedRows.length > 0 && (
+                {monthFilteredRows.length > 0 && (
                   <tfoot>
                     <tr className="bg-gray-100 font-bold">
-                      <td
-                        colSpan={4}
-                        className="border border-gray-300 p-3 text-right"
-                      >
-                        Total Participants:
-                      </td>
-                      <td className="border border-gray-300 p-3 text-center text-blue-700">
-                        {monthTotalParticipants}
-                      </td>
+                      <td colSpan={5} className="border border-gray-300 p-3 text-right">Total Participants:</td>
+                      <td className="border border-gray-300 p-3 text-center text-blue-700">{monthTotalParticipants}</td>
                       <td className="border border-gray-300 p-3" />
                     </tr>
                   </tfoot>
@@ -483,10 +446,7 @@ const AllCoCurricularForm = () => {
                   {Object.entries(monthCategorySummary).map(([catVal, count]) => {
                     const cat = Number(catVal) as ActivityCategory;
                     return (
-                      <div
-                        key={catVal}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${getCategoryBadgeClass(cat)}`}
-                      >
+                      <div key={catVal} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${getCategoryBadgeClass(cat)}`}>
                         <span>{getCategoryLabel(cat)}</span>
                         <span className="font-bold">{count}</span>
                       </div>
@@ -497,7 +457,7 @@ const AllCoCurricularForm = () => {
             )}
 
             {/* Pagination */}
-            {monthFilteredRows.length > 0 && (
+            {monthGroupedEvents.length > 0 && (
               <div className="mt-6">
                 <Pagination
                   form={handleSubmit}
@@ -505,10 +465,7 @@ const AllCoCurricularForm = () => {
                     currentPage: paginationParams.pageIndex,
                     firstPage: 1,
                     lastPage: monthTotalPages,
-                    nextPage: Math.min(
-                      paginationParams.pageIndex + 1,
-                      monthTotalPages
-                    ),
+                    nextPage: Math.min(paginationParams.pageIndex + 1, monthTotalPages),
                     previousPage: Math.max(paginationParams.pageIndex - 1, 1),
                   }}
                   handleSearch={handleSearch}
