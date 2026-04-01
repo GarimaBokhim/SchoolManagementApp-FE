@@ -23,6 +23,8 @@ import DeleteButton from '@/components/Buttons/DeleteButton'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetAllExams } from '../../Exam/hooks'
 import SchoolMarkSheet from './SchoolMarkSheet'
+import SchoolMarkSheetSecond from './SchoolMarkSheetSecond'
+
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -43,7 +45,9 @@ const AllExamResultForm = () => {
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
-  const buttonElement = (id: string) => {
+  
+  // Edit button element
+  const editButtonElement = (id: string) => {
     return (
       <ButtonElement
         icon={<Edit size={14} />}
@@ -57,11 +61,13 @@ const AllExamResultForm = () => {
       />
     )
   }
+  
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allStudent } = useGetAllStudents()
   const { data: allExam } = useGetAllExams()
   const [showStudentPrint, setShowStudentPrint] = useState(false)
+  const [showStudentPrintSecond, setShowStudentPrintSecond] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<string | null>('')
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
   const handleSubmit = useForm<SearchParam>({
@@ -149,6 +155,7 @@ const AllExamResultForm = () => {
     setSelectedStudentId('')
     form.reset()
   }
+
   return (
     <>
       <div className="md:px-4  px-4 ">
@@ -188,7 +195,7 @@ const AllExamResultForm = () => {
                   setParams={setParams}
                 />
 
-                {/* ExamResult name filter */}
+                {/* Student name filter */}
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
                     dropDownWidth="w-[25rem]"
@@ -209,25 +216,6 @@ const AllExamResultForm = () => {
                     getLabel={(g) => g?.firstName ?? ''}
                     getValue={(g) => g?.id ?? ''}
                   />
-                  {/* <AppCombobox
-                      dropDownWidth="w-[25rem]"
-                      label="Subject Name"
-                      name="name"
-                      form={form}
-                      dropdownPositionClass="fixed"
-                      value={selectedSubjectId}
-                      options={allSubject?.Items ?? []}
-                      selected={
-                        allSubject
-                          ? allSubject?.Items?.find(
-                              (g) => g.id === selectedSubjectId
-                            ) ?? null
-                          : null
-                      }
-                      onSelect={(user) => setSelectedSubjectId(user?.id ?? "")}
-                      getLabel={(g) => g?.name ?? ""}
-                      getValue={(g) => g?.id ?? ""}
-                    /> */}
                 </div>
 
                 {/* Action buttons */}
@@ -257,13 +245,13 @@ const AllExamResultForm = () => {
                   <th className="px-4 py-3 ">Exam Name</th>
                   <th className="px-4 py-3 ">Student Name</th>
                   <th className="px-4 py-3 ">Remarks</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
-                </tr>
+                  <th className="px-4 py-3 text-center w-[280px]">Actions</th>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                    <td colSpan={5} className="p-4 text-center text-gray-500">
                       Loading ExamResults...
                     </td>
                   </tr>
@@ -273,11 +261,10 @@ const AllExamResultForm = () => {
                     (ExamResult: IExamResult, index: number) => (
                       <tr
                         key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">
-                          {' '}
                           {
                             allExam?.Items.find(
                               (i) => i.id === ExamResult.examId
@@ -294,6 +281,40 @@ const AllExamResultForm = () => {
                         <td className="px-2 md:px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">
                           <div className="flex justify-center gap-2">
+                            {/* First Print Button - Opens SchoolMarkSheet */}
+                            <ButtonElement
+                              icon={<Printer size={14} />}
+                              text=""
+                              type="button"
+                              onClick={() => {
+                                setShowStudentPrint(true)
+                                setSelectedExamId(ExamResult.examId)
+                                setSelectedStudent(ExamResult.studentId)
+                              }}
+                              className="!text-xs !bg-blue-500 hover:!bg-blue-600"
+                            />
+                            
+                            {/* Second Print Button - Opens SchoolMarkSheetSecond */}
+                            <ButtonElement
+                              icon={<Printer size={14} />}
+                              text=""
+                              type="button"
+                              onClick={() => {
+                                setShowStudentPrintSecond(true)
+                                setSelectedExamId(ExamResult.examId)
+                                setSelectedStudent(ExamResult.studentId)
+                              }}
+                              className="!text-xs !bg-blue-500 hover:!bg-blue-600"
+                            />
+                            
+                            {/* Edit Button - Conditional */}
+                            {canEdit && (
+                              <EditButton
+                                button={editButtonElement(ExamResult.id ?? '')}
+                              />
+                            )}
+                            
+                            {/* Delete Button - Conditional */}
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
@@ -305,26 +326,6 @@ const AllExamResultForm = () => {
                                 content="Are you sure you want to delete this ExamResult?"
                               />
                             )}
-                            {canEdit && (
-                              <EditButton
-                                button={buttonElement(ExamResult.id ?? '')}
-                              />
-                            )}
-                            <EditButton
-                              button={
-                                <ButtonElement
-                                  icon={<Printer size={14} />}
-                                  text=""
-                                  type="button"
-                                  onClick={() => {
-                                    setShowStudentPrint(true)
-                                    setSelectedExamId(ExamResult.examId)
-                                    setSelectedStudent(ExamResult.studentId)
-                                  }}
-                                  className="!text-xs"
-                                />
-                              }
-                            />
                           </div>
                         </td>
                       </tr>
@@ -333,7 +334,7 @@ const AllExamResultForm = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={5}
                       className="p-4 text-center text-gray-500 italic"
                     >
                       No ExamResults found.
@@ -343,11 +344,20 @@ const AllExamResultForm = () => {
               </tbody>
             </table>
           </div>
+          {/* First Print Modal - SchoolMarkSheet */}
           {showStudentPrint && selectedStudent && selectedExamId && (
             <SchoolMarkSheet
               studentId={selectedStudent}
               examId={selectedExamId}
               onClose={() => setShowStudentPrint(false)}
+            />
+          )}
+          {/* Second Print Modal - SchoolMarkSheetSecond */}
+          {showStudentPrintSecond && selectedStudent && selectedExamId && (
+            <SchoolMarkSheetSecond
+              studentId={selectedStudent}
+              examId={selectedExamId}
+              onClose={() => setShowStudentPrintSecond(false)}
             />
           )}
           {showExamResults && selectedId && (

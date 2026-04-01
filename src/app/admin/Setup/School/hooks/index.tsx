@@ -44,6 +44,7 @@ type SchoolRequest = {
   isDeleted: boolean;
   institutionId: string;
   fiscalYearId: string;
+  academicYearId: string;
   Users: ISchoolUser[];
 };
 
