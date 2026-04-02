@@ -110,7 +110,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
 
           {/* Activity Name */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity Name <span className="text-red-500">*</span>
             </label>
@@ -127,7 +127,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
           </div>
 
           {/* Description */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Description
             </label>
@@ -142,7 +142,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
           </div>
 
           {/* Activity Category */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Category <span className="text-red-500">*</span>
             </label>
@@ -161,7 +161,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
           </div>
 
           {/* Event */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Event <span className="text-red-500">*</span>
             </label>
@@ -192,7 +192,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
           </div>
 
           {/* Classes Multi-Select */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Classes
             </label>
@@ -210,7 +210,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
           </div>
 
           {/* Activity Date */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity Date <span className="text-red-500">*</span>
             </label>
@@ -228,7 +228,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
           {/* Start Time & End Time */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-start">
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Start Time <span className="text-red-500">*</span>
               </label>
@@ -244,7 +244,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-start">
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 End Time <span className="text-red-500">*</span>
               </label>

@@ -1,10 +1,10 @@
 'use client'
-import { X } from 'lucide-react'
+import { X, Building } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
 import { useGetAllSubjects } from '../../Subject/hooks'
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
 import { useGetAllClass, useGetClassById } from '../../Class/hooks'
 import { IClass } from '../../Class/types/IClass'
@@ -24,6 +24,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
   const { data: allExam } = useGetAllExams()
   const { data: allclass } = useGetClassById(StudentData?.classId || '')
   const { data: allattendencecount } = useGetAttendenceCount(studentId)
+  const [imageError, setImageError] = useState(false)
 
   const storedUser = localStorage.getItem('userDetails')
   let schoolId = ''
@@ -41,6 +42,36 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
   const ExamName = allExam?.Items.find(
     (exam: IExam) => exam.id === examId
   )?.name
+  
+  // Get the image URL - use imageUrl from API response
+  const getImageUrl = () => {
+    if (!SchoolData?.imageUrl) {
+      console.log('No imageUrl found in school data')
+      return null
+    }
+    
+    const imageUrl = SchoolData.imageUrl
+    console.log('Raw imageUrl from API:', imageUrl)
+    
+    // Skip if it's a placeholder value
+    if (imageUrl === '-' || imageUrl === 'string' || imageUrl === '') {
+      console.log('Image URL is a placeholder:', imageUrl)
+      return null
+    }
+    
+    // Construct full URL
+    const fullUrl = `https://schoolapp.netraverselabs.com/${imageUrl}`
+    console.log('Full image URL:', fullUrl)
+    return fullUrl
+  }
+
+  const schoolLogoUrl = getImageUrl()
+
+  const handleImageError = () => {
+    console.error('Failed to load image from URL:', schoolLogoUrl)
+    setImageError(true)
+  }
+
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       onClose()
@@ -84,16 +115,16 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0  bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
+    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
       <div
         ref={modalRef}
         className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Print Marksheet</h2>{' '}
+          <h2 className="text-xl font-semibold">Print Marksheet</h2>
           <button onClick={onClose} className="text-red-500 text-xl">
-            <X />{' '}
-          </button>{' '}
+            <X />
+          </button>
         </div>
         <div
           id="marksheet"
@@ -103,8 +134,26 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
           <div className="border-4 border-sky-500 p-3 sm:p-5">
             <header className="pb-4 mb-2 relative">
               <div className="flex items-start justify-center w-full">
+                {/* School Logo on Top Left */}
+                <div className="absolute left-0 top-0 w-24 h-24 border-2 border-gray-300 rounded-md flex items-center justify-center overflow-hidden bg-gray-50 shadow-sm">
+                  {schoolLogoUrl && !imageError ? (
+                    <img
+                      src={schoolLogoUrl}
+                      alt="School Logo"
+                      className="w-full h-full object-contain p-1"
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-2 text-center">
+                      <Building className="w-8 h-8 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500">No Logo</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Student Image on Top Right */}
                 {StudentData?.studentImg && (
-                  <div className="absolute left-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                  <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
                     <img
                       src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
                       alt="Student Image"
@@ -149,7 +198,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                   <th className="border border-sky-500 p-1 w-24">
                     Marks Obtained
                   </th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {data?.MarksWithGrades?.map((m, index) => (
@@ -249,7 +298,6 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                   Total Absent Days {allattendencecount?.totalAbsentDays}
                 </strong>
                 <strong>
-                  {' '}
                   Total Present Days {allattendencecount?.totalPresentDays}
                 </strong>
               </p>
@@ -275,4 +323,4 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
   )
 }
 
-export default  SchoolMarkSheetSecond
+export default SchoolMarkSheetSecond
