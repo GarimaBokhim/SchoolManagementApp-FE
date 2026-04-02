@@ -334,7 +334,7 @@ const ViewStudentFeeForm = ({
         </table>
       </div>
 
-      {/* ✅ Always rendered so ref is always attached, hidden when no printData */}
+      {/* Always rendered so ref is always attached, hidden when no printData */}
       <div style={{ display: 'none' }}>
         <div ref={componentRef}>
           {printData && <PaymentReceiptPrint data={printData} />}
