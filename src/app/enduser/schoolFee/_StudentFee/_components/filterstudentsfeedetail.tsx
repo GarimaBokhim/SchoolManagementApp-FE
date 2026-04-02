@@ -20,7 +20,6 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import {
   useGetAllClass,
-  useGetClassById,
 } from '@/app/enduser/(Academics)/Class/hooks'
 import PaymentReceiptPrint from './printpaymentrecordindividually'
 import { useReactToPrint } from 'react-to-print'
@@ -44,6 +43,7 @@ const ViewStudentFeeForm = ({
   const [params, setParams] = useState('')
   const componentRef = useRef<HTMLDivElement>(null)
   const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
+  const [shouldPrint, setShouldPrint] = useState(false)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
@@ -55,6 +55,10 @@ const ViewStudentFeeForm = ({
 
   const handlePrintComponent = useReactToPrint({
     contentRef: componentRef,
+    onAfterPrint: () => {
+      setPrintData(null)
+      setShouldPrint(false)
+    },
   })
 
   const { setValue } = form
@@ -64,6 +68,17 @@ const ViewStudentFeeForm = ({
     refetch,
     isLoading,
   } = useGetStudentFeesummary(params)
+
+  // ✅ Trigger print only after printData is set and component has rendered
+  useEffect(() => {
+    if (printData && shouldPrint) {
+      const timeout = setTimeout(() => {
+        handlePrintComponent?.()
+        setShouldPrint(false)
+      }, 300)
+      return () => clearTimeout(timeout)
+    }
+  }, [printData, shouldPrint])
 
   useEffect(() => {
     if (!studentId || !classId) return
@@ -132,19 +147,17 @@ const ViewStudentFeeForm = ({
 
   const handlePrint = (fee: Istudentfeesummary) => {
     const data: IPaymentRecord = {
-      studentid: studentId ?? '',        // student id and class id is coming from props 
-      classid: classId ?? fee.classId,   
+      studentid: studentId ?? '',
+      classid: classId ?? fee.classId,
       amountPaid: fee.paidAmount,
       paymentDate: fee.paymentDate || new Date().toISOString(),
       paymentMethod: fee.paymentMethod,
       reference: fee.reference || '-',
     }
 
+    // ✅ Set data first, then trigger print via useEffect
     setPrintData(data)
-
-    setTimeout(() => {
-      handlePrintComponent?.()
-    }, 100)
+    setShouldPrint(true)
   }
 
   return (
@@ -320,13 +333,13 @@ const ViewStudentFeeForm = ({
           </tbody>
         </table>
       </div>
-      {printData && (
-        <div style={{ display: 'none' }}>
-          <div ref={componentRef}>
-            <PaymentReceiptPrint data={printData} />
-          </div>
+
+      {/* ✅ Always rendered so ref is always attached, hidden when no printData */}
+      <div style={{ display: 'none' }}>
+        <div ref={componentRef}>
+          {printData && <PaymentReceiptPrint data={printData} />}
         </div>
-      )}
+      </div>
     </>
   )
 }
