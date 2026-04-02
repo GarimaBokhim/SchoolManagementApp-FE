@@ -14,7 +14,7 @@ type ClassDetail = {
 type AdmitCardProps = {
   student: IStudent
   exam: IExam
-  schoolDetail?: ISchool | null  // ✅ now matches exactly what PrintAdmitCardsPage passes
+  schoolDetail?: ISchool | null  
   classDetail?: ClassDetail
   parent?: IParent | null
 }
@@ -118,11 +118,17 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
 
           {/* Photo */}
           <div className="w-[160px] p-5 flex items-center justify-center">
-            <img
-              src={student.imageUrl || student.studentImg?.toString() || '/default.png'}
-              className="w-[90px] h-[110px] border object-cover"
-              alt="Student"
-            />
+       <img
+  src={
+    student.imageUrl || student.studentImg?.toString()
+      ? (student.imageUrl || student.studentImg?.toString())
+      : student.genderStatus === 2
+      ? '/assets/female.png'
+      : '/assets/male.png'
+  }
+  className="w-[90px] h-[110px] border object-cover"
+  alt="Student"
+/>
           </div>
         </div>
       </div>
