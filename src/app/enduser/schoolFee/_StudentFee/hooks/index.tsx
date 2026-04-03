@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IPaymentRecord, IStudentFee, Istudentfeesummary } from "../types/IStudentFee";
+
 const StudentFeeEndPoints = {
   getAllStudentFees: "/api/Finance/StudentFee",
   createStudentFees: "/api/Finance/AddStudentFee",
@@ -10,11 +11,13 @@ const StudentFeeEndPoints = {
   filterStudentFeeByDate: "/api/Finance/FilterStudentFee",
   addpaymentrecords: "/api/Finance/AddPaymentsRecords",
   studentfeesummary: "/api/Finance/StudentFeeSummary",
+  feeStructureByClass: "/api/Finance/FeeStructureByClass",
 };
 
 const queryKey = "StudentFees";
 const filterQueryKey = "filteredStudentFee";
 const paymentRecordKey = "PaymentRecords";
+
 type StudentFeeRequest = {
   id?: string;
   studentId: string;
@@ -22,6 +25,7 @@ type StudentFeeRequest = {
   classId: string;
   discountPercentage: number;
 };
+
 type IPaymentRequest = {
   studentid: string;
   classid: string;
@@ -29,25 +33,26 @@ type IPaymentRequest = {
   paymentDate: string;
   paymentMethod: number;
   reference: string;
+};
+
+export interface IFeeStructureByClass {
+  id: string;
+  classId: string;
+  fyId: string;
+  feeCategoryName: string;
 }
 
 export const useAddStudentFee = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IStudentFee, Error, StudentFeeRequest>({
     mutationFn: async (formData: StudentFeeRequest): Promise<IStudentFee> => {
-      const response = await api.post(
-        StudentFeeEndPoints.createStudentFees,
-        formData
-      );
+      const response = await api.post(StudentFeeEndPoints.createStudentFees, formData);
       return response.data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
-
     onError: (error) => {
       console.error("Error adding StudentFee:", error);
     },
@@ -58,12 +63,8 @@ export const useRemoveStudentFee = () => {
   const queryClient = useQueryClient();
   return useMutation<IStudentFee, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IStudentFee> => {
-      if (!Id) {
-        throw new Error("Id is required to remove a StudentFee");
-      }
-      const response = await api.delete(
-        `${StudentFeeEndPoints.removeStudentFees}/${Id}`
-      );
+      if (!Id) throw new Error("Id is required to remove a StudentFee");
+      const response = await api.delete(`${StudentFeeEndPoints.removeStudentFees}/${Id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -75,19 +76,10 @@ export const useRemoveStudentFee = () => {
 
 export const useEditStudentFee = () => {
   const queryClient = useQueryClient();
-  return useMutation<
-    IStudentFee,
-    Error,
-    { id: string | unknown; data: StudentFeeRequest }
-  >({
+  return useMutation<IStudentFee, Error, { id: string | unknown; data: StudentFeeRequest }>({
     mutationFn: async ({ id, data }): Promise<IStudentFee> => {
-      if (!id) {
-        throw new Error("Ïd is required to edit StudentFee");
-      }
-      const response = await api.patch(
-        `${StudentFeeEndPoints.updateStudentFees}/${id}`,
-        data
-      );
+      if (!id) throw new Error("Id is required to edit StudentFee");
+      const response = await api.patch(`${StudentFeeEndPoints.updateStudentFees}/${id}`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -103,16 +95,9 @@ export const useGetAllStudentFees = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${StudentFeeEndPoints.getAllStudentFees}${params}`
-        : `${StudentFeeEndPoints.getAllStudentFees}`;
+        : StudentFeeEndPoints.getAllStudentFees;
       const response = await api.get<IPaginationResponse<IStudentFee>>(url);
-      return (
-        response.data ?? {
-          data: [],
-          PageIndex: 0,
-          isPagination: 1,
-          pageSize: 10,
-        }
-      );
+      return response.data ?? { data: [], PageIndex: 0, isPagination: 1, pageSize: 10 };
     },
   });
 };
@@ -125,8 +110,6 @@ export const useFilterStudentFeeByDate = (params?: string) => {
         ? `${StudentFeeEndPoints.filterStudentFeeByDate}${params}`
         : StudentFeeEndPoints.filterStudentFeeByDate;
       const response = await api.get<IPaginationResponse<IStudentFee>>(url);
-
-        console.log("Final API URL:",response);
       return response.data;
     },
     staleTime: 0,
@@ -134,25 +117,33 @@ export const useFilterStudentFeeByDate = (params?: string) => {
   });
 };
 
-export const useAddPaymentRecord = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<IPaymentRecord, Error, IPaymentRequest>({
-    mutationFn: async (formData: IPaymentRequest): Promise<IPaymentRecord> => {
-      const response = await api.post(
-        StudentFeeEndPoints.addpaymentrecords,
-        formData
+export const useGetFeeStructureByClassId = (classId?: string) => {
+  return useQuery({
+    queryKey: ["feeStructureByClass", classId],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<IFeeStructureByClass>>(
+        `${StudentFeeEndPoints.feeStructureByClass}?classId=${classId}`
       );
       return response.data;
     },
+    enabled: !!classId,
+    staleTime: 0,
+  });
+};
 
+export const useAddPaymentRecord = () => {
+  const queryClient = useQueryClient();
+  return useMutation<IPaymentRecord, Error, IPaymentRequest>({
+    mutationFn: async (formData: IPaymentRequest): Promise<IPaymentRecord> => {
+      const response = await api.post(StudentFeeEndPoints.addpaymentrecords, formData);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [paymentRecordKey] });
     },
-
     onError: (error) => {
-      console.error("Error adding StudentFee:", error);
+      console.error("Error adding payment record:", error);
     },
   });
 };
