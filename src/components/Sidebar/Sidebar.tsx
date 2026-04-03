@@ -354,10 +354,12 @@ const Sidebar: React.FC<Props> = ({
                             }`}
                           style={activeSub ? { backgroundColor: activeSubBg, color: primaryColor } : {}}
                         >
-                          {subItem.icon &&
-                            (React.isValidElement(subItem.icon)
-                              ? subItem.icon
-                              : React.createElement(subItem.icon, { size: 16 }))}
+                    {/* subItem icons intentionally removed - API sends no icons for sub-items    {subItem.icon && (() => {
+  const ResolvedIcon = staticIcons[subItem.icon as string];
+  if (!ResolvedIcon) return null;
+  if (React.isValidElement(ResolvedIcon)) return ResolvedIcon;
+  return React.createElement(ResolvedIcon as any, { size: 16 });
+})()}*/} 
                           {isOpen && (
                             <span className="transition-all duration-300 ease-in-out">
                               {subItem.name}
