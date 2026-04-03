@@ -326,12 +326,13 @@ const Sidebar: React.FC<Props> = ({
                   )}
                 </button>
 
-                {/* Expanded sub-items (sidebar open) */}
-                {isOpen && (
-                  <div
-                    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
-                      ${isOpenSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
-                  >
+              
+             {/* Expanded sub-items (sidebar open) */}
+{isOpen && (
+  <div
+    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
+      ${isOpenSection ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}  
+  >
                     {item.subItems.map((subItem, index) => {
                       const activeSub = pathAfterFirst === subItem.targetUrl
                       return (
@@ -353,10 +354,12 @@ const Sidebar: React.FC<Props> = ({
                             }`}
                           style={activeSub ? { backgroundColor: activeSubBg, color: primaryColor } : {}}
                         >
-                          {subItem.icon &&
-                            (React.isValidElement(subItem.icon)
-                              ? subItem.icon
-                              : React.createElement(subItem.icon, { size: 16 }))}
+                    {/* subItem icons intentionally removed - API sends no icons for sub-items    {subItem.icon && (() => {
+  const ResolvedIcon = staticIcons[subItem.icon as string];
+  if (!ResolvedIcon) return null;
+  if (React.isValidElement(ResolvedIcon)) return ResolvedIcon;
+  return React.createElement(ResolvedIcon as any, { size: 16 });
+})()}*/} 
                           {isOpen && (
                             <span className="transition-all duration-300 ease-in-out">
                               {subItem.name}

@@ -44,7 +44,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
     (exam: IExam) => exam.id === examId
   )?.name
 
-  // ✅ Resolve district and province names from IDs
+  //Resolve district and province names from IDs
   const districtName = allDistricts?.Items?.find(
     (d) => d.Id === StudentData?.districtId
   )?.districtNameInEnglish ?? '-'
@@ -135,7 +135,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const headerBg = '#e6e7ff'
   const headerColor = '#080ccb'
 
-  // ✅ Format date of birth
+  // Format date of birth
   const dateOfBirth = StudentData?.dateOfBirth
     ? new Date(StudentData.dateOfBirth).toISOString().split('T')[0]
     : '-'
