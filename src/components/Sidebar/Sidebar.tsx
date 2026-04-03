@@ -326,12 +326,13 @@ const Sidebar: React.FC<Props> = ({
                   )}
                 </button>
 
-                {/* Expanded sub-items (sidebar open) */}
-                {isOpen && (
-                  <div
-                    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
-                      ${isOpenSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
-                  >
+              
+             {/* Expanded sub-items (sidebar open) */}
+{isOpen && (
+  <div
+    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
+      ${isOpenSection ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}  
+  >
                     {item.subItems.map((subItem, index) => {
                       const activeSub = pathAfterFirst === subItem.targetUrl
                       return (
