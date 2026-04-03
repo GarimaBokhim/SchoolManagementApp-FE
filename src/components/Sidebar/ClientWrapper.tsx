@@ -12,7 +12,6 @@ import SuperAdminSidebar from "@/tempdata/SuperAdminNavItems.json";
 export default function LayoutWrapper({
   children,
   title,
-
   sidebarClassName,
   sidebarStyle,
   mainClassName,
@@ -24,15 +23,11 @@ export default function LayoutWrapper({
   activeSubBg,
   sidebarContainerClassName,
   sidebarContainerStyle,
-
   headerContent,
-  
-  // ✅ NEW - for TitleHeader customization
-  customTitleHeader, // Completely replace TitleHeader
+  customTitleHeader,
 }: {
   children: ReactNode;
   title: string;
-
   sidebarClassName?: string;
   sidebarStyle?: CSSProperties;
   mainClassName?: string;
@@ -45,8 +40,6 @@ export default function LayoutWrapper({
   sidebarContainerClassName?: string;
   sidebarContainerStyle?: CSSProperties;
   headerContent?: ReactNode;
-  
-  // ✅ NEW TYPE
   customTitleHeader?: ReactNode;
 }) {
   const { isOpen } = useSidebar();
@@ -79,7 +72,6 @@ export default function LayoutWrapper({
   }, [navigate]);
 
   const { data: sideBarMenu } = useRoleWiseSidebarMenu(userId);
-
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -127,12 +119,7 @@ export default function LayoutWrapper({
         className={`flex-1 flex flex-col ${mainClassName ?? ""}`}
         style={mainStyle}
       >
-        {/* Title Header - Now can be replaced with custom component */}
-        {customTitleHeader ? (
-          customTitleHeader
-        ) : (
-          <TitleHeader title={title} />
-        )}
+        {customTitleHeader ? customTitleHeader : <TitleHeader title={title} />}
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>

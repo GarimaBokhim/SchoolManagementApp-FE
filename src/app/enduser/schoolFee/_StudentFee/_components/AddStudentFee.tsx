@@ -11,7 +11,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState, useEffect } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import {  useGetAllFeeStructure, useGetFeeStructureByClassId } from "../../_FeeStructure/hooks";
+import { useGetAllFeeStructure, useGetFeeStructureByClassId } from "../../_FeeStructure/hooks";
 import { IFeeStructure } from "../../_FeeStructure/types/IFeeStructure";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
@@ -20,6 +20,21 @@ type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
 };
+
+const NEPALI_MONTHS = [
+  "Baisakh",
+  "Jestha",
+  "Ashadh",
+  "Shrawan",
+  "Bhadra",
+  "Ashwin",
+  "Kartik",
+  "Mangsir",
+  "Poush",
+  "Magh",
+  "Falgun",
+  "Chaitra",
+];
 
 const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const addStudentFee = useAddStudentFee();
@@ -33,29 +48,36 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
   const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeStructure | undefined>(undefined);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
 
-const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
+  const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
 
- const handleClose = () => {
-  form.reset();
-  setSelectedStudentId("");
-  setSelectedClassId("");
-  setSelectedFeeStructureId("");
-  onClose();
-};
+  const handleClose = () => {
+    form.reset();
+    setSelectedStudentId("");
+    setSelectedClassId("");
+    setSelectedFeeStructureId("");
+    setSelectedMonths([]);
+    onClose();
+  };
 
-useEffect(() => {
-  const student = allStudents?.Items?.find(s => s.id === selectedStudentId);
-  if (student) {
-    setSelectedClassId(student.classId ?? "");
-    setSelectedFeeStructureId(""); 
-  }
-}, [selectedStudentId, allStudents]);
+  const toggleMonth = (month: string) => {
+    setSelectedMonths((prev) =>
+      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month]
+    );
+  };
 
-useEffect(() => {
-  form.setValue("classId", selectedClassId);
-}, [selectedClassId, form]);
+  useEffect(() => {
+    const student = allStudents?.Items?.find((s) => s.id === selectedStudentId);
+    if (student) {
+      setSelectedClassId(student.classId ?? "");
+      setSelectedFeeStructureId("");
+    }
+  }, [selectedStudentId, allStudents]);
 
+  useEffect(() => {
+    form.setValue("classId", selectedClassId);
+  }, [selectedClassId, form]);
 
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
@@ -98,10 +120,10 @@ useEffect(() => {
                 form={form}
                 required
                 options={allStudents?.Items}
-                selected={allStudents?.Items?.find(s => s.id === selectedStudentId) || null}
+                selected={allStudents?.Items?.find((s) => s.id === selectedStudentId) || null}
                 onSelect={(s) => setSelectedStudentId(s?.id ?? "")}
                 getLabel={(s) => {
-                  const className = allClasses?.Items?.find(c => c.id === s?.classId)?.name ?? "";
+                  const className = allClasses?.Items?.find((c) => c.id === s?.classId)?.name ?? "";
                   return `${s?.firstName ?? ""} - (${className})`;
                 }}
                 getValue={(s) => s?.id ?? ""}
@@ -112,7 +134,7 @@ useEffect(() => {
                 inputType="text"
                 form={form}
                 name="classDisplay"
-                value={allClasses?.Items?.find(c => c.id === selectedClassId)?.name ?? ""}
+                value={allClasses?.Items?.find((c) => c.id === selectedClassId)?.name ?? ""}
                 disabled
               />
 
@@ -121,31 +143,75 @@ useEffect(() => {
                 {...form.register("classId")}
                 value={selectedClassId}
               />
-             <AppCombobox
-              value={selectedFeeStructureId}
-              dropDownWidth="w-full"
-              dropdownPositionClass="absolute"
-              label="Fee Structure"
-              name="feeStructureId"
-              form={form}
-              required
-              options={feeStructuresByClass?.Items ?? []}
-              selected={
-                feeStructuresByClass?.Items?.find(f => f.id === selectedFeeStructureId) ?? null
-              }
-              onSelect={(f) => {
-                const id = f?.id?.toString() ?? "";
-                setSelectedFeeStructureId(id);
-                form.setValue("feeStructureId", id); 
-              }}
-              getLabel={(f) => {
-                const feeType = allFeeTypes?.Items?.find(t => t?.id === f?.feeTypeId);
 
-                return `${feeType?.name ?? ""} - ${f?.amount ?? ""}`;
-              }}
-              getValue={(f) => f?.id ?? ""}
-            />
+              <AppCombobox
+                value={selectedFeeStructureId}
+                dropDownWidth="w-full"
+                dropdownPositionClass="absolute"
+                label="Fee Structure"
+                name="feeStructureId"
+                form={form}
+                required
+                options={feeStructuresByClass?.Items ?? []}
+                selected={feeStructuresByClass?.Items?.find((f) => f.id === selectedFeeStructureId) ?? null}
+                onSelect={(f) => {
+                  const id = f?.id?.toString() ?? "";
+                  setSelectedFeeStructureId(id);
+                  form.setValue("feeStructureId", id);
+                }}
+                getLabel={(f) => {
+                  const feeType = allFeeTypes?.Items?.find((t) => t?.id === f?.feeTypeId);
+                  return `${feeType?.name ?? ""} - ${f?.amount ?? ""}`;
+                }}
+                getValue={(f) => f?.id ?? ""}
+              />
 
+         {/* Months Tag Selector */}
+<div className="col-span-1 md:col-span-2 lg:col-span-3">
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    Months
+  </label>
+
+  {/* Dropdown */}
+  <select
+    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+    value=""
+    onChange={(e) => {
+      const month = e.target.value;
+      if (month && !selectedMonths.includes(month)) {
+        setSelectedMonths((prev) => [...prev, month]);
+      }
+    }}
+  >
+    <option value="">Select a month...</option>
+    {NEPALI_MONTHS.filter((m) => !selectedMonths.includes(m)).map((month) => (
+      <option key={month} value={month}>
+        {month}
+      </option>
+    ))}
+  </select>
+
+  {/* Tags */}
+  {selectedMonths.length > 0 && (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {selectedMonths.map((month) => (
+        <span
+          key={month}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-teal-500 text-white"
+        >
+          {month}
+          <button
+            type="button"
+            onClick={() => setSelectedMonths((prev) => prev.filter((m) => m !== month))}
+            className="hover:opacity-70 transition-opacity"
+          >
+            <X size={12} strokeWidth={2.5} />
+          </button>
+        </span>
+      ))}
+    </div>
+  )}
+</div>
 
               <InputElement
                 label="Discount (%)"
