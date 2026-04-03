@@ -3,6 +3,7 @@ import { useState } from "react";
 import AllFeeTypeForm from "../_components/AllFeeType";
 import AllFeeStructureForm from "../../_FeeStructure/_components/AllFeeStructure";
 import AllStudentFeeForm from "../../_StudentFee/_components/AllStudentFee";
+import AllFeeCategoryForm from "../../_FeeCategory/components/AllFeeCategory";
 const AllFeeType = () => {
   const exam = [
     { id: "feeType", label: "FeeType", color: "gray" },
@@ -19,7 +20,7 @@ const AllFeeType = () => {
       case "feeCategory":
         return (
           <div className=" text-center">
-            { <AllFeeStructureForm /> }  
+            { <AllFeeCategoryForm /> }  
           </div>
         );
       case "feeStructure":
