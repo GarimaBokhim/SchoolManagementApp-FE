@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IPaymentRecord, IStudentFee, Istudentfeesummary } from "../types/IStudentFee";
+import { IPaymentRecord, IStudentFee, IStudentFeeDetails, Istudentfeesummary } from "../types/IStudentFee";
 
 const StudentFeeEndPoints = {
   getAllStudentFees: "/api/Finance/StudentFee",
@@ -18,12 +18,14 @@ const queryKey = "StudentFees";
 const filterQueryKey = "filteredStudentFee";
 const paymentRecordKey = "PaymentRecords";
 
+// ✅ Updated to include studentFeeDetailsDTOs to match API schema
 type StudentFeeRequest = {
   id?: string;
   studentId: string;
   feeStructureId: string;
   classId: string;
   discountPercentage: number;
+  studentFeeDetailsDTOs: IStudentFeeDetails[];
 };
 
 type IPaymentRequest = {
