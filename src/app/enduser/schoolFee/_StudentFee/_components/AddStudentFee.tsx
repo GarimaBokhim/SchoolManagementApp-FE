@@ -2,7 +2,7 @@
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X } from "lucide-react";
 import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
 import { useAddStudentFee, useGetFeeStructureByClassId } from "../hooks";
 import toast from "react-hot-toast";
@@ -12,6 +12,10 @@ import { useState, useEffect } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+import {
+  useGetFeeStructureById,
+  mapFeeStructureDTOsToDetails,
+} from "../hooks/useGetFeeStructureById";
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -20,15 +24,6 @@ const FEE_PAID_TYPE_OPTIONS = [
   { label: "Yearly", value: 4 },
   { label: "Semester", value: 5 },
 ];
-
-const emptyFeeDetail = (): IStudentFeeDetails => ({
-  feeTypeId: "",
-  discountAmount: 0,
-  amount: 0,
-  times: 1,
-  totalAmount: 0,
-  feePaidType: 1,
-});
 
 type Props = {
   form: UseFormReturn<IStudentFee>;
@@ -50,6 +45,23 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
 
   const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
 
+  // ── Fetch the selected fee structure's full details ──────────────────────────
+  const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
+    useGetFeeStructureById(selectedFeeStructureId);
+
+  // ── Auto-populate table when fee structure data arrives ──────────────────────
+  useEffect(() => {
+    if (!feeStructureDetail?.feeStructureDTOs?.length) return
+
+    const discount = form.getValues("discountPercentage") || 0
+    const populated = mapFeeStructureDTOsToDetails(
+      feeStructureDetail.feeStructureDTOs,
+      discount
+    )
+    setFeeDetails(populated)
+    form.setValue("studentFeeDetailsDTOs", populated)
+  }, [feeStructureDetail])
+
   const handleClose = () => {
     form.reset();
     setSelectedStudentId("");
@@ -59,7 +71,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     onClose();
   };
 
-  // Auto-set classId when student is selected
+  // ── Auto-set classId when student is selected ────────────────────────────────
   useEffect(() => {
     const student = allStudents?.Items?.find((s) => s.id === selectedStudentId);
     if (student) {
@@ -75,7 +87,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     form.setValue("classId", selectedClassId);
   }, [selectedClassId, form]);
 
-  // Reset fee details when fee structure changes
+  // ── Clear table when fee structure is deselected ─────────────────────────────
   useEffect(() => {
     if (!selectedFeeStructureId) {
       setFeeDetails([]);
@@ -83,59 +95,12 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     }
   }, [selectedFeeStructureId, form]);
 
-  // ── Row operations ──────────────────────────────────────────
-
-  const addRow = () => {
-    const updated = [...feeDetails, emptyFeeDetail()];
-    setFeeDetails(updated);
-    form.setValue("studentFeeDetailsDTOs", updated);
-  };
-
-  const removeRow = (index: number) => {
-    const updated = feeDetails.filter((_, i) => i !== index);
-    setFeeDetails(updated);
-    form.setValue("studentFeeDetailsDTOs", updated);
-  };
-
-  const updateRow = (index: number, fields: Partial<IStudentFeeDetails>) => {
-    const updated = feeDetails.map((d, i) => {
-      if (i !== index) return d;
-      const merged = { ...d, ...fields };
-      // Recalculate totals whenever amount, times, or discount changes
-      const discount = form.getValues("discountPercentage") || 0;
-      merged.discountAmount = (merged.amount * discount) / 100;
-      merged.totalAmount =
-        merged.amount * merged.times -
-        (merged.amount * discount * merged.times) / 100;
-      return merged;
-    });
-    setFeeDetails(updated);
-    form.setValue("studentFeeDetailsDTOs", updated);
-  };
-
-  // ── Discount ────────────────────────────────────────────────
-
-  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const discount = Number(e.target.value);
-    form.setValue("discountPercentage", discount);
-    const updated = feeDetails.map((detail) => ({
-      ...detail,
-      discountAmount: (detail.amount * discount) / 100,
-      totalAmount:
-        detail.amount * detail.times -
-        (detail.amount * discount * detail.times) / 100,
-    }));
-    setFeeDetails(updated);
-    form.setValue("studentFeeDetailsDTOs", updated);
-  };
-
-  // ── Submit ──────────────────────────────────────────────────
-
+  // ── Submit ───────────────────────────────────────────────────────────────────
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
 
     if (!data.studentFeeDetailsDTOs || data.studentFeeDetailsDTOs.length === 0) {
-      toast.error("Please add at least one fee detail.");
+      toast.error("Please select a fee structure first.");
       return;
     }
 
@@ -171,7 +136,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     <div className="inset-0 flex items-center justify-center w-full h-full">
       <div className="w-full max-w-4xl h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
         <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-          
+
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
@@ -187,10 +152,10 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
+
             {/* Top Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-              
+
               {/* Student */}
               <AppCombobox
                 value={selectedStudentId}
@@ -214,7 +179,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 getValue={(s) => s?.id ?? ""}
               />
 
-              {/* Class (read-only) */}
+              {/* Class (read-only display) */}
               <InputElement
                 label="Class"
                 inputType="text"
@@ -243,6 +208,9 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                   const id = f?.id ?? "";
                   setSelectedFeeStructureId(id);
                   form.setValue("feeStructureId", id);
+                  // Clear existing details while new fee structure loads
+                  setFeeDetails([]);
+                  form.setValue("studentFeeDetailsDTOs", []);
                 }}
                 getLabel={(f) => {
                   if (!f) return "";
@@ -258,152 +226,111 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 name="discountPercentage"
                 placeholder="Enter Discount Percentage"
                 inputType="number"
-                onChange={handleDiscountChange}
               />
             </div>
 
-            {/* Fee Details Section */}
-            {selectedFeeStructureId && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    Fee Details
-                  </h3>
-                  {/* Add Row Button */}
-                  <button
-                    type="button"
-                    onClick={addRow}
-                    className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition-all"
-                  >
-                    <Plus size={16} />
-                    Add Fee Detail
-                  </button>
-                </div>
-
-                {feeDetails.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg">
-                    No fee details added yet. Click &quot;Add Fee Detail&quot; to begin.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white dark:bg-gray-700 rounded-lg overflow-hidden">
-                      <thead className="bg-gray-100 dark:bg-gray-600">
-                        <tr>
-                          <th className="px-3 py-2 text-left text-sm">Fee Type</th>
-                          <th className="px-3 py-2 text-left text-sm">Paid Type</th>
-                          <th className="px-3 py-2 text-right text-sm">Amount (Rs.)</th>
-                          <th className="px-3 py-2 text-right text-sm">Times</th>
-                          <th className="px-3 py-2 text-right text-sm">Discount (Rs.)</th>
-                          <th className="px-3 py-2 text-right text-sm">Total (Rs.)</th>
-                          <th className="px-3 py-2 text-center text-sm">Remove</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {feeDetails.map((detail, index) => (
-                          <tr key={index} className="border-b dark:border-gray-600">
-                            
-                            {/* Fee Type Dropdown */}
-                            <td className="px-3 py-2">
-                              <select
-                                className="border rounded px-2 py-1 text-sm w-full bg-white dark:bg-gray-700 dark:border-gray-500 dark:text-white"
-                                value={detail.feeTypeId}
-                                onChange={(e) =>
-                                  updateRow(index, { feeTypeId: e.target.value })
-                                }
-                              >
-                                <option value="">-- Select --</option>
-                                {allFeeTypes?.Items?.map((ft) => (
-                                  <option key={ft.id} value={ft.id}>
-                                    {ft.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-
-                            {/* Fee Paid Type Dropdown */}
-                            <td className="px-3 py-2">
-                              <select
-                                className="border rounded px-2 py-1 text-sm w-full bg-white dark:bg-gray-700 dark:border-gray-500 dark:text-white"
-                                value={detail.feePaidType}
-                                onChange={(e) =>
-                                  updateRow(index, { feePaidType: Number(e.target.value) })
-                                }
-                              >
-                                {FEE_PAID_TYPE_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-
-                            {/* Amount */}
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                min={0}
-                                className="border rounded px-2 py-1 text-sm text-right w-24 bg-white dark:bg-gray-700 dark:border-gray-500 dark:text-white"
-                                value={detail.amount}
-                                onChange={(e) =>
-                                  updateRow(index, { amount: Number(e.target.value) })
-                                }
-                              />
-                            </td>
-
-                            {/* Times */}
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                min={1}
-                                className="border rounded px-2 py-1 text-sm text-right w-16 bg-white dark:bg-gray-700 dark:border-gray-500 dark:text-white"
-                                value={detail.times}
-                                onChange={(e) =>
-                                  updateRow(index, { times: Number(e.target.value) })
-                                }
-                              />
-                            </td>
-
-                            {/* Discount Amount (read-only, auto-calculated) */}
-                            <td className="px-3 py-2 text-right text-sm">
-                              {detail.discountAmount.toFixed(2)}
-                            </td>
-
-                            {/* Total (read-only, auto-calculated) */}
-                            <td className="px-3 py-2 text-right text-sm font-semibold">
-                              {detail.totalAmount.toFixed(2)}
-                            </td>
-
-                            {/* Remove Row */}
-                            <td className="px-3 py-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => removeRow(index)}
-                                className="text-red-400 hover:text-red-600 transition-colors"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-
-                      {/* Grand Total */}
-                      <tfoot className="bg-gray-50 dark:bg-gray-600 font-bold">
-                        <tr>
-                          <td colSpan={5} className="px-3 py-2 text-right text-sm">
-                            Grand Total:
-                          </td>
-                          <td className="px-3 py-2 text-right text-sm">
-                            Rs. {grandTotal.toFixed(2)}
-                          </td>
-                          <td />
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+            {/* Fee Details Table — always visible */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  Fee Details
+                </h3>
+                {isFeeStructureLoading && (
+                  <span className="text-sm text-gray-400 animate-pulse">
+                    Loading fee structure...
+                  </span>
                 )}
               </div>
-            )}
+
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                <table className="min-w-full bg-white dark:bg-gray-700 text-sm">
+                  <thead className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">S.N</th>
+                      <th className="px-3 py-2 text-left font-semibold">Fee Type</th>
+                      <th className="px-3 py-2 text-left font-semibold">Paid Type</th>
+                      <th className="px-3 py-2 text-right font-semibold">Amount (Rs.)</th>
+                      <th className="px-3 py-2 text-right font-semibold">Times</th>
+                      <th className="px-3 py-2 text-right font-semibold">Discount (Rs.)</th>
+                      <th className="px-3 py-2 text-right font-semibold">Total (Rs.)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isFeeStructureLoading ? (
+                      // Skeleton rows while fetching
+                      [1, 2, 3].map((i) => (
+                        <tr key={i} className="border-t border-gray-100 dark:border-gray-600">
+                          {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                            <td key={j} className="px-3 py-3">
+                              <div className="h-3 rounded bg-gray-200 dark:bg-gray-600 animate-pulse" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : feeDetails.length === 0 ? (
+                      // Default empty row with zeros before any fee structure is selected
+                      <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
+                        <td className="px-3 py-3 text-center">1</td>
+                        <td className="px-3 py-3">—</td>
+                        <td className="px-3 py-3">—</td>
+                        <td className="px-3 py-3 text-right">0.00</td>
+                        <td className="px-3 py-3 text-right">0</td>
+                        <td className="px-3 py-3 text-right">0.00</td>
+                        <td className="px-3 py-3 text-right">0.00</td>
+                      </tr>
+                    ) : (
+                      feeDetails.map((detail, index) => {
+                        const feeTypeName =
+                          allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ?? detail.feeTypeId
+                        const paidTypeLabel =
+                          FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? '—'
+
+                        return (
+                          <tr
+                            key={index}
+                            className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
+                          >
+                            <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
+                              {index + 1}
+                            </td>
+                            <td className="px-3 py-3 font-medium text-gray-800 dark:text-gray-100">
+                              {feeTypeName || '—'}
+                            </td>
+                            <td className="px-3 py-3 text-gray-600 dark:text-gray-300">
+                              {paidTypeLabel}
+                            </td>
+                            <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
+                              {detail.amount.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
+                              {detail.times}
+                            </td>
+                            <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
+                              {detail.discountAmount.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                              {detail.totalAmount.toFixed(2)}
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+
+                  {/* Grand Total footer */}
+                  <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
+                    <tr>
+                      <td colSpan={6} className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-sm">
+                        Grand Total:
+                      </td>
+                      <td className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white text-sm">
+                        Rs. {grandTotal.toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
 
             <div className="flex justify-center mt-8">
               <ButtonElement

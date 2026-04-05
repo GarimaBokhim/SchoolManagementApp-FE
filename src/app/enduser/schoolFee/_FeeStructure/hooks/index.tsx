@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IFeeStructure } from "../types/IFeeStructure";
+import { IFeeStructure, IFeeStructureDTO } from "../types/IFeeStructure";
+
 const FeeStructureEndPoints = {
   getAllFeeStructure: "/api/Finance/FeeStructure",
   createFeeStructure: "/api/Finance/AddFeeStructure",
@@ -13,32 +14,28 @@ const FeeStructureEndPoints = {
 
 const queryKey = "FeeStructure";
 const filterQueryKey = "filteredFeeStructure";
+
+// Updated to match new API schema
 type FeeStructureRequest = {
-  id: string;
-  amount: number;
   classId: string;
-  feeTypeId: string;
+  feeCategoryId: string;
+  feeStructureDTOs: IFeeStructureDTO[];
 };
 
 export const useAddFeeStructure = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IFeeStructure, Error, FeeStructureRequest>({
-    mutationFn: async (
-      formData: FeeStructureRequest
-    ): Promise<IFeeStructure> => {
+    mutationFn: async (formData: FeeStructureRequest): Promise<IFeeStructure> => {
       const response = await api.post(
         FeeStructureEndPoints.createFeeStructure,
         formData
       );
       return response.data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
-
     onError: (error) => {
       console.error("Error adding FeeStructure:", error);
     },
@@ -49,9 +46,7 @@ export const useRemoveFeeStructure = () => {
   const queryClient = useQueryClient();
   return useMutation<IFeeStructure, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IFeeStructure> => {
-      if (!Id) {
-        throw new Error("Id is required to remove a FeeStructure");
-      }
+      if (!Id) throw new Error("Id is required to remove a FeeStructure");
       const response = await api.delete(
         `${FeeStructureEndPoints.removeFeeStructure}/${Id}`
       );
@@ -72,9 +67,7 @@ export const useEditFeeStructure = () => {
     { id: string | unknown; data: FeeStructureRequest }
   >({
     mutationFn: async ({ id, data }): Promise<IFeeStructure> => {
-      if (!id) {
-        throw new Error("Ïd is required to edit FeeStructure");
-      }
+      if (!id) throw new Error("Id is required to edit FeeStructure");
       const response = await api.patch(
         `${FeeStructureEndPoints.updateFeeStructure}/${id}`,
         data
@@ -94,16 +87,9 @@ export const useGetAllFeeStructure = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${FeeStructureEndPoints.getAllFeeStructure}${params}`
-        : `${FeeStructureEndPoints.getAllFeeStructure}`;
+        : FeeStructureEndPoints.getAllFeeStructure;
       const response = await api.get<IPaginationResponse<IFeeStructure>>(url);
-      return (
-        response.data ?? {
-          data: [],
-          PageIndex: 0,
-          isPagination: 1,
-          pageSize: 10,
-        }
-      );
+      return response.data ?? { data: [], PageIndex: 0, isPagination: 1, pageSize: 10 };
     },
   });
 };
