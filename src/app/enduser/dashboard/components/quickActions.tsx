@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import {
   Plus,
-  MessageSquare,
+  Bell,
   FileText,
   Calendar,
-  Download,
+  CalendarDays,
   Users,
 } from "lucide-react";
 import AddStudentForm from "../../(StudentManagement)/Student/_components/AddStudentForm";
@@ -24,36 +24,42 @@ const QuickActions = () => {
       icon: Plus,
       label: "Add Student",
       color: "from-blue-600 to-cyan-500",
+      route: null, // Modal opens instead of navigation
       onClick: () => setIsAddModalOpen(true),
     },
     { 
-      icon: MessageSquare, 
-      label: "Send Message", 
+      icon: Bell, 
+      label: "Notices", 
       color: "from-green-600 to-emerald-500", 
+      route: "/enduser/notice",
       onClick: () => router.push("/enduser/notice"),
     }, 
     { 
       icon: FileText, 
-      label: "Generate Report", 
+      label: "Attendance Report", 
       color: "from-purple-600 to-pink-500", 
+      route: "/enduser/attendanceReport",
       onClick: () => router.push("/enduser/attendanceReport"),
     }, 
     {   
       icon: Calendar, 
-      label: "Schedule Meeting", 
+      label: "Exams", 
       color: "from-orange-600 to-amber-500", 
+      route: "/enduser/Exam",
       onClick: () => router.push("/enduser/Exam"),
     }, 
     {   
-      icon: Download, 
-      label: "Export Data", 
+      icon: CalendarDays, 
+      label: "Events", 
       color: "from-indigo-600 to-blue-500", 
+      route: "/enduser/miscellaneous/Events",
       onClick: () => router.push("/enduser/miscellaneous/Events"),
     }, 
     {   
       icon: Users, 
-      label: "Bulk Email",
+      label: "Students List", 
       color: "from-red-600 to-orange-500", 
+      route: "/enduser/Student",
       onClick: () => router.push("/enduser/Student"),
     }, 
   ];
