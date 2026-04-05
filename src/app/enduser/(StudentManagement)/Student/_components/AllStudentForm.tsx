@@ -16,6 +16,7 @@ import {
   Plus,
   RotateCcw,
   Trash,
+  Eye,
 } from 'lucide-react'
 import EditStudent from '../pages/Edit'
 import DateRangeFilter, {
@@ -42,15 +43,9 @@ import AllPrintFormForParents from '../../_Parent/components/PrintAllParentsform
 import ExcelParentTable from '../../_Parent/components/Excelprint'
 import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
-const EnrollmentStatus = [
-  { id: 1, name: 'Active' },
-  { id: 2, name: 'Promoted' },
-  { id: 3, name: 'Repeated' },
-  { id: 4, name: 'Graduated' },
-  { id: 5, name: 'Dropped' },
-  { id: 6, name: 'Added' },
-  { id: 7, name: 'Enrolled' },
-]
+import StudentProfilePopup from './StudentProfilePopUp'
+
+
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -68,12 +63,14 @@ const AllStudentForm = () => {
   }
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
+  const [showProfilePopup, setShowProfilePopup] = useState(false)
   const [selectedIdForRegistration, setSelectedIdForRegistration] =
     useState<string>('')
   const [addModal, setAddModal] = useState(false)
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<IStudent | null>(null)
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allStudent } = useGetAllStudents()
@@ -87,9 +84,11 @@ const AllStudentForm = () => {
     refetch,
     isLoading,
   } = useFilterStudentByDate(fullQuery)
+  
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
+  
   const form = useForm<IFilterStudentByDate>({
     defaultValues: {
       firstName: '',
@@ -103,6 +102,7 @@ const AllStudentForm = () => {
     allStudent?.Items[0]?.classId || ''
   )
   const { mutateAsync: uploadstudent } = useUploadStudents()
+  
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError()
     try {
@@ -136,12 +136,15 @@ const AllStudentForm = () => {
       console.error('Error during form submission:', error)
     }
   }
+  
   const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
     refForInput.current?.focus()
   }, [])
+  
   const formRef = useRef<DateRangeFilterRef>(null)
   const deleteStudent = useRemoveStudent()
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteStudent.mutateAsync(id)
@@ -151,18 +154,45 @@ const AllStudentForm = () => {
       toast.error('Error deleting user.')
     }
   }
+  
   const onClearClick = () => {
     refetch()
     setParams('')
     formRef.current?.handleClear()
     form.reset()
   }
+  
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return 'N/A'
+    try {
+      const dateObj = date instanceof Date ? date : new Date(date)
+      if (isNaN(dateObj.getTime())) return 'N/A'
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (error) {
+      return 'N/A'
+    }
+  }
+  
+  const handleNameClick = (student: IStudent) => {
+    setSelectedStudentForProfile(student)
+    setShowProfilePopup(true)
+  }
+  
+  const getClassName = (classId: string) => {
+    if (!classId) return 'N/A'
+    return allclass?.name || 'N/A'
+  }
+  
   return (
     <>
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All Students</h1>
+            <h1 className="text-xl font-semibold">All Students</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -206,6 +236,7 @@ const AllStudentForm = () => {
               />
             </div>
           </div>
+          
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -239,7 +270,6 @@ const AllStudentForm = () => {
                     getValue={(g) => g?.firstName ?? ''}
                   />
                 </div>
-
                 <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
                   <ButtonElement
                     type="submit"
@@ -258,44 +288,27 @@ const AllStudentForm = () => {
               </form>
             </div>
           )}
+          
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left">S.N</th>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Reg. No</th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">
-                    Gender
-                  </th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">
-                    Class
-                  </th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">
-                    Enrollment Status
-                  </th>
-                  <th className="px-4 py-3 text-left hidden xl:table-cell">
-                    Address
-                  </th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">
-                    Phone
-                  </th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">
-                    DOB
-                  </th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
+                  <th className="px-4 py-3 text-left w-16">S.N</th>
+                  <th className="px-4 py-3 text-left w-48">Name</th>
+                  <th className="px-4 py-3 text-left w-32">Reg. No</th>
+                  <th className="px-4 py-3 text-left w-20 hidden md:table-cell">Gender</th>
+                  <th className="px-4 py-3 text-left w-48 hidden lg:table-cell">Email</th>
+                  <th className="px-4 py-3 text-left w-32 hidden lg:table-cell">Class</th>
+                  <th className="px-4 py-3 text-left w-48 hidden xl:table-cell">Address</th>
+                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">Phone</th>
+                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">DOB</th>
+                  <th className="px-4 py-3 text-center w-40">Actions</th>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 dark:text-gray-300"
-                    >
+                    <td colSpan={11} className="p-4 text-center text-gray-500 dark:text-gray-300">
                       Loading students...
                     </td>
                   </tr>
@@ -303,54 +316,49 @@ const AllStudentForm = () => {
                   filteredStudent.Items.map(
                     (student: IStudent, index: number) => (
                       <tr
-                        key={index}
+                        key={student.id || index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        <td className="py-1 px-4">{index + 1}</td>
-                        <td className="py-1 px-4">
-                          {student.firstName}
-                          {student.middleName} {student.lastName}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {((paginationParams.pageIndex - 1) * paginationParams.pageSize) + index + 1}
                         </td>
-                        <td className="py-1 px-4">
-                          {student.registrationNumber}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <button
+                            onClick={() => handleNameClick(student)}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors"
+                          >
+                            {student.firstName} {student.middleName} {student.lastName}
+                          </button>
                         </td>
-                        <td className="py-1 px-4 hidden md:table-cell">
-                          {student.genderStatus === 0 ? 'M' : 'F'}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {student.registrationNumber || 'N/A'}
                         </td>
-                        <td className="py-1 px-4 hidden lg:table-cell">
-                          {student.email}
+                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                          {student.genderStatus === 0 ? 'Male' : student.genderStatus === 1 ? 'Female' : 'Other'}
                         </td>
-                        <td className="py-1 px-4 hidden lg:table-cell">
-                          {allclass?.name}
+                        <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell" title={student.email}>
+                          {student.email || 'N/A'}
                         </td>
-                        <td className="py-1 px-4 hidden lg:table-cell">
-                          {
-                            EnrollmentStatus?.find(
-                              (i) => i.id === student.enrollmentStatus
-                            )?.name
-                          }
+                        <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+                          {getClassName(student.classId)}
                         </td>
-                        <td className="py-1 px-4 hidden xl:table-cell">
-                          {student.address}
+                        <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell" title={student.address}>
+                          {student.address || 'N/A'}
                         </td>
-                        <td className="py-1 px-4 hidden md:table-cell">
-                          {student.phoneNumber}
+                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                          {student.phoneNumber || 'N/A'}
                         </td>
-                        <td className="py-1 px-4 hidden md:table-cell">
-                          {
-                            new Date(student.dateOfBirth)
-                              .toISOString()
-                              .split('T')[0]
-                          }
+                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                          {formatDate(student.dateOfBirth)}
                         </td>
-                        <td className="py-1 px-4 text-center align-middle whitespace-nowrap">
+                        <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
                                   handleDelete(student.id ? student.id : '')
                                 }
-                                headerText={<Trash />}
+                                headerText={<Trash size={16} />}
                                 content="Are you sure you want to delete this student?"
                               />
                             )}
@@ -371,7 +379,6 @@ const AllStudentForm = () => {
                               />
                             )}
                             <PrintIDCardButton StudentId={student.id ?? ''} />
-
                             <EditButton
                               button={
                                 <ButtonElement
@@ -395,10 +402,7 @@ const AllStudentForm = () => {
                   )
                 ) : (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
+                    <td colSpan={11} className="p-8 text-center text-gray-500 italic">
                       No students found.
                     </td>
                   </tr>
@@ -407,6 +411,7 @@ const AllStudentForm = () => {
             </table>
           </div>
         </div>
+        
         {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -422,6 +427,7 @@ const AllStudentForm = () => {
             />
           </div>
         )}
+        
         {showStudents && selectedId && (
           <EditStudent
             StudentId={selectedId}
@@ -429,6 +435,7 @@ const AllStudentForm = () => {
             onClose={() => setShowStudents(false)}
           />
         )}
+        
         {showRegistration && selectedIdForRegistration && (
           <AddRegistration
             studentId={selectedIdForRegistration}
@@ -436,7 +443,18 @@ const AllStudentForm = () => {
             onClose={() => setShowRegistration(false)}
           />
         )}
+        
         <AddStudent visible={addModal} onClose={() => setAddModal(false)} />
+        
+        {showProfilePopup && selectedStudentForProfile && (
+          <StudentProfilePopup
+            student={selectedStudentForProfile}
+            onClose={() => {
+              setShowProfilePopup(false)
+              setSelectedStudentForProfile(null)
+            }}
+          />
+        )}
       </div>
     </>
   )

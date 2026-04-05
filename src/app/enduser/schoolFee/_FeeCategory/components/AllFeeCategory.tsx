@@ -189,7 +189,6 @@ const AllFeeCategoryForm = () => {
                   <th className="px-4 py-3 text-center">S.N</th>
                   <th className="px-4 py-3 text-center">Name</th>
                   <th className="px-4 py-3 text-center">Description</th>
-                  <th className="px-4 py-3 text-center">Status</th>
                   {canDelete && (
                     <th className="px-4 py-3 text-center">Actions</th>
                   )}
@@ -224,17 +223,7 @@ const AllFeeCategoryForm = () => {
                         <td className="py-3 px-4 text-center">
                           {feeCategory.description || "-"}
                         </td>
-                        <td className="py-3 px-4 text-center">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              feeCategory.isActive
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-600"
-                            }`}
-                          >
-                            {feeCategory.isActive ? "Active" : "Inactive"}
-                          </span>
-                        </td>
+                      
                         {canDelete && (
                           <td className="py-3 px-4 text-center">
                             <div className="flex justify-center gap-2">

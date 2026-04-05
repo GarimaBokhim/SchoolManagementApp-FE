@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="p-6 flex flex-col gap-6">
-        {/* Top header section - only render when schoolId is available */}
+        {/* Top header section - with logo and school info centered */}
         {schoolId && <SchoolInfoCard schoolId={schoolId} />}
         
         {/* Show message if no school is selected */}
