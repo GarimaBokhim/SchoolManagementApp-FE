@@ -1,18 +1,24 @@
-// Update your IFeeStructure interface in the types file
 export interface IFeeStructure {
-  id: string;
-  amount?: number;
+  id?: string;
   classId: string;
-  feeTypeId?: string;
-  discountAmount?: number;
+  feeCategoryId: string;
   feeCategoryName?: string;
-  totalAmount?: number;
+  feeStructureDTOs: IFeeStructureDTO[]
   isActive?: boolean;
   schoolId?: string;
   createdBy?: string;
   createdAt?: string;
   modifiedBy?: string;
   modifiedAt?: string;
+}
+
+export interface IFeeStructureDTO {
+  feeTypeId: string;
+  amount: number;
+  discountAmount: number;
+  times: number;
+  totalAmount: number;
+  feePaidType: number;
 }
 
 export interface IFilterFeeStructure {
@@ -34,4 +40,12 @@ export enum NameOfMonthsEnum {
   Magh,
   Falgun,
   Chaitra,
+}
+
+export enum FeePaidType {
+  OneTime = 1,
+  Monthly = 2,
+  Quarterly = 3,
+  Yearly = 4,
+  Semester = 5,
 }
