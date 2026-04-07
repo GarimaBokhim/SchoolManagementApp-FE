@@ -7,19 +7,23 @@ interface Props {
   visible: boolean;
   onClose?: () => void;
 }
+
 const AddFeeStructure = ({ visible, onClose }: Props) => {
+  // ✅ FIX: Removed `feeTypeId` (not part of IFeeStructure) and added the
+  //         correct required fields so the generic resolves to IFeeStructure
   const form = useForm<IFeeStructure>({
     defaultValues: {
       id: "",
       classId: "",
-      feeTypeId: "",
+      feeCategoryId: "",
+      feeStructureDTOs: [],
     },
-
-    // resolver: yupResolver(StudentValidator),
   });
+
   const handleOnClose = () => {
     if (onClose) onClose();
   };
+
   if (!visible) return null;
 
   return (
@@ -39,4 +43,5 @@ const AddFeeStructure = ({ visible, onClose }: Props) => {
     </div>
   );
 };
+
 export default AddFeeStructure;

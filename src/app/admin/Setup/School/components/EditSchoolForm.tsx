@@ -29,13 +29,15 @@ const EditSchoolForm = ({
   const query = `?pagesize=${pageSize}&pageIndex=${currentPageIndex}&IsPagination=true`;
   const { refetch } = useGetAllSchool(query);
   const [institutionId, setInstitutionId] = useState("");
-      const [schoollogo, setschoollogo] = useState("");
-        const fileInputRef = useRef<HTMLInputElement>(null);
-   const handleImageClick = () => fileInputRef.current?.click();
+  const [schoollogo, setschoollogo] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleImageClick = () => fileInputRef.current?.click();
+
   const handleSelectInstitution = (id: string) => {
     form.setValue("institutionId", id);
   };
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -43,11 +45,38 @@ const EditSchoolForm = ({
       reader.readAsDataURL(file);
     }
   };
-  const onSubmit: SubmitHandler<ISchool> = async (form) => {
+
+  const onSubmit: SubmitHandler<ISchool> = async (formData) => {
     try {
+      const data = new FormData();
+      data.append("name", formData.name ?? "");
+      data.append("address", formData.address ?? "");
+      data.append("email", formData.email ?? "");
+      data.append("shortName", formData.shortName ?? "");
+      data.append("contactNumber", formData.contactNumber ?? "");
+      data.append("contactPerson", formData.contactPerson ?? "");
+      data.append("pan", formData.pan ?? "");
+      data.append("institutionId", formData.institutionId ?? "");
+      data.append("fiscalYearId", formData.fiscalYearId ?? "");
+      data.append("academicYearId", formData.academicYearId ?? "");
+      data.append("isEnable", String(formData.isEnable ?? false));
+      data.append("isDeleted", String(formData.isDeleted ?? false));
+      data.append(
+        "billNumberGenerationTypeForPurchase",
+        String(formData.billNumberGenerationTypeForPurchase ?? 0)
+      );
+      data.append(
+        "billNumberGenerationTypeForSales",
+        String(formData.billNumberGenerationTypeForSales ?? 0)
+      );
+      // Append logo file if a new one was selected
+      if (fileInputRef.current?.files?.[0]) {
+        data.append("logoUrl", fileInputRef.current.files[0]);
+      }
+
       await editCompany.mutateAsync({
         id: SchoolId,
-        data: form,
+        data,
       });
 
       Toast.success("Successfully Updated School");
@@ -149,30 +178,29 @@ const EditSchoolForm = ({
                   />
                 </div>
               </div>
-      <div className="my-4">
-              <div className="flex-shrink-0 flex flex-col items-center justify-center">
-
+              <div className="my-4">
+                <div className="flex-shrink-0 flex flex-col items-center justify-center">
                   <div
-                  onClick={handleImageClick}
-                  className="w-24 h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
-                >
-                  {schoollogo ? (
-                    <img
-                      src={schoollogo}
-                      alt="School Logo"
-                      className="object-cover w-full h-full"
+                    onClick={handleImageClick}
+                    className="w-24 h-24 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-teal-500 transition"
+                  >
+                    {schoollogo ? (
+                      <img
+                        src={schoollogo}
+                        alt="School Logo"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">Click to add</span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileChange}
                     />
-                  ) : (
-                    <span className="text-gray-400 text-sm">Click to add</span>
-                  )}
-                  <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-               </div>
+                  </div>
                 </div>
                 <div className="my-4 justify-between mt-[3%]">
                   <AppCombobox
@@ -198,79 +226,6 @@ const EditSchoolForm = ({
                     getValue={(g) => g?.id ?? ""}
                   />
                 </div>
-                {/* <div className="mb-2 flex items-center">
-                  <InputElement
-                    label=""
-                    layout="row"
-                    form={form}
-                    inputTypeCheckBox="checkbox"
-                    name="isDeleted"
-                    customStyle="!border-0 after:!content-none"
-                  />
-                  <p className="ml-4 ">Is Deleted</p>
-                </div> */}
-                {/* <div className="">
-                  <label className=" text-sm !text-slate-500 ml-2">
-                    Bill Number Generation Type For Purchase
-                  </label>
-                  <SelectElement
-                    form={form}
-                    name="billNumberGenerationTypeForPurchase"
-                    className="sm:!min-w-[150px] !min-w-full"
-                    data={
-                      data?.map(({ name, value }) => {
-                        return {
-                          label: name,
-                          value: value,
-                        };
-                      }) || []
-                    }
-                  />
-                </div>
-                <div className="">
-                  <label className=" text-sm !text-slate-500 ml-2">
-                    Bill Number Generation Type For Sales
-                  </label>
-                  <SelectElement
-                    form={form}
-                    name="billNumberGenerationTypeForSales"
-                    className="sm:!min-w-[150px] !min-w-full"
-                    data={
-                      data?.map(({ name, value }) => {
-                        return {
-                          label: name,
-                          value: value,
-                        };
-                      }) || []
-                    }
-                  />
-                </div>
-                <div className="my-4 justify-between mt-[3%] ">
-                  <AppCombobox
-                    required
-                    value={fiscalYearId}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="Fiscal Year"
-                    name="fiscalYearId"
-                    form={form}
-                    options={AllFiscalYear?.Items}
-                    selected={
-                      AllFiscalYear?.Items.find((g) => g.Id === fiscalYearId) ||
-                      null
-                    }
-                    onSelect={(group) => {
-                      if (group) {
-                        setFiscalYearId(group.Id || "");
-                        handleSelectFiscalYear(group.Id || "");
-                      } else {
-                        setFiscalYearId("");
-                      }
-                    }}
-                    getLabel={(g) => g?.FyName || ""}
-                    getValue={(g) => g?.Id ?? ""}
-                  />
-                </div> */}
               </div>
             </div>
             <div className="flex justify-center mt-4 mx-10">
