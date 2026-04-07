@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Filter, Plus, RotateCcw } from 'lucide-react'
+import { Filter, Plus, RotateCcw, Scroll } from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
@@ -10,6 +10,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddParticipationModal from './AddParticipationModel'
+import CertificateModal from './ParticipentCertificateModel'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { IFilterActivityByDate, Participation } from '../../_Activities/types/IActivities'
@@ -30,6 +31,12 @@ const AWARD_POSITION_LABELS: Record<number, string> = {
   8: 'Best Team Leader',
   9: 'Active Participant',
   10: 'Outstanding Efforts',
+}
+
+interface CertificateTarget {
+  studentName: string
+  activityName: string
+  awardPosition: number
 }
 
 const AllParticipationForm = () => {
@@ -55,6 +62,7 @@ const AllParticipationForm = () => {
 
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
+  const [certificateTarget, setCertificateTarget] = useState<CertificateTarget | null>(null)
   const [params, setParams] = useState('')
   const formRef = useRef<DateRangeFilterRef>(null)
   const { handleError, clearError } = useErrorHandler()
@@ -70,7 +78,6 @@ const AllParticipationForm = () => {
 
   const { data: filteredParticipation, refetch, isLoading } = useFilterParticipation(fullQuery)
 
-  // ✅ Lookup maps — id → name
   const { data: activities = [] } = useGetAllActivitiesDropdown()
   const { data: students = [] } = useGetAllStudents()
 
@@ -110,6 +117,14 @@ const AllParticipationForm = () => {
     formRef.current?.handleClear()
     form.reset()
     refetch()
+  }
+
+  const handleGenerateCertificate = (p: Participation) => {
+    setCertificateTarget({
+      studentName: studentMap[p.studentId] ?? String(p.studentId),
+      activityName: activityMap[p.activityId] ?? String(p.activityId),
+      awardPosition: p.awardPosition,
+    })
   }
 
   return (
@@ -183,7 +198,7 @@ const AllParticipationForm = () => {
                   <th className="px-4 py-3 text-left hidden md:table-cell">Activity</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Award Position</th>
                   <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[220px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,7 +236,19 @@ const AllParticipationForm = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-center items-center gap-2">
+                          {/* Certificate icon button */}
+                          <button
+                            type="button"
+                            title="Generate Certificate"
+                            onClick={() => handleGenerateCertificate(p)}
+                            className="p-1.5 rounded-md bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30
+                                       dark:hover:bg-amber-800/50 text-amber-700 dark:text-amber-400
+                                       transition-colors duration-150"
+                          >
+                            <Scroll size={14} />
+                          </button>
+
                           {canEdit && (
                             <ButtonElement
                               type="button"
@@ -280,6 +307,16 @@ const AllParticipationForm = () => {
           refetch()
         }}
       />
+
+      {certificateTarget && (
+        <CertificateModal
+          visible={!!certificateTarget}
+          onClose={() => setCertificateTarget(null)}
+          studentName={certificateTarget.studentName}
+          activityName={certificateTarget.activityName}
+          awardPosition={certificateTarget.awardPosition}
+        />
+      )}
     </>
   )
 }

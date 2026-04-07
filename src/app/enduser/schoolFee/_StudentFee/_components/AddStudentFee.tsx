@@ -2,7 +2,7 @@
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { X } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
 import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
 import { useAddStudentFee, useGetFeeStructureByClassId } from "../hooks";
 import toast from "react-hot-toast";
@@ -25,6 +25,45 @@ const FEE_PAID_TYPE_OPTIONS = [
   { label: "Semester", value: 5 },
 ];
 
+// Helper to get default times based on feePaidType
+const getDefaultTimes = (feePaidType: number): number => {
+  switch (feePaidType) {
+    case 1: // One Time
+      return 1;
+    case 2: // Monthly
+      return 12;
+    case 3: // Quarterly
+      return 4;
+    case 4: // Yearly
+      return 1;
+    case 5: // Semester
+      return 6;
+    default:
+      return 1;
+  }
+};
+
+// Helper to calculate total amount for a row with discount percentage
+const calculateRowTotals = (
+  row: IStudentFeeDetails,
+  discountPercentage: number
+): { discountAmount: number; totalAmount: number } => {
+  const subtotal = row.amount * row.times;
+  const discountAmount = subtotal * (discountPercentage / 100);
+  const totalAmount = subtotal - discountAmount;
+  return { discountAmount, totalAmount };
+};
+
+// Helper to create an empty manual row
+const createEmptyManualRow = (): IStudentFeeDetails => ({
+  feeTypeId: "",
+  feePaidType: 1,
+  amount: 0,
+  times: 1,
+  discountAmount: 0,
+  totalAmount: 0,
+});
+
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
@@ -41,33 +80,57 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
-  const [feeDetails, setFeeDetails] = useState<IStudentFeeDetails[]>([]);
+  const [autoRows, setAutoRows] = useState<IStudentFeeDetails[]>([]);
+  const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([]);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
 
   const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
+
+  // Watch discount percentage from form
+  const watchedDiscount = form.watch("discountPercentage");
+
+  // Update local state when form discount changes
+  useEffect(() => {
+    if (watchedDiscount !== undefined && watchedDiscount !== discountPercentage) {
+      setDiscountPercentage(watchedDiscount || 0);
+    }
+  }, [watchedDiscount]);
 
   // ── Fetch the selected fee structure's full details ──────────────────────────
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
     useGetFeeStructureById(selectedFeeStructureId);
 
-  // ── Auto-populate table when fee structure data arrives ──────────────────────
+  // ── Auto-populate auto rows when fee structure data arrives ──────────────────────
   useEffect(() => {
-    if (!feeStructureDetail?.feeStructureDTOs?.length) return
+    if (!feeStructureDetail?.feeStructureDTOs?.length) {
+      setAutoRows([]);
+      return;
+    }
 
-    const discount = form.getValues("discountPercentage") || 0
-    const populated = mapFeeStructureDTOsToDetails(
+    const autoPopulated = mapFeeStructureDTOsToDetails(
       feeStructureDetail.feeStructureDTOs,
-      discount
-    )
-    setFeeDetails(populated)
-    form.setValue("studentFeeDetailsDTOs", populated)
-  }, [feeStructureDetail])
+      0 // No discount for auto rows
+    );
+    setAutoRows(autoPopulated);
+  }, [feeStructureDetail]);
+
+  // ── Update manual rows when discount changes ─────────────────────────
+  useEffect(() => {
+    const updatedManualRows = manualRows.map(row => {
+      const { discountAmount, totalAmount } = calculateRowTotals(row, discountPercentage);
+      return { ...row, discountAmount, totalAmount };
+    });
+    setManualRows(updatedManualRows);
+  }, [discountPercentage]);
 
   const handleClose = () => {
     form.reset();
     setSelectedStudentId("");
     setSelectedClassId("");
     setSelectedFeeStructureId("");
-    setFeeDetails([]);
+    setAutoRows([]);
+    setManualRows([]);
+    setDiscountPercentage(0);
     onClose();
   };
 
@@ -77,9 +140,12 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     if (student) {
       setSelectedClassId(student.classId ?? "");
       setSelectedFeeStructureId("");
+      setAutoRows([]);
+      setManualRows([]);
+      setDiscountPercentage(0);
       form.setValue("feeStructureId", "");
+      form.setValue("discountPercentage", 0);
       form.setValue("studentFeeDetailsDTOs", []);
-      setFeeDetails([]);
     }
   }, [selectedStudentId, allStudents, form]);
 
@@ -87,26 +153,71 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     form.setValue("classId", selectedClassId);
   }, [selectedClassId, form]);
 
-  // ── Clear table when fee structure is deselected ─────────────────────────────
+  // ── Clear everything when fee structure is deselected ─────────────────────────
   useEffect(() => {
     if (!selectedFeeStructureId) {
-      setFeeDetails([]);
+      setAutoRows([]);
+      setManualRows([]);
       form.setValue("studentFeeDetailsDTOs", []);
     }
   }, [selectedFeeStructureId, form]);
+
+  // ── Manual Row Management ────────────────────────────────────────────────────
+  const addManualRow = () => {
+    const newRow = createEmptyManualRow();
+    setManualRows(prev => [...prev, newRow]);
+  };
+
+  const updateManualRow = (index: number, updates: Partial<IStudentFeeDetails>) => {
+    setManualRows(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], ...updates };
+      
+      // If feePaidType is being updated, auto-update the times field
+      if (updates.feePaidType !== undefined) {
+        updated[index].times = getDefaultTimes(updates.feePaidType);
+      }
+      
+      // Recalculate totals with current discount
+      const { discountAmount, totalAmount } = calculateRowTotals(updated[index], discountPercentage);
+      updated[index].discountAmount = discountAmount;
+      updated[index].totalAmount = totalAmount;
+      
+      return updated;
+    });
+  };
+
+  const removeManualRow = (index: number) => {
+    setManualRows(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // ── Handle discount change ───────────────────────────────────────────────────
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setDiscountPercentage(value);
+    form.setValue("discountPercentage", value);
+  };
+
+  // ── Prepare final data for submission ────────────────────────────────────────
+  useEffect(() => {
+    const allDetails = [...autoRows, ...manualRows];
+    form.setValue("studentFeeDetailsDTOs", allDetails);
+  }, [autoRows, manualRows, form]);
 
   // ── Submit ───────────────────────────────────────────────────────────────────
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
 
-    if (!data.studentFeeDetailsDTOs || data.studentFeeDetailsDTOs.length === 0) {
-      toast.error("Please select a fee structure first.");
+    const allDetails = [...autoRows, ...manualRows];
+    
+    if (allDetails.length === 0) {
+      toast.error("Please add at least one fee detail.");
       return;
     }
 
-    const hasEmptyFeeType = data.studentFeeDetailsDTOs.some((d) => !d.feeTypeId);
+    const hasEmptyFeeType = manualRows.some((d) => !d.feeTypeId);
     if (hasEmptyFeeType) {
-      toast.error("Please select a fee type for all rows.");
+      toast.error("Please select a fee type for all custom rows.");
       return;
     }
 
@@ -115,8 +226,8 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
         studentId: data.studentId,
         feeStructureId: data.feeStructureId,
         classId: data.classId,
-        discountPercentage: data.discountPercentage,
-        studentFeeDetailsDTOs: data.studentFeeDetailsDTOs,
+        discountPercentage: discountPercentage,
+        studentFeeDetailsDTOs: allDetails,
       };
 
       await toast.promise(addStudentFee.mutateAsync(finalData), {
@@ -130,11 +241,13 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     }
   };
 
-  const grandTotal = feeDetails.reduce((sum, d) => sum + d.totalAmount, 0);
+  const autoRowsTotal = autoRows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
+  const manualRowsTotal = manualRows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
+  const grandTotal = autoRowsTotal + manualRowsTotal;
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
-      <div className="w-full max-w-4xl h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
+      <div className="w-full max-w-5xl h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
         <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
 
           {/* Header */}
@@ -144,7 +257,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
             </h1>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="text-red-400 text-3xl hover:text-red-500 transition-transform transform hover:scale-110"
             >
               <X strokeWidth={3} />
@@ -196,10 +309,9 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 value={selectedFeeStructureId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute"
-                label="Fee Structure"
+                label="Fee Structure (Optional)"
                 name="feeStructureId"
                 form={form}
-                required
                 options={feeStructuresByClass?.Items ?? []}
                 selected={
                   feeStructuresByClass?.Items?.find((f) => f.id === selectedFeeStructureId) ?? null
@@ -208,8 +320,8 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                   const id = f?.id ?? "";
                   setSelectedFeeStructureId(id);
                   form.setValue("feeStructureId", id);
-                  // Clear existing details while new fee structure loads
-                  setFeeDetails([]);
+                  setAutoRows([]);
+                  setManualRows([]);
                   form.setValue("studentFeeDetailsDTOs", []);
                 }}
                 getLabel={(f) => {
@@ -219,40 +331,53 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 getValue={(f) => f?.id ?? ""}
               />
 
-              {/* Discount */}
+              {/* Discount Percentage - Only applies to custom rows */}
               <InputElement
-                label="Discount (%)"
+                label="Discount (%) for Custom Rows"
                 form={form}
                 name="discountPercentage"
                 placeholder="Enter Discount Percentage"
                 inputType="number"
+                onChange={handleDiscountChange}
               />
             </div>
 
-            {/* Fee Details Table — always visible */}
+            {/* Fee Details Table */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                   Fee Details
                 </h3>
-                {isFeeStructureLoading && (
-                  <span className="text-sm text-gray-400 animate-pulse">
-                    Loading fee structure...
-                  </span>
-                )}
+                <div className="flex gap-2">
+                  {isFeeStructureLoading && (
+                    <span className="text-sm text-gray-400 animate-pulse">
+                      Loading fee structure...
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addManualRow}
+                    className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow transition-all"
+                  >
+                    <Plus size={15} />
+                    Add Custom Row
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
                 <table className="min-w-full bg-white dark:bg-gray-700 text-sm">
                   <thead className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
                     <tr>
-                      <th className="px-3 py-2 text-left font-semibold">S.N</th>
-                      <th className="px-3 py-2 text-left font-semibold">Fee Type</th>
-                      <th className="px-3 py-2 text-left font-semibold">Paid Type</th>
-                      <th className="px-3 py-2 text-right font-semibold">Amount (Rs.)</th>
-                      <th className="px-3 py-2 text-right font-semibold">Times</th>
-                      <th className="px-3 py-2 text-right font-semibold">Discount (Rs.)</th>
-                      <th className="px-3 py-2 text-right font-semibold">Total (Rs.)</th>
+                      <th className="px-3 py-2 text-left font-semibold w-12">S.N</th>
+                      <th className="px-3 py-2 text-left font-semibold min-w-[150px]">Fee Type</th>
+                      <th className="px-3 py-2 text-left font-semibold min-w-[120px]">Paid Type</th>
+                      <th className="px-3 py-2 text-right font-semibold min-w-[100px]">Amount (Rs.)</th>
+                      <th className="px-3 py-2 text-right font-semibold min-w-[80px]">Times</th>
+                      <th className="px-3 py-2 text-right font-semibold min-w-[100px]">Discount (%)</th>
+                      <th className="px-3 py-2 text-right font-semibold min-w-[120px]">Discount (Rs.)</th>
+                      <th className="px-3 py-2 text-right font-semibold min-w-[120px]">Total (Rs.)</th>
+                      <th className="px-3 py-2 text-center font-semibold w-12">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -260,74 +385,184 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                       // Skeleton rows while fetching
                       [1, 2, 3].map((i) => (
                         <tr key={i} className="border-t border-gray-100 dark:border-gray-600">
-                          {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((j) => (
                             <td key={j} className="px-3 py-3">
                               <div className="h-3 rounded bg-gray-200 dark:bg-gray-600 animate-pulse" />
                             </td>
                           ))}
                         </tr>
                       ))
-                    ) : feeDetails.length === 0 ? (
-                      // Default empty row with zeros before any fee structure is selected
-                      <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
-                        <td className="px-3 py-3 text-center">1</td>
-                        <td className="px-3 py-3">—</td>
-                        <td className="px-3 py-3">—</td>
-                        <td className="px-3 py-3 text-right">0.00</td>
-                        <td className="px-3 py-3 text-right">0</td>
-                        <td className="px-3 py-3 text-right">0.00</td>
-                        <td className="px-3 py-3 text-right">0.00</td>
-                      </tr>
                     ) : (
-                      feeDetails.map((detail, index) => {
-                        const feeTypeName =
-                          allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ?? detail.feeTypeId
-                        const paidTypeLabel =
-                          FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? '—'
+                      <>
+                        {/* Auto-populated Rows (Read-only, no discount applied) */}
+                        {autoRows.map((detail, index) => {
+                          const feeTypeName =
+                            allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ?? 
+                            (detail.feeTypeId || '—');
+                          const paidTypeLabel =
+                            FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? '—';
 
-                        return (
-                          <tr
-                            key={index}
-                            className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
-                          >
-                            <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
-                              {index + 1}
-                            </td>
-                            <td className="px-3 py-3 font-medium text-gray-800 dark:text-gray-100">
-                              {feeTypeName || '—'}
-                            </td>
-                            <td className="px-3 py-3 text-gray-600 dark:text-gray-300">
-                              {paidTypeLabel}
-                            </td>
-                            <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
-                              {detail.amount.toFixed(2)}
-                            </td>
-                            <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
-                              {detail.times}
-                            </td>
-                            <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
-                              {detail.discountAmount.toFixed(2)}
-                            </td>
-                            <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
-                              {detail.totalAmount.toFixed(2)}
+                          return (
+                            <tr
+                              key={`auto-${index}`}
+                              className="border-t border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-gray-750"
+                            >
+                              <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
+                                {index + 1}
+                              </td>
+                              <td className="px-3 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                {feeTypeName}
+                              </td>
+                              <td className="px-3 py-3 text-gray-600 dark:text-gray-300">
+                                {paidTypeLabel}
+                              </td>
+                              <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
+                                {detail.amount.toFixed(2)}
+                              </td>
+                              <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
+                                {detail.times}
+                              </td>
+                              <td className="px-3 py-3 text-right text-gray-400">
+                                —
+                              </td>
+                              <td className="px-3 py-3 text-right text-gray-400">
+                                —
+                              </td>
+                              <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                                {detail.totalAmount.toFixed(2)}
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                {/* No delete button for auto rows */}
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* Custom Rows (Editable, with discount applied) */}
+                        {manualRows.map((detail, index) => {
+                          const actualIndex = autoRows.length + index;
+                          
+                          return (
+                            <tr
+                              key={`manual-${index}`}
+                              className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
+                            >
+                              <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
+                                {actualIndex + 1}
+                              </td>
+                              
+                              {/* Fee Type - Editable */}
+                              <td className="px-3 py-3">
+                                <select
+                                  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                  value={detail.feeTypeId}
+                                  onChange={(e) => updateManualRow(index, { feeTypeId: e.target.value })}
+                                >
+                                  <option value="">— Select —</option>
+                                  {allFeeTypes?.Items?.map((ft) => (
+                                    <option key={ft.id} value={ft.id}>
+                                      {ft.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              
+                              {/* Paid Type - Editable */}
+                              <td className="px-3 py-3">
+                                <select
+                                  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                  value={detail.feePaidType}
+                                  onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    updateManualRow(index, { feePaidType: value });
+                                  }}
+                                >
+                                  {FEE_PAID_TYPE_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                      {opt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              
+                              {/* Amount - Editable */}
+                              <td className="px-3 py-3">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                                  value={detail.amount}
+                                  onChange={(e) => updateManualRow(index, { amount: Number(e.target.value) })}
+                                />
+                              </td>
+                              
+                              {/* Times - Editable */}
+                              <td className="px-3 py-3">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  className="w-16 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                                  value={detail.times}
+                                  onChange={(e) => updateManualRow(index, { times: Number(e.target.value) })}
+                                />
+                              </td>
+                              
+                              {/* Discount Percentage (display only) */}
+                              <td className="px-3 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">
+                                {discountPercentage}%
+                              </td>
+                              
+                              {/* Discount Amount */}
+                              <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
+                                {detail.discountAmount?.toFixed(2) || '0.00'}
+                              </td>
+                              
+                              {/* Total Amount */}
+                              <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                                {detail.totalAmount?.toFixed(2) || '0.00'}
+                              </td>
+                              
+                              {/* Delete Button */}
+                              <td className="px-3 py-3 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => removeManualRow(index)}
+                                  className="text-red-400 hover:text-red-600 transition-colors"
+                                  title="Remove row"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* No rows message */}
+                        {autoRows.length === 0 && manualRows.length === 0 && (
+                          <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
+                            <td colSpan={9} className="px-3 py-8 text-center">
+                              No fee details added. Please select a fee structure or add custom rows.
                             </td>
                           </tr>
-                        )
-                      })
+                        )}
+                      </>
                     )}
                   </tbody>
 
-                  {/* Grand Total footer */}
-                  <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
-                    <tr>
-                      <td colSpan={6} className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-sm">
-                        Grand Total:
-                      </td>
-                      <td className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white text-sm">
-                        Rs. {grandTotal.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
+             {/* Grand Total footer */}
+{(autoRows.length > 0 || manualRows.length > 0) && (
+  <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
+    <tr>
+      <td colSpan={7} className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-base">
+        Grand Total:
+      </td>
+      <td colSpan={2} className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white text-base">
+        Rs. {grandTotal.toFixed(2)}
+      </td>
+    </tr>
+  </tfoot>
+)}
                 </table>
               </div>
             </div>

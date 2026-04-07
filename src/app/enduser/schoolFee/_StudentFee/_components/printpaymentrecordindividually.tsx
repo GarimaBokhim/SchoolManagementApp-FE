@@ -24,7 +24,6 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
-
   const schoolId = useMemo(() => {
     try {
       const storedUser = localStorage.getItem('userDetails')
@@ -36,11 +35,9 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     }
   }, [])
 
-  // Match school by id instead of always picking the first one
-  const schoolName = useMemo(() => {
-    if (!schools?.Items?.length) return ''
-    const matched = schools.Items.find((s) => s.id === schoolId)
-    return matched?.name ?? schools.Items[0]?.name ?? ''
+  const school = useMemo(() => {
+    if (!schools?.Items?.length) return null
+    return schools.Items.find((s) => s.id === schoolId) ?? schools.Items[0]
   }, [schools, schoolId])
 
   const isReady = schools?.Items?.length && students?.Items?.length && classData
@@ -63,8 +60,18 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     ? new Date(data.paymentDate).toISOString().split('T')[0]
     : '-'
 
+  // + Construct full logo URL the same way SchoolMarkSheetSecond does
+  const getLogoUrl = () => {
+    const raw = school?.imageUrl
+    if (!raw || raw === '-' || raw === 'string' || raw === '') return ''
+    return `https://schoolapp.netraverselabs.com/${raw}`
+  }
+
   const receiptData = {
-    schoolName,
+    schoolName: school?.name ?? '',
+    schoolAddress: school?.address ?? '',
+    schoolPan: school?.pan ?? '',
+    schoolLogoUrl: getLogoUrl(),           // + fixed URL construction
     paymentDate: formattedPaymentDate,
     paymentMethod: paymentMethods[data.paymentMethod] ?? '-',
     studentName,
@@ -76,21 +83,24 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   if (!isReady) return null
 
   return (
-    <div
-      style={{
-        width: '700px',
-        border: '1px solid #000',
-        padding: '10px',
-        fontSize: '12px',
-        fontFamily: 'Arial, sans-serif',
-        background: '#fff',
-      }}
-    >
-      {/* School copy */}
-      <Receipt label="School Copy" showSeparator {...receiptData} />
+    // + Simple centering without minHeight:100vh so there's no excessive scroll
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+      <div
+        style={{
+          width: '700px',
+          border: '1px solid #000',
+          padding: '10px',
+          fontSize: '12px',
+          fontFamily: 'Arial, sans-serif',
+          background: '#fff',
+        }}
+      >
+        {/* School copy */}
+        <Receipt label="School Copy" showSeparator {...receiptData} />
 
-      {/* Student copy */}
-      <Receipt label="Student Copy" {...receiptData} />
+        {/* Student copy */}
+        <Receipt label="Student Copy" {...receiptData} />
+      </div>
     </div>
   )
 }
