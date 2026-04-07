@@ -22,6 +22,24 @@ const FEE_PAID_TYPE_OPTIONS = [
   { label: "Semester", value: 5 },
 ];
 
+// Helper function to get default times based on feePaidType
+const getDefaultTimes = (feePaidType: number): number => {
+  switch (feePaidType) {
+    case 1: // One Time
+      return 1;
+    case 2: // Monthly
+      return 12;
+    case 3: // Quarterly
+      return 4;
+    case 4: // Yearly
+      return 1;
+    case 5: // Semester
+      return 6;
+    default:
+      return 1;
+  }
+};
+
 const emptyRow = (): IFeeStructureDTO => ({
   feeTypeId: "",
   amount: 0,
@@ -73,6 +91,12 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
       prev.map((row, i) => {
         if (i !== index) return row;
         const updated = { ...row, ...fields };
+        
+        // If feePaidType is being updated, auto-update the times field
+        if (fields.feePaidType !== undefined) {
+          updated.times = getDefaultTimes(fields.feePaidType);
+        }
+        
         updated.totalAmount = calcTotalAmount(updated);
         return updated;
       })
@@ -263,7 +287,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                           />
                         </td>
 
-                        {/* Times */}
+                        {/* Times - Now editable but auto-populates based on Paid Type */}
                         <td className="px-3 py-2">
                           <input
                             type="number"
