@@ -15,14 +15,15 @@ const StudentEndPoints = {
 
 const queryKey = "Students";
 const filterQueryKey = "filteredStudent";
+
 type StudentRequest = {
   id?: string;
   firstName: string;
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
-  genderStatus: 0;
-  studentStatus: 0;
+  genderStatus: number; // ✅ FIX: was literal `0`, changed to `number`
+  studentStatus: number; // ✅ FIX: was literal `0`, changed to `number`
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
@@ -94,7 +95,7 @@ export const useEditStudent = () => {
   >({
     mutationFn: async ({ id, data }): Promise<IStudent> => {
       if (!id) {
-        throw new Error("Ïd is required to edit Student");
+        throw new Error("Id is required to edit Student");
       }
       const response = await api.patch(
         `${StudentEndPoints.updateStudents}/${id}`,
@@ -190,12 +191,8 @@ export const useUploadStudents = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [queryKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [filterQueryKey],
-      });
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
     retry: false,
   });

@@ -47,10 +47,19 @@ const emptyRow = (): IFeeStructureDTO => ({
   times: 1,
   totalAmount: 0,
   feePaidType: 1,
+  discountPercentage: 0, // Add percentage field
 });
 
-const calcTotalAmount = (dto: IFeeStructureDTO): number =>
-  dto.amount * dto.times - dto.discountAmount * dto.times;
+// Calculate discount amount based on percentage
+const calcDiscountAmount = (amount: number, times: number, percentage: number): number => {
+  const subtotal = amount * times;
+  return (subtotal * percentage) / 100;
+};
+
+// Calculate total amount after discount
+const calcTotalAmount = (amount: number, times: number, discountAmount: number): number => {
+  return amount * times - discountAmount;
+};
 
 // ── Props ────────────────────────────────────────────────────────────────────
 type Props = {
@@ -97,7 +106,27 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
           updated.times = getDefaultTimes(fields.feePaidType);
         }
         
-        updated.totalAmount = calcTotalAmount(updated);
+        // Calculate discount amount based on percentage if percentage or amount or times changed
+        if (fields.discountPercentage !== undefined || fields.amount !== undefined || fields.times !== undefined) {
+          const discountAmount = calcDiscountAmount(
+            updated.amount,
+            updated.times,
+            updated.discountPercentage || 0
+          );
+          updated.discountAmount = discountAmount;
+        }
+        
+        // If discount amount is manually set, calculate percentage from it
+        if (fields.discountAmount !== undefined) {
+          const subtotal = updated.amount * updated.times;
+          if (subtotal > 0) {
+            updated.discountPercentage = (updated.discountAmount / subtotal) * 100;
+          } else {
+            updated.discountPercentage = 0;
+          }
+        }
+        
+        updated.totalAmount = calcTotalAmount(updated.amount, updated.times, updated.discountAmount);
         return updated;
       })
     );
@@ -129,8 +158,9 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
         amount: Number(r.amount),
         discountAmount: Number(r.discountAmount),
         times: Number(r.times),
-        totalAmount: calcTotalAmount(r),
+        totalAmount: calcTotalAmount(r.amount, r.times, r.discountAmount),
         feePaidType: r.feePaidType,
+        discountPercentage: Number(r.discountPercentage || 0),
       })),
     };
 
@@ -146,7 +176,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
     }
   };
 
-  const grandTotal = rows.reduce((sum, r) => sum + calcTotalAmount(r), 0);
+  const grandTotal = rows.reduce((sum, r) => sum + calcTotalAmount(r.amount, r.times, r.discountAmount), 0);
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
@@ -227,6 +257,8 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                       <th className="px-3 py-2 text-left font-semibold">Paid Type</th>
                       <th className="px-3 py-2 text-right font-semibold">Amount (Rs.)</th>
                       <th className="px-3 py-2 text-right font-semibold">Times</th>
+                      <th className="px-3 py-2 text-right font-semibold">Subtotal (Rs.)</th>
+                      <th className="px-3 py-2 text-right font-semibold">Discount (%)</th>
                       <th className="px-3 py-2 text-right font-semibold">Discount (Rs.)</th>
                       <th className="px-3 py-2 text-right font-semibold">Total (Rs.)</th>
                       <th className="px-3 py-2 text-center font-semibold w-12">
@@ -235,105 +267,121 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, index) => (
-                      <tr
-                        key={index}
-                        className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
-                      >
-                        {/* S.N */}
-                        <td className="px-3 py-2 text-center text-gray-400 dark:text-gray-500">
-                          {index + 1}
-                        </td>
+                    {rows.map((row, index) => {
+                      const subtotal = row.amount * row.times;
+                      return (
+                        <tr
+                          key={index}
+                          className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
+                        >
+                          {/* S.N */}
+                          <td className="px-3 py-2 text-center text-gray-400 dark:text-gray-500">
+                            {index + 1}
+                          </td>
 
-                        {/* Fee Type */}
-                        <td className="px-3 py-2">
-                          <select
-                            className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                            value={row.feeTypeId}
-                            onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
-                          >
-                            <option value="">— Select —</option>
-                            {allFeeType?.Items?.map((ft) => (
-                              <option key={ft.id} value={ft.id}>
-                                {ft.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                          {/* Fee Type */}
+                          <td className="px-3 py-2">
+                            <select
+                              className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                              value={row.feeTypeId}
+                              onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
+                            >
+                              <option value="">— Select —</option>
+                              {allFeeType?.Items?.map((ft) => (
+                                <option key={ft.id} value={ft.id}>
+                                  {ft.name}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
 
-                        {/* Paid Type */}
-                        <td className="px-3 py-2">
-                          <select
-                            className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                            value={row.feePaidType}
-                            onChange={(e) => updateRow(index, { feePaidType: Number(e.target.value) })}
-                          >
-                            {FEE_PAID_TYPE_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                          {/* Paid Type */}
+                          <td className="px-3 py-2">
+                            <select
+                              className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                              value={row.feePaidType}
+                              onChange={(e) => updateRow(index, { feePaidType: Number(e.target.value) })}
+                            >
+                              {FEE_PAID_TYPE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
 
-                        {/* Amount */}
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            min={0}
-                            className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
-                            value={row.amount}
-                            onChange={(e) => updateRow(index, { amount: Number(e.target.value) })}
-                          />
-                        </td>
+                          {/* Amount */}
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                              value={row.amount}
+                              onChange={(e) => updateRow(index, { amount: Number(e.target.value) })}
+                            />
+                          </td>
 
-                        {/* Times - Now editable but auto-populates based on Paid Type */}
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            min={1}
-                            className="w-16 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
-                            value={row.times}
-                            onChange={(e) => updateRow(index, { times: Number(e.target.value) })}
-                          />
-                        </td>
+                          {/* Times */}
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={1}
+                              className="w-16 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                              value={row.times}
+                              onChange={(e) => updateRow(index, { times: Number(e.target.value) })}
+                            />
+                          </td>
 
-                        {/* Discount Amount */}
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            min={0}
-                            className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 ml-auto block"
-                            value={row.discountAmount}
-                            onChange={(e) => updateRow(index, { discountAmount: Number(e.target.value) })}
-                          />
-                        </td>
+                          {/* Subtotal (read-only) */}
+                          <td className="px-3 py-2 text-right font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            {subtotal.toFixed(2)}
+                          </td>
 
-                        {/* Total (read-only, auto-calculated) */}
-                        <td className="px-3 py-2 text-right font-semibold text-gray-800 dark:text-white whitespace-nowrap">
-                          {calcTotalAmount(row).toFixed(2)}
-                        </td>
+                          {/* Discount Percentage */}
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step="0.01"
+                              className="w-20 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 ml-auto block"
+                              value={row.discountPercentage || 0}
+                              onChange={(e) => updateRow(index, { discountPercentage: Number(e.target.value) })}
+                            />
+                          </td>
 
-                        {/* Remove Row */}
-                        <td className="px-3 py-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => removeRow(index)}
-                            disabled={rows.length === 1}
-                            className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          {/* Discount Amount (auto-calculated) */}
+                          <td className="px-3 py-2 text-right text-red-600 dark:text-red-400 whitespace-nowrap">
+                            {row.discountAmount.toFixed(2)}
+                          </td>
+
+                          {/* Total Amount (after discount) */}
+                          <td className="px-3 py-2 text-right font-bold text-gray-800 dark:text-white whitespace-nowrap">
+                            {calcTotalAmount(row.amount, row.times, row.discountAmount).toFixed(2)}
+                          </td>
+
+                          {/* Remove Row */}
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => removeRow(index)}
+                              disabled={rows.length === 1}
+                              className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
 
                   {/* Grand Total Footer */}
                   <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={8}
                         className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-sm"
                       >
                         Grand Total:

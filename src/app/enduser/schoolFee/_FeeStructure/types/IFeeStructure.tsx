@@ -16,6 +16,7 @@ export interface IFeeStructureDTO {
   feeTypeId: string;
   amount: number;
   discountAmount: number;
+  discountPercentage: number; // ✅ Added this field
   times: number;
   totalAmount: number;
   feePaidType: number;

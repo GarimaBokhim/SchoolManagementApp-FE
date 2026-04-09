@@ -9,7 +9,7 @@ const AllContributor = () => {
     { id: "contributor", label: "Contributor", color: "gray" },
     { id: "schoolItem", label: "School Item", color: "gray" },
     { id: "history", label: "History", color: "gray" },
-    { id: "assetsreport", label: "Asset Report", color: "gray" },
+
   ];
   const [activeReport, setActiveReport] = useState<string>("contributor");
 
