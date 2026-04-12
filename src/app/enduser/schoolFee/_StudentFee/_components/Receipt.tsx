@@ -11,6 +11,8 @@ type ReceiptProps = {
   className?: string
   reference?: string
   amountPaid?: number | string
+  dueAmount?: number | string   //  new
+  receiptNumber?: string        //  new
 }
 
 const Receipt = ({
@@ -22,12 +24,14 @@ const Receipt = ({
   schoolLogoUrl = '',
   paymentDate = '',
   paymentMethod = '',
-  studentName = '',   
+  studentName = '',
   className = '',
   reference = '',
   amountPaid = '',
+  dueAmount = '',       //  new
+  receiptNumber = '',   //  new
 }: ReceiptProps) => {
-  
+
   return (
     <div
       style={{
@@ -35,10 +39,10 @@ const Receipt = ({
         paddingBottom: '15px',
         marginBottom: '15px',
         pageBreakInside: 'avoid',
-        position: 'relative',          // + needed for watermark
+        position: 'relative',
       }}
     >
-      {/* + Watermark logo behind content */}
+      {/* Watermark logo behind content */}
       {schoolLogoUrl && (
         <div
           style={{
@@ -59,18 +63,20 @@ const Receipt = ({
         </div>
       )}
 
-      {/* + z-index wrapper so content sits above watermark */}
+      {/* z-index wrapper so content sits above watermark */}
       <div style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* Header */}
         <div
           style={{
             textAlign: 'center',
             borderBottom: '1px solid #000',
             paddingBottom: '6px',
             marginBottom: '8px',
-            position: 'relative',      // + for logo positioning
+            position: 'relative',
           }}
         >
-          {/* + Logo top-left */}
+          {/* Logo top-left */}
           {schoolLogoUrl && (
             <img
               src={schoolLogoUrl}
@@ -87,7 +93,6 @@ const Receipt = ({
           )}
 
           <h3 style={{ margin: 0 }}>{schoolName}</h3>
-          {/* + Address and PAN below school name */}
           {schoolAddress && (
             <div style={{ fontSize: '11px', color: '#444', marginBottom: '1px' }}>
               {schoolAddress}
@@ -101,6 +106,12 @@ const Receipt = ({
           <div>STUDENT PAYMENT RECEIPT ({label})</div>
         </div>
 
+        {/* ✅ Receipt number row */}
+        <div style={{ marginBottom: '4px' }}>
+          Receipt No: <b>{receiptNumber || 'N/A'}</b>
+        </div>
+
+        {/* Date and Method */}
         <div
           style={{
             display: 'flex',
@@ -116,6 +127,7 @@ const Receipt = ({
           </span>
         </div>
 
+        {/* Student and Class */}
         <div
           style={{
             display: 'flex',
@@ -124,17 +136,19 @@ const Receipt = ({
           }}
         >
           <span>
-            Student: <b>{studentName || '-'}</b>  
+            Student: <b>{studentName || '-'}</b>
           </span>
           <span>
             Class: <b>{className}</b>
           </span>
         </div>
 
+        {/* Reference */}
         <div style={{ marginBottom: '6px' }}>
           Reference: <b>{reference || '-'}</b>
         </div>
 
+        {/* ✅ Amount table with Due Amount row added */}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
@@ -145,9 +159,18 @@ const Receipt = ({
                 <b>{amountPaid}</b>
               </td>
             </tr>
+            <tr>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Due Amount
+              </td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                <b>{dueAmount !== '' && dueAmount !== undefined ? dueAmount : 'N/A'}</b>
+              </td>
+            </tr>
           </tbody>
         </table>
 
+        {/* Signatures */}
         <div
           style={{
             marginTop: '30px',
