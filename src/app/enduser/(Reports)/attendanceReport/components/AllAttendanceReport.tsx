@@ -18,11 +18,15 @@ const AllAttendanceForm = () => {
 
   const form = useForm({ defaultValues: { classId: "" } });
 
+  const { data: allClasses } = useGetAllClasses();
+
+const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
+
   const { data: attendanceData, isLoading: isLoadingAttendance } =
-    useGetAttendanceReport(selectedMonth);
+    useGetAttendanceReport(selectedMonth, activeClassId); // pass classId
+
   const { data: studentData, isLoading: isLoadingStudents } =
     useGetAllStudents();
-  const { data: allClasses } = useGetAllClasses();
 
   const studentMap = useMemo(() => {
     const map: Record<string, IStudent> = {};
@@ -68,9 +72,9 @@ const AllAttendanceForm = () => {
 
   const isLoading = isLoadingAttendance || isLoadingStudents;
 
-  const selectedClass = allClasses?.find((c) => c.id === selectedClassId) ?? allClasses?.[0] ?? null;
+  const selectedClass =
+    allClasses?.find((c) => c.id === activeClassId) ?? allClasses?.[0] ?? null; // ✅ use activeClassId
 
-  // Get visible months (6 at a time)
   const visibleMonths = useMemo(() => {
     const monthsArray = Object.entries(NEPALI_MONTHS);
     return monthsArray.slice(monthStartIndex, monthStartIndex + 6);
@@ -84,12 +88,11 @@ const AllAttendanceForm = () => {
   };
 
   const handleNextMonths = () => {
-    setMonthStartIndex((prev) => 
+    setMonthStartIndex((prev) =>
       Math.min(Object.keys(NEPALI_MONTHS).length - 6, prev + 6)
     );
   };
 
-  // Export to CSV functionality
   const handleExport = () => {
     if (filteredStudents.length === 0) {
       Toast.error("No data to export");
@@ -99,11 +102,11 @@ const AllAttendanceForm = () => {
     const csvData = filteredStudents.map((student, index) => {
       const fullName = getFullName(student.StudentId);
       const summary = getSummary(student.Attendance);
-      const attendanceRate = days.length > 0
-        ? Math.round((summary.present / days.length) * 100)
-        : 0;
+      const attendanceRate =
+        days.length > 0
+          ? Math.round((summary.present / days.length) * 100)
+          : 0;
 
-      // Create a row with day-wise attendance
       const dayAttendance: Record<string, string> = {};
       days.forEach(({ key, day }) => {
         const statusVal = student.Attendance[key]?.Status ?? "-";
@@ -114,9 +117,9 @@ const AllAttendanceForm = () => {
       return {
         "S.N.": index + 1,
         "Student Name": fullName,
-        "Present": summary.present,
-        "Absent": summary.absent,
-        "Late": summary.late,
+        Present: summary.present,
+        Absent: summary.absent,
+        Late: summary.late,
         "No Data": summary.noData,
         "Attendance Rate (%)": attendanceRate,
         ...dayAttendance,
@@ -127,14 +130,18 @@ const AllAttendanceForm = () => {
     const csvContent = [
       headers.join(","),
       ...csvData.map((row) =>
-        headers.map((h) => {
-          const value = row[h as keyof typeof row];
-          // Handle values that might contain commas or quotes
-          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(",")
+        headers
+          .map((h) => {
+            const value = row[h as keyof typeof row];
+            if (
+              typeof value === "string" &&
+              (value.includes(",") || value.includes('"'))
+            ) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(",")
       ),
     ].join("\n");
 
@@ -142,7 +149,9 @@ const AllAttendanceForm = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `attendance_report_${NEPALI_MONTHS[selectedMonth]}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `attendance_report_${NEPALI_MONTHS[selectedMonth]}_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -160,10 +169,9 @@ const AllAttendanceForm = () => {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Left side: Class and Search */}
             <div className="flex items-center gap-3 flex-wrap">
-              {/* Class Combobox */}
               <div className="w-48">
                 <AppCombobox
-                  value={selectedClassId || (allClasses?.[0]?.id ?? "")}
+                  value={activeClassId} // ✅ use activeClassId
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute z-50"
                   label="Class"
@@ -182,9 +190,11 @@ const AllAttendanceForm = () => {
                 />
               </div>
 
-              {/* Search field */}
               <div className="relative w-48">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
                 <input
                   type="text"
                   placeholder="Search student..."
@@ -195,9 +205,8 @@ const AllAttendanceForm = () => {
               </div>
             </div>
 
-            {/* Right side: Export button and Month navigation */}
+            {/* Right side: Export + Month nav */}
             <div className="flex items-center gap-3">
-              {/* Export Button */}
               <button
                 onClick={handleExport}
                 disabled={filteredStudents.length === 0}
@@ -207,7 +216,6 @@ const AllAttendanceForm = () => {
                 <span className="text-sm">Export</span>
               </button>
 
-              {/* Month navigation with 6 visible months */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrevMonths}
@@ -216,7 +224,7 @@ const AllAttendanceForm = () => {
                 >
                   <ChevronLeft size={15} />
                 </button>
-                
+
                 <div className="flex gap-1">
                   {visibleMonths.map(([num, name]) => (
                     <button
@@ -232,7 +240,7 @@ const AllAttendanceForm = () => {
                     </button>
                   ))}
                 </div>
-                
+
                 <button
                   onClick={handleNextMonths}
                   disabled={!canGoNext}
@@ -247,7 +255,9 @@ const AllAttendanceForm = () => {
 
         {/* Student Cards */}
         {isLoading ? (
-          <div className="text-center text-gray-500 py-16">Loading attendance data...</div>
+          <div className="text-center text-gray-500 py-16">
+            Loading attendance data...
+          </div>
         ) : filteredStudents.length === 0 ? (
           <div className="text-center text-gray-500 italic py-16">
             No attendance data found for {NEPALI_MONTHS[selectedMonth]}.
@@ -294,8 +304,10 @@ const AllAttendanceForm = () => {
                   <div className="p-3">
                     <div className="flex flex-wrap gap-1">
                       {days.map(({ key, day }) => {
-                        const statusVal = student.Attendance[key]?.Status ?? "-";
-                        const config = STATUS_CONFIG[statusVal] ?? STATUS_CONFIG["-"];
+                        const statusVal =
+                          student.Attendance[key]?.Status ?? "-";
+                        const config =
+                          STATUS_CONFIG[statusVal] ?? STATUS_CONFIG["-"];
                         return (
                           <div
                             key={key}
@@ -311,9 +323,15 @@ const AllAttendanceForm = () => {
 
                   {/* Summary footer */}
                   <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-600 flex justify-between text-xs">
-                    <span className="text-emerald-600 font-semibold">P: {summary.present}</span>
-                    <span className="text-red-500 font-semibold">A: {summary.absent}</span>
-                    <span className="text-yellow-500 font-semibold">L: {summary.late}</span>
+                    <span className="text-emerald-600 font-semibold">
+                      P: {summary.present}
+                    </span>
+                    <span className="text-red-500 font-semibold">
+                      A: {summary.absent}
+                    </span>
+                    <span className="text-yellow-500 font-semibold">
+                      L: {summary.late}
+                    </span>
                     <span className="text-gray-400">–: {summary.noData}</span>
                   </div>
                 </div>
@@ -327,10 +345,14 @@ const AllAttendanceForm = () => {
           <div className="flex flex-wrap justify-center gap-4 text-xs pt-2">
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <div key={key} className="flex items-center gap-1.5">
-                <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold ${cfg.className}`}>
+                <span
+                  className={`inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold ${cfg.className}`}
+                >
                   {cfg.short}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400">{cfg.label}</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  {cfg.label}
+                </span>
               </div>
             ))}
           </div>

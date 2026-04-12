@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetClassById } from '@/app/enduser/(Academics)/Class/hooks'
+import { useGetStudentFeesummary } from '../hooks'
 import { IPaymentRecord } from '../types/IStudentFee'
 import Receipt from './Receipt'
 
@@ -24,6 +25,14 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
+  // ✅ Fetch fee summary for totalAmount and dueAmount
+  const { data: feeSummary } = useGetStudentFeesummary(
+    `?studentId=${data.studentid}&classId=${data.classid}`
+  )
+
+  const dueAmount = feeSummary?.Items?.[0]?.dueAmount
+  const totalAmount = feeSummary?.Items?.[0]?.totalAmount
+
   const schoolId = useMemo(() => {
     try {
       const storedUser = localStorage.getItem('userDetails')
@@ -40,7 +49,8 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     return schools.Items.find((s) => s.id === schoolId) ?? schools.Items[0]
   }, [schools, schoolId])
 
-  const isReady = schools?.Items?.length && students?.Items?.length && classData
+  const isReady =
+    schools?.Items?.length && students?.Items?.length && classData && feeSummary
 
   useEffect(() => {
     if (isReady) {
@@ -60,7 +70,6 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     ? new Date(data.paymentDate).toISOString().split('T')[0]
     : '-'
 
-  // + Construct full logo URL the same way SchoolMarkSheetSecond does
   const getLogoUrl = () => {
     const raw = school?.imageUrl
     if (!raw || raw === '-' || raw === 'string' || raw === '') return ''
@@ -71,19 +80,21 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     schoolName: school?.name ?? '',
     schoolAddress: school?.address ?? '',
     schoolPan: school?.pan ?? '',
-    schoolLogoUrl: getLogoUrl(),           // + fixed URL construction
+    schoolLogoUrl: getLogoUrl(),
     paymentDate: formattedPaymentDate,
     paymentMethod: paymentMethods[data.paymentMethod] ?? '-',
     studentName,
     className: classData?.name ?? '-',
     reference: data.reference ?? '-',
     amountPaid: data.amountPaid,
+    totalAmount: totalAmount,
+    dueAmount: dueAmount,
+    receiptNumber: data.receiptNumber,
   }
 
   if (!isReady) return null
 
   return (
-    // + Simple centering without minHeight:100vh so there's no excessive scroll
     <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
       <div
         style={{
@@ -95,10 +106,7 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
           background: '#fff',
         }}
       >
-        {/* School copy */}
         <Receipt label="School Copy" showSeparator {...receiptData} />
-
-        {/* Student copy */}
         <Receipt label="Student Copy" {...receiptData} />
       </div>
     </div>
