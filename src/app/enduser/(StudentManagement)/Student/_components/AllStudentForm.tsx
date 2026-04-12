@@ -44,6 +44,8 @@ import ExcelParentTable from '../../_Parent/components/Excelprint'
 import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
+import { useExcelPreview } from "../hooks/excelPreview"
+import ExcelPreviewModal from "./ExcelPreviewModel"
 
 
 const AllStudentForm = () => {
@@ -61,6 +63,18 @@ const AllStudentForm = () => {
     params.pageSize = paginationParams.pageSize
     setPaginationParams(params)
   }
+  
+  const {
+  previewData,  
+  showPreviewModal,
+  setShowPreviewModal,
+  uploadLoading,
+  setUploadLoading,
+  handleExcelPreview,
+  selectedFile,
+  setSelectedFile,
+} = useExcelPreview();
+
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
@@ -181,6 +195,56 @@ const AllStudentForm = () => {
     setSelectedStudentForProfile(student)
     setShowProfilePopup(true)
   }
+
+  const handleSaveExcel = async () => {
+  try {
+  
+    setUploadLoading(true);
+
+    if (!selectedFile) {
+      toast.error("No file selected");
+      return;
+    }
+
+    await toast.promise(
+      uploadstudent(selectedFile),
+      {
+        loading: "Uploading...",
+        success: "Students uploaded!",
+        error: "Upload failed!",
+      }
+    );
+
+    setShowPreviewModal(false);
+    refetch();
+
+  } finally {
+    setUploadLoading(false);
+  }
+};
+
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const validTypes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+
+  const isValid =
+    validTypes.includes(file.type) ||
+    file.name.endsWith(".xlsx") ||
+    file.name.endsWith(".xls");
+
+  if (!isValid) {
+    toast.error("Please upload a valid Excel file");
+    return;
+  }
+
+  setSelectedFile(file);        // ✅ NOW SAFE
+  handleExcelPreview(file);     // preview
+};
   
   const getClassName = (classId: string) => {
     if (!classId) return 'N/A'
@@ -225,7 +289,26 @@ const AllStudentForm = () => {
                   />
                 }
               />
-              <ImportButtonForm
+              <ImportButtonForm handleExcelImport={handleExcelPreview} />
+             {/* <ImportButtonForm handleExcelImport={handleFileChange} /> */}
+
+             {showPreviewModal && (
+                <ExcelPreviewModal             
+                    previewData={previewData}
+                    show={showPreviewModal}
+                    onClose={() => setShowPreviewModal(false)}
+                    onSave={handleSaveExcel}
+                    loading={uploadLoading}
+                    
+                />
+                )}
+
+              
+
+              
+
+
+              {/* <ImportButtonForm
                 handleExcelImport={async (file) => {
                   await toast.promise(uploadstudent(file), {
                     loading: 'Uploading...',
@@ -233,7 +316,7 @@ const AllStudentForm = () => {
                     error: 'Upload failed! Please Check the format',
                   })
                 }}
-              />
+              /> */}
             </div>
           </div>
           
@@ -427,6 +510,8 @@ const AllStudentForm = () => {
             />
           </div>
         )}
+
+        
         
         {showStudents && selectedId && (
           <EditStudent

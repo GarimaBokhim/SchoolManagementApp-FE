@@ -86,14 +86,16 @@ const LoginForm = () => {
       }
 
       const dashboardRoute = roleToDashboardMap[userDetails.role]
-        ? roleToDashboardMap[userDetails.role]
-        : role === 'admin'
-          ? '/admin/dashboard'
-          : role === 'demoexpiryrole'
-            ? '/end-user/expired'
-            : role === 'crm'
-              ? '/crm/dashboard'
-              : '/enduser/dashboard'
+    ? roleToDashboardMap[userDetails.role]
+    : role === 'admin'
+      ? '/admin/dashboard'
+      : role === 'crmadmin'
+        ? '/crmadmin/dashboard'
+        : role === 'demoexpiryrole'
+          ? '/end-user/expired'
+          : role === 'crm'
+            ? '/crm/dashboard'
+            : '/enduser/dashboard';
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)
     } catch (error: any) {
       Toast.error(error.response?.data || error.message || 'Failed to login.')

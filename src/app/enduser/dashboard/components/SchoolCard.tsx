@@ -56,7 +56,7 @@ export default function SchoolInfoCard({ schoolId }: Props) {
       </div>
 
       {/* Centered Content */}
-      <div className="py-4 px-8 flex flex-col items-center justify-center text-center">
+      <div className="py-4 px-8 flex flex-col items-center text-center">
         <h2 className="text-2xl font-bold">
           {schoolData?.name ?? "—"}
           <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
