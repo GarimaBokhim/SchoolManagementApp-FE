@@ -10,15 +10,16 @@ const AttendanceEndPoints = {
 const attendanceQueryKey = "attendanceReport";
 const studentQueryKey = "allStudents";
 
-export const useGetAttendanceReport = (nameOfMonths: number) => {
+export const useGetAttendanceReport = (nameOfMonths: number, classId: string) => {
   return useQuery({
-    queryKey: [attendanceQueryKey, nameOfMonths],
+    queryKey: [attendanceQueryKey, nameOfMonths, classId],
     queryFn: async (): Promise<IAttendanceReport> => {
       const response = await api.get<IAttendanceReport>(
-        `${AttendanceEndPoints.getReport}?nameOfMonths=${nameOfMonths}`
+        `${AttendanceEndPoints.getReport}?nameOfMonths=${nameOfMonths}&classId=${classId}`
       );
       return response.data;
     },
+    enabled: !!classId, // only fetch when classId is available
     staleTime: 0,
     retry: false,
   });
