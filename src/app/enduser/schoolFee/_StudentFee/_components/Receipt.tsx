@@ -11,8 +11,9 @@ type ReceiptProps = {
   className?: string
   reference?: string
   amountPaid?: number | string
-  dueAmount?: number | string   //  new
-  receiptNumber?: string        //  new
+  dueAmount?: number | string
+  totalAmount?: number | string
+  receiptNumber?: string
 }
 
 const Receipt = ({
@@ -28,8 +29,9 @@ const Receipt = ({
   className = '',
   reference = '',
   amountPaid = '',
-  dueAmount = '',       //  new
-  receiptNumber = '',   //  new
+  dueAmount = '',
+  totalAmount = '',
+  receiptNumber = '',
 }: ReceiptProps) => {
 
   return (
@@ -106,7 +108,7 @@ const Receipt = ({
           <div>STUDENT PAYMENT RECEIPT ({label})</div>
         </div>
 
-        {/* ✅ Receipt number row */}
+        {/* Receipt Number */}
         <div style={{ marginBottom: '4px' }}>
           Receipt No: <b>{receiptNumber || 'N/A'}</b>
         </div>
@@ -148,9 +150,17 @@ const Receipt = ({
           Reference: <b>{reference || '-'}</b>
         </div>
 
-        {/* ✅ Amount table with Due Amount row added */}
+        {/* Amount Table */}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
+            <tr>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Total Amount
+              </td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                <b>{totalAmount !== '' && totalAmount !== undefined ? totalAmount : 'N/A'}</b>
+              </td>
+            </tr>
             <tr>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
                 Amount Paid

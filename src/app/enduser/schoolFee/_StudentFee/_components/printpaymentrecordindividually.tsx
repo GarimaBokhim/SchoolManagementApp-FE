@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetClassById } from '@/app/enduser/(Academics)/Class/hooks'
-import { useGetStudentFeesummary } from '../hooks' 
+import { useGetStudentFeesummary } from '../hooks'
 import { IPaymentRecord } from '../types/IStudentFee'
 import Receipt from './Receipt'
 
@@ -25,12 +25,13 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
-  // ✅ Fetch fee summary to get real dueAmount
+  // ✅ Fetch fee summary for totalAmount and dueAmount
   const { data: feeSummary } = useGetStudentFeesummary(
     `?studentId=${data.studentid}&classId=${data.classid}`
   )
 
   const dueAmount = feeSummary?.Items?.[0]?.dueAmount
+  const totalAmount = feeSummary?.Items?.[0]?.totalAmount
 
   const schoolId = useMemo(() => {
     try {
@@ -48,7 +49,8 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     return schools.Items.find((s) => s.id === schoolId) ?? schools.Items[0]
   }, [schools, schoolId])
 
-  const isReady = schools?.Items?.length && students?.Items?.length && classData && feeSummary  // ✅ wait for summary too
+  const isReady =
+    schools?.Items?.length && students?.Items?.length && classData && feeSummary
 
   useEffect(() => {
     if (isReady) {
@@ -85,7 +87,8 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     className: classData?.name ?? '-',
     reference: data.reference ?? '-',
     amountPaid: data.amountPaid,
-    dueAmount: dueAmount,           // ✅ real value from API
+    totalAmount: totalAmount,
+    dueAmount: dueAmount,
     receiptNumber: data.receiptNumber,
   }
 
