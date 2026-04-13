@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import React from "react";
 import { Toaster } from "react-hot-toast";
 import { ChevronLeft, ChevronRight, Search, Download } from "lucide-react";
@@ -18,15 +18,39 @@ const AllAttendanceForm = () => {
 
   const form = useForm({ defaultValues: { classId: "" } });
 
-  const { data: allClasses } = useGetAllClasses();
+  const { data: allClasses, isLoading: isLoadingClasses } = useGetAllClasses();
 
-const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
+  // Set default class when classes load
+  useEffect(() => {
+    if (allClasses && allClasses.length > 0 && !selectedClassId) {
+      const defaultClassId = allClasses[0]?.id;
+      if (defaultClassId) {
+        setSelectedClassId(defaultClassId);
+        form.setValue("classId", defaultClassId);
+      }
+    }
+  }, [allClasses, selectedClassId, form]);
 
-  const { data: attendanceData, isLoading: isLoadingAttendance } =
-    useGetAttendanceReport(selectedMonth, activeClassId); // pass classId
+  const activeClassId = useMemo(() => {
+    return selectedClassId || allClasses?.[0]?.id || "";
+  }, [selectedClassId, allClasses]);
+
+  const { 
+    data: attendanceData, 
+    isLoading: isLoadingAttendance, 
+    error: attendanceError,
+    refetch: refetchAttendance
+  } = useGetAttendanceReport(selectedMonth, activeClassId);
 
   const { data: studentData, isLoading: isLoadingStudents } =
     useGetAllStudents();
+
+  // Refetch when month or class changes
+  useEffect(() => {
+    if (activeClassId) {
+      refetchAttendance();
+    }
+  }, [selectedMonth, activeClassId, refetchAttendance]);
 
   const studentMap = useMemo(() => {
     const map: Record<string, IStudent> = {};
@@ -70,10 +94,10 @@ const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
     );
   }, [students, searchTerm, studentMap]);
 
-  const isLoading = isLoadingAttendance || isLoadingStudents;
+  const isLoading = isLoadingAttendance || isLoadingStudents || isLoadingClasses;
 
   const selectedClass =
-    allClasses?.find((c) => c.id === activeClassId) ?? allClasses?.[0] ?? null; // ✅ use activeClassId
+    allClasses?.find((c) => c.id === activeClassId) ?? allClasses?.[0] ?? null;
 
   const visibleMonths = useMemo(() => {
     const monthsArray = Object.entries(NEPALI_MONTHS);
@@ -159,11 +183,16 @@ const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
     Toast.success("Report exported successfully");
   };
 
+  // Show error if any
+  if (attendanceError) {
+    console.error("Attendance Error:", attendanceError);
+    Toast.error("Failed to load attendance data");
+  }
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6 space-y-4">
-
         {/* Top bar with controls */}
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -171,7 +200,7 @@ const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
             <div className="flex items-center gap-3 flex-wrap">
               <div className="w-48">
                 <AppCombobox
-                  value={activeClassId} // ✅ use activeClassId
+                  value={activeClassId}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute z-50"
                   label="Class"
@@ -180,7 +209,7 @@ const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
                   options={allClasses ?? []}
                   selected={selectedClass}
                   onSelect={(cls) => {
-                    if (cls) {
+                    if (cls && cls.id) {
                       setSelectedClassId(cls.id);
                       form.setValue("classId", cls.id);
                     }
@@ -253,109 +282,127 @@ const activeClassId = (selectedClassId || allClasses?.[0]?.id) ?? "";
           </div>
         </div>
 
-        {/* Student Cards */}
+        {/* Loading and Error States */}
         {isLoading ? (
           <div className="text-center text-gray-500 py-16">
-            Loading attendance data...
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p>Loading attendance data...</p>
+            </div>
+          </div>
+        ) : !activeClassId ? (
+          <div className="text-center text-gray-500 italic py-16">
+            <p>Please select a class to view attendance.</p>
+          </div>
+        ) : attendanceError ? (
+          <div className="text-center text-red-500 py-16">
+            <p>Failed to load attendance data. Please try again.</p>
+            <button 
+              onClick={() => refetchAttendance()}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         ) : filteredStudents.length === 0 ? (
           <div className="text-center text-gray-500 italic py-16">
-            No attendance data found for {NEPALI_MONTHS[selectedMonth]}.
+            <p>No attendance data found for {NEPALI_MONTHS[selectedMonth]} in this class.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredStudents.map((student, idx) => {
-              const summary = getSummary(student.Attendance);
-              const fullName = getFullName(student.StudentId);
-              const attendanceRate =
-                days.length > 0
-                  ? Math.round((summary.present / days.length) * 100)
-                  : 0;
+          <>
+            {/* Student Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredStudents.map((student, idx) => {
+                const summary = getSummary(student.Attendance);
+                const fullName = getFullName(student.StudentId);
+                const attendanceRate =
+                  days.length > 0
+                    ? Math.round((summary.present / days.length) * 100)
+                    : 0;
 
-              return (
-                <div
-                  key={student.StudentId}
-                  className="bg-white dark:bg-[#3a3a3a] border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden"
-                >
-                  {/* Card Header */}
-                  <div className="px-4 py-3 bg-gray-50 dark:bg-[#2f2f2f] border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center shrink-0">
-                        {idx + 1}
+                return (
+                  <div
+                    key={student.StudentId}
+                    className="bg-white dark:bg-[#3a3a3a] border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    {/* Card Header */}
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-[#2f2f2f] border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-white truncate">
+                          {fullName}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-800 dark:text-white truncate">
-                        {fullName}
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                          attendanceRate >= 75
+                            ? "bg-emerald-100 text-emerald-700"
+                            : attendanceRate >= 50
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {attendanceRate}%
                       </span>
                     </div>
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                        attendanceRate >= 75
-                          ? "bg-emerald-100 text-emerald-700"
-                          : attendanceRate >= 50
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {attendanceRate}%
-                    </span>
-                  </div>
 
-                  {/* Day Grid */}
-                  <div className="p-3">
-                    <div className="flex flex-wrap gap-1">
-                      {days.map(({ key, day }) => {
-                        const statusVal =
-                          student.Attendance[key]?.Status ?? "-";
-                        const config =
-                          STATUS_CONFIG[statusVal] ?? STATUS_CONFIG["-"];
-                        return (
-                          <div
-                            key={key}
-                            title={`Day ${day}: ${config.label}`}
-                            className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center cursor-default ${config.className}`}
-                          >
-                            {day}
-                          </div>
-                        );
-                      })}
+                    {/* Day Grid */}
+                    <div className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {days.map(({ key, day }) => {
+                          const statusVal =
+                            student.Attendance[key]?.Status ?? "-";
+                          const config =
+                            STATUS_CONFIG[statusVal] ?? STATUS_CONFIG["-"];
+                          return (
+                            <div
+                              key={key}
+                              title={`Day ${day}: ${config.label}`}
+                              className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center cursor-default transition-transform hover:scale-110 ${config.className}`}
+                            >
+                              {day}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Summary footer */}
+                    <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-600 flex justify-between text-xs">
+                      <span className="text-emerald-600 font-semibold">
+                        P: {summary.present}
+                      </span>
+                      <span className="text-red-500 font-semibold">
+                        A: {summary.absent}
+                      </span>
+                      <span className="text-yellow-500 font-semibold">
+                        L: {summary.late}
+                      </span>
+                      <span className="text-gray-400">–: {summary.noData}</span>
                     </div>
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Summary footer */}
-                  <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-600 flex justify-between text-xs">
-                    <span className="text-emerald-600 font-semibold">
-                      P: {summary.present}
-                    </span>
-                    <span className="text-red-500 font-semibold">
-                      A: {summary.absent}
-                    </span>
-                    <span className="text-yellow-500 font-semibold">
-                      L: {summary.late}
-                    </span>
-                    <span className="text-gray-400">–: {summary.noData}</span>
-                  </div>
+            {/* Legend */}
+            <div className="flex flex-wrap justify-center gap-4 text-xs pt-2">
+              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                <div key={key} className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold ${cfg.className}`}
+                  >
+                    {cfg.short}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    {cfg.label}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Legend */}
-        {!isLoading && filteredStudents.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-4 text-xs pt-2">
-            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <span
-                  className={`inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold ${cfg.className}`}
-                >
-                  {cfg.short}
-                </span>
-                <span className="text-gray-500 dark:text-gray-400">
-                  {cfg.label}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </>
