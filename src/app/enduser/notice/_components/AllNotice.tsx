@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { EyeIcon, Filter, Plus, RotateCcw } from "lucide-react";
+import { EyeIcon, Filter, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -50,8 +50,10 @@ const AllNoticeForm = () => {
   const { canAdd } = useMenuPermissionData(menuStatus);
   const [viewNotice, setViewNotice] = useState<boolean>(false);
   const [selectedNotice, setSelectedNotice] = useState<INotice>();
-  const buttonElement = (notice: INotice) => {
-    return (
+const buttonElement = (notice: INotice) => {
+  return (
+    <div className="flex items-center justify-end gap-2">
+      {/* View */}
       <ButtonElement
         type="button"
         icon={<EyeIcon size={16} />}
@@ -60,10 +62,29 @@ const AllNoticeForm = () => {
           setSelectedNotice(notice);
           setViewNotice(true);
         }}
-        className="!bg-blue-500 hover:!bg-blue-600 "
+        className="!bg-blue-500 hover:!bg-blue-600"
       />
-    );
-  };
+
+      {/* Edit */}
+      <ButtonElement
+        type="button"
+        icon={<Pencil size={16} />}
+        text=""
+        onClick={() => {}}
+        className="!bg-yellow-500 hover:!bg-yellow-600"
+      />
+
+      {/* Delete */}
+      <ButtonElement
+        type="button"
+        icon={< Trash2 size={16} />}
+        text=""
+        onClick={() => {}}
+        className="!bg-red-500 hover:!bg-red-600"
+      />
+    </div>
+  );
+};
   const [params, setParams] = useState("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const form = useForm<IFilterNotice>({

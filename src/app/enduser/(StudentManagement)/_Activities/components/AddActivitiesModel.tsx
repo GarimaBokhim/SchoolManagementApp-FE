@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { X } from 'lucide-react'
-import { AddActivityPayload } from '../types/IActivities'
-import { useGetAllEvents, useAddActivity } from '../hooks'
+import { AddActivityPayload, IClass } from '../types/IActivities'
+import { useGetAllEvents, useAddActivity, useGetAllClasses } from '../hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import ClassMultiSelect from './ClassMiultiSelect'
 
 const ACTIVITY_CATEGORY_OPTIONS = [
   { value: 1, label: 'Sports' },
@@ -29,50 +30,51 @@ interface Props {
   onSuccess: () => void
 }
 
-// Extended payload to match full API schema
-interface AddActivityFormPayload extends AddActivityPayload {
-  startTime: string
-  endTime: string
-  activityDate: string
-}
-
 const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<EventOption | null>(null)
+  const [selectedClasses, setSelectedClasses] = useState<IClass[]>([])
 
   const { mutateAsync: addActivity } = useAddActivity()
   const { data: events, isLoading: eventsLoading } = useGetAllEvents()
+  const { data: classes, isLoading: classesLoading } = useGetAllClasses()
 
   const {
     register,
     handleSubmit,
     reset,
     control,
-    setValue,
     formState: { errors },
-  } = useForm<AddActivityFormPayload>({
+  } = useForm<AddActivityPayload>({
     defaultValues: {
       activityCategory: 1,
       name: '',
+      descriptions: '',
       eventId: '',
       startTime: '',
       endTime: '',
       activityDate: '',
+      classIds: [],
     },
   })
 
   const handleClose = () => {
     reset()
     setSelectedEvent(null)
+    setSelectedClasses([])
     onClose()
   }
 
-  const onFormSubmit = async (data: AddActivityFormPayload) => {
+  const onFormSubmit = async (data: AddActivityPayload) => {
     setIsSubmitting(true)
     try {
-      await addActivity(data)
+      await addActivity({
+        ...data,
+        classIds: selectedClasses.map((c) => c.id),
+      })
       reset()
       setSelectedEvent(null)
+      setSelectedClasses([])
       onSuccess()
     } finally {
       setIsSubmitting(false)
@@ -88,7 +90,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
       onClick={handleClose}
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[520px]
+        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[540px]
                    max-h-[95vh] rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
@@ -108,28 +110,47 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
 
           {/* Activity Name */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity Name <span className="text-red-500">*</span>
             </label>
             <input
               {...register('name', { required: 'Activity name is required' })}
               placeholder="e.g. Football Tournament"
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             {errors.name && (
               <p className="text-xs text-red-500">{errors.name.message}</p>
             )}
           </div>
 
+          {/* Description */}
+          <div className="flex flex-col gap-1 items-start">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Description
+            </label>
+            <textarea
+              {...register('descriptions')}
+              placeholder="Brief description of the activity..."
+              rows={3}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                         focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            />
+          </div>
+
           {/* Activity Category */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Category <span className="text-red-500">*</span>
             </label>
             <select
               {...register('activityCategory', { valueAsNumber: true })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               {ACTIVITY_CATEGORY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -139,8 +160,8 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
             </select>
           </div>
 
-          {/* Event — AppCombobox */}
-          <div className="flex flex-col gap-1">
+          {/* Event */}
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Event <span className="text-red-500">*</span>
             </label>
@@ -170,15 +191,35 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
             )}
           </div>
 
+          {/* Classes Multi-Select */}
+          <div className="flex flex-col gap-1 items-start">
+            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Classes
+            </label>
+            <ClassMultiSelect
+              classes={classes ?? []}
+              selected={selectedClasses}
+              onChange={setSelectedClasses}
+              isLoading={classesLoading}
+            />
+            {selectedClasses.length > 0 && (
+              <p className="text-xs text-gray-400">
+                {selectedClasses.length} class{selectedClasses.length > 1 ? 'es' : ''} selected
+              </p>
+            )}
+          </div>
+
           {/* Activity Date */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               {...register('activityDate', { required: 'Activity date is required' })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             {errors.activityDate && (
               <p className="text-xs text-red-500">{errors.activityDate.message}</p>
@@ -187,28 +228,32 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
           {/* Start Time & End Time */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-start">
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Start Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 {...register('startTime', { required: 'Start time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                           bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {errors.startTime && (
                 <p className="text-xs text-red-500">{errors.startTime.message}</p>
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-start">
               <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 End Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
                 {...register('endTime', { required: 'End time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
+                           bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {errors.endTime && (
                 <p className="text-xs text-red-500">{errors.endTime.message}</p>
@@ -228,7 +273,8 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700
+                         disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               {isSubmitting ? 'Saving...' : 'Save Activity'}
             </button>

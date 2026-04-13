@@ -10,7 +10,7 @@ import { useGetAllExams } from '../../Exam/hooks'
 import { useGetClassById } from '../../Class/hooks'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
-
+import { useGetAllDistricts ,useGetAllProvinces} from '../hooks/locationoHooks'
 interface Props {
   studentId: string
   examId: string
@@ -24,6 +24,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data: allExam } = useGetAllExams()
   const { data: allclass } = useGetClassById(StudentData?.classId || '')
   const { data: allattendencecount } = useGetAttendenceCount(studentId)
+  const { data: allDistricts } = useGetAllDistricts()
+  const { data: allProvinces } = useGetAllProvinces()
 
   const storedUser = localStorage.getItem('userDetails')
   let schoolId = ''
@@ -41,6 +43,15 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const ExamName = allExam?.Items.find(
     (exam: IExam) => exam.id === examId
   )?.name
+
+  //Resolve district and province names from IDs
+  const districtName = allDistricts?.Items?.find(
+    (d) => d.Id === StudentData?.districtId
+  )?.districtNameInEnglish ?? '-'
+
+  const provinceName = allProvinces?.Items?.find(
+    (p) => p.Id === StudentData?.provinceId
+  )?.provinceNameInEnglish ?? '-'
 
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -69,12 +80,10 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
         * {
           font-family: 'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif;
         }
-        
         body {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
-        
         @media print {
           @page { size: A4 portrait; margin: 0 !important; }
           body { margin: 0; padding: 0; }
@@ -125,6 +134,11 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const blue = '#080ccb'
   const headerBg = '#e6e7ff'
   const headerColor = '#080ccb'
+
+  // Format date of birth
+  const dateOfBirth = StudentData?.dateOfBirth
+    ? new Date(StudentData.dateOfBirth).toISOString().split('T')[0]
+    : '-'
 
   return (
     <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
@@ -194,35 +208,37 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               <p>
                 THE GRADE(S) SECURED BY{' '}
                 <span className="font-bold text-black">
-                  {StudentData?.firstName} {StudentData?.lastName}
+                  {[StudentData?.firstName, StudentData?.middleName, StudentData?.lastName]
+                    .filter(Boolean)
+                    .join(' ') || '-'}
                 </span>
                 {' '}DATE OF BIRTH:{' '}
                 <span className="font-bold text-black">
-                  {'2066-01-01'}
+                  {dateOfBirth}
                 </span>
                 {' '}SYMBOL NO.:{' '}
                 <span className="font-bold text-black">
-                  { 'undefine'}
+                  {StudentData?.admissionNumber || '-'}
                 </span>
                 {' '}REGISTRATION NO.:{' '}
                 <span className="font-bold text-black">
-                  {'undefine'}
+                  {StudentData?.registrationNumber || '-'}
                 </span>
                 {' '}GRADE:{' '}
                 <span className="font-bold text-black">
-                  {allclass?.name || 'Eight'}
+                  {allclass?.name || '-'}
                 </span>
                 {' '}SCHOOL:{' '}
                 <span className="font-bold text-black">
-                  {SchoolData?.name || 'undefine'}
+                  {SchoolData?.name || '-'}
                 </span>
                 {' '}DISTRICT:{' '}
                 <span className="font-bold text-black">
-                  {'undefine'}
+                  {districtName}
                 </span>
                 {' '}PROVINCE:{' '}
                 <span className="font-bold text-black">
-                  {'undefine'}
+                  {provinceName}
                 </span>
                 {' '}IN THE ANNUAL BASIC EDUCATION EXAMINATION{' '}
                 <span className="font-bold text-black">
@@ -238,7 +254,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               style={{ border: `1px solid ${blue}` }}
             >
               <thead>
-                {/* Row 1 */}
                 <tr style={{ backgroundColor: headerBg, color: headerColor }}>
                   <th
                     rowSpan={2}
@@ -282,8 +297,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                   >
                     REMARKS
                   </th>
-                 </tr>
-                {/* Row 2: sub-columns */}
+                </tr>
                 <tr style={{ backgroundColor: headerBg, color: headerColor }}>
                   <th
                     className="p-2 text-center font-bold"
@@ -306,12 +320,10 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 </tr>
               </thead>
               <tbody>
-                {/* Dynamic rows — white background, blue text */}
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
                   ? data.MarksWithGrades.map((m, index) => {
                       const subjectName =
-                        allSubject?.Items.find((i) => i.Id === m.subjectId)
-                          ?.name ||
+                        allSubject?.Items.find((i) => i.Id === m.subjectId)?.name ||
                         m.subjectId ||
                         '-'
                       const gradePoint =
@@ -324,59 +336,34 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                           className="text-center"
                           style={{ backgroundColor: '#ffffff', color: blue }}
                         >
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             {index + 1}
                           </td>
-                          <td
-                            className="p-2 text-left px-3"
-                            style={{ border: `1px solid ${blue}`, color: blue }}
-                          >
+                          <td className="p-2 text-left px-3" style={{ border: `1px solid ${blue}`, color: blue }}>
                             {subjectName}
                           </td>
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             4
                           </td>
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             {'-'}
                           </td>
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
-                            { '-'}
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
+                            {'-'}
                           </td>
-                          <td
-                            className="p-2 font-medium"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2 font-medium" style={{ border: `1px solid ${blue}` }}>
                             {m.grade || '-'}
                           </td>
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             {gradePoint}
                           </td>
-                          <td
-                            className="p-2"
-                            style={{ border: `1px solid ${blue}` }}
-                          >
+                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             {'-'}
                           </td>
                         </tr>
                       )
                     })
-                  : /* Placeholder rows */
-                    [
+                  : [
                       'Nepali',
                       'English',
                       'Mathematics',
@@ -392,58 +379,18 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                         className="text-center"
                         style={{ backgroundColor: '#ffffff', color: blue }}
                       >
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          {index + 1}
-                        </td>
-                        <td
-                          className="p-2 text-left px-3"
-                          style={{ border: `1px solid ${blue}`, color: blue }}
-                        >
-                          {subject}
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          4
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>{index + 1}</td>
+                        <td className="p-2 text-left px-3" style={{ border: `1px solid ${blue}`, color: blue }}>{subject}</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>4</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
+                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
                       </tr>
                     ))}
 
-                {/* ── GPA ROW (light blue bg like header) ── */}
+                {/* GPA Row */}
                 <tr style={{ backgroundColor: headerBg, color: headerColor }}>
                   <td
                     colSpan={6}
@@ -458,44 +405,31 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                   >
                     {gpa}
                   </td>
-                  <td
-                    className="p-2"
-                    style={{ border: `1px solid ${blue}` }}
-                  />
+                  <td className="p-2" style={{ border: `1px solid ${blue}` }} />
                 </tr>
               </tbody>
             </table>
 
             {/* ── FOOTER ── */}
-            <div
-              className="mt-4 pt-2 text-xs"
-              style={{ color: blue }}
-            >
+            <div className="mt-4 pt-2 text-xs" style={{ color: blue }}>
               <div className="flex justify-between items-start gap-4">
-
-                {/* Left: Notes + Checked By + Date */}
                 <div className="flex flex-col gap-1 text-xs">
                   <p>1. One Credit Hour Equals 32 Clock Hours</p>
                   <p>2. TH: Theory &nbsp;&nbsp; Pr: Practical</p>
                   <p>3. Abs / Ab*: Absent</p>
                   <p className="ml-4">T*: Theory Grade Missing</p>
                   <p className="ml-4">P*: Practical Grade Missing</p>
-
                   <div className="mt-6">
                     <p className="font-semibold">Checked By</p>
                   </div>
-
                   <p className="mt-8">
                     <span className="font-semibold">Date of Issue:</span>{' '}
                     {today}
                   </p>
                 </div>
-
-                {/* Right: Education Officer */}
                 <div className="flex flex-col items-end justify-end mt-auto">
                   <p className="font-semibold">EDUCATION OFFICER</p>
                 </div>
-
               </div>
             </div>
 

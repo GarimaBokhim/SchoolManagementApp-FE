@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
-import { Activity, AddActivityPayload, AddParticipationPayload, Participation } from '../types/IActivities'
-
+import {
+  Activity,
+  AddActivityPayload,
+  AddParticipationPayload,
+  IClass,
+  Participation,
+} from '../types/IActivities'
 
 const ActivityEndPoints = {
   filterActivity: '/api/CocurricularActivities/FilterActivity',
@@ -10,6 +15,7 @@ const ActivityEndPoints = {
   allActivities: '/api/CocurricularActivities/Activity',
   filterParticipation: '/api/CocurricularActivities/FilterParticipation',
   addParticipation: '/api/CocurricularActivities/AddParticipation',
+  allClasses: '/api/Academics/all-SchoolClass',
 }
 
 const activityQueryKey = 'Activities'
@@ -115,12 +121,26 @@ export const useGetAllStudents = () => {
     staleTime: 5 * 60 * 1000,
   })
 }
+
 export const useGetAllEvents = () => {
   return useQuery({
     queryKey: ['AllEvents'],
     queryFn: async () => {
       const response = await api.get<IPaginationResponse<{ id: string; title: string }>>(
         '/api/Academics/GetAllEvents'
+      )
+      return response.data?.Items ?? []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export const useGetAllClasses = () => {
+  return useQuery({
+    queryKey: ['AllClasses'],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<IClass>>(
+        ActivityEndPoints.allClasses
       )
       return response.data?.Items ?? []
     },

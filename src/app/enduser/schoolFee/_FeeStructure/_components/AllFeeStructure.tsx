@@ -18,8 +18,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddFeeStructure from "../pages/Add";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { useGetAllFeeTypes } from "../../_FeeType/hooks";
-import DeleteButton from "@/components/Buttons/DeleteButton";
+import DeleteButton from "@/components/Buttons/DeleteButton"; 
 const AllFeeStructureForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -37,12 +36,11 @@ const AllFeeStructureForm = () => {
   };
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
-  const { canAdd,canDelete } = useMenuPermissionData(menuStatus);
+  const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allClass } = useGetAllClass();
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const { data: allFeeType } = useGetAllFeeTypes();
   const fullQuery = query + (params || "");
 
   const {
@@ -50,9 +48,11 @@ const AllFeeStructureForm = () => {
     refetch,
     isLoading,
   } = useFilterFeeStructureByDate(fullQuery);
+  
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  
   const form = useForm<IFilterFeeStructure>({
     defaultValues: {
       classId: "",
@@ -60,8 +60,10 @@ const AllFeeStructureForm = () => {
       endDate: "",
     },
   });
+  
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  
   const onSubmit: SubmitHandler<IFilterFeeStructure> = async (formData) => {
     clearError();
     try {
@@ -95,21 +97,25 @@ const AllFeeStructureForm = () => {
       console.error("Error during form submission:", error);
     }
   };
+  
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+  
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteFeeStructure = useRemoveFeeStructure();
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteFeeStructure.mutateAsync(id);
-      toast.success("User deleted successfully!");
+      toast.success("Fee structure deleted successfully!");
       refetch();
     } catch {
-      toast.error("Error deleting user.");
+      toast.error("Error deleting fee structure.");
     }
   };
+  
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -117,13 +123,20 @@ const AllFeeStructureForm = () => {
     formRef.current?.handleClear();
     form.reset();
   };
+  
+  // Helper function to get class name by ID
+  const getClassName = (classId: string) => {
+    const classItem = allClass?.Items?.find((i) => i.id === classId);
+    return classItem?.name || "N/A";
+  };
+  
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All FeeStructure</h1>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All Fee Structure</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -143,6 +156,7 @@ const AllFeeStructureForm = () => {
               )}
             </div>
           </div>
+          
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -194,61 +208,57 @@ const AllFeeStructureForm = () => {
               </form>
             </div>
           )}
+          
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 ">S.N</th>
-                  <th className="px-4 py-3 ">Class</th>
-                  <th className="px-4 py-3 ">Fee Type</th>
-                  <th className="px-4 py-3 ">Amount</th>
+                  <th className="px-4 py-3">S.N</th>
+                  <th className="px-4 py-3">Class</th>
+                  <th className="px-4 py-3">Fee Category Name</th>
+                  <th className="px-4 py-3">Total Amount</th>
+                  <th className="px-4 py-3">Discount Amount</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 dark:text-gray-300"
-                    >
-                      Loading FeeStructure...
+                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                      Loading Fee Structure...
                     </td>
                   </tr>
                 ) : filteredFeeStructure?.Items?.length ? (
                   filteredFeeStructure.Items.map(
-                    (FeeStructure: IFeeStructure, index: number) => (
+                    (feeStructure: IFeeStructure, index: number) => (
                       <tr
-                        key={index}
+                        key={feeStructure.id || index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">
-                          {
-                            allClass?.Items?.find(
-                              (i) => i.id === FeeStructure.classId
-                            )?.name
-                          }
+                          {(paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1}
                         </td>
                         <td className="py-3 px-4">
-                          {
-                            allFeeType?.Items.find(
-                              (i) => i.id === FeeStructure.feeTypeId
-                            )?.name
-                          }
+                          {getClassName(feeStructure.classId)}
                         </td>
-                        <td className="py-3 px-4">{FeeStructure.amount}</td>
+                        <td className="py-3 px-4">
+                          {(feeStructure as any).feeCategoryName || "N/A"}
+                        </td>
+                        <td className="py-3 px-4">
+                          {(feeStructure as any).totalAmount?.toFixed(2) || "0.00"}
+                        </td>
+                        <td className="py-3 px-4">
+                          {(feeStructure as any).discountAmount?.toFixed(2) || "0.00"}
+                        </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(
-                                    FeeStructure.id ? FeeStructure.id : ""
-                                  )
+                                  handleDelete(feeStructure.id ? feeStructure.id : "")
                                 }
                                 headerText={<Trash />}
-                                content="Are you sure you want to delete this FeeStructure?"
+                                content="Are you sure you want to delete this Fee Structure?"
                               />
                             )}
                           </div>
@@ -258,11 +268,8 @@ const AllFeeStructureForm = () => {
                   )
                 ) : (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
-                      No FeeStructure found.
+                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                      No Fee Structure found.
                     </td>
                   </tr>
                 )}
@@ -270,6 +277,7 @@ const AllFeeStructureForm = () => {
             </table>
           </div>
         </div>
+        
         {filteredFeeStructure && filteredFeeStructure?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -285,6 +293,7 @@ const AllFeeStructureForm = () => {
             />
           </div>
         )}
+        
         <AddFeeStructure
           visible={addModal}
           onClose={() => setAddModal(false)}

@@ -5,8 +5,8 @@ export interface IStudent {
   lastName: string;
   registrationNumber: string;
   admissionNumber?: string;
-  genderStatus: 0;
-  studentStatus: 0;
+  genderStatus: number;
+  studentStatus: number;
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;

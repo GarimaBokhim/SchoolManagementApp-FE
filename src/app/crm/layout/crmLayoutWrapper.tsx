@@ -3,7 +3,7 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper";
 import { ReactNode } from "react";
 import CrmHeader from "./CrmHeader";
-import CrmTitleHeader from "./CrmTitleHeader"; // ✅ Import custom title header
+import CrmTitleHeader from "./CrmTitleHeader";
 
 export default function CrmLayoutWrapper({
   children,
