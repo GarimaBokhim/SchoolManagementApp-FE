@@ -14,12 +14,17 @@ export const useGetAttendanceReport = (nameOfMonths: number, classId: string) =>
   return useQuery({
     queryKey: [attendanceQueryKey, nameOfMonths, classId],
     queryFn: async (): Promise<IAttendanceReport> => {
+      if (!classId || classId.trim() === "") {
+        throw new Error("Class ID is required");
+      }
+      console.log(`Fetching attendance - Month: ${nameOfMonths}, ClassId: ${classId}`);
       const response = await api.get<IAttendanceReport>(
         `${AttendanceEndPoints.getReport}?nameOfMonths=${nameOfMonths}&classId=${classId}`
       );
+      console.log("Attendance API Response:", response.data);
       return response.data;
     },
-    enabled: !!classId, // only fetch when classId is available
+    enabled: !!classId && classId.trim() !== "",
     staleTime: 0,
     retry: false,
   });
