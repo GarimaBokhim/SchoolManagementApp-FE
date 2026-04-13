@@ -16,7 +16,10 @@ import {
   Plus,
   RotateCcw,
   Trash,
-  Eye,
+  Users,
+  UserCheck,
+  UserX,
+  BookOpen,
 } from 'lucide-react'
 import EditStudent from '../pages/Edit'
 import DateRangeFilter, {
@@ -44,9 +47,6 @@ import ExcelParentTable from '../../_Parent/components/Excelprint'
 import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
-import { useExcelPreview } from "../hooks/excelPreview"
-import ExcelPreviewModal from "./ExcelPreviewModel"
-
 
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -74,7 +74,6 @@ const AllStudentForm = () => {
   selectedFile,
   setSelectedFile,
 } = useExcelPreview();
-
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
@@ -88,9 +87,7 @@ const AllStudentForm = () => {
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allStudent } = useGetAllStudents()
-  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
-    ''
-  )
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>('')
   const fullQuery = query + (params || '')
 
   const {
@@ -98,11 +95,11 @@ const AllStudentForm = () => {
     refetch,
     isLoading,
   } = useFilterStudentByDate(fullQuery)
-  
+
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
-  
+
   const form = useForm<IFilterStudentByDate>({
     defaultValues: {
       firstName: '',
@@ -116,7 +113,7 @@ const AllStudentForm = () => {
     allStudent?.Items[0]?.classId || ''
   )
   const { mutateAsync: uploadstudent } = useUploadStudents()
-  
+
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError()
     try {
@@ -150,15 +147,15 @@ const AllStudentForm = () => {
       console.error('Error during form submission:', error)
     }
   }
-  
+
   const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
     refForInput.current?.focus()
   }, [])
-  
+
   const formRef = useRef<DateRangeFilterRef>(null)
   const deleteStudent = useRemoveStudent()
-  
+
   const handleDelete = async (id: string) => {
     try {
       await deleteStudent.mutateAsync(id)
@@ -168,14 +165,14 @@ const AllStudentForm = () => {
       toast.error('Error deleting user.')
     }
   }
-  
+
   const onClearClick = () => {
     refetch()
     setParams('')
     formRef.current?.handleClear()
     form.reset()
   }
-  
+
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'N/A'
     try {
@@ -184,78 +181,36 @@ const AllStudentForm = () => {
       return dateObj.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       })
-    } catch (error) {
+    } catch {
       return 'N/A'
     }
   }
-  
+
   const handleNameClick = (student: IStudent) => {
     setSelectedStudentForProfile(student)
     setShowProfilePopup(true)
   }
-
-  const handleSaveExcel = async () => {
-  try {
-  
-    setUploadLoading(true);
-
-    if (!selectedFile) {
-      toast.error("No file selected");
-      return;
-    }
-
-    await toast.promise(
-      uploadstudent(selectedFile),
-      {
-        loading: "Uploading...",
-        success: "Students uploaded!",
-        error: "Upload failed!",
-      }
-    );
-
-    setShowPreviewModal(false);
-    refetch();
-
-  } finally {
-    setUploadLoading(false);
-  }
-};
-
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const validTypes = [
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-excel",
-  ];
-
-  const isValid =
-    validTypes.includes(file.type) ||
-    file.name.endsWith(".xlsx") ||
-    file.name.endsWith(".xls");
-
-  if (!isValid) {
-    toast.error("Please upload a valid Excel file");
-    return;
-  }
-
-  setSelectedFile(file);        // ✅ NOW SAFE
-  handleExcelPreview(file);     // preview
-};
   
   const getClassName = (classId: string) => {
     if (!classId) return 'N/A'
     return allclass?.name || 'N/A'
   }
-  
+// ── Stat derivations ───────────────────────────────────────────────────────
+const items = filteredStudent?.Items ?? []
+const totalStudents = filteredStudent?.TotalItems ?? items.length  // ← was TotalCount
+const maleCount = items.filter((s) => s.genderStatus === 0).length
+const femaleCount = items.filter((s) => s.genderStatus === 1).length
+const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
+// ──────────────────────────────────────────────────────────────────────────
   return (
     <>
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
+
+          {/* ── Page header ─────────────────────────────────────────────── */}
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold">All Students</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
@@ -319,7 +274,40 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               /> */}
             </div>
           </div>
-          
+
+          {/* ── Stat cards ──────────────────────────────────────────────── */}
+          <div className="flex flex-wrap gap-3 px-4 pb-4 pt-1">
+            <StatCard
+              label="Total Students"
+              value={isLoading ? '—' : totalStudents}
+              icon={<Users size={18} />}
+              iconBg="bg-blue-50 dark:bg-blue-900/30"
+              iconColor="text-blue-600 dark:text-blue-400"
+            />
+            <StatCard
+              label="Male"
+              value={isLoading ? '—' : maleCount}
+              icon={<UserCheck size={18} />}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <StatCard
+              label="Female"
+              value={isLoading ? '—' : femaleCount}
+              icon={<UserX size={18} />}
+              iconBg="bg-pink-50 dark:bg-pink-900/30"
+              iconColor="text-pink-500 dark:text-pink-400"
+            />
+            <StatCard
+              label="Classes"
+              value={isLoading ? '—' : uniqueClasses}
+              icon={<BookOpen size={18} />}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+          </div>
+
+          {/* ── Filter panel ────────────────────────────────────────────── */}
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -371,7 +359,8 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               </form>
             </div>
           )}
-          
+
+          {/* ── Table ───────────────────────────────────────────────────── */}
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
@@ -386,7 +375,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">Phone</th>
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">DOB</th>
                   <th className="px-4 py-3 text-center w-40">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -396,93 +385,87 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                     </td>
                   </tr>
                 ) : filteredStudent?.Items?.length ? (
-                  filteredStudent.Items.map(
-                    (student: IStudent, index: number) => (
-                      <tr
-                        key={student.id || index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                      >
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {((paginationParams.pageIndex - 1) * paginationParams.pageSize) + index + 1}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <button
-                            onClick={() => handleNameClick(student)}
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors"
-                          >
-                            {student.firstName} {student.middleName} {student.lastName}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {student.registrationNumber || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-                          {student.genderStatus === 0 ? 'Male' : student.genderStatus === 1 ? 'Female' : 'Other'}
-                        </td>
-                        <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell" title={student.email}>
-                          {student.email || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
-                          {getClassName(student.classId)}
-                        </td>
-                        <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell" title={student.address}>
-                          {student.address || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-                          {student.phoneNumber || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-                          {formatDate(student.dateOfBirth)}
-                        </td>
-                        <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(student.id ? student.id : '')
-                                }
-                                headerText={<Trash size={16} />}
-                                content="Are you sure you want to delete this student?"
-                              />
-                            )}
-                            {canEdit && (
-                              <EditButton
-                                button={
-                                  <ButtonElement
-                                    icon={<Edit size={14} />}
-                                    type="button"
-                                    text=""
-                                    onClick={() => {
-                                      setShowStudents(true)
-                                      setSelectedId(student.id ?? '')
-                                    }}
-                                    className="!text-xs !bg-teal-500"
-                                  />
-                                }
-                              />
-                            )}
-                            <PrintIDCardButton StudentId={student.id ?? ''} />
+                  filteredStudent.Items.map((student: IStudent, index: number) => (
+                    <tr
+                      key={student.id || index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                    >
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {((paginationParams.pageIndex - 1) * paginationParams.pageSize) + index + 1}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={() => handleNameClick(student)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors"
+                        >
+                          {student.firstName} {student.middleName} {student.lastName}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {student.registrationNumber || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                        {student.genderStatus === 0 ? 'Male' : student.genderStatus === 1 ? 'Female' : 'Other'}
+                      </td>
+                      <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell" title={student.email}>
+                        {student.email || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+                        {getClassName(student.classId)}
+                      </td>
+                      <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell" title={student.address}>
+                        {student.address || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                        {student.phoneNumber || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                        {formatDate(student.dateOfBirth)}
+                      </td>
+                      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2">
+                          {canDelete && (
+                            <DeleteButton
+                              onConfirm={() => handleDelete(student.id ? student.id : '')}
+                              headerText={<Trash size={16} />}
+                              content="Are you sure you want to delete this student?"
+                            />
+                          )}
+                          {canEdit && (
                             <EditButton
                               button={
                                 <ButtonElement
-                                  icon={<GraduationCap size={14} />}
+                                  icon={<Edit size={14} />}
                                   type="button"
                                   text=""
                                   onClick={() => {
-                                    setShowRegistration(true)
-                                    setSelectedIdForRegistration(
-                                      student.id ?? ''
-                                    )
+                                    setShowStudents(true)
+                                    setSelectedId(student.id ?? '')
                                   }}
-                                  className="!text-xs !bg-blue-500"
+                                  className="!text-xs !bg-teal-500"
                                 />
                               }
                             />
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                          )}
+                          <PrintIDCardButton StudentId={student.id ?? ''} />
+                          <EditButton
+                            button={
+                              <ButtonElement
+                                icon={<GraduationCap size={14} />}
+                                type="button"
+                                text=""
+                                onClick={() => {
+                                  setShowRegistration(true)
+                                  setSelectedIdForRegistration(student.id ?? '')
+                                }}
+                                className="!text-xs !bg-blue-500"
+                              />
+                            }
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan={11} className="p-8 text-center text-gray-500 italic">
@@ -494,7 +477,8 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             </table>
           </div>
         </div>
-        
+
+        {/* ── Pagination ────────────────────────────────────────────────── */}
         {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -510,8 +494,6 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             />
           </div>
         )}
-
-        
         
         {showStudents && selectedId && (
           <EditStudent
@@ -520,7 +502,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             onClose={() => setShowStudents(false)}
           />
         )}
-        
+
         {showRegistration && selectedIdForRegistration && (
           <AddRegistration
             studentId={selectedIdForRegistration}
@@ -528,9 +510,9 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             onClose={() => setShowRegistration(false)}
           />
         )}
-        
+
         <AddStudent visible={addModal} onClose={() => setAddModal(false)} />
-        
+
         {showProfilePopup && selectedStudentForProfile && (
           <StudentProfilePopup
             student={selectedStudentForProfile}

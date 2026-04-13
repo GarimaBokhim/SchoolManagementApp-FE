@@ -22,8 +22,8 @@ type StudentRequest = {
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
-  genderStatus: number; // ✅ FIX: was literal `0`, changed to `number`
-  studentStatus: number; // ✅ FIX: was literal `0`, changed to `number`
+  genderStatus: number; //  FIX: was literal `0`, changed to `number`
+  studentStatus: number; //  FIX: was literal `0`, changed to `number`
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
