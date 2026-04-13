@@ -3,6 +3,7 @@ export interface Istudentaward {
     studentId: string;
     awardedAt: string;
     awardedBy: string;
+    awardTitle: string;
     createdAt: string;
     createdBy: string;
     modifiedBy: string;

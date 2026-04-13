@@ -4,10 +4,11 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { IHallResponses, ISeatPlanning } from "../types/IExamSession";
+import { IHallResponses, ISeatPlanning, IStudentSeatResponses } from "../types/IExamSession";
 import { useGetAllClass } from "../../Class/hooks";
 import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 import { useGenerateSeatPlanning, useGetClassByExamSessionId } from "../hooks";
+import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
 
 interface Props {
   examSessionId: string;
@@ -26,8 +27,8 @@ const SeatPlanning: React.FC<Props> = ({ examSessionId, onClose, schoolId }) => 
   const [rows, setRows] = useState<number>(5);
   const [columns, setColumns] = useState<number>(3);
 
-  // Alternating seat logic
-  const generateAlternatingSeats = (students: any[], rows: number, columns: number) => {
+  const generateAlternatingSeats = (students: IStudentSeatResponses[], rows: number, columns: number) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const grid: (any | null)[][] = Array.from({ length: rows }, () => Array(columns).fill(null));
     const queue = [...students];
 

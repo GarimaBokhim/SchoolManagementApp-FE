@@ -3,9 +3,11 @@ import { useState } from "react";
 import AllFeeTypeForm from "../_components/AllFeeType";
 import AllFeeStructureForm from "../../_FeeStructure/_components/AllFeeStructure";
 import AllStudentFeeForm from "../../_StudentFee/_components/AllStudentFee";
+import AllFeeCategoryForm from "../../_FeeCategory/components/AllFeeCategory";
 const AllFeeType = () => {
   const exam = [
     { id: "feeType", label: "FeeType", color: "gray" },
+   { id: "feeCategory", label: "Fee Category", color: "gray" },
     { id: "feeStructure", label: "Fee Structure", color: "gray" },
     { id: "studentFee", label: "Student Fee", color: "gray" },
   ];
@@ -15,6 +17,12 @@ const AllFeeType = () => {
     switch (activeReport) {
       case "studentFee":
         return <div className=" text-center">{<AllStudentFeeForm />}</div>;
+      case "feeCategory":
+        return (
+          <div className=" text-center">
+            { <AllFeeCategoryForm /> }  
+          </div>
+        );
       case "feeStructure":
         return (
           <div className=" text-center">

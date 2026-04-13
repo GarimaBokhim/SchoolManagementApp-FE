@@ -1,44 +1,31 @@
-// import { useForm } from "react-hook-form";
-// import { IStudent } from "../types/IContributor";
-// import EditStudentForm from "../_components/EditStudentForm";
-// import { useGetStudentById } from "../hooks";
+'use client'
 
-// interface Props {
-//   visible: boolean;
-//   onClose: () => void;
-//   StudentId: string;
-// }
+import { useForm } from 'react-hook-form'
+import { IHistory } from '../types/IHistory'
+import { useGetHistoryById } from '../hooks'
+import EditHistoryForm from '../_components/EditItemhistory'
 
-// const EditStudent = ({ visible, onClose, StudentId }: Props) => {
-//   const { data: StudentData } = useGetStudentById(StudentId);
+interface Props {
+  visible: boolean
+  onClose: () => void
+  historyId: string
+}
 
-//   const form = useForm<IStudent>({
-//     defaultValues: {
-//       firstName: StudentData?.firstName ?? "",
-//       middleName: StudentData?.middleName ?? "",
-//       lastName: StudentData?.lastName ?? "",
-//       registrationNumber: StudentData?.registrationNumber ?? "",
-//       genderStatus: StudentData?.genderStatus ?? 0,
-//       studentStatus: StudentData?.studentStatus ?? 0,
-//       dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
-//       email: StudentData?.email ?? "",
-//       phoneNumber: StudentData?.phoneNumber ?? "",
-//       studentImg: StudentData?.studentImg,
-//       address: StudentData?.address ?? "",
-//       enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
-//       parentId: StudentData?.parentId ?? "",
-//       classId: StudentData?.classId ?? "",
-//       provinceId: StudentData?.provinceId ?? 0,
-//       districtId: StudentData?.districtId ?? 0,
-//       wardNumber: StudentData?.wardNumber ?? 0,
-//     },
-//   });
+const EditItemHistory = ({ visible, onClose, historyId }: Props) => {
+  const { data: historyData } = useGetHistoryById(historyId)
 
-//   if (!visible) return null;
+  const form = useForm<IHistory>({
+    defaultValues: {
+      schoolItemId: historyData?.schoolItemId ?? '',
+      previousStatus: historyData?.previousStatus ?? 0,
+      currentStatus: historyData?.currentStatus ?? 0,
+      remarks: historyData?.remarks ?? '',
+    },
+  })
 
-//   return (
-//     <EditStudentForm form={form} onClose={onClose} studentId={StudentId} />
-//   );
-// };
+  if (!visible) return null
 
-// export default EditStudent;
+  return <EditHistoryForm form={form} onClose={onClose} historyId={historyId} />
+}
+
+export default EditItemHistory

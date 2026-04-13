@@ -48,6 +48,7 @@ const AllRolePermissionForm = () => {
   const { data, error, refetch } = useGetAllPermission(query);
   useEffect(() => {
     if (data?.Items) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       updateState({
         loading: true,
         roles: data.Items,

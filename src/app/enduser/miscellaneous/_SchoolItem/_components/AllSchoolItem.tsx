@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, School } from "lucide-react";
+import { Filter, Plus, RotateCcw } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";

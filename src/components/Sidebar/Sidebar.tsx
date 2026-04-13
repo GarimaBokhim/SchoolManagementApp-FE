@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import { Icon } from "@iconify/react";
-import React, { useState, useEffect } from "react";
-import adi from "../../../public/assets/adi.jpg";
+'use client'
+import { Icon } from '@iconify/react'
+import React, { useState, useEffect, CSSProperties } from 'react'
+import adi from '../../../public/assets/adi.jpg'
 import {
   BadgeCent,
   Banknote,
@@ -30,150 +30,125 @@ import {
   School2Icon,
   Notebook,
   GiftIcon,
-} from "lucide-react";
-import { ISidebar } from "@/types/ISidebar";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import DialogButton from "../Buttons/DialogButton";
-import { useSidebar } from "@/context/SidebarContext";
-import Image from "next/image";
-import { useGetMenuStatus } from "@/app/SuperAdmin/navigation/menu/hooks";
+  NotepadTextDashedIcon,
+  Package,
+} from 'lucide-react'
+import { ISidebar } from '@/types/ISidebar'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
+import DialogButton from '../Buttons/DialogButton'
+import { useSidebar } from '@/context/SidebarContext'
+import Image from 'next/image'
+import { useGetMenuStatus } from '@/app/SuperAdmin/navigation/menu/hooks'
 
 type Props = {
-  sideBarItems: ISidebar;
-};
+  sideBarItems: ISidebar
+  // All optional — defaults match existing school management colors exactly
+  primaryColor?: string        // active text + border color
+  activeBg?: string            // active item background
+  activeSubBg?: string         // active sub-item background
+  containerClassName?: string  // controls dark bg — e.g. "dark:bg-[#161B27]" for CRM
+  containerStyle?: CSSProperties
+}
 
-const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
-  const { setMenuStatus } = usePermissions();
-  const { isOpen } = useSidebar();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
-  const pathAfterFirst = `/${parts.slice(1).join("/")}`;
-  const navigate = useRouter();
-  const [activeRole, setActiveRole] = useState<string | undefined>("");
-  const [activeSubModule, setActiveSubModule] = useState<string | undefined>(
-    ""
-  );
-  let role = "";
-  const [storedUser, setStoredUser] = useState<any>(null);
+const Sidebar: React.FC<Props> = ({
+  sideBarItems,
+  primaryColor = '#035BBA',        // school management default
+  activeBg = '#CCE3FC',            // school management default
+  activeSubBg = '#e5f1fe',         // school management default
+  containerClassName = '', // school management default 
+  containerStyle,
+}) => {
+  const { setMenuStatus } = usePermissions()
+  const { isOpen } = useSidebar()
+  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const pathname = usePathname()
+  const parts = pathname.split('/').filter(Boolean)
+  const pathAfterFirst = `/${parts.slice(1).join('/')}`
+  const navigate = useRouter()
+  const [activeRole, setActiveRole] = useState<string | undefined>('')
+  const [activeSubModule, setActiveSubModule] = useState<string | undefined>('')
+  let role = ''
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("userDetails");
-      if (user) {
-        try {
-          const parsed = JSON.parse(user);
-          setStoredUser(parsed);
-        } catch (err) {
-          console.error("Failed to parse user details:", err);
-        }
-      }
+  const [storedUser, setStoredUser] = useState<any>(() => {
+    if (typeof window === 'undefined') return null
+    const user = localStorage.getItem('userDetails')
+    if (!user) return null
+    try {
+      return JSON.parse(user)
+    } catch (err) {
+      console.error('Failed to parse user details:', err)
+      return null
     }
-  }, []);
+  })
 
-  role = storedUser?.role || "";
+  role = storedUser?.role || ''
 
   const withRolePrefix = (path: string) => {
-    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`
+    const lowerRole = role?.toLowerCase()
+    let prefix = ''
+    if (lowerRole === 'superadmin') prefix = 'superadmin'
+    else if (lowerRole === 'admin') prefix = 'admin'
+    else if (lowerRole === 'crm') prefix = 'crm'
+    else if (lowerRole === 'enduser') prefix = 'enduser'
+    else prefix = lowerRole
+    return `/${prefix}${cleanPath}`
+  }
 
-    let prefix;
-    if (role === "superadmin") {
-      prefix = "SuperAdmin";
-    } else if (role === "admin") prefix = "Admin";
-    else prefix = "endUser";
-    return `/${prefix?.toLowerCase()}${cleanPath}`;
-  };
-  const { data: menuStatus, refetch } = useGetMenuStatus(
-    activeSubModule,
-    activeRole
-  );
+  const { data: menuStatus, refetch } = useGetMenuStatus(activeSubModule, activeRole)
+
   useEffect(() => {
-    if (role === "superadmin" || role === "developeruser") {
+    if (role === 'superadmin' || role === 'developeruser') {
       setMenuStatus([
-        {
-          menuName: "add",
-          isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
-          rank: 0,
-        },
-        {
-          menuName: "edit",
-          isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
-          rank: 0,
-        },
-        {
-          menuName: "delete",
-          isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
-          rank: 0,
-        },
-        {
-          menuName: "assign",
-          isActive: true,
-          submoduleId: "",
-          icon: "",
-          targetUrl: "",
-          role: "",
-          rank: 0,
-        },
-      ]);
+        { menuName: 'add', isActive: true, submoduleId: '', icon: '', targetUrl: '', role: '', rank: 0 },
+        { menuName: 'edit', isActive: true, submoduleId: '', icon: '', targetUrl: '', role: '', rank: 0 },
+        { menuName: 'delete', isActive: true, submoduleId: '', icon: '', targetUrl: '', role: '', rank: 0 },
+        { menuName: 'assign', isActive: true, submoduleId: '', icon: '', targetUrl: '', role: '', rank: 0 },
+      ])
     }
-  }, [role, setMenuStatus]);
+  }, [role, setMenuStatus])
 
   useEffect(() => {
-    const storedMenuStatus = localStorage.getItem("menuStatus");
-    if (storedMenuStatus) {
-      setMenuStatus(JSON.parse(storedMenuStatus));
-    }
-  }, [setMenuStatus]);
+    const storedMenuStatus = localStorage.getItem('menuStatus')
+    if (storedMenuStatus) setMenuStatus(JSON.parse(storedMenuStatus))
+  }, [setMenuStatus])
 
   useEffect(() => {
-    if (activeRole !== "role" && menuStatus) {
-      setMenuStatus(menuStatus);
-      localStorage.setItem("menuStatus", JSON.stringify(menuStatus));
+    if (activeRole !== 'role' && menuStatus) {
+      setMenuStatus(menuStatus)
+      localStorage.setItem('menuStatus', JSON.stringify(menuStatus))
     }
-  }, [activeRole, menuStatus, setMenuStatus]);
+  }, [activeRole, menuStatus, setMenuStatus])
+
   useEffect(() => {
-    if (activeSubModule && activeRole) refetch();
-  }, [refetch, activeRole, activeSubModule]);
+    if (activeSubModule && activeRole) refetch()
+  }, [refetch, activeRole, activeSubModule])
 
   const staticIcons: {
     [key: string]:
       | React.ForwardRefExoticComponent<
-          Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+          Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
         >
-      | React.ReactElement;
+      | React.ReactElement
   } = {
     Dashboard: Home,
     Navigation: Navigation,
-    "Access Control": LockKeyholeOpen,
-    "Institution SetUp": School,
-    "Company SetUp": School2Icon,
+    'Access Control': LockKeyholeOpen,
+    'Institution SetUp': School,
+    'Company SetUp': School2Icon,
     Students: Users,
-    "Parents Information": (
-      <Icon icon="mynaui:users-group" width="24" height="24" />
-    ),
+    'Parents Information': <Icon icon="mynaui:users-group" width="24" height="24" />,
     Academics: BookOpen,
-    "Fee and Accounting": Banknote,
+    'Fee and Accounting': Banknote,
     Finance: Banknote,
     Miscellaneous: GiftIcon,
-    "Attendance Management": Hand,
-    "Exam and Grading": BookCheck,
-    "Class Management": NotebookPen,
+    'Attendance Management': Hand,
+    'Exam and Grading': BookCheck,
+    'Class Management': NotebookPen,
     Certificate: NotepadText,
-    "Staff Management": BriefcaseBusiness,
+    'Staff Management': BriefcaseBusiness,
     User: User,
     Role: UserCog,
     Notice: Notebook,
@@ -182,10 +157,13 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
     Report: SheetIcon,
     Account: Calculator,
     Setup: Settings,
-  };
+    Applications: NotepadTextDashedIcon,
+    'Academic Program': School,
+    Services: Package,
+  }
 
-  const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999);
-  const handleLogout = () => navigate.push("/");
+  const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999)
+  const handleLogout = () => navigate.push('/')
 
   const sortedModules = [...sideBarItems.module]
     .sort(sortByRank)
@@ -194,7 +172,7 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       subModulesResponse: item.subModulesResponse
         ? [...item.subModulesResponse].sort(sortByRank)
         : [],
-    }));
+    }))
 
   const navLinks = sortedModules.map((item) => ({
     name: item.name,
@@ -205,29 +183,34 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
       ? [...item.subModulesResponse].sort(sortByRank)
       : [],
     allowedRoles: item.role,
-  }));
+  }))
 
   const toggleSection = (section: string) => {
-    setActiveSection((prev) => (prev === section ? null : section));
-    if (activeSection !== section) setActiveSubModule("");
-  };
+    setActiveSection((prev) => (prev === section ? null : section))
+    if (activeSection !== section) setActiveSubModule('')
+  }
 
   const handleSelectSubModule = (
     id: string | undefined,
     role: string | undefined
   ) => {
-    setActiveSubModule(id);
-    setActiveRole(role);
-  };
+    setActiveSubModule(id)
+    setActiveRole(role)
+  }
+
   return (
+    // School management: default is "dark:bg-[#0A0A0A]" (set above in defaults)
+    // CRM: pass containerClassName="dark:bg-[#161B27]" via LayoutWrapper
     <div
-      className={`h-screen flex flex-col dark:bg-[#0A0A0A] bg-white border-r border-gray-200 shadow-sm 
-    transition-[width,background-color,border-color] duration-300 ease-in-out overflow-hidden ${
-      isOpen ? "w-64" : "w-16"
-    }`}
+      className={`h-screen flex flex-col bg-white border-r border-gray-200 shadow-sm
+        transition-[width,background-color,border-color] duration-300 ease-in-out overflow-hidden
+        ${isOpen ? 'w-64' : 'w-16'}
+        ${containerClassName || 'dark:bg-[#0A0A0A]'}`}
+      style={containerStyle}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 text-gray-800 dark:text-white bg-white dark:bg-[#0A0A0A] shadow-sm border-y dark:border-white space-y-2 md:space-y-0">
-        <div className="flex items-center justify-center md:justify-start w-full md:w-auto space-x-3 ">
+      {/* User info + logout */}
+      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 text-gray-800 dark:text-white bg-white dark:bg-inherit shadow-sm border-y dark:border-white space-y-2 md:space-y-0">
+        <div className="flex items-center justify-center md:justify-start w-full md:w-auto space-x-3">
           <Image
             src={adi}
             alt="User"
@@ -245,40 +228,48 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
           />
         </div>
       </div>
+
+      {/* Nav links */}
       <div className="flex-1 mt-4 px-2 overflow-y-auto space-y-1">
         {navLinks
           .filter((item) => {
-            const lowerRole = role?.toLowerCase() || "";
-            if (lowerRole === "superadmin" || lowerRole === "developeruser")
-              return (item.allowedRoles ?? []).includes(lowerRole);
-            return true;
+            const lowerRole = role?.toLowerCase() || ''
+            if (lowerRole === 'superadmin' || lowerRole === 'developeruser')
+              return (item.allowedRoles ?? []).includes(lowerRole)
+            return true
           })
           .map((item) => {
-            const hasSubItems = item.subItems.length > 0;
-            const isOpenSection = activeSection === item.key;
+            const hasSubItems = item.subItems.length > 0
+            const isOpenSection = activeSection === item.key
             const hasActiveChild = item.subItems.some(
               (child) => pathAfterFirst === child.targetUrl
-            );
-            const active = pathAfterFirst === item.url;
+            )
+            const active = pathAfterFirst === item.url
 
+            // ── Leaf link (no sub-items) ──────────────────────────────
             if (!hasSubItems) {
               return (
                 <Link
                   key={item.key}
                   href={
-                    role === "superadmin" || role === "developeruser"
+                    role === 'superadmin' || role === 'developeruser'
                       ? item.url
                       : withRolePrefix(item.url)
                   }
                   className={`group relative flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease
                     ${
                       active
-                        ? "bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none"
-                        : "text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black"
+                        ? 'font-semibold rounded-l-none'
+                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
+                  style={active ? { backgroundColor: activeBg, color: primaryColor } : {}}
                 >
+                  {/* Left accent bar */}
                   {active && (
-                    <span className="absolute left-0 top-0 h-full w-[3px] bg-[#035BBA] rounded-r-lg" />
+                    <span
+                      className="absolute left-0 top-0 h-full w-[3px] rounded-r-lg"
+                      style={{ backgroundColor: primaryColor }}
+                    />
                   )}
                   {item.icon &&
                     (React.isValidElement(item.icon)
@@ -290,9 +281,10 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                     </span>
                   )}
                 </Link>
-              );
+              )
             }
 
+            // ── Parent with sub-items ─────────────────────────────────
             return (
               <div key={item.key} className="relative group">
                 <button
@@ -301,12 +293,16 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                   className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease-in-out
                     ${
                       hasActiveChild
-                        ? "bg-[#CCE3FC] text-[#035BBA] font-semibold rounded-l-none"
-                        : "text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black"
+                        ? 'font-semibold rounded-l-none'
+                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
+                  style={hasActiveChild ? { backgroundColor: activeBg, color: primaryColor } : {}}
                 >
                   {hasActiveChild && (
-                    <span className="absolute left-0 top-0 h-full w-[3px] bg-[#035BBA] rounded-r-lg" />
+                    <span
+                      className="absolute left-0 top-0 h-full w-[3px] rounded-r-lg"
+                      style={{ backgroundColor: primaryColor }}
+                    />
                   )}
                   <div className="flex items-center gap-3">
                     {item.icon &&
@@ -329,58 +325,59 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                     </span>
                   )}
                 </button>
-                {isOpen && (
-                  <div
-                    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
-                  ${
-                    isOpenSection ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
-                  }`}
-                  >
+
+              
+             {/* Expanded sub-items (sidebar open) */}
+{isOpen && (
+  <div
+    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
+      ${isOpenSection ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}  
+  >
                     {item.subItems.map((subItem, index) => {
-                      const activeSub = pathAfterFirst === subItem.targetUrl;
+                      const activeSub = pathAfterFirst === subItem.targetUrl
                       return (
                         <Link
                           key={subItem.targetUrl + index}
                           href={
-                            role === "superadmin" || role === "developeruser"
+                            role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl
                               : withRolePrefix(subItem.targetUrl)
                           }
                           onClick={() =>
-                            handleSelectSubModule(
-                              subItem.subModulesId!,
-                              subItem.role
-                            )
+                            handleSelectSubModule(subItem.subModulesId!, subItem.role)
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors
-                          ${
-                            activeSub
-                              ? "bg-[#e5f1fe] text-[#035BBA] font-medium"
-                              : "text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black"
-                          }`}
+                            ${
+                              activeSub
+                                ? 'font-medium'
+                                : 'text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black'
+                            }`}
+                          style={activeSub ? { backgroundColor: activeSubBg, color: primaryColor } : {}}
                         >
-                          {subItem.icon &&
-                            (React.isValidElement(subItem.icon)
-                              ? subItem.icon
-                              : React.createElement(subItem.icon, {
-                                  size: 16,
-                                }))}
+                    {/* subItem icons intentionally removed - API sends no icons for sub-items    {subItem.icon && (() => {
+  const ResolvedIcon = staticIcons[subItem.icon as string];
+  if (!ResolvedIcon) return null;
+  if (React.isValidElement(ResolvedIcon)) return ResolvedIcon;
+  return React.createElement(ResolvedIcon as any, { size: 16 });
+})()}*/} 
                           {isOpen && (
                             <span className="transition-all duration-300 ease-in-out">
                               {subItem.name}
                             </span>
                           )}
                         </Link>
-                      );
+                      )
                     })}
                   </div>
                 )}
+
+                {/* Floating sub-menu (sidebar collapsed) */}
                 {!isOpen &&
                   isOpenSection &&
                   item.subItems.length > 0 &&
                   activeSection === item.key && (
                     <div
-                      className="fixed z-[9999] left-[4rem] bg-white dark:bg-[#0A0A0A] shadow-lg border rounded-md min-w-[180px]"
+                      className={`fixed z-[9999] left-[4rem] bg-white shadow-lg border rounded-md min-w-[180px] ${containerClassName}`}
                       style={{
                         top: `${
                           document
@@ -394,17 +391,16 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                         <Link
                           key={subItem.targetUrl + index}
                           href={
-                            role === "superadmin" || role === "developeruser"
+                            role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl
                               : withRolePrefix(subItem.targetUrl)
                           }
-                          className={`flex items-center px-4 py-2 text-sm whitespace-nowrap 
-          hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-white
-          ${
-            pathAfterFirst === subItem.targetUrl
-              ? "bg-[#e5f1fe] text-[#035BBA] font-medium"
-              : ""
-          }`}
+                          className="flex items-center px-4 py-2 text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-white"
+                          style={
+                            pathAfterFirst === subItem.targetUrl
+                              ? { backgroundColor: activeSubBg, color: primaryColor, fontWeight: 500 }
+                              : {}
+                          }
                         >
                           {subItem.name}
                         </Link>
@@ -412,16 +408,18 @@ const Sidebar: React.FC<Props> = ({ sideBarItems }: Props) => {
                     </div>
                   )}
               </div>
-            );
+            )
           })}
       </div>
+
+      {/* Footer */}
       {isOpen && (
         <div className="p-4 border-t border-gray-200 hidden md:block">
-          <p className="text-xs text-gray-500">© 2025 MyApp</p>
+          <p className="text-xs text-gray-500">© 2025 SchoolManagement System</p>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

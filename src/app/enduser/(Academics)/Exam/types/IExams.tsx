@@ -4,6 +4,7 @@ export interface IExam {
   examDate: Date;
   isfinalExam: boolean;
   classId: string;
+  schoolId: string;  
   examSubjects?: IExamSubjects[];
   totalMarks?: number; 
   passingMarks?: number;

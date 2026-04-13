@@ -1,6 +1,5 @@
 import { api } from "@/utils/instance";
 import { ISchoolAward } from "../types/Ischoolaward";
-import { Award } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 

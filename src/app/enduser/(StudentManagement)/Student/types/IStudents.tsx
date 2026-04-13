@@ -4,8 +4,9 @@ export interface IStudent {
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
-  genderStatus: 0;
-  studentStatus: 0;
+  admissionNumber?: string;
+  genderStatus: number;
+  studentStatus: number;
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
@@ -17,9 +18,11 @@ export interface IStudent {
   classId: string;
   provinceId: number;
   districtId: number;
+  enrollmentStatus?: number;
   municipalityId: number | 0;
   vdcid: number | 0;
   wardNumber?: number | null;
+  imageUrl: string;
 }
 
 export interface IFilterStudentByDate {

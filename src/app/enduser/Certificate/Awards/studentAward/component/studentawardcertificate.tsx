@@ -1,22 +1,47 @@
 "use client";
 import React from "react";
-import { School, Underline, X } from "lucide-react";
-    import { useGetStudentAwardById } from "../hooks"; 
-    import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-    import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-
+import { X } from "lucide-react";
+import { useGetStudentAwardById } from "../hooks";
+import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
+import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import { useGetAllTemplate } from "../../../CertificateTemplate/hooks";
 
 interface Props {
-    visible: boolean
+  visible: boolean;
   awardId: string;
   onClose: () => void;
 }
 
-const StudentAwardCertificate: React.FC<Props> = ({visible, awardId, onClose }) => {
+const StudentAwardCertificate: React.FC<Props> = ({ visible, awardId, onClose }) => {
+  const { data: awardData, isLoading: awardLoading } = useGetStudentAwardById(awardId);
+  const { data: allschool } = useGetAllSchool();
+  const { data: allstudent } = useGetAllStudents();
+  const { data: alltemplate, isLoading: templateLoading } = useGetAllTemplate();
 
-  const { data: awardData } = useGetStudentAwardById(awardId);
-    const {data:allschool}=useGetAllSchool();
-    const{data:allstudent} =useGetAllStudents();
+  const school = allschool?.Items?.find((s) => s.id === awardData?.schoolId);
+  const student = allstudent?.Items?.find((s) => s.id === awardData?.studentId);
+  const template = alltemplate?.Items?.find((t) => t.id === awardData?.certificateTemplateId);
+
+  const schoolName = school?.name;
+  const schoolAddress = school?.address;
+  const schoolContact = school?.contactNumber;
+  const studentName = [student?.firstName, student?.middleName, student?.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  // ── Award title logic ──────────────────────────────────────────────────────
+  // Wait for both awardData and template to finish loading before resolving.
+  // Priority: awardTitle entered at creation → templateSubject → fallback label
+  const isResolvingTitle = awardLoading || templateLoading;
+  const awardTitle = awardData?.awardTitle?.trim()
+    ? awardData.awardTitle
+    : template?.templateSubject?.trim()
+    ? template.templateSubject
+    : isResolvingTitle
+    ? null          // still loading — render a placeholder
+    : "Award Certificate"; // final fallback if both are empty
+  // ──────────────────────────────────────────────────────────────────────────
+
   const handlePrint = () => {
     const content = document.getElementById("awardCertificate")?.outerHTML;
     if (!content) return;
@@ -33,9 +58,19 @@ const StudentAwardCertificate: React.FC<Props> = ({visible, awardId, onClose }) 
               body { margin: 0; padding: 0; }
               body * { visibility: hidden; }
               #awardCertificate, #awardCertificate * { visibility: visible; }
-              #awardCertificate { position: absolute; top: 0; left: 0; width: 297mm; height: 210mm; padding: 2rem; }
+              #awardCertificate {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 297mm;
+                height: 210mm;
+                padding: 2rem;
+              }
               #printBtn { display: none !important; }
-              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
             }
           </style>
         </head>
@@ -46,14 +81,14 @@ const StudentAwardCertificate: React.FC<Props> = ({visible, awardId, onClose }) 
     printWindow?.focus();
     printWindow?.print();
   };
-  const schoolName = allschool?.Items.find((school) => school.id === awardData?.schoolId)?.name;
-  const schoolAddress = allschool?.Items.find((school) => school.id === awardData?.schoolId)?.address;
-  const schoolFiscalYear = allschool?.Items.find((school) => school.id === awardData?.schoolId)?.contactNumber;
-  const StudentName = allstudent?.Items.find((student) => student.id === awardData?.Id)?.firstName;
+
+  if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-50 ml-12 md:ml-64 sm:ml-16 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[100vw] md:max-w-[100vw] lg:max-w-[75vw] xl:max-w-[100vw] h-full rounded-lg overflow-auto md:p-8 shadow-lg">
+      <div className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[100vw] lg:max-w-[75vw] h-full rounded-lg overflow-auto md:p-8 shadow-lg">
+
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
             Print Student Award
@@ -67,46 +102,37 @@ const StudentAwardCertificate: React.FC<Props> = ({visible, awardId, onClose }) 
           </button>
         </div>
 
+        {/* Certificate */}
         <div
           id="awardCertificate"
-          className="shadow-xl font-[Times_New_Roman] h-[794px] w-[1123px] mx-auto p-12 px-18 bg-white"
+          className="shadow-xl font-[Times_New_Roman] h-[794px] w-[1123px] mx-auto p-12 bg-white"
           style={{
             backgroundImage: "url('/assets/border.png')",
             backgroundRepeat: "no-repeat",
             backgroundSize: "100% 100%",
           }}
         >
-          {/* Header */}
+          {/* School Header */}
           <header className="pb-4 mb-2 text-center text-blue-800">
             <h2 className="text-6xl font-bold">{schoolName}</h2>
             <p className="text-md mt-1 font-semibold">{schoolAddress}</p>
-            <p className="text-md mt-1 font-semibold">({schoolFiscalYear})</p>
+            <p className="text-md mt-1 font-semibold">({schoolContact})</p>
           </header>
 
+          {/* Title — from awardTitle if set, else from templateSubject, else fallback */}
           <div className="flex justify-center mb-6">
-            <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl">
-              CERTIFICATE OF MERIT
+            <h1 className="bg-red-800 px-6 py-4 text-white text-4xl font-bold rounded-3xl min-w-[200px] text-center">
+              {awardTitle ?? <span className="opacity-50 text-2xl">Loading...</span>}
             </h1>
           </div>
+
+          {/* Body */}
           <div className="text-[16px] leading-relaxed text-center mt-6">
-  <p className="my-3">
-    This is to formally recognize <strong><u>{StudentName}</u></strong>, 
-    a diligent student of <strong>{schoolName}</strong>, for outstanding 
-    achievement in <strong>{awardData?.awardedBy}</strong>. 
-    The award is granted on <strong>{new Date(awardData?.awardedAt || "").toLocaleDateString()}</strong> 
-    in appreciation of <strong>{awardData?.awardDescriptions}</strong>.
-  </p>
-
-  <p className="my-3">
-    This award honors the exemplary dedication, effort, and performance demonstrated 
-    by the student, serving as a testament to their commitment to excellence.
-  </p>
-
-  <p className="italic mt-3">
-    We extend our heartfelt congratulations and best wishes for continued success in all future endeavors.
-  </p>
-</div>
-
+            <div
+              className="prose max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: awardData?.contentHtml as string }}
+            />
+          </div>
 
           <footer className="flex justify-between mt-56 text-center">
             <div className="w-1/3 font-semibold">Principal</div>

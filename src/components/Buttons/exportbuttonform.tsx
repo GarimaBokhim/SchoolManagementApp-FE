@@ -50,11 +50,11 @@ const ExportButtonForm = ({ data, excelData, file }: Props) => {
               )}
 
               <div className="cursor-pointer text-center hover:scale-105 transition-transform">
-                <PdfButton children={data} />
+                <PdfButton data={data} />
                 <p className="mt-2 font-medium">PDF</p>
               </div>
               <div className="cursor-pointer text-center hover:scale-105 transition-transform">
-                <ExportExcelButton children={excelData} />
+                <ExportExcelButton data={excelData} />
                 <p className="mt-2 font-medium">Excel</p>
               </div>
             </div>

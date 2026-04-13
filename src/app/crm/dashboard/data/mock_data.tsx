@@ -1,45 +1,84 @@
 import { 
-  Users, FileText, Award, DollarSign, 
-  GraduationCap, Calendar, MessageSquare, 
-  BookOpen, Globe 
+  Eye, TrendingUp, Calendar, BookOpen, ClipboardList,
+  MessageCircle, BookMarked, Plane, CheckSquare,
+  PhoneCall, Users, Target, ArrowDownCircle, ArrowUpCircle,
+  GraduationCap, Globe, FileText, DollarSign, MessageSquare
 } from 'lucide-react';
 
 export const dashboardStats = [
   {
-    label: 'Total Students',
-    value: '1,248',
-    change: '+18%',
-    icon: Users,
-    color: 'from-blue-600 to-cyan-500',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-    description: 'Enrolled students'
+    label: 'Visitors',
+    count: 1284,
+    icon: Eye,
+    iconBg: 'bg-sky-100 dark:bg-sky-900/40',
+    iconColor: 'text-sky-600 dark:text-sky-400',
+    route: '/crm/visitors',
+  },
+  {
+    label: 'Appointments',
+    count: 74,
+    icon: Calendar,
+    iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
+    iconColor: 'text-yellow-600 dark:text-yellow-400',
+    route: '/crm/appointment',
+  },
+  {
+    label: 'Universities',
+    count: 56,
+    icon: BookOpen,
+    iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+    iconColor: 'text-purple-600 dark:text-purple-400',
+    route: '/crm/university',
   },
   {
     label: 'Applications',
-    value: '342',
-    change: '+12%',
-    icon: FileText,
-    color: 'from-emerald-600 to-green-500',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
-    description: 'Processing'
+    count: 189,
+    icon: ClipboardList,
+    iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    route: '/crm/applications',
   },
   {
-    label: 'Visa Success Rate',
-    value: '94%',
-    change: '+2%',
-    icon: Award,
-    color: 'from-amber-600 to-orange-500',
-    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-    description: 'This year'
+    label: 'Inquiries',
+    count: 347,
+    icon: MessageCircle,
+    iconBg: 'bg-violet-100 dark:bg-violet-900/40',
+    iconColor: 'text-violet-600 dark:text-violet-400',
   },
   {
-    label: 'Revenue',
-    value: '₨ 12.8M',
-    change: '+22%',
-    icon: DollarSign,
-    color: 'from-purple-600 to-pink-500',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-    description: 'YTD'
+    label: 'Class Enrollments',
+    count: 892,
+    icon: BookMarked,
+    iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
+  },
+  {
+    label: 'Abroad Enrollments',
+    count: 214,
+    icon: Plane,
+    iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+  },
+  {
+    label: 'Decision',
+    count: 128,
+    icon: CheckSquare,
+    iconBg: 'bg-teal-100 dark:bg-teal-900/40',
+    iconColor: 'text-teal-600 dark:text-teal-400',
+  },
+  {
+    label: 'Leads',
+    count: 563,
+    icon: TrendingUp,
+    iconBg: 'bg-orange-100 dark:bg-orange-900/40',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+  },
+  {
+    label: 'Appearances',
+    count: 431,
+    icon: Users,
+    iconBg: 'bg-pink-100 dark:bg-pink-900/40',
+    iconColor: 'text-pink-600 dark:text-pink-400',
   },
 ];
 

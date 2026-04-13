@@ -1,47 +1,81 @@
-import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-import { ISchool } from "@/app/admin/Setup/School/types/ISchool";
-import { LocateIcon, Mail, Phone } from "lucide-react";
-import { useEffect, useState } from "react";
+"use client";
+import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
+import { LocateIcon, Mail, Phone, School } from "lucide-react";
+import { useState } from "react";
+
 type Props = {
   schoolId: string;
 };
-export default function SchoolInfoCard({ schoolId }: Props) {
-  const { data: allSchool } = useGetAllSchool();
-  const [schoolData, setSchoolData] = useState<ISchool>();
-  useEffect(() => {
-    if (allSchool && schoolId) {
-      const school = allSchool.Items.find((i) => i.id === schoolId);
-      setSchoolData(school);
-    }
-  }, [allSchool, schoolId]);
-  return (
-    <div className="relative bg-gradient-to-r from-green-900 to-green-500 text-white p-8 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold">
-        {schoolData?.name}
-        <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
-      </h2>
 
-      <div className="mt-3 space-y-2 text-sm">
-        <div className="flex items-center">
-          <LocateIcon className="mr-3" />
-          {schoolData?.address}
+const resolveImageUrl = (url?: string | null): string | null => {
+  if (!url || url === '-' || url === 'string' || url.trim() === '') return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `https://schoolapp.netraverselabs.com/${url.replace(/^\//, '')}`
+}
+
+export default function SchoolInfoCard({ schoolId }: Props) {
+  const { data: schoolData, isLoading } = useGetSchoolById(schoolId || null);
+  const [logoError, setLogoError] = useState(false);
+
+  const logoUrl = resolveImageUrl(schoolData?.imageUrl);
+
+  if (isLoading) {
+    return (
+      <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">
+        <div className="absolute top-1/2 left-6 -translate-y-1/2">
+          <div className="w-28 h-28 bg-white/20 rounded-full animate-pulse" />
         </div>
-        <div className="flex items-center">
-          <Mail className="mr-3" />
-          {schoolData?.email}
+        <div className="py-4 px-8 flex flex-col items-center justify-center text-center animate-pulse">
+          <div className="h-7 w-48 bg-white/20 rounded mb-4" />
+          <div className="space-y-2">
+            <div className="h-4 w-64 bg-white/20 rounded" />
+            <div className="h-4 w-56 bg-white/20 rounded" />
+            <div className="h-4 w-40 bg-white/20 rounded" />
+          </div>
         </div>
-        <div className="flex items-center">
-          <Phone className="mr-3" />
-          {schoolData?.contactNumber}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">
+      {/* School Logo - Left Center Circular */}
+      <div className="absolute top-1/2 left-6 -translate-y-1/2">
+        <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+          {logoUrl && !logoError ? (
+            <img
+              src={logoUrl}
+              alt="School Logo"
+              className="w-full h-full object-cover"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <School className="w-14 h-14 text-green-700" />
+          )}
         </div>
-        {/* <div className="hidden sm:block absolute md:top-20 md:left-110 lg:top-15 lg:left-260 sm:left-80 top-24 w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-          <img
-            // src={logo}
-            alt="School Logo"
-            className="object-cover hidden sm:block"
-            sizes="(max-width: 640px) 48px, (max-width: 768px) 96px, 96px"
-          />
-        </div> */}
+      </div>
+
+      {/* Centered Content */}
+      <div className="py-4 px-8 flex flex-col items-center justify-center text-center">
+        <h2 className="text-2xl font-bold">
+          {schoolData?.name ?? "—"}
+          <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
+        </h2>
+
+        <div className="mt-2 space-y-1.5 text-sm">
+          <div className="flex items-center justify-center">
+            <LocateIcon className="mr-3 shrink-0" />
+            {schoolData?.address ?? "—"}
+          </div>
+          <div className="flex items-center justify-center">
+            <Mail className="mr-3 shrink-0" />
+            {schoolData?.email ?? "—"}
+          </div>
+          <div className="flex items-center justify-center">
+            <Phone className="mr-3 shrink-0" />
+            {schoolData?.contactNumber ?? "—"}
+          </div>
+        </div>
       </div>
     </div>
   );

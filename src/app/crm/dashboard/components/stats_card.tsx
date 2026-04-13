@@ -1,36 +1,92 @@
-import React from 'react';
-import { TrendingUp, LucideIcon } from 'lucide-react';
+"use client";
 
-interface StatProps {
-  stat: {
-    icon: LucideIcon;
-    bgColor: string;
-    color: string;
-    change: string;
-    value: string | number;
-    label: string;
-    description: string;
-  };
+import React from "react";
+import { LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+export interface StatItem {
+  label: string;
+  count: number | string;
+  icon: LucideIcon;
+  iconBg: string;
+  iconColor: string;
+  route?: string;
 }
 
-const StatsCard: React.FC<StatProps> = ({ stat }) => {
+interface StatsCardProps {
+  stat: StatItem;
+}
+
+const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
   const Icon = stat.icon;
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (stat.route) {
+      router.push(stat.route);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between">
-        <div className={`p-3 ${stat.bgColor} rounded-lg`}>
-          <Icon className={`h-6 w-6 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`} />
-        </div>
-        <div className="flex items-center space-x-1 text-sm font-medium text-green-600 dark:text-green-400">
-          <TrendingUp className="h-4 w-4" />
-          <span>{stat.change}</span>
-        </div>
+    <div
+      onClick={handleClick}
+      className={`
+        group
+        bg-white dark:bg-[#161B27]
+        rounded-xl shadow-sm
+        border border-gray-200 dark:border-[#1E2A3E]
+        p-5 flex items-center gap-4
+        transition-all duration-200
+        ${
+          stat.route
+            ? "cursor-pointer hover:shadow-md hover:border-[#0A53C3]/40 dark:hover:border-[#0A53C3]/50 hover:-translate-y-0.5"
+            : "cursor-default hover:shadow-sm"
+        }
+      `}
+    >
+      {/* Icon bubble */}
+      <div
+        className={`
+          flex-shrink-0 w-13 h-13 w-12 h-12 rounded-xl
+          flex items-center justify-center
+          ${stat.iconBg}
+          group-hover:scale-105 transition-transform duration-200
+        `}
+      >
+        <Icon className={`w-5 h-5 ${stat.iconColor}`} />
       </div>
-      <div className="mt-6">
-        <h3 className="text-3xl font-bold text-gray-800 dark:text-white">{stat.value}</h3>
-        <p className="text-gray-600 dark:text-gray-300 font-medium mt-1">{stat.label}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stat.description}</p>
+
+      {/* Label & Count */}
+      <div className="flex flex-col flex-1 min-w-0">
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 leading-tight truncate">
+          {stat.label}
+        </span>
+        <span className="text-2xl font-bold text-gray-900 dark:text-white mt-0.5 tabular-nums">
+          {stat.count}
+        </span>
       </div>
+
+      {/* Arrow — only for clickable cards */}
+      {stat.route && (
+        <div
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
+          style={{ color: "#0A53C3" }}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,7 +17,7 @@ const Add = ({ visible, onClose }: Props) => {
       contactNumber: "",
       contactPerson: "",
       pan: "",
-      imageUrl: "",
+      logoUrl: null,
       isEnable: true,
       isDeleted: false,
       fiscalYearId: "",

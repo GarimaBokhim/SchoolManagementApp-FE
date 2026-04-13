@@ -1,107 +1,107 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
-import { IAcademicTeam } from "../types/IAcademicTeam";
-import { useAddAcademicTeam } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useEffect, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { IAcademicTeam } from '../types/IAcademicTeam'
+import { useAddAcademicTeam } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
   useGetMunicipalityByDistrict,
   useGetVDCByDistrict,
-} from "@/components/common/hooks";
-import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+} from '@/components/common/hooks'
+import { useGetAllRoles } from '@/app/SuperAdmin/accessControl/roles/hooks'
 type Props = {
-  form: UseFormReturn<IAcademicTeam>;
-  onClose: () => void;
-};
+  form: UseFormReturn<IAcademicTeam>
+  onClose: () => void
+}
 const AddAcademicTeamForm = ({ form, onClose }: Props) => {
-  const addAcademicTeam = useAddAcademicTeam();
-  const { handleError, clearError } = useErrorHandler();
-  const { data: allProvince } = useGetAllProvince();
-  const [genderStatus, setGenderStatus] = useState<number | null>(null);
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const addAcademicTeam = useAddAcademicTeam()
+  const { handleError, clearError } = useErrorHandler()
+  const { data: allProvince } = useGetAllProvince()
+  const [genderStatus, setGenderStatus] = useState<number | null>(null)
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
   const [selectedProvinceId, setSelectedProvinceId] = useState<
     number | undefined
-  >(0);
+  >(0)
   const [selectedDistrictId, setSelectedDistrictId] = useState<
     number | undefined
-  >(0);
-  const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
+  >(0)
+  const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null)
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | null
-  >(null);
-  const { data: allRoles } = useGetAllRoles();
+  >(null)
+  const { data: allRoles } = useGetAllRoles()
   const { data: filteredDistrict } =
-    useGetDistrictByProvince(selectedProvinceId);
-  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
+    useGetDistrictByProvince(selectedProvinceId)
+  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
   const { data: filteredMunicipality } =
-    useGetMunicipalityByDistrict(selectedDistrictId);
+    useGetMunicipalityByDistrict(selectedDistrictId)
 
   const handleClose = () => {
-    form.reset();
-  };
+    form.reset()
+  }
   const onSubmit: SubmitHandler<IAcademicTeam> = async (data) => {
-    clearError();
-    const formData = new FormData();
-    formData.append("email", data.email);
-    formData.append("username", data.username);
-    formData.append("password", data.password);
-    formData.append("fullName", data.fullName);
+    clearError()
+    const formData = new FormData()
+    formData.append('email', data.email)
+    formData.append('username', data.username)
+    formData.append('password', data.password)
+    formData.append('fullName', data.fullName)
     if (data.teacherImg) {
-      formData.append("teacherImg", data.teacherImg as File);
+      formData.append('teacherImg', data.teacherImg as File)
     }
-    formData.append("address", data.address);
-    formData.append("provinceId", String(data.provinceId));
-    formData.append("districtId", String(data.districtId));
-    formData.append("vdcid", String(data.vdcid));
-    formData.append("municipalityId", String(data.municipalityId));
-    formData.append("wardNumber", String(data.wardNumber));
-    formData.append("gender", String(data.gender));
+    formData.append('address', data.address)
+    formData.append('provinceId', String(data.provinceId))
+    formData.append('districtId', String(data.districtId))
+    formData.append('vdcid', String(data.vdcid))
+    formData.append('municipalityId', String(data.municipalityId))
+    formData.append('wardNumber', String(data.wardNumber))
+    formData.append('gender', String(data.gender))
     data.rolesId.forEach((role) => {
-      formData.append("rolesId", role);
-    });
+      formData.append('rolesId', role)
+    })
     try {
       await toast.promise(addAcademicTeam.mutateAsync(formData), {
-        loading: "Adding AcademicTeam...",
-        success: "Successfully added AcademicTeam",
-      });
-      handleClose();
+        loading: 'Adding AcademicTeam...',
+        success: 'Successfully added AcademicTeam',
+      })
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [AcademicTeamImgPath, setAcademicTeamImgPath] = useState<string>("");
-  const [image, setImage] = useState<File | "">();
-  const handleImageClick = () => fileInputRef.current?.click();
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [AcademicTeamImgPath, setAcademicTeamImgPath] = useState<string>('')
+  const [image, setImage] = useState<File | ''>()
+  const handleImageClick = () => fileInputRef.current?.click()
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      setAcademicTeamImgPath(URL.createObjectURL(file));
-      setImage(file);
+      setAcademicTeamImgPath(URL.createObjectURL(file))
+      setImage(file)
     }
-  };
+  }
   useEffect(() => {
     if (selectedRoleId) {
-      form.setValue("rolesId", [selectedRoleId], {
+      form.setValue('rolesId', [selectedRoleId], {
         shouldValidate: true,
-      });
+      })
     }
     if (image) {
-      form.setValue("teacherImg", image, {
+      form.setValue('teacherImg', image, {
         shouldValidate: true,
-      });
+      })
     }
-  }, [selectedRoleId, image]);
+  }, [selectedRoleId, image])
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -181,24 +181,33 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                   <AppCombobox
                     label="Gender"
                     dropdownPositionClass="absolute"
-                    name="genderStatus"
+                    name="gender"
                     value={genderStatus}
                     options={[
-                      { id: 1, name: "Male" },
-                      { id: 2, name: "Female" },
-                      { id: 3, name: "Other" },
+                      { id: 1, name: 'Male' },
+                      { id: 2, name: 'Female' },
+                      { id: 3, name: 'Other' },
                     ]}
                     dropDownWidth="w-full"
                     selected={
                       [
-                        { id: 1, name: "Male" },
-                        { id: 2, name: "Female" },
-                        { id: 3, name: "Other" },
+                        { id: 1, name: 'Male' },
+                        { id: 2, name: 'Female' },
+                        { id: 3, name: 'Other' },
                       ].find((g) => g.id === genderStatus) || null
                     }
-                    onSelect={(option) => setGenderStatus(option?.id ?? null)}
-                    getLabel={(o) => o?.name || ""}
-                    getValue={(o) => o?.id ?? ""}
+                    onSelect={(option) => {
+                      const value = option?.id ?? null
+                      setGenderStatus(value)
+
+                      if (value !== null) {
+                        form.setValue('gender', value, {
+                          shouldValidate: true,
+                        })
+                      }
+                    }}
+                    getLabel={(o) => o?.name || ''}
+                    getValue={(o) => o?.id ?? ''}
                   />
                   <AppCombobox
                     value={selectedRoleId}
@@ -213,13 +222,13 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                       null
                     }
                     onSelect={(group) => {
-                      const id = group?.Id ?? null;
+                      const id = group?.Id ?? null
 
-                      setSelectedRoleId(id);
-                      if (id) form.setValue("rolesId", [id]);
+                      setSelectedRoleId(id)
+                      if (id) form.setValue('rolesId', [id])
                     }}
-                    getLabel={(g) => g?.Name ?? ""}
-                    getValue={(g) => g?.Id ?? ""}
+                    getLabel={(g) => g?.Name ?? ''}
+                    getValue={(g) => g?.Id ?? ''}
                   />
                 </div>
               </div>
@@ -250,8 +259,8 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                     ) || null
                   }
                   onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
-                  getLabel={(g) => g?.provinceNameInEnglish ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.provinceNameInEnglish ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <AppCombobox
                   value={selectedDistrictId}
@@ -268,8 +277,8 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                     ) || null
                   }
                   onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
-                  getLabel={(g) => g?.districtNameInEnglish ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.districtNameInEnglish ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <AppCombobox
                   value={selectedMunicipalityId}
@@ -288,8 +297,8 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                   onSelect={(group) =>
                     setSelectedMunicipalityId(group?.Id ?? null)
                   }
-                  getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.MunicipalityNameinEnglish ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <AppCombobox
                   value={selectedVdcId}
@@ -307,8 +316,8 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
                     filteredVdc?.find((g) => g.Id === selectedVdcId) || null
                   }
                   onSelect={(group) => setSelectedVdcId(group?.Id ?? null)}
-                  getLabel={(g) => g?.VdcNameInNepali ?? ""}
-                  getValue={(g) => g?.Id ?? ""}
+                  getLabel={(g) => g?.VdcNameInNepali ?? ''}
+                  getValue={(g) => g?.Id ?? ''}
                 />
                 <InputElement
                   label="Ward Number"
@@ -330,7 +339,7 @@ const AddAcademicTeamForm = ({ form, onClose }: Props) => {
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddAcademicTeamForm;
+export default AddAcademicTeamForm

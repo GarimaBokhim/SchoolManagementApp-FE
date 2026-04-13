@@ -25,7 +25,7 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddSubject from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllClass } from "../../Class/hooks";
-const AllSubjectForm = () => {
+const   AllSubjectForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,

@@ -25,13 +25,15 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const { data: allClass } = useGetAllClass();
 
   const [selectedClass, setSelectedClass] = useState<string | undefined>("");
+
+ 
     const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
     [key: number]: string | null;
   }>({});
     const [selectedFullMarks, setSelectedFullMarks] = useState<{
     [key: number]: number;
   }>({});
- const { data: allSubjects } = useGetSubjectByClassId(selectedClass || "");
+ const { data: allSubjects } = useGetSubjectByClassId(selectedClass);
 
   const { fields, append, remove } = useFieldArray({
     name: "examSubjects",

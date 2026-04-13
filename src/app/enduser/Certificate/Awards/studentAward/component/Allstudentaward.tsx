@@ -54,7 +54,6 @@ const AllStudentAwardForm = () => {
   const [AwardId, setAwardId] = useState<string | null>(null);
   const [addModal, setAddModal] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-  const [selectedSchoolId, setselectedSchoolId] = useState<string | null>("");
   const deleteStudentAward = useRemoveStudentAward();
   
   const form = useForm<IfilterStudentAward>({
@@ -123,7 +122,6 @@ const StudentAwardform = useForm<Istudentaward>()
   const onClearClick = () => {
     refetch();
     setParams("");
-    setselectedSchoolId("");
     formRef.current?.handleClear();
     form.reset();
   };

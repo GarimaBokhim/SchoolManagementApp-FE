@@ -3,11 +3,13 @@ import { useState } from "react";
 import AllParent from "../../_Parent/pages/All";
 import AllStudentForm from "../_components/AllStudentForm";
 import AllStudentAttendance from "../../_StudentAttendance/pages/All";
+import AllRegistration from "../../_Registration/pages/All";
 const AllStudent = () => {
   const exam = [
-     { id: "parent", label: "Parent", color: "gray" },
+    { id: "parent", label: "Parent", color: "gray" },
     { id: "student", label: "Student", color: "gray" },
     { id: "attendance", label: "Attendance", color: "gray" },
+    { id: "registration", label: "Registration", color: "gray" },
   ];
   const [activeReport, setActiveReport] = useState<string>("parent");
 
@@ -25,8 +27,18 @@ const AllStudent = () => {
             <AllStudentAttendance />
           </div>
         );
+      case "registration":
+        return (
+          <div className=" text-center">
+            <AllRegistration />
+          </div>
+        );
       default:
-        return <AllStudentForm />;
+        return (
+        <div className=" text-center">
+          <AllStudentForm />
+          </div>
+        );
     }
   };
 

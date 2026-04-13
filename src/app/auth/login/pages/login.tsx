@@ -1,105 +1,106 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+'use client'
 
-import { useState, useContext } from "react";
-import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { jwtDecode } from "jwt-decode";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { InputElement } from "@/components/Input/InputElement";
-import { Toast } from "@/components/Toast/toast";
-import { AuthContext } from "@/context/auth/AuthContext";
-import { useLogin } from "../hooks";
-import bgImg from "../../../../../public/assets/background.png";
-import { NormalizeStringCase } from "@/components/helpers/normalizeStringCase";
+import { useState, useContext } from 'react'
+import { useForm } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { jwtDecode } from 'jwt-decode'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { InputElement } from '@/components/Input/InputElement'
+import { Toast } from '@/components/Toast/toast'
+import { AuthContext } from '@/context/auth/AuthContext'
+import { useLogin } from '../hooks'
+import bgImg from '../../../../../public/assets/background.png'
+import { NormalizeStringCase } from '@/components/helpers/normalizeStringCase'
 import {
   ILoginType,
   ITokenPayload,
   ITokenPayloadObject,
-} from "../types/loginResponse";
-import { IUserRole } from "../types/userRoles";
-import dashboardPic from "../../../../../public/assets/dashboard.png";
-import attendanceQr from "../../../../../public/assets/scan.png";
-import Image, { StaticImageData } from "next/image";
+} from '../types/loginResponse'
+import { IUserRole } from '../types/userRoles'
+import dashboardPic from '../../../../../public/assets/dashboard.png'
+import attendanceQr from '../../../../../public/assets/scan.png'
+import Image, { StaticImageData } from 'next/image'
 
 const LoginForm = () => {
   const form = useForm<ILoginType>({
-    defaultValues: { email: "", password: "" },
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toggleImg, setToggleImg] = useState<StaticImageData>(dashboardPic);
-  const router = useRouter();
-  const login = useLogin();
-  const { updateUserDetails } = useContext(AuthContext);
+    defaultValues: { email: '', password: '' },
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [toggleImg, setToggleImg] = useState<StaticImageData>(dashboardPic)
+  const router = useRouter()
+  const login = useLogin()
+  const { updateUserDetails } = useContext(AuthContext)
 
   const handleToggleImg = () => {
     setToggleImg((prev) =>
       prev === dashboardPic ? attendanceQr : dashboardPic
-    );
-  };
+    )
+  }
   const handleSubmit = async (values: ILoginType) => {
-    console.log("Test", values);
-    setIsSubmitting(true);
+    console.log('Test', values)
+    setIsSubmitting(true)
     try {
-      const response = await login.mutateAsync(values);
-      const token = response.token;
-      if (!token) throw new Error("No token returned from login");
-      const tokenPayload: ITokenPayload = jwtDecode(token);
+      const response = await login.mutateAsync(values)
+      const token = response.token
+      if (!token) throw new Error('No token returned from login')
+      const tokenPayload: ITokenPayload = jwtDecode(token)
       const userDetails: ITokenPayloadObject = {
         username:
           tokenPayload[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'
           ],
         role: NormalizeStringCase(
           tokenPayload[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
           ],
           false
         ) as IUserRole,
         email: tokenPayload.email,
         id: tokenPayload[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
         ],
         schoolId: tokenPayload.SchoolId,
         institutionId: tokenPayload.InstitutionId,
-      };
+      }
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", tokenPayload.sub);
-      localStorage.setItem("userDetails", JSON.stringify(userDetails));
-      updateUserDetails(userDetails);
+      localStorage.setItem('token', token)
+      localStorage.setItem('userId', tokenPayload.sub)
+      localStorage.setItem('userDetails', JSON.stringify(userDetails))
+      updateUserDetails(userDetails)
       const roleToDashboardMap: Partial<Record<IUserRole, string>> = {
-        superadmin: "/SuperAdmin/dashboard",
-        developeruser: "/developer",
-        crm: "/crm",
-      };
-      const storedUser = localStorage.getItem("userDetails");
+        superadmin: '/SuperAdmin/dashboard',
+        developeruser: '/developer',
+      }
+      const storedUser = localStorage.getItem('userDetails')
 
-      let role = "";
+      let role = ''
       if (storedUser) {
         try {
-          const parsedUser = JSON.parse(storedUser);
-          role = parsedUser.role;
+          const parsedUser = JSON.parse(storedUser)
+          role = parsedUser.role
         } catch (error) {
-          console.error("Failed to parse user details:", error);
+          console.error('Failed to parse user details:', error)
         }
       }
 
       const dashboardRoute = roleToDashboardMap[userDetails.role]
         ? roleToDashboardMap[userDetails.role]
-        : role === "admin"
-        ? "/admin/dashboard"
-        : role === "demoexpiryrole"
-        ? "/end-user/expired"
-        : "/enduser/dashboard";
-      if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200);
+        : role === 'admin'
+          ? '/admin/dashboard'
+          : role === 'demoexpiryrole'
+            ? '/end-user/expired'
+            : role === 'crm'
+              ? '/crm/dashboard'
+              : '/enduser/dashboard'
+      if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)
     } catch (error: any) {
-      Toast.error(error.response?.data || error.message || "Failed to login.");
+      Toast.error(error.response?.data || error.message || 'Failed to login.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="flex min-h-screen w-full ">
@@ -138,7 +139,7 @@ const LoginForm = () => {
                 form={form}
                 label="Password"
                 name="password"
-                inputType={"password"}
+                inputType={'password'}
                 placeholder="••••••••"
               />
               {/* <button
@@ -168,7 +169,7 @@ const LoginForm = () => {
             />
 
             <div className="text-center text-sm text-gray-600 mt-4">
-              Don’t have an account?{" "}
+              Don’t have an account?{' '}
               <Link href="/register" className="text-[#035BBA] hover:underline">
                 Register Now.
               </Link>
@@ -240,7 +241,7 @@ const LoginForm = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginForm;
+export default LoginForm

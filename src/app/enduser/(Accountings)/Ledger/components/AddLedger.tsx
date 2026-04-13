@@ -1,73 +1,79 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { ILedgers } from "../types/ILedgers";
-import { useAddLedger, useGetAllLedgers } from "../hooks";
-import { InputElement } from "@/components/Input/InputElement";
-import { ChevronDown, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import { useGetAllSubLedgerGroups } from "../../_SubLedgerGroup/hooks";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
+/* eslint-disable react-hooks/set-state-in-effect */
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { ILedgers } from '../types/ILedgers'
+import { useAddLedger, useGetAllLedgers } from '../hooks'
+import { InputElement } from '@/components/Input/InputElement'
+import { ChevronDown, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import { useGetAllSubLedgerGroups } from '../../_SubLedgerGroup/hooks'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 type Props = {
-  form: UseFormReturn<ILedgers>;
-  onClose: () => void;
-};
+  form: UseFormReturn<ILedgers>
+  onClose: () => void
+  selectedSubLedgerGroup?: string
+}
 
-const AddLedgerForm = ({ form, onClose }: Props) => {
-  const addLedger = useAddLedger();
-  const { data: SubLedgerGroup } = useGetAllSubLedgerGroups();
-  const { refetch } = useGetAllLedgers();
-  const { handleError, clearError } = useErrorHandler();
+const AddLedgerForm = ({ form, onClose, selectedSubLedgerGroup }: Props) => {
+  const addLedger = useAddLedger()
+  const { data: SubLedgerGroup } = useGetAllSubLedgerGroups()
+  const { refetch } = useGetAllLedgers()
+  const { handleError, clearError } = useErrorHandler()
 
-  const [balanceType, setBalanceType] = useState("Dr");
-  const [selectedSubLedgerGroupId, setSelectedSubLedgerGroupId] = useState("");
-  const [openExtension, setOpenExtension] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [balanceType, setBalanceType] = useState('Dr')
+  const [selectedSubLedgerGroupId, setSelectedSubLedgerGroupId] = useState('')
+  const [openExtension, setOpenExtension] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
+    if (selectedSubLedgerGroup)
+      setSelectedSubLedgerGroupId(selectedSubLedgerGroup)
+  }, [selectedSubLedgerGroup])
+  useEffect(() => {
     if (selectedSubLedgerGroupId)
-      form.setValue("subledgerGroupId", selectedSubLedgerGroupId);
-  }, [selectedSubLedgerGroupId, form]);
+      form.setValue('subledgerGroupId', selectedSubLedgerGroupId)
+  }, [selectedSubLedgerGroupId, form])
 
   useEffect(() => {
     const openGroupIds = [
-      "dff66bb4-11e6-4e5f-8bb9-f00c01b90284",
-      "f5c2cba4-e4c7-496a-9f07-f2060c426e06",
-    ];
-    setOpenExtension(openGroupIds.includes(selectedSubLedgerGroupId));
-  }, [selectedSubLedgerGroupId]);
+      'dff66bb4-11e6-4e5f-8bb9-f00c01b90284',
+      'f5c2cba4-e4c7-496a-9f07-f2060c426e06',
+    ]
+    setOpenExtension(openGroupIds.includes(selectedSubLedgerGroupId))
+  }, [selectedSubLedgerGroupId])
 
   const handleClose = () => {
-    onClose();
-    setSelectedSubLedgerGroupId("");
-  };
+    onClose()
+    setSelectedSubLedgerGroupId('')
+  }
 
   const onSubmit: SubmitHandler<ILedgers> = async (data) => {
-    clearError();
+    clearError()
 
-    if (balanceType === "Cr" && data.openingBalance) {
-      data.openingBalance = -Math.abs(Number(data.openingBalance));
-    } else if (balanceType === "Dr" && data.openingBalance) {
-      data.openingBalance = Math.abs(Number(data.openingBalance));
+    if (balanceType === 'Cr' && data.openingBalance) {
+      data.openingBalance = -Math.abs(Number(data.openingBalance))
+    } else if (balanceType === 'Dr' && data.openingBalance) {
+      data.openingBalance = Math.abs(Number(data.openingBalance))
     }
 
     try {
       await toast.promise(addLedger.mutateAsync(data), {
-        loading: "Adding ledger...",
-        success: "Successfully added ledger",
-      });
+        loading: 'Adding ledger...',
+        success: 'Successfully added ledger',
+      })
 
-      await refetch();
+      await refetch()
 
-      handleClose();
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
 
   return (
     <>
@@ -118,10 +124,10 @@ const AddLedgerForm = ({ form, onClose }: Props) => {
                   ) || null
                 }
                 onSelect={(group) =>
-                  setSelectedSubLedgerGroupId(group?.id || "")
+                  setSelectedSubLedgerGroupId(group?.id || '')
                 }
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
+                getLabel={(g) => g?.name ?? ''}
+                getValue={(g) => g?.id ?? ''}
                 // renderOptionExtra={(g) => (
                 //   <LedgerGroupName ledgerGroupId={g?.ledgerGroupId ?? ""} />
                 // )}
@@ -192,9 +198,9 @@ const AddLedgerForm = ({ form, onClose }: Props) => {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={balanceType === "Cr"}
+                      checked={balanceType === 'Cr'}
                       onChange={(e) =>
-                        setBalanceType(e.target.checked ? "Cr" : "Dr")
+                        setBalanceType(e.target.checked ? 'Cr' : 'Dr')
                       }
                       className="sr-only peer"
                     />
@@ -209,29 +215,29 @@ const AddLedgerForm = ({ form, onClose }: Props) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputElement
-                      disabled={balanceType === "Cr"}
-                      readOnly={balanceType === "Cr"}
+                      disabled={balanceType === 'Cr'}
+                      readOnly={balanceType === 'Cr'}
                       label="Debit Balance"
                       inputType="number"
                       form={form}
                       name={
-                        balanceType === "Dr"
-                          ? "openingBalance"
-                          : "ClosingDemoBalance"
+                        balanceType === 'Dr'
+                          ? 'openingBalance'
+                          : 'ClosingDemoBalance'
                       }
                       placeholder="Debit opening balance"
                     />
 
                     <InputElement
-                      disabled={balanceType === "Dr"}
-                      readOnly={balanceType === "Dr"}
+                      disabled={balanceType === 'Dr'}
+                      readOnly={balanceType === 'Dr'}
                       label="Credit Balance"
                       inputType="number"
                       form={form}
                       name={
-                        balanceType === "Cr"
-                          ? "openingBalance"
-                          : "ClosingDemoBalance"
+                        balanceType === 'Cr'
+                          ? 'openingBalance'
+                          : 'ClosingDemoBalance'
                       }
                       placeholder="Credit opening balance"
                     />
@@ -252,7 +258,7 @@ const AddLedgerForm = ({ form, onClose }: Props) => {
         </form>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AddLedgerForm;
+export default AddLedgerForm
