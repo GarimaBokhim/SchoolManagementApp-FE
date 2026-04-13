@@ -48,30 +48,6 @@ import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
 
-
-// ── Stat card ────────────────────────────────────────────────────────────────
-interface StatCardProps {
-  label: string
-  value: number | string
-  icon: React.ReactNode
-  iconBg: string
-  iconColor: string
-}
-
-const StatCard = ({ label, value, icon, iconBg, iconColor }: StatCardProps) => (
-  <div className="flex-1 min-w-[140px] bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center gap-3 shadow-sm">
-    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-      <span className={iconColor}>{icon}</span>
-    </div>
-    <div className="min-w-0">
-      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{label}</p>
-      <p className="text-xl font-semibold text-gray-800 dark:text-white leading-tight">{value}</p>
-    </div>
-  </div>
-)
-// ─────────────────────────────────────────────────────────────────────────────
-
-
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -87,6 +63,17 @@ const AllStudentForm = () => {
     params.pageSize = paginationParams.pageSize
     setPaginationParams(params)
   }
+  
+  const {
+  previewData,  
+  showPreviewModal,
+  setShowPreviewModal,
+  uploadLoading,
+  setUploadLoading,
+  handleExcelPreview,
+  selectedFile,
+  setSelectedFile,
+} = useExcelPreview();
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
@@ -205,7 +192,7 @@ const AllStudentForm = () => {
     setSelectedStudentForProfile(student)
     setShowProfilePopup(true)
   }
-
+  
   const getClassName = (classId: string) => {
     if (!classId) return 'N/A'
     return allclass?.name || 'N/A'
@@ -257,7 +244,26 @@ const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
                   />
                 }
               />
-              <ImportButtonForm
+              <ImportButtonForm handleExcelImport={handleExcelPreview} />
+             {/* <ImportButtonForm handleExcelImport={handleFileChange} /> */}
+
+             {showPreviewModal && (
+                <ExcelPreviewModal             
+                    previewData={previewData}
+                    show={showPreviewModal}
+                    onClose={() => setShowPreviewModal(false)}
+                    onSave={handleSaveExcel}
+                    loading={uploadLoading}
+                    
+                />
+                )}
+
+              
+
+              
+
+
+              {/* <ImportButtonForm
                 handleExcelImport={async (file) => {
                   await toast.promise(uploadstudent(file), {
                     loading: 'Uploading...',
@@ -265,7 +271,7 @@ const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
                     error: 'Upload failed! Please Check the format',
                   })
                 }}
-              />
+              /> */}
             </div>
           </div>
 
@@ -488,7 +494,7 @@ const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
             />
           </div>
         )}
-
+        
         {showStudents && selectedId && (
           <EditStudent
             StudentId={selectedId}

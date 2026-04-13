@@ -183,17 +183,30 @@ export const useGetStudentByClass = (ClassId: string) => {
 
 export const useUploadStudents = () => {
   const queryClient = useQueryClient();
+
   return useMutation<void, Error, File>({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("formFile", file);
-      const response = await api.post(StudentEndPoints.uploadstudents, formData);
+
+      const response = await api.post(
+        StudentEndPoints.uploadstudents,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       return response.data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
+
     retry: false,
   });
 };

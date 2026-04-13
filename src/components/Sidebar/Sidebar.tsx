@@ -85,7 +85,7 @@ const Sidebar: React.FC<Props> = ({
 
   role = storedUser?.role || ''
 
-  const withRolePrefix = (path: string) => {
+  const withRolePrefix = (path: string='') => {
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     const lowerRole = role?.toLowerCase()
     let prefix = ''
@@ -93,6 +93,7 @@ const Sidebar: React.FC<Props> = ({
     else if (lowerRole === 'admin') prefix = 'admin'
     else if (lowerRole === 'crm') prefix = 'crm'
     else if (lowerRole === 'enduser') prefix = 'enduser'
+    else if (lowerRole === 'crmadmin') prefix = 'crmadmin'
     else prefix = lowerRole
     return `/${prefix}${cleanPath}`
   }
