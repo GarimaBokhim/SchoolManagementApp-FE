@@ -1,12 +1,14 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { IModules } from "../types/IModules";
-import { useAddModule } from "../hooks";
+import { IModules, IAppName } from "../types/IModules";
+import { useAddModule, useGetAppNames } from "../hooks";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AxiosError } from "axios";
 import { InputElement } from "@/components/Input/InputElement";
+import { AppCombobox } from "@/components/Input/ComboBox";
 import { X } from "lucide-react";
+import { useState } from "react";
 
 type Props = {
   form: UseFormReturn<IModules>;
@@ -15,19 +17,20 @@ type Props = {
 
 const AddModuleForm = ({ form, onClose }: Props) => {
   const addModule = useAddModule();
+  const { data: appNames, isLoading: appNamesLoading } = useGetAppNames();
+  const [selectedApp, setSelectedApp] = useState<IAppName | null>(null);
 
   const onSubmit: SubmitHandler<IModules> = async (data) => {
     try {
       await addModule.mutateAsync(data);
       Toast.success("Module added successfully!");
+      onClose();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
         Toast.error(error.response?.data || "Failed to add module");
       } else {
         Toast.error("Failed to add module: " + error);
       }
-    } finally {
-      onClose();
     }
   };
 
@@ -53,15 +56,23 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               label="Name"
               layout="column"
               form={form}
-              name="Name"
+              name="name"
               placeholder="Enter module name"
+            />
+
+            <InputElement
+              label="Description"
+              layout="column"
+              form={form}
+              name="description"
+              placeholder="Enter description"
             />
 
             <InputElement
               label="Target URL"
               layout="column"
               form={form}
-              name="TargetUrl"
+              name="targetUrl"
               placeholder="Enter target URL"
             />
 
@@ -69,7 +80,7 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               label="Icon URL"
               layout="column"
               form={form}
-              name="IconUrl"
+              name="iconUrl"
               placeholder="Enter icon URL"
             />
 
@@ -77,11 +88,32 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               label="Rank"
               layout="column"
               form={form}
-              name="Rank"
+              name="rank"
               placeholder="Enter rank"
             />
 
-            {/* Checkbox */}
+            <AppCombobox<IAppName>
+              label="Application"
+              required
+              name="appId"
+              form={form}
+              options={appNames ?? []}
+              selected={selectedApp ?? undefined}
+              disabled={appNamesLoading}
+              placeholder={
+                appNamesLoading ? "Loading apps..." : "Search application..."
+              }
+              getLabel={(app) => app.Name}
+              getValue={(app) => app.Id}
+              onSelect={(app) => {
+                setSelectedApp(app);
+                form.setValue("appId", app ? app.Id : "", {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }}
+            />
+
             <div className="flex items-center space-x-2">
               <InputElement
                 label=""
@@ -91,10 +123,15 @@ const AddModuleForm = ({ form, onClose }: Props) => {
                 name="isActive"
                 customStyle="!border-0 after:!content-none"
               />
-              <p className="ml-4 ">Is Active</p>
+              <p className="ml-4">Is Active</p>
             </div>
+
             <div className="flex justify-center mt-4">
-              <ButtonElement type="submit" text="Submit" />
+              <ButtonElement
+                type="submit"
+                text="Submit"
+                isLoading={addModule.isPending}
+              />
             </div>
           </form>
         </fieldset>

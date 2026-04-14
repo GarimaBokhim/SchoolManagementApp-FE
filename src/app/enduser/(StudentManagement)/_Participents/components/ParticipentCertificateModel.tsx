@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { X, Download, Building } from 'lucide-react'
+import { X, Download, Building, User } from 'lucide-react'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
@@ -24,6 +24,7 @@ interface CertificateModalProps {
   activityName: string
   awardPosition: number
   issuedDate?: string
+  studentPhoto?: string // Optional student photo URL
 }
 
 const CertificateModal = ({
@@ -33,9 +34,11 @@ const CertificateModal = ({
   activityName,
   awardPosition,
   issuedDate,
+  studentPhoto,
 }: CertificateModalProps) => {
   const certRef = useRef<HTMLDivElement>(null)
   const [imageError, setImageError] = useState(false)
+  const [studentPhotoError, setStudentPhotoError] = useState(false)
 
   let schoolId = ''
   const storedUser = localStorage.getItem('userDetails')
@@ -230,24 +233,22 @@ const CertificateModal = ({
               z-index: 1;
             }
 
-            /* Header row: school info left, logo right */
+            /* Header row: logo left, photo right */
             .cert-header {
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
               margin-bottom: 8px;
+              gap: 20px;
             }
 
-            .cert-school-info {
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
+            .cert-logo-section {
+              flex-shrink: 0;
             }
 
             .cert-logo-box {
               width: min(80px, 15vw);
               height: min(80px, 15vw);
-              flex-shrink: 0;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -259,6 +260,80 @@ const CertificateModal = ({
               width: 100%;
               height: 100%;
               object-fit: contain;
+            }
+
+            .cert-photo-section {
+              flex-shrink: 0;
+            }
+
+            .cert-photo-frame {
+              width: 100px;
+              height: 100px;
+              border: 3px solid #b45309;
+              border-radius: 8px;
+              overflow: hidden;
+              background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+
+            .cert-photo-frame img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+
+            .cert-photo-placeholder {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              color: #b45309;
+              opacity: 0.5;
+            }
+
+            .cert-photo-placeholder svg {
+              width: 40px;
+              height: 40px;
+            }
+
+            .cert-photo-placeholder span {
+              font-size: 10px;
+              margin-top: 4px;
+            }
+
+            @media (max-width: 640px) {
+              .cert-photo-frame {
+                width: 70px;
+                height: 70px;
+              }
+            }
+
+            /* School info in middle */
+            .cert-school-info {
+              flex: 1;
+              text-align: center;
+              padding: 0 10px;
+            }
+
+            .cert-school-info p {
+              margin: 2px 0;
+            }
+
+            /* Responsive header */
+            @media (max-width: 640px) {
+              .cert-header {
+                flex-wrap: wrap;
+                justify-content: center;
+              }
+              
+              .cert-school-info {
+                order: 3;
+                width: 100%;
+                margin-top: 12px;
+              }
             }
           `}</style>
 
@@ -273,8 +348,24 @@ const CertificateModal = ({
             </div>
 
             <div className="certificate-content">
-              {/* Header: school info (left) + logo (right) */}
+              {/* Header: logo (left), school info (center), photo (right) */}
               <div className="cert-header">
+                {/* Left: School Logo */}
+                <div className="cert-logo-section">
+                  <div className="cert-logo-box">
+                    {schoolLogoUrl && !imageError ? (
+                      <img
+                        src={schoolLogoUrl}
+                        alt="School Logo"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <Building className="w-12 h-12 text-amber-600" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Center: School Information */}
                 <div className="cert-school-info">
                   <p className="text-base font-semibold text-amber-900 uppercase tracking-wide">
                     {SchoolData?.name ?? 'School Name'}
@@ -287,21 +378,27 @@ const CertificateModal = ({
                   )}
                 </div>
 
-                <div className="cert-logo-box">
-                  {schoolLogoUrl && !imageError ? (
-                    <img
-                      src={schoolLogoUrl}
-                      alt="School Logo"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <Building className="w-12 h-12 text-amber-600" />
-                  )}
+                {/* Right: Student Photo */}
+                <div className="cert-photo-section">
+                  <div className="cert-photo-frame">
+                    {studentPhoto && !studentPhotoError ? (
+                      <img
+                        src={studentPhoto}
+                        alt={`${studentName}'s photo`}
+                        onError={() => setStudentPhotoError(true)}
+                      />
+                    ) : (
+                      <div className="cert-photo-placeholder">
+                        <User size={40} />
+                        <span>Photo</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="w-full h-px bg-amber-300 mb-6" />
+              <div className="w-full h-px bg-amber-300 mb-6 mt-4" />
 
               {/* Main certificate content — centred */}
               <div className="text-center">
