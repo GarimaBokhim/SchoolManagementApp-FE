@@ -1,8 +1,9 @@
 "use client";
-import { useGetModulesById } from "../hooks";
 import { useForm } from "react-hook-form";
 import EditModuleForm from "../components/EditModuleForm";
-import { IModules } from "../types/IModules";
+import { useGetModulesById } from "../hooks";
+import { ModuleFormValues } from "../types/ModuleForm";
+
 interface Props {
   visible: boolean;
   modulesId: string;
@@ -12,26 +13,25 @@ interface Props {
 const EditModule = ({ visible, modulesId, onClose }: Props) => {
   const { data: module } = useGetModulesById(modulesId);
 
-  const form = useForm<IModules>({
-    values: {
-      Id: module?.Id ?? "",
-      Name: module?.Name ?? "",
-      TargetUrl: module?.TargetUrl ?? "",
-      IsActive: module?.isActive ?? false,
-      IconUrl: module?.IconUrl ?? "",
-      Rank: module?.Rank ?? "",
-      createdAt: module?.createdAt,
+  const form = useForm<ModuleFormValues>({
+    defaultValues: {
+      name: "",
+      description: "",
+      targetUrl: "",
+      iconUrl: "",
+      rank: "",
+      appId: "",
+      isActive: false,
     },
-
-    // resolver: yupResolver(ModuleValidator),
   });
 
   if (!visible) return null;
+
   return (
     <EditModuleForm
       form={form}
       moduleId={modulesId}
-      onClose={() => onClose()}
+      onClose={onClose}
     />
   );
 };
