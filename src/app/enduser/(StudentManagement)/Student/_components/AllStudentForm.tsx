@@ -48,6 +48,7 @@ import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
 import ExcelPreviewModal from './ExcelPreviewModel'
+
 const useExcelPreview = () => {
   const [previewData, setPreviewData] = useState<any[]>([])
   const [showPreviewModal, setShowPreviewModal] = useState(false)
@@ -96,9 +97,9 @@ const useExcelPreview = () => {
   }
 }
 
-// StatCard component (if not imported from elsewhere)
+// StatCard component with improved styling for better distribution
 const StatCard = ({ label, value, icon, iconBg, iconColor }: any) => (
-  <div className="flex items-center gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-4 py-2 shadow-sm border border-gray-200 dark:border-gray-700">
+  <div className="flex items-center gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700 flex-1 min-w-[150px]">
     <div className={`p-2 rounded-full ${iconBg} ${iconColor}`}>{icon}</div>
     <div>
       <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
@@ -125,7 +126,6 @@ const AllStudentForm = () => {
     setPaginationParams(params)
   }
   
-  // Now this will work because we defined the hook above
   const {
     previewData,  
     showPreviewModal,
@@ -261,21 +261,19 @@ const AllStudentForm = () => {
     return allclass?.name || 'N/A'
   }
 
-  // ── Stat derivations ───────────────────────────────────────────────────────
   const items = filteredStudent?.Items ?? []
   const totalStudents = filteredStudent?.TotalItems ?? items.length
   const maleCount = items.filter((s) => s.genderStatus === 0).length
   const femaleCount = items.filter((s) => s.genderStatus === 1).length
   const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
-  // ──────────────────────────────────────────────────────────────────────────
   
   return (
     <>
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
-          {/* ── Page header ─────────────────────────────────────────────── */}
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+          {/* Page header */}
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center flex-wrap gap-3">
             <h1 className="text-xl font-semibold">All Students</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
@@ -323,8 +321,8 @@ const AllStudentForm = () => {
             </div>
           </div>
 
-          {/* ── Stat cards ──────────────────────────────────────────────── */}
-          <div className="flex flex-wrap gap-3 px-4 pb-4 pt-1">
+          {/* Stats cards - Now properly distributed across full width */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 pb-4 pt-1">
             <StatCard
               label="Total Students"
               value={isLoading ? '—' : totalStudents}
@@ -355,7 +353,7 @@ const AllStudentForm = () => {
             />
           </div>
 
-          {/* ── Filter panel ────────────────────────────────────────────── */}
+          {/* Filter panel */}
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -408,7 +406,7 @@ const AllStudentForm = () => {
             </div>
           )}
 
-          {/* ── Table ───────────────────────────────────────────────────── */}
+          {/* Table */}
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
@@ -423,7 +421,7 @@ const AllStudentForm = () => {
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">Phone</th>
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">DOB</th>
                   <th className="px-4 py-3 text-center w-40">Actions</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -526,7 +524,7 @@ const AllStudentForm = () => {
           </div>
         </div>
 
-        {/* ── Pagination ────────────────────────────────────────────────── */}
+        {/* Pagination */}
         {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
