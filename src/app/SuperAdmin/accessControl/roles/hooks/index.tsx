@@ -1,6 +1,6 @@
 import { api } from "@/utils/instance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IRoles } from "../types/IRoles";
+import { IRoleModuleGroup, IRoles } from "../types/IRoles";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 
 const rolesEntryPoints = {
@@ -156,5 +156,17 @@ export const useGetFilterRoleByDate = (
     },
     staleTime: 0,
     retry: false,
+  });
+};
+export const useGetModuleByRoleId = (id: string) => {
+  return useQuery<IRoleModuleGroup[]>({  // Explicitly type the query
+    queryKey: ["modulesByRole", id],
+    queryFn: async () => {
+      const response = await api.get<IRoleModuleGroup[]>(
+        `/api/RoleModuleControllers/GetModulesByRoleId/${id}`
+      );
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
