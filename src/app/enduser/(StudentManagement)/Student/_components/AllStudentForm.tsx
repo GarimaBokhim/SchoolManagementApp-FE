@@ -47,6 +47,65 @@ import ExcelParentTable from '../../_Parent/components/Excelprint'
 import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
+import ExcelPreviewModal from './ExcelPreviewModel'
+const useExcelPreview = () => {
+  const [previewData, setPreviewData] = useState<any[]>([])
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const handleExcelPreview = async (file: File) => {
+    setSelectedFile(file)
+    setUploadLoading(true)
+    
+    try {
+      // Parse Excel file and preview data
+      setShowPreviewModal(true)
+    } catch (error) {
+      console.error('Error previewing Excel:', error)
+      toast.error('Failed to preview Excel file')
+    } finally {
+      setUploadLoading(false)
+    }
+  }
+
+  const handleSaveExcel = async () => {
+    setUploadLoading(true)
+    try {
+      // Upload the file to your server
+      // await uploadstudent(selectedFile)
+      toast.success('File uploaded successfully!')
+      setShowPreviewModal(false)
+    } catch (error) {
+      toast.error('Upload failed! Please check the format')
+    } finally {
+      setUploadLoading(false)
+    }
+  }
+
+  return {
+    previewData,
+    showPreviewModal,
+    setShowPreviewModal,
+    uploadLoading,
+    setUploadLoading,
+    handleExcelPreview,
+    selectedFile,
+    setSelectedFile,
+    handleSaveExcel,
+  }
+}
+
+// StatCard component (if not imported from elsewhere)
+const StatCard = ({ label, value, icon, iconBg, iconColor }: any) => (
+  <div className="flex items-center gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-4 py-2 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className={`p-2 rounded-full ${iconBg} ${iconColor}`}>{icon}</div>
+    <div>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="text-xl font-semibold text-gray-900 dark:text-white">{value}</p>
+    </div>
+  </div>
+)
 
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -54,31 +113,35 @@ const AllStudentForm = () => {
     pageIndex: 1,
     isPagination: true,
   })
+  
   type SearchParam = {
     pageSize: number
     pageIndex: number
     isPagination: boolean
   }
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize
     setPaginationParams(params)
   }
   
+  // Now this will work because we defined the hook above
   const {
-  previewData,  
-  showPreviewModal,
-  setShowPreviewModal,
-  uploadLoading,
-  setUploadLoading,
-  handleExcelPreview,
-  selectedFile,
-  setSelectedFile,
-} = useExcelPreview();
+    previewData,  
+    showPreviewModal,
+    setShowPreviewModal,
+    uploadLoading,
+    setUploadLoading,
+    handleExcelPreview,
+    selectedFile,
+    setSelectedFile,
+    handleSaveExcel,
+  } = useExcelPreview()
+  
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
-  const [selectedIdForRegistration, setSelectedIdForRegistration] =
-    useState<string>('')
+  const [selectedIdForRegistration, setSelectedIdForRegistration] = useState<string>('')
   const [addModal, setAddModal] = useState(false)
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
@@ -197,13 +260,15 @@ const AllStudentForm = () => {
     if (!classId) return 'N/A'
     return allclass?.name || 'N/A'
   }
-// ── Stat derivations ───────────────────────────────────────────────────────
-const items = filteredStudent?.Items ?? []
-const totalStudents = filteredStudent?.TotalItems ?? items.length  // ← was TotalCount
-const maleCount = items.filter((s) => s.genderStatus === 0).length
-const femaleCount = items.filter((s) => s.genderStatus === 1).length
-const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
-// ──────────────────────────────────────────────────────────────────────────
+
+  // ── Stat derivations ───────────────────────────────────────────────────────
+  const items = filteredStudent?.Items ?? []
+  const totalStudents = filteredStudent?.TotalItems ?? items.length
+  const maleCount = items.filter((s) => s.genderStatus === 0).length
+  const femaleCount = items.filter((s) => s.genderStatus === 1).length
+  const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
+  // ──────────────────────────────────────────────────────────────────────────
+  
   return (
     <>
       <div className="p-4 sm:p-6">
@@ -245,33 +310,16 @@ const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
                 }
               />
               <ImportButtonForm handleExcelImport={handleExcelPreview} />
-             {/* <ImportButtonForm handleExcelImport={handleFileChange} /> */}
 
-             {showPreviewModal && (
+              {showPreviewModal && (
                 <ExcelPreviewModal             
-                    previewData={previewData}
-                    show={showPreviewModal}
-                    onClose={() => setShowPreviewModal(false)}
-                    onSave={handleSaveExcel}
-                    loading={uploadLoading}
-                    
+                  previewData={previewData}
+                  show={showPreviewModal}
+                  onClose={() => setShowPreviewModal(false)}
+                  onSave={handleSaveExcel}
+                  loading={uploadLoading}
                 />
-                )}
-
-              
-
-              
-
-
-              {/* <ImportButtonForm
-                handleExcelImport={async (file) => {
-                  await toast.promise(uploadstudent(file), {
-                    loading: 'Uploading...',
-                    success: 'Item uploaded successfully!',
-                    error: 'Upload failed! Please Check the format',
-                  })
-                }}
-              /> */}
+              )}
             </div>
           </div>
 

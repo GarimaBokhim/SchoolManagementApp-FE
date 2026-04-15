@@ -1,12 +1,19 @@
 export interface IModules {
-  createdAt: string | number | Date;
-  Name: string;
-  TargetUrl: string;
   Id: string;
+  Name?: string;
+  Description?: string;
+  TargetUrl?: string;
+  IconUrl?: string;
+  Rank?: string;
+  AppId?: string;
   IsActive: boolean;
-  IconUrl: string;
-  Rank: string;
 }
+
+export interface IAppName {
+  Id: string;
+  Name: string;
+}
+
 export interface IFilterModulesByDate {
   startDate: string;
   endDate: string;

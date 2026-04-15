@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IDisplayNotice, INotice, IPublish } from "../types/INotice";
+
 const NoticeEndPoints = {
   getAllNotices: "/api/Communication/all-Notice",
   createNotices: "/api/Communication/AddNotice",
@@ -10,37 +11,85 @@ const NoticeEndPoints = {
   unPublishNotice: "/api/Communication/UnPublishNotice",
   filterNoticeByDate: "/api/Communication/FilterNotice",
   DisplayNotice: "/api/Communication/DisplayNotice",
+  updateNotice: "/api/Communication/UpdateNotice",
+  deleteNotice: "/api/Communication/DeleteNotice",
 };
 
 const queryKey = "Notice";
 const filterQueryKey = "filteredNotice";
 const publishQuery = "publish";
 const unPublishQuery = "unPublish";
+
 type NoticeRequest = {
   id?: string;
   title: string;
   contentHtml: string;
   shortDescription: string;
 };
+
+type UpdateNoticeRequest = {
+  id: string;
+  title: string;
+  contentHtml: string;
+  shortDescription: string;
+  modifiedBy: string;
+  modifiedAt: string;
+};
+
 type PublishRequest = {
   noticeId: string;
 };
+
 export const useAddNotice = () => {
   const queryClient = useQueryClient();
-
   return useMutation<INotice, Error, NoticeRequest>({
     mutationFn: async (formData: NoticeRequest): Promise<INotice> => {
       const response = await api.post(NoticeEndPoints.createNotices, formData);
       return response.data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
-
     onError: (error) => {
       console.error("Error adding Notice:", error);
+    },
+  });
+};
+
+export const useUpdateNotice = () => {
+  const queryClient = useQueryClient();
+  return useMutation<INotice, Error, UpdateNoticeRequest>({
+    mutationFn: async (data: UpdateNoticeRequest): Promise<INotice> => {
+      const { id, ...body } = data;
+      const response = await api.put(
+        `${NoticeEndPoints.updateNotice}/${id}`,
+        body
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
+    },
+    onError: (error) => {
+      console.error("Error updating Notice:", error);
+    },
+  });
+};
+
+export const useDeleteNotice = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: async (id: string): Promise<void> => {
+      await api.delete(`${NoticeEndPoints.deleteNotice}/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
+    },
+    onError: (error) => {
+      console.error("Error deleting Notice:", error);
     },
   });
 };
@@ -98,42 +147,36 @@ export const useFilterNoticeByDate = (params?: string) => {
 
 export const usePublishNotice = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IPublish, Error, PublishRequest>({
     mutationFn: async (data: PublishRequest): Promise<IPublish> => {
       const response = await api.post(NoticeEndPoints.publishNotice, data);
       return response.data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [publishQuery] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
-
     onError: (error) => {
-      console.error("Error adding Notice:", error);
+      console.error("Error publishing Notice:", error);
     },
   });
 };
 
 export const useUnPublishNotice = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IPublish, Error, PublishRequest>({
     mutationFn: async (data: PublishRequest): Promise<IPublish> => {
       const response = await api.post(NoticeEndPoints.unPublishNotice, data);
       return response.data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [unPublishQuery] });
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
     },
-
     onError: (error) => {
-      console.error("Error adding Notice:", error);
+      console.error("Error unpublishing Notice:", error);
     },
   });
 };

@@ -1,45 +1,44 @@
 "use client";
 import { useForm } from "react-hook-form";
 import AddModuleForm from "../components/AddModuleForm";
-import type { IModules } from "../types/IModules";
-// import { yupResolver } from "@hookform/resolvers/yup";
-// import { ModuleValidator } from "../validators";
 import { useEffect } from "react";
+import { ModuleFormValues } from "../types/ModuleForm";
+
 interface Props {
   visible: boolean;
   onClose: () => void;
 }
 
 const Add = ({ visible, onClose }: Props) => {
-  const form = useForm<IModules>({
+  const form = useForm<ModuleFormValues>({
     defaultValues: {
-      Name: "",
-      TargetUrl: "",
-      Id: "",
-      IsActive: true,
-      IconUrl: "",
-      Rank: "",
+      name: "",
+      description: "",
+      targetUrl: "",
+      iconUrl: "",
+      rank: "",
+      appId: "",
+      isActive: true,
     },
-
-    // resolver: yupResolver(ModuleValidator),
   });
 
-  // Reset form when modal opens
   useEffect(() => {
     if (visible) {
       form.reset({
-        Name: "",
-        TargetUrl: "",
-        Id: "",
-        IsActive: true,
-        IconUrl: "",
-        Rank: "",
+        name: "",
+        description: "",
+        targetUrl: "",
+        iconUrl: "",
+        rank: "",
+        appId: "",
+        isActive: true,
       });
     }
   }, [visible, form]);
 
   if (!visible) return null;
 
-  return <AddModuleForm form={form} onClose={() => onClose()} />;
+  return <AddModuleForm form={form} onClose={onClose} />;
 };
+
 export default Add;

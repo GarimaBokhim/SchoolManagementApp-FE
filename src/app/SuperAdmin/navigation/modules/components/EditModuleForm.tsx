@@ -1,6 +1,5 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { IModules } from "../types/IModules";
 import { useEditModule, useGetModulesById } from "../hooks";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -9,105 +8,135 @@ import { AxiosError } from "axios";
 import { useEffect } from "react";
 import { X } from "lucide-react";
 
+// ✅ FORM TYPE (camelCase)
+type ModuleFormValues = {
+  name: string;
+  description: string;
+  targetUrl: string;
+  iconUrl: string;
+  rank: string;
+  appId: string;
+  isActive: boolean;
+};
+
 type Props = {
-  form: UseFormReturn<IModules>;
+  form: UseFormReturn<ModuleFormValues>;
   moduleId: string;
   onClose: () => void;
 };
+
 const EditModuleForm = ({ form, onClose, moduleId }: Props) => {
   const editModule = useEditModule();
   const { data: moduleData } = useGetModulesById(moduleId);
-  const onSubmit: SubmitHandler<IModules> = async (form) => {
+
+  // ✅ SUBMIT (transform to API format)
+  const onSubmit: SubmitHandler<ModuleFormValues> = async (data) => {
     try {
+      const moduleRequest = {
+        name: data.name,
+        description: data.description,
+        targetUrl: data.targetUrl,
+        isActive: data.isActive,
+        iconUrl: data.iconUrl,
+        rank: data.rank,
+        appId: data.appId,
+      };
+
       await editModule.mutateAsync({
         id: moduleId,
-        data: form,
+        data: moduleRequest,
       });
+
       Toast.success("Successfully Updated Module");
       onClose();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
-        Toast.error(error.response?.data);
+        Toast.error(error.response?.data || "Update failed");
       } else {
-        Toast.error("Failed to update module" + error);
+        Toast.error("Failed to update module");
       }
-    } finally {
-      onClose();
     }
   };
 
+  // ✅ MAP API → FORM
   useEffect(() => {
     if (moduleData) {
       form.reset({
-        Id: moduleData?.Id ?? "",
-        Name: moduleData?.Name ?? "",
-        TargetUrl: moduleData?.TargetUrl ?? "",
-        IsActive: moduleData?.isActive ?? false,
-        IconUrl: moduleData?.IconUrl ?? "",
-        Rank: moduleData?.Rank ?? "",
-        createdAt: moduleData?.createdAt,
+        name: moduleData.Name ?? "",
+        description: moduleData.Description ?? "",
+        targetUrl: moduleData.TargetUrl ?? "",
+        iconUrl: moduleData.IconUrl ?? "",
+        rank: moduleData.Rank ?? "",
+        appId: moduleData.AppId ?? "",
+        isActive: moduleData.IsActive ?? false,
       });
     }
   }, [moduleData, form]);
+
   return (
-    <div className="fixed inset-0 flex justify-center items-center backdrop-blur-xs z-50">
-      <div className="w-full max-w-md mx-4">
-        <fieldset className="bg-white rounded-xl shadow-xl p-6 border border-gray-200">
+    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2">
+      <div className="w-full max-w-md">
+        <fieldset className="bg-white dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200">
+          
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold text-gray-800">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Update Module
             </h1>
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-gray-400 hover:text-red-500 transition-colors"
             >
               <X size={24} strokeWidth={3} color="red" />
             </button>
           </div>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="mb-4">
-              <InputElement
-                label="Name"
-                layout="column"
-                form={form}
-                name="Name"
-                placeholder="Enter module name"
-                defaultValue={moduleData?.Name}
-              />
-            </div>
 
-            <div className="mb-4">
-              <InputElement
-                label="Target Url"
-                layout="column"
-                form={form}
-                name="TargetUrl"
-                placeholder="Enter target URl"
-                defaultValue={moduleData?.TargetUrl}
-              />
-            </div>
-            <div className="mb-4">
-              <InputElement
-                label="Icon Url"
-                layout="column"
-                form={form}
-                name="IconUrl"
-                placeholder="Enter Icon URl"
-                defaultValue={moduleData?.IconUrl}
-              />
-            </div>
-            <div className="mb-4">
-              <InputElement
-                label="Rank"
-                layout="column"
-                form={form}
-                name="Rank"
-                placeholder="Enter Rank"
-                defaultValue={moduleData?.Rank}
-              />
-            </div>
-            <div className="mb-2 flex ml-4 items-center">
+          {/* Form */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+            <InputElement
+              label="Name"
+              layout="column"
+              form={form}
+              name="name"
+              placeholder="Enter module name"
+            />
+
+            <InputElement
+              label="Description"
+              layout="column"
+              form={form}
+              name="description"
+              placeholder="Enter description"
+            />
+
+            <InputElement
+              label="Target URL"
+              layout="column"
+              form={form}
+              name="targetUrl"
+              placeholder="Enter target URL"
+            />
+
+            <InputElement
+              label="Icon URL"
+              layout="column"
+              form={form}
+              name="iconUrl"
+              placeholder="Enter icon URL"
+            />
+
+            <InputElement
+              label="Rank"
+              layout="column"
+              form={form}
+              name="rank"
+              placeholder="Enter rank"
+            />
+
+            {/* Checkbox */}
+            <div className="flex items-center space-x-2">
               <InputElement
                 label=""
                 layout="column"
@@ -115,13 +144,15 @@ const EditModuleForm = ({ form, onClose, moduleId }: Props) => {
                 inputTypeCheckBox="checkbox"
                 name="isActive"
                 customStyle="!border-0 after:!content-none"
-                defaultValue={moduleData?.isActive}
               />
-              <p className="ml-4 ">Is Active</p>
+              <p className="ml-4">Is Active</p>
             </div>
+
+            {/* Submit */}
             <div className="flex justify-center mt-4">
-              <ButtonElement type="submit" text="Submit" />
+              <ButtonElement type="submit" text="Update" />
             </div>
+
           </form>
         </fieldset>
       </div>

@@ -63,29 +63,33 @@ const Sidebar: React.FC<Props> = ({
   const { setMenuStatus } = usePermissions()
   const { isOpen } = useSidebar()
   const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false) // Add this to fix hydration
   const pathname = usePathname()
   const parts = pathname.split('/').filter(Boolean)
   const pathAfterFirst = `/${parts.slice(1).join('/')}`
   const navigate = useRouter()
   const [activeRole, setActiveRole] = useState<string | undefined>('')
   const [activeSubModule, setActiveSubModule] = useState<string | undefined>('')
-  let role = ''
+  const [storedUser, setStoredUser] = useState<any>(null)
 
-  const [storedUser, setStoredUser] = useState<any>(() => {
-    if (typeof window === 'undefined') return null
-    const user = localStorage.getItem('userDetails')
-    if (!user) return null
-    try {
-      return JSON.parse(user)
-    } catch (err) {
-      console.error('Failed to parse user details:', err)
-      return null
+  // Handle client-side only initialization
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const user = localStorage.getItem('userDetails')
+      if (user) {
+        try {
+          setStoredUser(JSON.parse(user))
+        } catch (err) {
+          console.error('Failed to parse user details:', err)
+        }
+      }
     }
-  })
+  }, [])
 
-  role = storedUser?.role || ''
+  const role = storedUser?.role || ''
 
-  const withRolePrefix = (path: string='') => {
+  const withRolePrefix = (path: string = '') => {
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     const lowerRole = role?.toLowerCase()
     let prefix = ''
@@ -219,7 +223,8 @@ const Sidebar: React.FC<Props> = ({
             className="rounded-full w-[2.5rem] h-[2.5rem] object-cover cursor-pointer bg-amber-200"
             priority
           />
-          {isOpen && <span className="text-md font-semibold">{role}</span>}
+          {/* Only render role text on client side to avoid hydration mismatch */}
+          {mounted && isOpen && <span className="text-md font-semibold">{role}</span>}
         </div>
         <div className="flex justify-center w-full md:w-auto">
           <DialogButton
@@ -251,7 +256,7 @@ const Sidebar: React.FC<Props> = ({
             if (!hasSubItems) {
               return (
                 <Link
-                  key={item.key}
+                  key={item.key || item.name}
                   href={
                     role === 'superadmin' || role === 'developeruser'
                       ? item.url
@@ -287,7 +292,7 @@ const Sidebar: React.FC<Props> = ({
 
             // ── Parent with sub-items ─────────────────────────────────
             return (
-              <div key={item.key} className="relative group">
+              <div key={item.key || item.name} className="relative group">
                 <button
                   data-key={item.key}
                   onClick={() => toggleSection(item.key)}
@@ -327,18 +332,17 @@ const Sidebar: React.FC<Props> = ({
                   )}
                 </button>
 
-              
-             {/* Expanded sub-items (sidebar open) */}
-{isOpen && (
-  <div
-    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
-      ${isOpenSection ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}  
-  >
+                {/* Expanded sub-items (sidebar open) */}
+                {isOpen && (
+                  <div
+                    className={`ml-3 mt-1 flex flex-col gap-1 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out
+                      ${isOpenSection ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                  >
                     {item.subItems.map((subItem, index) => {
                       const activeSub = pathAfterFirst === subItem.targetUrl
                       return (
                         <Link
-                          key={subItem.targetUrl + index}
+                          key={`${subItem.targetUrl}-${subItem.subModulesId || index}`}
                           href={
                             role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl
@@ -355,12 +359,7 @@ const Sidebar: React.FC<Props> = ({
                             }`}
                           style={activeSub ? { backgroundColor: activeSubBg, color: primaryColor } : {}}
                         >
-                    {/* subItem icons intentionally removed - API sends no icons for sub-items    {subItem.icon && (() => {
-  const ResolvedIcon = staticIcons[subItem.icon as string];
-  if (!ResolvedIcon) return null;
-  if (React.isValidElement(ResolvedIcon)) return ResolvedIcon;
-  return React.createElement(ResolvedIcon as any, { size: 16 });
-})()}*/} 
+                          {/* subItem icons intentionally removed - API sends no icons for sub-items */}
                           {isOpen && (
                             <span className="transition-all duration-300 ease-in-out">
                               {subItem.name}
@@ -390,7 +389,7 @@ const Sidebar: React.FC<Props> = ({
                     >
                       {item.subItems.map((subItem, index) => (
                         <Link
-                          key={subItem.targetUrl + index}
+                          key={`floating-${subItem.targetUrl}-${subItem.subModulesId || index}`}
                           href={
                             role === 'superadmin' || role === 'developeruser'
                               ? subItem.targetUrl

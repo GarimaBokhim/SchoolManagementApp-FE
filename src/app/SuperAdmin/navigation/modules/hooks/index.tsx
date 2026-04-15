@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IModules } from "../types/IModules";
+
 const modulesEndPoints = {
   getAllModules: "/api/RoleModuleControllers/all-modules",
   createModules: "/api/RoleModuleControllers/AddModules",
@@ -11,17 +12,33 @@ const modulesEndPoints = {
   updateModules: "/api/RoleModuleControllers/UpdateModules",
   assignModules: "/api/RoleModuleControllers/AssignModules",
   filterModulesByDate: "/api/RoleModuleControllers/FilterModulesByDate",
+  getAppNames: "/api/RoleModuleControllers/AppNames",
 };
 
 const queryKey = "modules";
 
 type ModuleRequest = {
-  Id?: string;
-  Name: string;
-  TargetUrl: string;
-  IsActive: boolean;
-  IconUrl: string;
-  Rank: string;
+  id?: string;
+  name: string;
+  description: string;
+  targetUrl: string;
+  isActive: boolean;
+  iconUrl: string;
+  rank: string;
+  appId: string;
+};
+
+export const useGetAppNames = () => {
+  return useQuery({
+    queryKey: ["appNames"],
+    queryFn: async () => {
+      const response = await api.get<{
+        Items: { Id: string; Name: string }[];
+      }>(modulesEndPoints.getAppNames);
+      return response.data.Items;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 };
 
 export const useGetModuleByRoleId = (id: string) => {
@@ -31,7 +48,6 @@ export const useGetModuleByRoleId = (id: string) => {
       const response = await api.get<IModules[]>(
         `${modulesEndPoints.getModuleByRoleId}/${id}`
       );
-
       return response.data;
     },
     enabled: !!id,
@@ -42,14 +58,17 @@ export const useGetModuleByRoleId = (id: string) => {
 
 export const useGetAllModules = (params?: string) => {
   return useQuery({
-    queryKey: [queryKey],
+    queryKey: ["modules", params], // Include params in query key
     queryFn: async () => {
       const url = params
         ? `${modulesEndPoints.getAllModules}${params}`
         : `${modulesEndPoints.getAllModules}`;
       const response = await api.get<IPaginationResponse<IModules>>(url);
+      console.log("API Response:", response.data); // Debug log
       return response.data;
     },
+    staleTime: 0, // Set to 0 to always fetch fresh data
+    retry: 1,
   });
 };
 
@@ -57,7 +76,9 @@ export const useGetModulesById = (Id: string) => {
   return useQuery({
     queryKey: [queryKey, Id],
     queryFn: async () => {
-      const response = await api.get(`${modulesEndPoints.getModuleById}/${Id}`);
+      const response = await api.get(
+        `${modulesEndPoints.getModuleById}/${Id}`
+      );
       return response.data;
     },
     enabled: !!Id,
@@ -83,15 +104,19 @@ export const useAddModule = () => {
   });
 };
 
+// CORRECTED VERSION - Fixed the syntax error
 export const useEditModule = () => {
-  return useMutation<
-    IModules,
-    Error,
-    { id: string | unknown; data: ModuleRequest }
-  >({
-    mutationFn: async ({ id, data }): Promise<IModules> => {
+  const queryClient = useQueryClient();
+  return useMutation<IModules, Error, { id: string | unknown; data: ModuleRequest }>({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string | unknown;
+      data: ModuleRequest;
+    }): Promise<IModules> => {
       if (!id) {
-        throw new Error("Id is required to edit a role");
+        throw new Error("Id is required to edit a module");
       }
       const response = await api.patch(
         `${modulesEndPoints.updateModules}/${id}`,
@@ -99,22 +124,38 @@ export const useEditModule = () => {
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.refetchQueries({ queryKey: ["modules"] });
+    },
+    onError: (error: Error) => {
+      console.error("Error editing module:", error);
+    },
   });
 };
 
 export const useRemoveModule = () => {
+  const queryClient = useQueryClient();
   return useMutation<IModules, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IModules> => {
       if (!Id) {
-        throw new Error("Id is required to edit a role");
+        throw new Error("Id is required to delete a module");
       }
       const response = await api.delete(
         `${modulesEndPoints.removeModules}/${Id}`
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.refetchQueries({ queryKey: ["modules"] });
+    },
+    onError: (error: Error) => {
+      console.error("Error removing module:", error);
+    },
   });
 };
+
 export const useGetFilterModulesByDate = (
   startDate: string,
   endDate: string,
@@ -124,18 +165,16 @@ export const useGetFilterModulesByDate = (
     queryKey: [queryKey, name, startDate, endDate],
     queryFn: async () => {
       if (!startDate || !endDate || !name) {
-        throw new Error("StartDate and EndDate are required to get a Modules");
+        throw new Error("StartDate and EndDate are required to get Modules");
       }
       const queryParams = new URLSearchParams({
         startDate,
         endDate,
         name,
       });
-
       const response = await api.get<IModules[]>(
         `${modulesEndPoints.filterModulesByDate}?${queryParams.toString()}`
       );
-
       return response.data;
     },
     staleTime: 0,
