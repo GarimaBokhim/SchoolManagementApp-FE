@@ -14,6 +14,12 @@ const FeeCategoryEndPoints = {
 const queryKey = "FeeCategories";
 const filterQueryKey = "filteredFeeCategory";
 
+type UpdateFeeCategoryRequest = {
+  name: string;
+  description: string;
+};
+
+// Full FeeCategory request for create
 type FeeCategoryRequest = {
   id?: string;
   name: string;
@@ -60,18 +66,19 @@ export const useRemoveFeeCategory = () => {
   });
 };
 
+// Updated useEditFeeCategory hook that only sends name and description
 export const useEditFeeCategory = () => {
   const queryClient = useQueryClient();
   return useMutation<
     IFeeCategory,
     Error,
-    { id: string | unknown; data: FeeCategoryRequest }
+    { id: string | unknown; data: UpdateFeeCategoryRequest }
   >({
     mutationFn: async ({ id, data }): Promise<IFeeCategory> => {
       if (!id) throw new Error("Id is required to edit FeeCategory");
       const response = await api.patch(
         `${FeeCategoryEndPoints.updateFeeCategory}/${id}`,
-        data
+        data // Now only sends { name, description }
       );
       return response.data;
     },
@@ -79,8 +86,14 @@ export const useEditFeeCategory = () => {
       queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
       queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
+    onError: (error) => {
+      console.error("Error updating FeeCategory:", error);
+    },
   });
 };
+
+// Alias for useEditFeeCategory to match your naming convention
+export const useUpdateFeeCategory = useEditFeeCategory;
 
 export const useGetAllFeeCategories = (params?: string) => {
   return useQuery({

@@ -16,6 +16,8 @@ import { useFilterFeeCategoryByDate, useRemoveFeeCategory } from "../hooks";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddFeeCategory from "../pages/Add";
+import UpdateFeeCategory from "../pages/Update";
+
 const AllFeeCategoryForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -35,8 +37,11 @@ const AllFeeCategoryForm = () => {
   };
 
   const [addModal, setAddModal] = useState(false);
+  const [updateModal, setUpdateModal] = useState(false);
+  const [selectedFeeCategory, setSelectedFeeCategory] = useState<IFeeCategory | null>(null);
+  
   const { menuStatus } = usePermissions();
-  const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
+  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
 
@@ -124,6 +129,17 @@ const AllFeeCategoryForm = () => {
     }
   };
 
+  const handleEdit = (feeCategory: IFeeCategory) => {
+    setSelectedFeeCategory(feeCategory);
+    setUpdateModal(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setUpdateModal(false);
+    setSelectedFeeCategory(null);
+    refetch(); // Refresh the list after update
+  };
+
   return (
     <>
       <Toaster position="top-right" />
@@ -189,7 +205,7 @@ const AllFeeCategoryForm = () => {
                   <th className="px-4 py-3 text-center">S.N</th>
                   <th className="px-4 py-3 text-center">Name</th>
                   <th className="px-4 py-3 text-center">Description</th>
-                  {canDelete && (
+                  {(canEdit || canDelete) && (
                     <th className="px-4 py-3 text-center">Actions</th>
                   )}
                 </tr>
@@ -223,18 +239,25 @@ const AllFeeCategoryForm = () => {
                         <td className="py-3 px-4 text-center">
                           {feeCategory.description || "-"}
                         </td>
-                      
-                        {canDelete && (
+                        {(canEdit || canDelete) && (
                           <td className="py-3 px-4 text-center">
                             <div className="flex justify-center gap-2">
-                              <ButtonElement
-                                text=""
-                                icon={
-                                  <Trash2 className="text-white" size={15} />
-                                }
-                                onClick={() => handleDelete(feeCategory.id)}
-                                className="!bg-red-500 hover:!bg-red-600"
-                              />
+                              {canEdit && (
+                                <ButtonElement
+                                  text=""
+                                  icon={<Pencil className="text-white" size={15} />}
+                                  onClick={() => handleEdit(feeCategory)}
+                                  className="!bg-blue-500 hover:!bg-blue-600"
+                                />
+                              )}
+                              {canDelete && (
+                                <ButtonElement
+                                  text=""
+                                  icon={<Trash2 className="text-white" size={15} />}
+                                  onClick={() => handleDelete(feeCategory.id)}
+                                  className="!bg-red-500 hover:!bg-red-600"
+                                />
+                              )}
                             </div>
                           </td>
                         )}
@@ -278,6 +301,12 @@ const AllFeeCategoryForm = () => {
             setAddModal(false);
             refetch();
           }}
+        />
+
+        <UpdateFeeCategory
+          visible={updateModal}
+          onClose={handleCloseUpdateModal}
+          feeCategory={selectedFeeCategory}
         />
       </div>
     </>
