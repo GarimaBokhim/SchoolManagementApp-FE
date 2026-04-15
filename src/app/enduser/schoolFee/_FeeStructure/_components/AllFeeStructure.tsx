@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Filter, Plus, RotateCcw, Trash, Pencil } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -17,26 +17,34 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddFeeStructure from "../pages/Add";
+import UpdateFeeStructure from "../pages/Edit";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import DeleteButton from "@/components/Buttons/DeleteButton"; 
+import DeleteButton from "@/components/Buttons/DeleteButton";
+
 const AllFeeStructureForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+  
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  
   const [addModal, setAddModal] = useState(false);
+  const [updateModal, setUpdateModal] = useState(false);
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeStructure | null>(null);
+  
   const { menuStatus } = usePermissions();
-  const { canAdd, canDelete } = useMenuPermissionData(menuStatus);
+  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allClass } = useGetAllClass();
@@ -114,6 +122,17 @@ const AllFeeStructureForm = () => {
     } catch {
       toast.error("Error deleting fee structure.");
     }
+  };
+  
+  const handleEdit = (feeStructure: IFeeStructure) => {
+    setSelectedFeeStructure(feeStructure);
+    setUpdateModal(true);
+  };
+  
+  const handleCloseUpdateModal = () => {
+    setUpdateModal(false);
+    setSelectedFeeStructure(null);
+    refetch();
   };
   
   const onClearClick = () => {
@@ -252,6 +271,14 @@ const AllFeeStructureForm = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
+                            {canEdit && (
+                              <ButtonElement
+                                text=""
+                                icon={<Pencil className="text-white" size={15} />}
+                                onClick={() => handleEdit(feeStructure)}
+                                className="!bg-blue-500 hover:!bg-blue-600"
+                              />
+                            )}
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
@@ -296,7 +323,16 @@ const AllFeeStructureForm = () => {
         
         <AddFeeStructure
           visible={addModal}
-          onClose={() => setAddModal(false)}
+          onClose={() => {
+            setAddModal(false);
+            refetch();
+          }}
+        />
+
+        <UpdateFeeStructure
+          visible={updateModal}
+          onClose={handleCloseUpdateModal}
+          feeStructure={selectedFeeStructure}
         />
       </div>
     </>

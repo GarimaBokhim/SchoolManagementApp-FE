@@ -3,7 +3,9 @@ export interface IFeeStructure {
   classId: string;
   feeCategoryId: string;
   feeCategoryName?: string;
-  feeStructureDTOs: IFeeStructureDTO[]
+  feeStructureDTOs: IFeeStructureDTO[];
+  totalAmount?: number;  // Optional: for display in list view
+  discountAmount?: number; // Optional: for display in list view
   isActive?: boolean;
   schoolId?: string;
   createdBy?: string;
@@ -13,19 +15,21 @@ export interface IFeeStructure {
 }
 
 export interface IFeeStructureDTO {
+  id?: string;  // Required for updates
   feeTypeId: string;
   amount: number;
   discountAmount: number;
-  discountPercentage: number; // ✅ Added this field
   times: number;
   totalAmount: number;
   feePaidType: number;
+  discountPercentage?: number;
+  feeTypeName?: string;  // Optional: for display purposes
 }
 
 export interface IFilterFeeStructure {
-  startDate: string;
-  endDate: string;
-  classId: string;
+  startDate?: string;  // Make optional
+  endDate?: string;    // Make optional
+  classId?: string;    // Make optional
 }
 
 export enum NameOfMonthsEnum {
