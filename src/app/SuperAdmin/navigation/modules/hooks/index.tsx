@@ -58,14 +58,17 @@ export const useGetModuleByRoleId = (id: string) => {
 
 export const useGetAllModules = (params?: string) => {
   return useQuery({
-    queryKey: [queryKey],
+    queryKey: ["modules", params], // Include params in query key
     queryFn: async () => {
       const url = params
         ? `${modulesEndPoints.getAllModules}${params}`
         : `${modulesEndPoints.getAllModules}`;
       const response = await api.get<IPaginationResponse<IModules>>(url);
+      console.log("API Response:", response.data); // Debug log
       return response.data;
     },
+    staleTime: 0, // Set to 0 to always fetch fresh data
+    retry: 1,
   });
 };
 

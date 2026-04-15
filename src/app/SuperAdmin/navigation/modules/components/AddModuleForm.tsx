@@ -1,6 +1,5 @@
 "use client";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { IModules, IAppName } from "../types/IModules";
 import { useAddModule, useGetAppNames } from "../hooks";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
@@ -9,9 +8,22 @@ import { InputElement } from "@/components/Input/InputElement";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { IAppName } from "../types/IModules";
+
+
+// ✅ Separate FORM TYPE (camelCase)
+type ModuleFormValues = {
+  name: string;
+  description: string;
+  targetUrl: string;
+  iconUrl: string;
+  rank: string;
+  appId: string;
+  isActive: boolean;
+};
 
 type Props = {
-  form: UseFormReturn<IModules>;
+  form: UseFormReturn<ModuleFormValues>;
   onClose: () => void;
 };
 
@@ -20,24 +32,37 @@ const AddModuleForm = ({ form, onClose }: Props) => {
   const { data: appNames, isLoading: appNamesLoading } = useGetAppNames();
   const [selectedApp, setSelectedApp] = useState<IAppName | null>(null);
 
-  const onSubmit: SubmitHandler<IModules> = async (data) => {
+  const onSubmit: SubmitHandler<ModuleFormValues> = async (data) => {
     try {
-      await addModule.mutateAsync(data);
+      // ✅ Send API request in expected format
+      const moduleRequest = {
+        name: data.name,
+        description: data.description,
+        targetUrl: data.targetUrl,
+        isActive: data.isActive,
+        iconUrl: data.iconUrl,
+        rank: data.rank,
+        appId: data.appId,
+      };
+
+      await addModule.mutateAsync(moduleRequest);
       Toast.success("Module added successfully!");
       onClose();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
         Toast.error(error.response?.data || "Failed to add module");
       } else {
-        Toast.error("Failed to add module: " + error);
+        Toast.error("Failed to add module");
       }
     }
   };
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center bg-black/30 backdrop-blur-sm z-50">
-      <div className="w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2">
+      <div className="w-full max-w-md">
         <fieldset className="bg-white dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200">
+          
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add Module
@@ -51,13 +76,16 @@ const AddModuleForm = ({ form, onClose }: Props) => {
             </button>
           </div>
 
+          {/* Form */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            
             <InputElement
               label="Name"
               layout="column"
               form={form}
               name="name"
               placeholder="Enter module name"
+              rules={{ required: "Module name is required" }}
             />
 
             <InputElement
@@ -90,8 +118,10 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               form={form}
               name="rank"
               placeholder="Enter rank"
+              rules={{ required: "Rank is required" }}
             />
 
+            {/* App Dropdown */}
             <AppCombobox<IAppName>
               label="Application"
               required
@@ -114,6 +144,7 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               }}
             />
 
+            {/* Checkbox */}
             <div className="flex items-center space-x-2">
               <InputElement
                 label=""
@@ -126,6 +157,7 @@ const AddModuleForm = ({ form, onClose }: Props) => {
               <p className="ml-4">Is Active</p>
             </div>
 
+            {/* Submit */}
             <div className="flex justify-center mt-4">
               <ButtonElement
                 type="submit"
@@ -133,6 +165,7 @@ const AddModuleForm = ({ form, onClose }: Props) => {
                 isLoading={addModule.isPending}
               />
             </div>
+
           </form>
         </fieldset>
       </div>

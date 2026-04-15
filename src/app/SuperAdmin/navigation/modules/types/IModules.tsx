@@ -1,13 +1,12 @@
 export interface IModules {
-  createdAt?: string | number | Date;
-  name: string;
-  description: string;
-  targetUrl: string;
-  id?: string;
-  isActive: boolean;
-  iconUrl: string;
-  rank: string;
-  appId: string;
+  Id: string;
+  Name?: string;
+  Description?: string;
+  TargetUrl?: string;
+  IconUrl?: string;
+  Rank?: string;
+  AppId?: string;
+  IsActive: boolean;
 }
 
 export interface IAppName {

@@ -6,37 +6,32 @@ import AddNoticeForm from "../_components/AddNotice";
 interface Props {
   visible: boolean;
   onClose?: () => void;
+  noticeToEdit?: INotice | null;
 }
-const AddStudent = ({ visible, onClose }: Props) => {
+
+const AddNotice = ({ visible, onClose, noticeToEdit }: Props) => {
   const form = useForm<INotice>({
     defaultValues: {
       title: "",
       contentHtml: "",
       shortDescription: "",
     },
-
-    // resolver: yupResolver(StudentValidator),
   });
+
   const handleOnClose = () => {
+    form.reset();
     if (onClose) onClose();
   };
+
   if (!visible) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
-             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-    >
-      <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] 
-               w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
-               max-h-[95vh] md:max-h-[92vh] h-full 
-               rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
-      >
-        <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-        <AddNoticeForm form={form} onClose={handleOnClose} />
+    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0">
+      <div className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw] max-h-[95vh] md:max-h-[92vh] h-full rounded-lg overflow-auto p-6 md:p-8 shadow-lg">
+        <AddNoticeForm form={form} onClose={handleOnClose} noticeToEdit={noticeToEdit} />
       </div>
     </div>
   );
 };
-export default AddStudent;
+
+export default AddNotice;
