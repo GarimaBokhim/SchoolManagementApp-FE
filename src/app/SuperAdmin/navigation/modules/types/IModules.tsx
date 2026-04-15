@@ -1,4 +1,5 @@
 export interface IModules {
+  Modules: any;
   Id: string;
   Name?: string;
   Description?: string;

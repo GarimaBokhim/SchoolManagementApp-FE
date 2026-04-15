@@ -72,64 +72,74 @@ const AssignMenuForm = ({ roleId, refetchRoles, visible, onClose }: Props) => {
   };
 
   const handleOnClose = (e: MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLDivElement).id === roleId) onClose();
+    if ((e.target as HTMLDivElement).id === "assign-menu-modal") onClose();
   };
   if (!visible) return null;
 
   return (
     <div
-      id="assign-submodule-modal"
+      id="assign-menu-modal"
       onClick={handleOnClose}
-      className="fixed inset-0 bg-black/50 flex justify-end items-start z-50 overflow-auto "
+      className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2"
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[88%] p-6 mt-3">
-        <div className="flex items-center justify-between space-x-5 mb-3 border-b pb-2">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-            Assign Menu
-          </h2>
-          <button onClick={onClose} className="cursor-pointer">
-            <X strokeWidth={3} color="red" className="mb-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {subModuleData && subModuleData.length > 0 ? (
-            subModuleData.map((mod) => (
-              <div
-                key={mod.id}
-                className="border rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-semibold text-gray-700">
-                    {mod.name}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <MenuList
-                    subModuleId={mod.id}
-                    selectedMenu={selectedMenu}
-                    handleCheckboxChange={handleCheckboxChange}
-                    handleSelectAllChange={handleSelectAllChange}
-                  />
-                </div>
-              </div>
-            ))
-          ) : !isLoading ? (
-            <p className="text-gray-500 text-base font-medium">
-              No modules found
-            </p>
-          ) : (
-            <p className="text-gray-400">Loading modules...</p>
-          )}
-          <div className="flex justify-center mt-4">
-            <ButtonElement
-              type="submit"
-              className="hover:bg-teal-700 transition-all"
-              text="Submit"
-            />
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <fieldset className="bg-white dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-600">
+          
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+              Assign Menu
+            </h1>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={24} strokeWidth={3} color="red" />
+            </button>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {subModuleData && subModuleData.length > 0 ? (
+              subModuleData.map((mod) => (
+                <div
+                  key={mod.id}
+                  className="border rounded-xl p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer dark:border-gray-600"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                      {mod.name}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <MenuList
+                      subModuleId={mod.id}
+                      selectedMenu={selectedMenu}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleSelectAllChange={handleSelectAllChange}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : !isLoading ? (
+              <p className="text-gray-500 dark:text-gray-400 text-base font-medium">
+                No modules found
+              </p>
+            ) : (
+              <p className="text-gray-400 dark:text-gray-500">Loading modules...</p>
+            )}
+            
+            <div className="flex justify-center mt-4">
+              <ButtonElement
+                type="submit"
+                className="hover:bg-teal-700 transition-all"
+                text="Submit"
+              />
+            </div>
+          </form>
+          
+        </fieldset>
       </div>
     </div>
   );

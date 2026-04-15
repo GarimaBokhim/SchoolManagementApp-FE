@@ -62,52 +62,69 @@ const ModuleByRoleId = ({ roleId, visible, onClose }: Props) => {
     <div
       id="module-modal"
       onClick={handleOnClose}
-      className="fixed inset-0 bg-black/50 flex justify-end items-start z-50 overflow-auto "
+      className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2"
     >
-      <div className="bg-white rounded-md shadow-xl w-full max-w-[85%] p-6 mt-3">
-        <div className="flex items-center justify-between space-x-5 mb-3 border-b pb-2">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Modules</h2>
-          <button onClick={onClose} className="cursor-pointer">
-            <X strokeWidth={3} color="red" className="mb-6" />
-          </button>
-        </div>
-
-        {isLoading && <p className="text-gray-400">Loading modules...</p>}
-
-        {data && data.length > 0 ? (
-          <div className="space-y-6">
-            {data.map((mod) => (
-              <div key={mod.Id} className="flex flex-col w-full">
-                <div className="flex items-center space-x-5 mb-3 border-b pb-2">
-                  <span className="font-medium text-gray-700 text-lg">
-                    {mod.Name}
-                  </span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={moduleStatuses[mod.Id]}
-                      onChange={() => handleToggle(mod.Id)}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
-                    <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
-                  </label>
-                </div>
-                {moduleStatuses[mod.Id] && (
-                  <div className="flex flex-wrap gap-3">
-                    <SubModulesByRoleId
-                      roleId={roleId}
-                      moduleId={mod.Id}
-                      activateAll={moduleStatuses[mod.Id]}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <fieldset className="bg-white dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-600">
+          
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+              Modules
+            </h1>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={24} strokeWidth={3} color="red" />
+            </button>
           </div>
-        ) : !isLoading ? (
-          <p className="text-gray-500">No modules found</p>
-        ) : null}
+
+          {isLoading && (
+            <p className="text-gray-400 dark:text-gray-500 text-center py-4">
+              Loading modules...
+            </p>
+          )}
+
+          {data && data.length > 0 ? (
+            <div className="space-y-6">
+              {data.map((mod) => (
+                <div key={mod.Id} className="flex flex-col w-full">
+                  <div className="flex items-center space-x-5 mb-3 border-b pb-2 dark:border-gray-600">
+                    <span className="font-medium text-gray-700 dark:text-gray-200 text-lg">
+                      {mod.Name}
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={moduleStatuses[mod.Id]}
+                        onChange={() => handleToggle(mod.Id)}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
+                      <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
+                    </label>
+                  </div>
+                  {moduleStatuses[mod.Id] && (
+                    <div className="flex flex-wrap gap-3">
+                      <SubModulesByRoleId
+                        roleId={roleId}
+                        moduleId={mod.Id}
+                        activateAll={moduleStatuses[mod.Id]}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : !isLoading ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              No modules found
+            </p>
+          ) : null}
+          
+        </fieldset>
       </div>
     </div>
   );

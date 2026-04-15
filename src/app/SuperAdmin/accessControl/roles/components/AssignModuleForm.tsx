@@ -1,15 +1,15 @@
 "use client";
 import {
   useGetAllModules,
-  useGetModuleByRoleId,
 } from "@/app/SuperAdmin/navigation/modules/hooks";
-import { IModules } from "@/app/SuperAdmin/navigation/modules/types/IModules";
 import { useEffect, useState, MouseEvent } from "react";
 import { useAssignModule } from "../assignrole/hooks";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { IAssignModule } from "../assignrole/types/IAssign";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { X } from "lucide-react";
+import { IRoleModuleGroup } from "../types/IRoles";
+import { useGetModuleByRoleId } from "../hooks";
 
 interface Props {
   roleId: string;
@@ -25,20 +25,31 @@ const AssignModuleForm = ({
   onClose,
 }: Props) => {
   const { handleSubmit } = useForm<IAssignModule>();
-  const [modules, setModules] = useState<IModules[]>([]);
+
+  const [allModules, setAllModules] = useState<any[]>([]);
+  const [groupedModules, setGroupedModules] = useState<IRoleModuleGroup[]>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
+
   const { data: assignedData } = useGetModuleByRoleId(roleId);
-  const { data, refetch } = useGetAllModules();
+  const { data } = useGetAllModules();
   const assignModule = useAssignModule();
 
+  // ✅ ALL MODULES (flat list for reference)
   useEffect(() => {
-    if (data?.Items) setModules(data.Items);
+    if (data?.Items) {
+      setAllModules(data.Items);
+    }
   }, [data]);
 
+  // ✅ GROUPED MODULES from API response
   useEffect(() => {
-    if (assignedData) {
-      const assignedModuleIds = assignedData.map((m: IModules) => m.Id);
-      setSelectedModules(assignedModuleIds);
+    if (assignedData && Array.isArray(assignedData)) {
+      setGroupedModules(assignedData as IRoleModuleGroup[]);
+      // Flatten to get selected module IDs
+      const ids = (assignedData as IRoleModuleGroup[]).flatMap((group) =>
+        group.Modules.map((m) => m.Id)
+      );
+      setSelectedModules(ids);
     }
   }, [assignedData]);
 
@@ -50,14 +61,34 @@ const AssignModuleForm = ({
     );
   };
 
+  const handleSelectAllForGroup = (group: IRoleModuleGroup) => {
+    const groupModuleIds = group.Modules.map((m) => m.Id);
+    const allSelectedInGroup = groupModuleIds.every((id) =>
+      selectedModules.includes(id)
+    );
+    
+    if (allSelectedInGroup) {
+      // Remove all modules in this group
+      setSelectedModules((prev) =>
+        prev.filter((id) => !groupModuleIds.includes(id))
+      );
+    } else {
+      // Add all modules in this group
+      setSelectedModules((prev) => [...prev, ...groupModuleIds]);
+    }
+  };
+
   const handleSelectAll = () => {
-    const allIds = modules.map((m) => m.Id);
-    const areAllSelected = allIds.every((id) => selectedModules.includes(id));
+    const allIds = allModules.map((m) => m.Id);
+    const areAllSelected = allIds.every((id) =>
+      selectedModules.includes(id)
+    );
     setSelectedModules(areAllSelected ? [] : allIds);
   };
 
   const onSubmit: SubmitHandler<IAssignModule> = async () => {
     if (!selectedModules.length) return;
+
     try {
       await assignModule.mutateAsync({
         roleId,
@@ -65,7 +96,7 @@ const AssignModuleForm = ({
         isActive: true,
         isAssign: true,
       });
-      refetch();
+
       refetchRoles();
     } finally {
       onClose();
@@ -82,66 +113,104 @@ const AssignModuleForm = ({
     <div
       id={roleId}
       onClick={handleOnClose}
-      className="absolute inset-0 flex justify-center items-center bg-black/50  z-40 overflow-auto"
+      className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2"
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6">
-        <div className="flex items-center justify-between space-x-5 mb-3 border-b pb-2">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-            Assign Modules
-          </h2>
-          <button onClick={onClose} className="cursor-pointer">
-            <X strokeWidth={3} color="red" className="mb-6" />
-          </button>
-        </div>
-        {modules.length > 0 && (
-          <div className="flex items-center justify-between mb-4 border rounded-lg p-3 bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
-            <span className="font-medium text-gray-700">Select All</span>
-            <label className="relative inline-flex items-center cursor-pointer">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <fieldset className="bg-white dark:bg-[#353535] rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-600">
+          
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+              Assign Modules
+            </h1>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={24} strokeWidth={3} color="red" />
+            </button>
+          </div>
+
+          {/* Select All - Global */}
+          {allModules.length > 0 && (
+            <div className="flex justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded mb-4">
+              <span className="font-semibold text-gray-800 dark:text-gray-50">
+                Select All Modules
+              </span>
               <input
                 type="checkbox"
-                className="sr-only peer"
-                checked={modules.every((m) => selectedModules.includes(m.Id))}
+                checked={allModules.every((m) =>
+                  selectedModules.includes(m.Id)
+                )}
                 onChange={handleSelectAll}
+                className="w-4 h-4"
               />
-              <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
-              <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
-            </label>
-          </div>
-        )}
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {modules.length > 0 ? (
-            modules.map((mod) => (
-              <div
-                key={mod.Id}
-                className="flex items-center justify-between border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
-              >
-                <span className="text-gray-700 font-medium">{mod.Name}</span>
-                <label className="relative inline-flex items-center cursor-pointer">
+          {/* Grouped Modules by AppName */}
+          {groupedModules.map((group, index) => (
+            <div key={index} className="mb-6 border rounded-lg overflow-hidden dark:border-gray-600">
+              {/* Group Header */}
+              <div className="bg-blue-50 dark:bg-blue-900/30 p-3 border-b dark:border-gray-600 flex justify-between items-center">
+                <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-50">
+                  {group.AppName}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Select All ({group.Modules.length})
+                  </span>
                   <input
                     type="checkbox"
-                    className="sr-only peer"
-                    checked={selectedModules.includes(mod.Id)}
-                    onChange={() => handleCheckboxChange(mod.Id)}
+                    checked={group.Modules.every((m) =>
+                      selectedModules.includes(m.Id)
+                    )}
+                    onChange={() => handleSelectAllForGroup(group)}
+                    className="w-4 h-4"
                   />
-                  <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
-                  <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
-                </label>
+                </div>
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500 col-span-full">Modules not found</p>
-          )}
-        </div>
 
-        <div className="flex justify-center mt-6">
-          <ButtonElement
-            type="submit"
-            className="hover:bg-teal-700 transition-all"
-            text="Submit"
-            onClick={handleSubmit(onSubmit)}
-          />
-        </div>
+              {/* Group Modules Grid */}
+              <div className="grid grid-cols-1 gap-3 p-4">
+                {group.Modules.map((mod) => (
+                  <div
+                    key={mod.Id}
+                    className="flex justify-between items-center p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600"
+                  >
+                    <div>
+                      <span className="font-medium text-gray-800 dark:text-gray-50">
+                        {mod.Name}
+                      </span>
+                      {mod.TargetUrl && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {mod.TargetUrl}
+                        </p>
+                      )}
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={selectedModules.includes(mod.Id)}
+                      onChange={() => handleCheckboxChange(mod.Id)}
+                      className="w-4 h-4"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Submit */}
+          <div className="flex justify-center mt-6">
+            <ButtonElement
+              text="Submit"
+              onClick={handleSubmit(onSubmit)}
+              className="hover:bg-teal-700 transition-all"
+            />
+          </div>
+          
+        </fieldset>
       </div>
     </div>
   );
