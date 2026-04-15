@@ -8,41 +8,52 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterFeeTypeByDate, useGetAllFeeTypes, useRemoveFeeType } from "../hooks";
+import {
+  useFilterFeeTypeByDate,
+  useGetAllFeeTypes,
+  useRemoveFeeType,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddFeeType from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { EditButton } from "@/components/Buttons/EditButton";
+import EditFeeType from "../pages/Edit";
+
 const AllFeeTypeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  // const [showFeeTypes, setShowFeeTypes] = useState(false);
+
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
   const { menuStatus } = usePermissions();
-  const { canAdd,canDelete } = useMenuPermissionData(menuStatus);
+  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus);
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allFeeType } = useGetAllFeeTypes();
-  const [selectedFeeTypeName, setSelectedFeeTypeName] = useState<string | null>(
-    ""
-  );
+  const [selectedFeeTypeName, setSelectedFeeTypeName] = useState<string | null>("");
+
   const fullQuery = query + (params || "");
 
   const {
@@ -50,9 +61,11 @@ const AllFeeTypeForm = () => {
     refetch,
     isLoading,
   } = useFilterFeeTypeByDate(fullQuery);
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+
   const form = useForm<IFilterFeeType>({
     defaultValues: {
       name: "",
@@ -60,8 +73,10 @@ const AllFeeTypeForm = () => {
       endDate: "",
     },
   });
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+
   const onSubmit: SubmitHandler<IFilterFeeType> = async (formData) => {
     clearError();
     try {
@@ -93,21 +108,25 @@ const AllFeeTypeForm = () => {
       console.error("Error during form submission:", error);
     }
   };
+
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteFeeType = useRemoveFeeType();
+
   const handleDelete = async (id: string) => {
     try {
       await deleteFeeType.mutateAsync(id);
-      toast.success("User deleted successfully!");
+      toast.success("FeeType deleted successfully!");
       refetch();
     } catch {
-      toast.error("Error deleting user.");
+      toast.error("Error deleting FeeType.");
     }
   };
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -115,13 +134,28 @@ const AllFeeTypeForm = () => {
     formRef.current?.handleClear();
     form.reset();
   };
+
+  const editButtonElement = (id: string) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => {
+        setEditModal(true);
+        setSelectedId(id);
+      }}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  );
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All FeeTypes</h1>
+          {/* Header */}
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All FeeTypes</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -141,6 +175,8 @@ const AllFeeTypeForm = () => {
               )}
             </div>
           </div>
+
+          {/* Filter Panel */}
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -174,7 +210,6 @@ const AllFeeTypeForm = () => {
                     getValue={(g) => g?.name ?? ""}
                   />
                 </div>
-
                 <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
                   <ButtonElement
                     type="submit"
@@ -193,6 +228,8 @@ const AllFeeTypeForm = () => {
               </form>
             </div>
           )}
+
+          {/* Table */}
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
@@ -200,7 +237,6 @@ const AllFeeTypeForm = () => {
                   <th className="px-4 py-3 text-left">S.N</th>
                   <th className="px-4 py-3 text-left">Name</th>
                   <th className="px-4 py-3 text-left">Description</th>
-                  {/* <th className="px-4 py-3 text-left">Month</th> */}
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -208,50 +244,45 @@ const AllFeeTypeForm = () => {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={4}
                       className="p-4 text-center text-gray-500 dark:text-gray-300"
                     >
                       Loading FeeTypes...
                     </td>
                   </tr>
                 ) : filteredFeeType?.Items?.length ? (
-                  filteredFeeType.Items.map(
-                    (FeeType: IFeeType, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                      >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">{FeeType.name}</td>
-                        <td className="py-3 px-4">{FeeType.description}</td>
-                        {/* <td className="py-3 px-4">
-                          {
-                            months.find((i) => i.id === FeeType.nameOfMonths)
-                              ?.name
-                          }
-                        </td> */}
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex justify-center gap-2 flex-wrap">
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    FeeType.id ? FeeType.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this FeeType?"
-                              />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                  filteredFeeType.Items.map((FeeType: IFeeType, index: number) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                    >
+                      <td className="py-3 px-4">{index + 1}</td>
+                      <td className="py-3 px-4">{FeeType.name}</td>
+                      <td className="py-3 px-4">{FeeType.description}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          {canEdit && (
+                            <EditButton
+                              button={editButtonElement(FeeType.id ?? "")}
+                            />
+                          )}
+                          {canDelete && (
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(FeeType.id ? FeeType.id : "")
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this FeeType?"
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={4}
                       className="p-4 text-center text-gray-500 italic"
                     >
                       No FeeTypes found.
@@ -261,7 +292,23 @@ const AllFeeTypeForm = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Modals */}
+          {editModal && selectedId && (
+            <EditFeeType
+              feeTypeId={selectedId}
+              visible={editModal}
+              onClose={() => {
+                setEditModal(false);
+                setSelectedId("");
+                refetch();
+              }}
+            />
+          )}
+          <AddFeeType visible={addModal} onClose={() => setAddModal(false)} />
         </div>
+
+        {/* Pagination */}
         {filteredFeeType && filteredFeeType?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -277,7 +324,6 @@ const AllFeeTypeForm = () => {
             />
           </div>
         )}
-        <AddFeeType visible={addModal} onClose={() => setAddModal(false)} />
       </div>
     </>
   );
