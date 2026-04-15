@@ -5,8 +5,8 @@ import { IFeeType } from "../types/IFeeType";
 const FeeTypeEndPoints = {
   getAllFeeTypes: "/api/Finance/Feetype",
   createFeeTypes: "/api/Finance/AddFeetype",
-  removeFeeTypes: "/api/Finance/DeleteFeeTypes",
-  updateFeeTypes: "/api/Finance/UpdateFeeTypes",
+  removeFeeTypes: "/api/Finance/DeleteFeeType",
+  updateFeeTypes: "/api/Finance/UpdateFeeType",
   filterFeeTypeByDate: "/api/Finance/FilterFeetype",
 };
 
@@ -16,7 +16,7 @@ type FeeTypeRequest = {
   id?: string;
   name: string;
   description: string;
-  // nameOfMonths: number;
+  nameOfMonths: number;
 };
 
 export const useAddFeeType = () => {
@@ -115,6 +115,21 @@ export const useFilterFeeTypeByDate = (params?: string) => {
       const response = await api.get<IPaginationResponse<IFeeType>>(url);
       return response.data;
     },
+    staleTime: 0,
+    retry: false,
+  });
+};
+export const useGetFeeTypeById = (feeTypeId: string) => {
+  return useQuery({
+    queryKey: [queryKey, feeTypeId],
+    queryFn: async (): Promise<IFeeType> => {
+      if (!feeTypeId) throw new Error("Id is required");
+      const response = await api.get<IFeeType>(
+        `${FeeTypeEndPoints.getAllFeeTypes}/${feeTypeId}`
+      );
+      return response.data;
+    },
+    enabled: !!feeTypeId,
     staleTime: 0,
     retry: false,
   });

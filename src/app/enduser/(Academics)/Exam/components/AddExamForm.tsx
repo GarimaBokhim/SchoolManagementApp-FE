@@ -1,18 +1,18 @@
 "use client";
+
 import { SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { X } from "lucide-react";
-import { IExam, IExamSubjects } from "../types/IExams";
+import { IExam } from "../types/IExams";
 import { useAddExam } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
 import { useGetAllClass } from "../../Class/hooks";
-import {  useGetSubjectByClassId } from "../../Subject/hooks";
-
+import { useGetSubjectByClassId } from "../../Subject/hooks";
 
 type Props = {
   form: UseFormReturn<IExam>;
@@ -24,16 +24,13 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
 
-  const [selectedClass, setSelectedClass] = useState<string | undefined>("");
+  const [selectedClass, setSelectedClass] = useState<string>("");
 
- 
-    const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
-    [key: number]: string | null;
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
+    [key: number]: string;
   }>({});
-    const [selectedFullMarks, setSelectedFullMarks] = useState<{
-    [key: number]: number;
-  }>({});
- const { data: allSubjects } = useGetSubjectByClassId(selectedClass);
+
+  const { data: allSubjects } = useGetSubjectByClassId(selectedClass);
 
   const { fields, append, remove } = useFieldArray({
     name: "examSubjects",
@@ -41,17 +38,37 @@ const AddExamForm = ({ form, onClose }: Props) => {
   });
 
   const handleClose = () => {
-    form.reset();
+    form.reset({
+      name: "",
+      examDate: undefined,
+      isfinalExam: false,
+      classId: "",
+      examSubjects: [],
+    });
     onClose();
   };
 
   const onSubmit: SubmitHandler<IExam> = async (data) => {
     clearError();
+
+ const formattedData = {
+  name: data.name,
+  examDate: new Date(data.examDate).toISOString(),
+  isfinalExam: data.isfinalExam,
+  classId: data.classId,
+  examSubjects: (data.examSubjects ?? []).map((s) => ({
+    subjectId: s.subjectId,
+    fullMarks: Number(s.fullMarks),
+    passMarks: Number(s.passMarks),
+  })),
+};
+
     try {
-      await toast.promise(addExam.mutateAsync(data), {
+      await toast.promise(addExam.mutateAsync(formattedData as any), {
         loading: "Adding Exam...",
         success: "Successfully added Exam",
       });
+
       handleClose();
     } catch (error) {
       const errorMsg = handleError(error);
@@ -61,23 +78,20 @@ const AddExamForm = ({ form, onClose }: Props) => {
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
-      <div className="w-full h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
+      <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
         <fieldset>
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add Exam
-            </h1>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
-            >
+            <h1 className="text-xl font-semibold">Add Exam</h1>
+            <button type="button" onClick={handleClose}>
               <X strokeWidth={3} />
             </button>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
               <InputElement
                 label="Exam Name"
                 form={form}
@@ -85,24 +99,26 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 placeholder="Enter Name"
                 required
               />
+
               <InputElement
                 label="Exam Date"
                 form={form}
                 name="examDate"
-                placeholder="Enter Exam Date"
                 inputType="date"
+                required
               />
-             <AppCombobox
-                dropDownWidth="w-[20rem]"
+
+              <AppCombobox
                 label="Class"
                 name="classId"
                 form={form}
-                dropdownPositionClass="absolute"
                 value={selectedClass}
                 options={allClass?.Items ?? []}
-                selected={allClass?.Items?.find((e) => e.id === selectedClass) || null}
-                onSelect={(exam) => {
-                  const id = exam?.id ?? "";
+                selected={
+                  allClass?.Items?.find((e) => e.id === selectedClass) || null
+                }
+                onSelect={(cls) => {
+                  const id = cls?.id ?? "";
                   setSelectedClass(id);
                   form.setValue("classId", id);
                   form.setValue("examSubjects", []);
@@ -111,90 +127,112 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 getValue={(e) => e?.id ?? ""}
               />
 
+              {/* ✅ Final Exam Checkbox */}
+              <div className="flex items-center gap-2 mt-6">
+                <input
+                  type="checkbox"
+                  {...form.register("isfinalExam")}
+                />
+                <label>Is Final Exam</label>
+              </div>
             </div>
 
+            {/* Subjects */}
             <div className="mt-6">
               <h2 className="font-semibold mb-2">Exam Subjects</h2>
-              {fields.map((field, index) => (
-             <div
-                key={field.id}
-               className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 items-start mb-2">
 
-               <AppCombobox
-                    dropDownWidth="w-[25rem]"
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 mb-2"
+                >
+                  {/* Subject */}
+                  <AppCombobox
                     label="Subject"
-                    name={`marksObtained.${index}.subjectId`}
+                    name={`examSubjects.${index}.subjectId`}
                     form={form}
-                    dropdownPositionClass="absolute"
                     value={selectedSubjectIds[index] ?? ""}
                     options={(allSubjects ?? []).filter((subj) => {
-                      const currentId = selectedSubjectIds[index];
                       const selectedIds = Object.values(selectedSubjectIds);
-
                       return (
-                        subj.id === currentId || !selectedIds.includes(subj.id)
+                        subj.id === selectedSubjectIds[index] ||
+                        !selectedIds.includes(subj.id)
                       );
                     })}
                     selected={
                       allSubjects?.find(
-                        (subj) => subj.id === selectedSubjectIds[index]
+                        (s) => s.id === selectedSubjectIds[index]
                       ) || null
                     }
                     onSelect={(subject) => {
                       const id = subject?.id ?? "";
-                      form.setValue(`examSubjects.${index}.subjectId`, id, {
-                        shouldValidate: true,
-                      });
-                      setSelectedFullMarks((prev) => ({
-                        ...prev,
-                        [index]: subject?.fullMarks || 100,
-                      }));
+
+                      form.setValue(
+                        `examSubjects.${index}.subjectId`,
+                        id,
+                        { shouldValidate: true }
+                      );
+
                       setSelectedSubjectIds((prev) => ({
                         ...prev,
                         [index]: id,
                       }));
+
+                      form.setValue(
+                        `examSubjects.${index}.fullMarks`,
+                        Number(subject?.fullMarks || 100)
+                      );
                     }}
                     getLabel={(s) => s?.subjectName ?? ""}
                     getValue={(s) => s?.id ?? ""}
                   />
 
-           <InputElement
-                  label="Full Marks"
-                  form={form}
-                  name={`examSubjects.${index}.fullMarks`}
-                  type="number"
-                  required
-                />
+                  {/* Full Marks */}
+                  <InputElement
+                    label="Full Marks"
+                    form={form}
+                    name={`examSubjects.${index}.fullMarks`}
+                    type="number"
+                    required
+                  />
 
-                <InputElement
-                  label="Pass Marks"
-                  form={form}
-                  name={`examSubjects.${index}.passMarks`}
-                  type="number"
-                  required
-                />
+                  {/* Pass Marks */}
+                  <InputElement
+                    label="Pass Marks"
+                    form={form}
+                    name={`examSubjects.${index}.passMarks`}
+                    type="number"
+                    required
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => remove(index)}
-                  className="text-red-500 h-10 self-end"
-                >
-                  Remove
-                </button>
-              </div>
-
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="text-red-500"
+                  >
+                    Remove
+                  </button>
+                </div>
               ))}
+
               <button
                 type="button"
-                onClick={() => append({ subjectId: "", fullMarks: 0, passMarks: 0 })}
+                onClick={() =>
+                  append({
+                    subjectId: "",
+                    fullMarks: 0,
+                    passMarks: 0,
+                  })
+                }
                 className="mt-2 px-3 py-1 bg-teal-500 text-white rounded"
               >
                 Add Subject
               </button>
             </div>
 
+            {/* Submit */}
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text="Submit" />
             </div>
           </form>
         </fieldset>

@@ -1,44 +1,41 @@
-// import { useForm } from "react-hook-form";
-// import { IStudent } from "../types/IContributor";
-// import EditStudentForm from "../_components/EditStudentForm";
-// import { useGetStudentById } from "../hooks";
+"use client";
+import { useForm } from "react-hook-form";
+import EditFeeTypeForm from "../_components/EditFeeType";
+import { IFeeType } from "../types/IFeeType";
 
-// interface Props {
-//   visible: boolean;
-//   onClose: () => void;
-//   StudentId: string;
-// }
+interface Props {
+  visible: boolean;
+  feeTypeId: string;
+  onClose?: () => void;
+}
 
-// const EditStudent = ({ visible, onClose, StudentId }: Props) => {
-//   const { data: StudentData } = useGetStudentById(StudentId);
+const EditFeeType = ({ visible, feeTypeId, onClose }: Props) => {
+  const form = useForm<IFeeType>({
+    defaultValues: {
+      id: "",
+      name: "",
+      description: "",
+      nameOfMonths: 0,
+    },
+  });
 
-//   const form = useForm<IStudent>({
-//     defaultValues: {
-//       firstName: StudentData?.firstName ?? "",
-//       middleName: StudentData?.middleName ?? "",
-//       lastName: StudentData?.lastName ?? "",
-//       registrationNumber: StudentData?.registrationNumber ?? "",
-//       genderStatus: StudentData?.genderStatus ?? 0,
-//       studentStatus: StudentData?.studentStatus ?? 0,
-//       dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
-//       email: StudentData?.email ?? "",
-//       phoneNumber: StudentData?.phoneNumber ?? "",
-//       studentImg: StudentData?.studentImg,
-//       address: StudentData?.address ?? "",
-//       enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
-//       parentId: StudentData?.parentId ?? "",
-//       classId: StudentData?.classId ?? "",
-//       provinceId: StudentData?.provinceId ?? 0,
-//       districtId: StudentData?.districtId ?? 0,
-//       wardNumber: StudentData?.wardNumber ?? 0,
-//     },
-//   });
+  const handleOnClose = () => {
+    if (onClose) onClose();
+  };
 
-//   if (!visible) return null;
+  if (!visible) return null;
 
-//   return (
-//     <EditStudentForm form={form} onClose={onClose} studentId={StudentId} />
-//   );
-// };
+  return (
+    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0">
+      <div className="bg-[#FBFBFB] dark:bg-[#27272a] 
+               w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+               max-h-[95vh] md:max-h-[92vh] h-full 
+               rounded-lg overflow-auto p-6 md:p-8 shadow-lg">
+        <EditFeeTypeForm form={form} feeTypeId={feeTypeId} onClose={handleOnClose} />
+      </div>
+    </div>
+  );
+};
 
-// export default EditStudent;
+export default EditFeeType;
