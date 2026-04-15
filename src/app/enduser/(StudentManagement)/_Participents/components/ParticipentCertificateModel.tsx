@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { X, Download, Building, User } from 'lucide-react'
+import { X, Download, Building } from 'lucide-react'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
@@ -24,7 +24,6 @@ interface CertificateModalProps {
   activityName: string
   awardPosition: number
   issuedDate?: string
-  studentPhoto?: string // Optional student photo URL
 }
 
 const CertificateModal = ({
@@ -34,11 +33,9 @@ const CertificateModal = ({
   activityName,
   awardPosition,
   issuedDate,
-  studentPhoto,
 }: CertificateModalProps) => {
   const certRef = useRef<HTMLDivElement>(null)
   const [imageError, setImageError] = useState(false)
-  const [studentPhotoError, setStudentPhotoError] = useState(false)
 
   let schoolId = ''
   const storedUser = localStorage.getItem('userDetails')
@@ -81,24 +78,23 @@ const CertificateModal = ({
       headerToRemove.remove()
     }
 
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) {
-      alert('Please allow pop-ups to print the certificate')
+    // Create an iframe for printing (hidden)
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'absolute'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = 'none'
+    document.body.appendChild(iframe)
+
+    const iframeDoc = iframe.contentWindow?.document
+    if (!iframeDoc) {
+      alert('Unable to open print dialog')
+      document.body.removeChild(iframe)
       return
     }
 
-    const styles = document.querySelectorAll('link[rel="stylesheet"], style')
-    let stylesHTML = ''
-    styles.forEach((style) => {
-      if (style.tagName === 'LINK') {
-        const link = style as HTMLLinkElement
-        stylesHTML += `<link href="${link.href}" rel="stylesheet">`
-      } else if (style.tagName === 'STYLE') {
-        stylesHTML += style.outerHTML
-      }
-    })
-
-    printWindow.document.write(`
+    iframeDoc.open()
+    iframeDoc.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -106,7 +102,6 @@ const CertificateModal = ({
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet" />
-          ${stylesHTML}
           <style>
             * {
               margin: 0;
@@ -115,29 +110,21 @@ const CertificateModal = ({
             }
             
             body {
-              background: #fff;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
+              background: white;
               font-family: 'Cormorant Garamond', serif;
-              padding: 20px;
+              margin: 0;
+              padding: 0;
+            }
+            
+            @page {
+              size: A4;
+              margin: 0;
             }
             
             @media print {
-              @page {
-                size: A4 portrait;
-                margin: 0;
-              }
-              
               body {
                 margin: 0;
                 padding: 0;
-                background: white;
-              }
-              
-              .no-print {
-                display: none !important;
               }
               
               * {
@@ -146,35 +133,54 @@ const CertificateModal = ({
               }
             }
             
-            .certificate-wrapper {
-              max-width: 900px;
-              width: 100%;
+            .certificate-container {
+              width: 210mm;
+              min-height: 297mm;
               margin: 0 auto;
               background: white;
-              box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+              position: relative;
+              page-break-after: avoid;
+              page-break-inside: avoid;
+            }
+            
+            /* Ensure content fits within A4 */
+            @media print {
+              .certificate-container {
+                width: 100%;
+                min-height: 100%;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="certificate-wrapper">
+          <div class="certificate-container">
             ${printContent.outerHTML}
           </div>
           <script>
-            // Auto-trigger print after everything loads
             window.onload = () => {
               setTimeout(() => {
                 window.print();
                 setTimeout(() => {
                   window.close();
                 }, 500);
-              }, 500);
+              }, 200);
             };
           <\/script>
         </body>
       </html>
     `)
+    iframeDoc.close()
 
-    printWindow.document.close()
+    const checkPrintDialog = setInterval(() => {
+      if (!iframe.contentWindow || iframe.contentWindow.closed) {
+        clearInterval(checkPrintDialog)
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe)
+          }
+        }, 100)
+      }
+    }, 500)
   }
 
   return (
@@ -198,251 +204,305 @@ const CertificateModal = ({
           </div>
         </div>
 
-        {/* Certificate body */}
+        {/* Certificate body - A4 sized */}
         <div
           ref={certRef}
-          className="bg-white mx-auto text-amber-800 p-4 sm:p-8"
-          style={{ backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}
+          className="bg-white mx-auto"
+          style={{
+            width: '210mm',
+            minHeight: '297mm',
+            padding: '15mm 20mm',
+            position: 'relative',
+            boxSizing: 'border-box'
+          }}
         >
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;600&display=swap');
-
-            .certificate-inner {
+            
+            .cert-a4 {
               font-family: 'Cormorant Garamond', serif;
+              height: 100%;
               position: relative;
-            }
-
-            .certificate-watermark {
-              position: absolute;
-              inset: 0;
               display: flex;
-              align-items: center;
-              justify-content: center;
-              pointer-events: none;
+              flex-direction: column;
+            }
+            
+            .watermark {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              opacity: 0.05;
               z-index: 0;
-              opacity: 0.07;
+              pointer-events: none;
             }
-
-            .certificate-watermark img {
-              width: min(200px, 30%);
-              height: auto;
+            
+            .watermark svg {
+              width: 300px;
+              height: 300px;
             }
-
-            .certificate-content {
+            
+            .cert-content {
               position: relative;
               z-index: 1;
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
             }
-
-            /* Header row: logo left, photo right */
+            
+            /* Header Section */
             .cert-header {
               display: flex;
               justify-content: space-between;
-              align-items: flex-start;
-              margin-bottom: 8px;
+              align-items: center;
+              margin-bottom: 30px;
               gap: 20px;
             }
-
-            .cert-logo-section {
-              flex-shrink: 0;
-            }
-
-            .cert-logo-box {
-              width: min(80px, 15vw);
-              height: min(80px, 15vw);
+            
+            .logo-section {
+              width: 100px;
+              height: 100px;
               display: flex;
               align-items: center;
               justify-content: center;
-              overflow: hidden;
-              background: white;
+              flex-shrink: 0;
             }
-
-            .cert-logo-box img {
+            
+            .logo-section img {
               width: 100%;
               height: 100%;
               object-fit: contain;
             }
-
-            .cert-photo-section {
-              flex-shrink: 0;
+            
+            .school-info {
+              text-align: center;
+              flex: 1;
             }
-
-            .cert-photo-frame {
+            
+            .school-name {
+              font-size: 20px;
+              font-weight: 700;
+              color: #78350f;
+              letter-spacing: 2px;
+              margin-bottom: 8px;
+            }
+            
+            .school-address {
+              font-size: 12px;
+              color: #92400e;
+              margin-bottom: 4px;
+            }
+            
+            .school-pan {
+              font-size: 11px;
+              color: #92400e;
+            }
+            
+            .photo-placeholder {
               width: 100px;
               height: 100px;
-              border: 3px solid #b45309;
-              border-radius: 8px;
-              overflow: hidden;
-              background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+              border: 2px solid #d4a373;
+              background: #fefaf5;
+              flex-shrink: 0;
+            }
+            
+            /* Decorative Line */
+            .decorative-line {
               display: flex;
-              align-items: center;
               justify-content: center;
-              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-
-            .cert-photo-frame img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-            }
-
-            .cert-photo-placeholder {
-              display: flex;
-              flex-direction: column;
               align-items: center;
-              justify-content: center;
-              color: #b45309;
-              opacity: 0.5;
+              gap: 15px;
+              margin: 20px 0;
             }
-
-            .cert-photo-placeholder svg {
-              width: 40px;
-              height: 40px;
+            
+            .line {
+              width: 80px;
+              height: 1px;
+              background: #b45309;
             }
-
-            .cert-photo-placeholder span {
-              font-size: 10px;
-              margin-top: 4px;
+            
+            .diamond {
+              width: 6px;
+              height: 6px;
+              background: #b45309;
+              transform: rotate(45deg);
             }
-
-            @media (max-width: 640px) {
-              .cert-photo-frame {
-                width: 70px;
-                height: 70px;
-              }
-            }
-
-            /* School info in middle */
-            .cert-school-info {
-              flex: 1;
+            
+            /* Main Content */
+            .cert-body {
               text-align: center;
-              padding: 0 10px;
+              margin: 40px 0;
             }
-
-            .cert-school-info p {
-              margin: 2px 0;
+            
+            .cert-title {
+              font-size: 14px;
+              letter-spacing: 3px;
+              color: #78350f;
+              margin-bottom: 20px;
             }
-
-            /* Responsive header */
-            @media (max-width: 640px) {
-              .cert-header {
-                flex-wrap: wrap;
-                justify-content: center;
+            
+            .student-name {
+              font-size: 42px;
+              font-style: italic;
+              color: #78350f;
+              margin: 20px 0;
+              font-weight: 600;
+            }
+            
+            .cert-description {
+              font-size: 16px;
+              color: #78350f;
+              line-height: 1.6;
+              margin: 20px 0;
+            }
+            
+            .activity-name {
+              font-size: 20px;
+              font-weight: 700;
+              font-style: italic;
+              color: #78350f;
+              margin: 10px 0;
+            }
+            
+            .award-badge {
+              display: inline-block;
+              background: linear-gradient(135deg, #d97706, #f59e0b, #d97706);
+              color: white;
+              padding: 8px 30px;
+              font-size: 14px;
+              font-weight: 600;
+              letter-spacing: 2px;
+              margin: 30px 0;
+              text-transform: uppercase;
+            }
+            
+            /* Footer Section */
+            .cert-footer {
+              display: flex;
+              justify-content: space-between;
+              margin-top: 50px;
+              padding-top: 30px;
+              border-top: 1px solid #d4a373;
+            }
+            
+            .signature-section {
+              text-align: center;
+              flex: 1;
+            }
+            
+            .signature-line {
+              width: 150px;
+              height: 1px;
+              background: #b45309;
+              margin: 0 auto 10px auto;
+            }
+            
+            .signature-label {
+              font-size: 11px;
+              letter-spacing: 1px;
+              color: #78350f;
+            }
+            
+            .date-section {
+              text-align: center;
+              flex: 1;
+            }
+            
+            .date-text {
+              font-size: 14px;
+              font-style: italic;
+              color: #78350f;
+              margin-bottom: 10px;
+            }
+            
+            .date-line {
+              width: 120px;
+              height: 1px;
+              background: #b45309;
+              margin: 0 auto 10px auto;
+            }
+            
+            .date-label {
+              font-size: 11px;
+              letter-spacing: 1px;
+              color: #78350f;
+            }
+            
+            @media print {
+              .cert-a4 {
+                padding: 0;
               }
               
-              .cert-school-info {
-                order: 3;
-                width: 100%;
-                margin-top: 12px;
+              .student-name {
+                font-size: 38px;
               }
             }
           `}</style>
 
-          <div className="certificate-inner">
+          <div className="cert-a4">
             {/* Watermark */}
-            <div className="certificate-watermark">
+            <div className="watermark">
               {schoolLogoUrl && !imageError ? (
-                <img src={schoolLogoUrl} alt="" onError={() => setImageError(true)} />
+                <img src={schoolLogoUrl} alt="" style={{ width: '300px', opacity: 0.3 }} />
               ) : (
-                <Building size={150} className="text-amber-600" />
+                <Building size={300} className="text-amber-600" />
               )}
             </div>
 
-            <div className="certificate-content">
-              {/* Header: logo (left), school info (center), photo (right) */}
+            <div className="cert-content">
+              {/* Header */}
               <div className="cert-header">
-                {/* Left: School Logo */}
-                <div className="cert-logo-section">
-                  <div className="cert-logo-box">
-                    {schoolLogoUrl && !imageError ? (
-                      <img
-                        src={schoolLogoUrl}
-                        alt="School Logo"
-                        onError={() => setImageError(true)}
-                      />
-                    ) : (
-                      <Building className="w-12 h-12 text-amber-600" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Center: School Information */}
-                <div className="cert-school-info">
-                  <p className="text-base font-semibold text-amber-900 uppercase tracking-wide">
-                    {SchoolData?.name ?? 'School Name'}
-                  </p>
-                  {SchoolData?.address && (
-                    <p className="text-xs text-amber-700">{SchoolData.address}</p>
-                  )}
-                  {SchoolData?.pan && (
-                    <p className="text-xs text-amber-700">PAN: {SchoolData.pan}</p>
+                <div className="logo-section">
+                  {schoolLogoUrl && !imageError ? (
+                    <img src={schoolLogoUrl} alt="School Logo" onError={() => setImageError(true)} />
+                  ) : (
+                    <Building size={80} className="text-amber-600" />
                   )}
                 </div>
-
-                {/* Right: Student Photo */}
-                <div className="cert-photo-section">
-                  <div className="cert-photo-frame">
-                    {studentPhoto && !studentPhotoError ? (
-                      <img
-                        src={studentPhoto}
-                        alt={`${studentName}'s photo`}
-                        onError={() => setStudentPhotoError(true)}
-                      />
-                    ) : (
-                      <div className="cert-photo-placeholder">
-                        <User size={40} />
-                        <span>Photo</span>
-                      </div>
-                    )}
-                  </div>
+                
+                <div className="school-info">
+                  <div className="school-name">{SchoolData?.name ?? 'SCHOOL NAME'}</div>
+                  {SchoolData?.address && <div className="school-address">{SchoolData.address}</div>}
+                  {SchoolData?.pan && <div className="school-pan">PAN: {SchoolData.pan}</div>}
                 </div>
+                
+                <div className="photo-placeholder"></div>
               </div>
 
-              {/* Divider */}
-              <div className="w-full h-px bg-amber-300 mb-6 mt-4" />
+              {/* Decorative Line */}
+              <div className="decorative-line">
+                <div className="line"></div>
+                <div className="diamond"></div>
+                <div className="line"></div>
+              </div>
 
-              {/* Main certificate content — centred */}
-              <div className="text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold text-amber-900">
-                  Excellence Award
-                </h1>
-                <p className="text-sm italic text-amber-700 mt-1">
-                  In Recognition of Outstanding Participation
-                </p>
-
-                <div className="flex items-center justify-center gap-4 my-6">
-                  <div className="w-20 h-px bg-amber-600" />
-                  <div className="w-2 h-2 bg-amber-600 rotate-45" />
-                  <div className="w-20 h-px bg-amber-600" />
-                </div>
-
-                <p className="text-xs uppercase tracking-wider text-amber-700">
-                  This Certificate is Proudly Presented to
-                </p>
-                <p className="text-2xl sm:text-3xl italic font-serif text-amber-900 mt-2 mb-4">
-                  {studentName}
-                </p>
-
-                <p className="text-sm text-amber-800 max-w-md mx-auto leading-relaxed">
+              {/* Body */}
+              <div className="cert-body">
+                <div className="cert-title">THIS CERTIFICATE IS PROUDLY PRESENTED TO</div>
+                
+                <div className="student-name">{studentName}</div>
+                
+                <div className="cert-description">
                   In recognition of exemplary dedication and outstanding participation in
-                  <br />
-                  <span className="text-base italic font-semibold">{activityName}</span>
-                </p>
-
-                <div className="inline-block mt-6 mb-8 px-6 py-2 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600 text-white text-sm uppercase tracking-wider">
-                  {awardLabel}
                 </div>
+                
+                <div className="activity-name">{activityName}</div>
+                
+                <div className="award-badge">{awardLabel}</div>
+              </div>
 
-                <div className="flex flex-col sm:flex-row justify-between mt-10 pt-4 border-t border-amber-300 gap-6 sm:gap-0">
-                  <div className="text-center">
-                    <div className="w-32 h-px bg-amber-600 mx-auto mb-2" />
-                    <p className="text-xs uppercase tracking-wider">Authorized Signature</p>
-                  </div>
-
-                  <div className="text-center">
-                    <p className="text-sm italic">{date}</p>
-                    <div className="w-32 h-px bg-amber-600 mx-auto my-2" />
-                    <p className="text-xs uppercase tracking-wider">Date of Issue</p>
-                  </div>
+              {/* Footer */}
+              <div className="cert-footer">
+                <div className="signature-section">
+                  <div className="signature-line"></div>
+                  <div className="signature-label">AUTHORIZED SIGNATURE</div>
+                </div>
+                
+                <div className="date-section">
+                  <div className="date-text">{date}</div>
+                  <div className="date-line"></div>
+                  <div className="date-label">DATE OF ISSUE</div>
                 </div>
               </div>
             </div>
