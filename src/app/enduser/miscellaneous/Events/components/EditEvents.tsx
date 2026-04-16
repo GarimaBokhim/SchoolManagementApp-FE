@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
-
+import {useApiHandler} from "@/hooks/useApiHandler"
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { InputElement } from "@/components/Input/InputElement";
 import { Toast } from "@/components/Toast/toast";
@@ -45,23 +45,27 @@ const EditEventForm = ({
     onClose();
   };
 
+    const { execute } = useApiHandler();
+
   const onSubmit: SubmitHandler<IEvents> = async (data) => {
     clearError();
     try {
-      await toast.promise(
-        updateEvent.mutateAsync({
-          Id: selectedEvent.id as string,
-          data:data,
-        }),
-        {
-          loading: "Updating event...",
-          success: "Event updated successfully!",
-        }
-      );
-      handleClose();
-    } catch (error) {
-      Toast.error(handleError(error));
-    }
+    await execute(
+      (payload) => updateEvent.mutateAsync(payload), 
+      {
+        Id: selectedEvent.id as string,
+        data: data,
+      },
+      {
+        loadingMessage: "Updating event...",
+        onSuccess: () => {
+          handleClose();
+        },
+      }
+    );
+  } catch (error) {
+    Toast.error(handleError(error));
+  }
   };
 
   return (

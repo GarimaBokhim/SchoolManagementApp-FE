@@ -4,6 +4,8 @@ import { SubmitHandler, UseFormReturn, Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 
+import {useApiHandler} from "@/hooks/useApiHandler"
+
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { Toast } from "@/components/Toast/toast";
@@ -84,26 +86,30 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
     onClose();
   };
 
-  const onSubmit: SubmitHandler<IEvents> = async (data) => {
-    clearError();
-    try {
-      await toast.promise(
-        addEvent.mutateAsync({
+  const { execute } = useApiHandler();
+
+const onSubmit: SubmitHandler<IEvents> = async (data) => {
+  clearError();
+
+      await execute(
+        addEvent.mutateAsync,
+        {
           ...data,
           eventsType: Number(data.eventsType),
           eventsDate: new Date(data.eventsDate).toISOString(),
-          eventTime: data.eventTime.length === 5 ? data.eventTime + ":00" : data.eventTime,
-        }),
+          eventTime:
+            data.eventTime.length === 5
+              ? data.eventTime + ":00"
+              : data.eventTime,
+        },
         {
-          loading: "Adding event...",
-          success: "Event added successfully!",
+          loadingMessage: "Adding event...",
+          onSuccess: () => {
+            handleClose();
+          },
         }
       );
-      handleClose();
-    } catch (error) {
-      Toast.error(handleError(error));
-    }
-  };
+    };
 
   const selectedEventType =
     EVENT_TYPES.find((et) => et.value === Number(form.watch("eventsType"))) ?? null;
