@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { ISubject, ISubjectByClass } from "../types/ISubjects";
+import { ISubject, ISubjectByClass, IUpdateSubject } from "../types/ISubjects";
 const SubjectEndPoints = {
   getAllSubjects: "/api/Academics/all-subject",
   createSubjects: "/api/Academics/AddSubject",
   removeSubjects: "/api/Academics/DeleteSubject",
-  updateSubjects: "/api/Academics/UpdateSubjects",
+  updateSubjects: "/api/Academics/UpdateSubject",
   getSubjectsById: "/api/Academics",
   getSubjectByClass: "/api/Academics/SubjectByClass",
   filterSubjectByDate: "/api/Academics/FilterSubject",
@@ -70,26 +70,33 @@ export const useDeleteSubject = () => {
   });
 };
 
+
 export const useEditSubject = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    ISubject,
-    Error,
-    { id: string | unknown; data: SubjectRequest }
-  >({
-    mutationFn: async ({ id, data }): Promise<ISubject> => {
+  return useMutation({
+    mutationFn: async (data: ISubject) => {
+      // ✅ Normalize ID
+      const id = data.id ?? data.Id;
+
       if (!id) {
-        throw new Error("Ïd is required to edit Subject");
+        throw new Error("Id is required to edit Subject");
       }
+      const payload: IUpdateSubject = {
+        id,
+        name: data.name ?? "",
+        code: data.code ?? "",
+        creditHours: Number(data.creditHours) || 0,
+        description: data.description ?? "",
+        classId: data.classId ?? "",
+      };
+
+      console.log("PATCH Payload:", payload); // 🔍 debug
+
       const response = await api.patch(
         `${SubjectEndPoints.updateSubjects}/${id}`,
-        data
+        payload
       );
+
       return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
     },
   });
 };

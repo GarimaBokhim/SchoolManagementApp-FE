@@ -22,3 +22,11 @@ export interface ISubjectByClass {
   subjectName: string;
   fullMarks: number;
 }
+export interface IUpdateSubject {
+  id: string;
+  name: string;
+  code: string;
+  creditHours: number;
+  description: string;
+  classId: string;
+}

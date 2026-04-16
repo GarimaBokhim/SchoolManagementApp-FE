@@ -11,20 +11,20 @@ import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllClass } from "../../Class/hooks";
+
 type Props = {
   form: UseFormReturn<ISubject>;
   onClose: () => void;
   SubjectId: string;
 };
+
 const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
   const editSubject = useEditSubject();
   const { handleError, clearError } = useErrorHandler();
   const { data: SubjectData } = useGetSubjectById(SubjectId);
   const { data: allClass } = useGetAllClass();
-  const handleClose = () => {
-    form.reset();
-  };
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
+
   useEffect(() => {
     if (SubjectData) {
       form.reset({
@@ -33,23 +33,30 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
         creditHours: SubjectData?.creditHours ?? 0,
         description: SubjectData?.description ?? "",
         classId: SubjectData?.classId ?? "",
+        examId: SubjectData?.examId ?? "",
       });
       setSelectedClassId(SubjectData.classId);
     }
-  }, [SubjectData]);
+  }, [SubjectData, form]);
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
   const onSubmit: SubmitHandler<ISubject> = async (data) => {
     clearError();
 
     try {
-      clearError();
       await toast.promise(
         editSubject.mutateAsync({
+          ...data,
           id: SubjectId,
-          data: data,
         }),
         {
-          loading: "Submitting Data",
-          success: "Successfully Edited Income",
+          loading: "Updating Subject...",
+          success: "Subject Successfully Updated",
+          error: "Failed to Update Subject",
         }
       );
       handleClose();
@@ -58,6 +65,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
       Toast.error(errorMsg);
     }
   };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
@@ -69,7 +77,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
-        <fieldset className="">
+        <fieldset>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Update Subject
@@ -77,7 +85,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
             </button>
@@ -99,6 +107,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
                 placeholder="Enter Subject code"
                 required
               />
+
               <InputElement
                 label="Credit Hours"
                 form={form}
@@ -114,6 +123,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
                 placeholder="Enter Description"
                 required
               />
+
               <AppCombobox
                 value={selectedClassId}
                 dropDownWidth="w-full"
@@ -129,8 +139,10 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
                 onSelect={(group) => {
                   if (group) {
                     setSelectedClassId(group.id || null);
+                    form.setValue("classId", group.id || "");
                   } else {
                     setSelectedClassId(null);
+                    form.setValue("classId", "");
                   }
                 }}
                 getLabel={(g) => g?.name ?? ""}
@@ -138,7 +150,7 @@ const EditSubjectForm = ({ form, onClose, SubjectId }: Props) => {
               />
             </div>
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text="Submit" />
             </div>
           </form>
         </fieldset>

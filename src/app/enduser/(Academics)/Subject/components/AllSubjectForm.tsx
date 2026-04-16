@@ -156,6 +156,21 @@ const AllSubjectForm = () => {
     setSelectedSubjectName("");
     form.reset();
   };
+
+  // Handler for when edit modal closes
+  const handleEditModalClose = () => {
+    setShowSubjects(false);
+    setSelectedId("");
+    // Refresh the list after edit modal closes
+    refetch();
+  };
+
+  // Handler for when add modal closes
+  const handleAddModalClose = () => {
+    setAddModal(false);
+    // Refresh the list after add modal closes
+    refetch();
+  };
   
   return (
     <>
@@ -254,8 +269,9 @@ const AllSubjectForm = () => {
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
-                </tr>
+                  </tr>
               </thead>
+              
               <tbody>
                 {isLoading ? (
                   <tr>
@@ -290,14 +306,14 @@ const AllSubjectForm = () => {
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(Subject.id ||Subject.Id|| "")
+                                  handleDelete(Subject.id || Subject.Id || "")
                                 }
                                 headerText={<Trash size={13} />}
                                 content="Are you sure you want to delete this Subject?"
                               />
                             )}
                             {canEdit && (
-                              <EditButton button={buttonElement(Subject.Id ?? "")} />
+                              <EditButton button={buttonElement(Subject.Id || Subject.id || "")} />
                             )}
                           </div>
                         </td>
@@ -323,12 +339,15 @@ const AllSubjectForm = () => {
             <EditSubject
               SubjectId={selectedId}
               visible={showSubjects}
-              onClose={() => setShowSubjects(false)}
+              onClose={handleEditModalClose} // Use the new handler
             />
           )}
           
           {/* Add Modal */}
-          <AddSubject visible={addModal} onClose={() => setAddModal(false)} />
+          <AddSubject 
+            visible={addModal} 
+            onClose={handleAddModalClose} // Use the new handler
+          />
         </div>
 
         {/* Pagination */}
