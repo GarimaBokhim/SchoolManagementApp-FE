@@ -46,7 +46,7 @@ export const useAddSubject = () => {
   });
 };
 
-export const useRemoveSubject = () => {
+export const useDeleteSubject = () => {
   const queryClient = useQueryClient();
   return useMutation<ISubject, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<ISubject> => {
@@ -61,6 +61,11 @@ export const useRemoveSubject = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
+    },
+    onError: (error: any) => {
+      console.error("Error deleting Subject:", error);
+      // Throw the error so it can be caught in the component
+      throw error;
     },
   });
 };

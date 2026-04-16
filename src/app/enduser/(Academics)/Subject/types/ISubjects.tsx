@@ -1,4 +1,5 @@
 export interface ISubject {
+  id?: any;
   Id?: string;
   name: string;
   code: string;
