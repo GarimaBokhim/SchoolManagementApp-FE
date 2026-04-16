@@ -58,8 +58,7 @@ const AddNoticeForm = ({ onClose, form, noticeToEdit }: Props) => {
             title: data.title,
             contentHtml: data.contentHtml,
             shortDescription: data.shortDescription,
-            modifiedBy: "Admin",
-            modifiedAt: new Date().toISOString(),
+          
           }),
           {
             loading: "Updating Notice...",
