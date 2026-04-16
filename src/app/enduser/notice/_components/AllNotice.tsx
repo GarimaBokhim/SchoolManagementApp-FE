@@ -32,6 +32,7 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddNotice from "../pages/Add";
 import { EditButton } from "@/components/Buttons/EditButton";
 import GenerateNotice from "./GenerateNotice";
+import EditNotice from "../pages/Edit";
 
 const AllNoticeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -429,14 +430,18 @@ const AllNoticeForm = () => {
           />
 
           {/* Edit Modal — now passes noticeToEdit */}
-          <AddNotice
-            visible={editModal}
-            noticeToEdit={noticeToEdit}
-            onClose={() => {
-              setEditModal(false);
-              setNoticeToEdit(null);
-            }}
-          />
+       {/* Edit Modal — now passes noticeToEdit */}
+{/* Edit Modal */}
+{noticeToEdit && (
+  <EditNotice
+    visible={editModal}
+    onClose={() => {
+      setEditModal(false);
+      setNoticeToEdit(null);
+    }}
+    noticeToEdit={noticeToEdit}
+  />
+)}
         </div>
 
         {selectedNotice && viewNotice && (

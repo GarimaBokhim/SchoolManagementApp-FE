@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { ISubject } from "../types/ISubjects";
 import EditSubjectForm from "../components/EditSubjectForm";
 import { useGetSubjectById } from "../hooks";
@@ -14,13 +15,26 @@ const EditSubject = ({ visible, onClose, SubjectId }: Props) => {
 
   const form = useForm<ISubject>({
     defaultValues: {
-      name: SubjectData?.name ?? "",
-      code: SubjectData?.code ?? "",
-      creditHours: SubjectData?.creditHours ?? 0,
-      description: SubjectData?.description ?? "",
-      classId: SubjectData?.classId ?? "",
+      name: "",
+      code: "",
+      creditHours: 0,
+      description: "",
+      classId: "",
     },
   });
+
+  // Reset form when SubjectData is loaded
+  useEffect(() => {
+    if (SubjectData) {
+      form.reset({
+        name: SubjectData.name ?? "",
+        code: SubjectData.code ?? "",
+        creditHours: SubjectData.creditHours ?? 0,
+        description: SubjectData.description ?? "",
+        classId: SubjectData.classId ?? "",
+      });
+    }
+  }, [SubjectData, form]);
 
   if (!visible) return null;
 

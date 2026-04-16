@@ -27,14 +27,7 @@ type NoticeRequest = {
   shortDescription: string;
 };
 
-type UpdateNoticeRequest = {
-  id: string;
-  title: string;
-  contentHtml: string;
-  shortDescription: string;
-  modifiedBy: string;
-  modifiedAt: string;
-};
+
 
 type PublishRequest = {
   noticeId: string;
@@ -57,12 +50,22 @@ export const useAddNotice = () => {
   });
 };
 
+// Update the type to match the new schema
+type UpdateNoticeRequest = {
+  id: string;
+  title: string;
+  contentHtml: string;
+  shortDescription: string;
+  // Remove modifiedBy and modifiedAt
+};
+
 export const useUpdateNotice = () => {
   const queryClient = useQueryClient();
   return useMutation<INotice, Error, UpdateNoticeRequest>({
     mutationFn: async (data: UpdateNoticeRequest): Promise<INotice> => {
       const { id, ...body } = data;
-      const response = await api.put(
+      // Change from put to patch
+      const response = await api.patch(
         `${NoticeEndPoints.updateNotice}/${id}`,
         body
       );
@@ -77,7 +80,6 @@ export const useUpdateNotice = () => {
     },
   });
 };
-
 export const useDeleteNotice = () => {
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({

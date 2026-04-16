@@ -288,9 +288,11 @@ const   AllSubjectForm = () => {
                               />
                             )}
                             {canEdit && (
-                              <EditButton
-                                button={buttonElement(Subject.Id ?? "")}
-                              />
+                           <EditSubject
+  SubjectId={selectedId} 
+  visible={showSubjects}
+  onClose={() => setShowSubjects(false)}
+/>
                             )}
                           </div>
                         </td>
