@@ -17,7 +17,7 @@ import DateRangeFilter, {
 import {
   useFilterSubjectByDate,
   useGetAllSubjects,
-  useRemoveSubject,
+  useDeleteSubject,
 } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -25,26 +25,31 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddSubject from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllClass } from "../../Class/hooks";
-const   AllSubjectForm = () => {
+
+const AllSubjectForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+  
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  
   const [showSubjects, setShowSubjects] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
   const [selectedId, setSelectedId] = useState<string>("");
+  
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -59,11 +64,13 @@ const   AllSubjectForm = () => {
       />
     );
   };
+  
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+  
   const form = useForm<IFilterSubjectByDate>({
     defaultValues: {
       name: "",
@@ -71,6 +78,7 @@ const   AllSubjectForm = () => {
       endDate: "",
     },
   });
+  
   const fullQuery = query + (params || "");
 
   const {
@@ -78,15 +86,17 @@ const   AllSubjectForm = () => {
     refetch,
     isLoading,
   } = useFilterSubjectByDate(fullQuery);
+  
   const { data: allSubjects } = useGetAllSubjects();
-  const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(
-    null
-  );
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(null);
+  
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  
   const onSubmit: SubmitHandler<IFilterSubjectByDate> = async (formData) => {
     clearError();
     try {
@@ -118,22 +128,27 @@ const   AllSubjectForm = () => {
       console.error("Error during form submission:", error);
     }
   };
+  
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+  
   const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteSubject = useRemoveSubject();
+  const deleteSubject = useDeleteSubject();
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteSubject.mutateAsync(id);
-      toast.success("User deleted successfully!");
+      toast.success("Subject deleted successfully!");
       refetch();
     } catch {
-      toast.error("Error deleting user.");
+      toast.error("Error deleting subject.");
     }
   };
+  
   const { data: allClass } = useGetAllClass();
+  
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -141,6 +156,22 @@ const   AllSubjectForm = () => {
     setSelectedSubjectName("");
     form.reset();
   };
+
+  // Handler for when edit modal closes
+  const handleEditModalClose = () => {
+    setShowSubjects(false);
+    setSelectedId("");
+    // Refresh the list after edit modal closes
+    refetch();
+  };
+
+  // Handler for when add modal closes
+  const handleAddModalClose = () => {
+    setAddModal(false);
+    // Refresh the list after add modal closes
+    refetch();
+  };
+  
   return (
     <>
       <Toaster position="top-right" />
@@ -168,6 +199,7 @@ const   AllSubjectForm = () => {
               )}
             </div>
           </div>
+          
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -234,17 +266,16 @@ const   AllSubjectForm = () => {
                   <th className="px-2 md:px-4 py-3 text-left">Subject Code</th>
                   <th className="px-2 md:px-4 py-3 text-left">Credit Hours</th>
                   <th className="px-2 md:px-4 py-3 text-left">Class</th>
-                  {/* <th className="px-2 md:px-4 py-3 text-left">Full Marks</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Pass Marks</th> */}
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
-                </tr>
+                  </tr>
               </thead>
+              
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                    <td colSpan={6} className="p-4 text-center text-gray-500">
                       Loading Subjects...
                     </td>
                   </tr>
@@ -270,27 +301,19 @@ const   AllSubjectForm = () => {
                             )?.name
                           }
                         </td>
-                        {/* <td className="py-1 px-2 md:px-4">
-                          {Subject.fullMarks}
-                        </td>
-                        <td className="py-1 px-2 md:px-4">
-                          {Subject.passMarks}
-                        </td> */}
                         <td className="py-1 px-2 md:px-4">
                           <div className="flex justify-center flex-wrap gap-1 md:gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(Subject.Id ? Subject.Id : "")
+                                  handleDelete(Subject.id || Subject.Id || "")
                                 }
                                 headerText={<Trash size={13} />}
                                 content="Are you sure you want to delete this Subject?"
                               />
                             )}
                             {canEdit && (
-                              <EditButton
-                                button={buttonElement(Subject.Id ?? "")}
-                              />
+                              <EditButton button={buttonElement(Subject.Id || Subject.id || "")} />
                             )}
                           </div>
                         </td>
@@ -300,7 +323,7 @@ const   AllSubjectForm = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="p-4 text-center text-gray-500 italic text-sm"
                     >
                       No Subjects found.
@@ -311,14 +334,20 @@ const   AllSubjectForm = () => {
             </table>
           </div>
 
+          {/* Edit Modal - Rendered once at the bottom */}
           {showSubjects && selectedId && (
             <EditSubject
               SubjectId={selectedId}
               visible={showSubjects}
-              onClose={() => setShowSubjects(false)}
+              onClose={handleEditModalClose} // Use the new handler
             />
           )}
-          <AddSubject visible={addModal} onClose={() => setAddModal(false)} />
+          
+          {/* Add Modal */}
+          <AddSubject 
+            visible={addModal} 
+            onClose={handleAddModalClose} // Use the new handler
+          />
         </div>
 
         {/* Pagination */}
