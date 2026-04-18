@@ -1,30 +1,32 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { IExam } from "../types/IExams";
-// import { ExamValidator } from "../validators/index";
 import AddExamForm from "../components/AddExamForm";
 
 interface Props {
   visible: boolean;
   onClose?: () => void;
 }
+
 const AddExam = ({ visible, onClose }: Props) => {
   const form = useForm<IExam>({
     defaultValues: {
       id: "",
       name: "",
-      examDate: new Date(),
+      examDate: "" as any,
       totalMarks: 0,
       passingMarks: 0,
       classId: "",
+      schoolId: "",       //  was missing — caused silent validation block
       isfinalExam: false,
+      examSubjects: [],   //  was missing — fieldArray needs an empty array default
     },
-
-    // resolver: yupResolver(ExamValidator),
   });
+
   const handleOnClose = () => {
     if (onClose) onClose();
   };
+
   if (!visible) return null;
 
   return (
@@ -38,10 +40,10 @@ const AddExam = ({ visible, onClose }: Props) => {
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
-        <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
         <AddExamForm form={form} onClose={handleOnClose} />
       </div>
     </div>
   );
 };
+
 export default AddExam;
