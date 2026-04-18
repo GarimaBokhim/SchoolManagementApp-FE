@@ -34,14 +34,14 @@ const AssignModuleForm = ({
   const { data } = useGetAllModules();
   const assignModule = useAssignModule();
 
-  // ✅ ALL MODULES (flat list for reference)
+  // ALL MODULES (flat list for reference)
   useEffect(() => {
     if (data?.Items) {
       setAllModules(data.Items);
     }
   }, [data]);
 
-  // ✅ GROUPED MODULES from API response
+  //  GROUPED MODULES from API response
   useEffect(() => {
     if (assignedData && Array.isArray(assignedData)) {
       setGroupedModules(assignedData as IRoleModuleGroup[]);

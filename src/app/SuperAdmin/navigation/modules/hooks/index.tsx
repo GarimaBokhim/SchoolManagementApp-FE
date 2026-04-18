@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IModules } from "../types/IModules";
+import { IModules, IModulesByRoleId } from "../types/IModules";
 
 const modulesEndPoints = {
   getAllModules: "/api/RoleModuleControllers/all-modules",
@@ -45,7 +45,7 @@ export const useGetModuleByRoleId = (id: string) => {
   return useQuery({
     queryKey: [queryKey + id],
     queryFn: async () => {
-      const response = await api.get<IModules[]>(
+      const response = await api.get<IModulesByRoleId[]>(
         `${modulesEndPoints.getModuleByRoleId}/${id}`
       );
       return response.data;

@@ -17,6 +17,9 @@ importers:
       '@iconify/react':
         specifier: ^6.0.2
         version: 6.0.2(react@19.1.0)
+      '@next/font':
+        specifier: ^14.2.15
+        version: 14.2.15(next@16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -149,6 +152,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      geist:
+        specifier: ^1.7.0
+        version: 1.7.0(next@16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       html-docx:
         specifier: link:html-docx-js/dist/html-docx
         version: link:html-docx-js/dist/html-docx
@@ -602,6 +608,11 @@ packages:
 
   '@next/eslint-plugin-next@16.1.1':
     resolution: {integrity: sha512-Ovb/6TuLKbE1UiPcg0p39Ke3puyTCIKN9hGbNItmpQsp+WX3qrjO3WaMVSi6JHr9X1NrmthqIguVHodMJbh/dw==}
+
+  '@next/font@14.2.15':
+    resolution: {integrity: sha512-QopYhBmCDDrNDynbi+ZD1hDZXmQXVFo7TmAFp4DQgO/kogz1OLbQ92hPigJbj572eZ3GaaVxNIyYVn3/eAsehg==}
+    peerDependencies:
+      next: '*'
 
   '@next/swc-darwin-arm64@16.1.6':
     resolution: {integrity: sha512-wTzYulosJr/6nFnqGW7FrG3jfUUlEf8UjGA0/pyypJl42ExdVgC6xJgcXQ+V8QFn6niSG2Pb8+MIG1mZr2vczw==}
@@ -2187,6 +2198,11 @@ packages:
 
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
+
+  geist@1.7.0:
+    resolution: {integrity: sha512-ZaoiZwkSf0DwwB1ncdLKp+ggAldqxl5L1+SXaNIBGkPAqcu+xjVJLxlf3/S8vLt9UHx1xu5fz3lbzKCj5iOVdQ==}
+    peerDependencies:
+      next: '>=13.2.0'
 
   generator-function@2.0.1:
     resolution: {integrity: sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g==}
@@ -3855,6 +3871,10 @@ snapshots:
   '@next/eslint-plugin-next@16.1.1':
     dependencies:
       fast-glob: 3.3.1
+
+  '@next/font@14.2.15(next@16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))':
+    dependencies:
+      next: 16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   '@next/swc-darwin-arm64@16.1.6':
     optional: true
@@ -5543,6 +5563,10 @@ snapshots:
       is-callable: 1.2.7
 
   functions-have-names@1.2.3: {}
+
+  geist@1.7.0(next@16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)):
+    dependencies:
+      next: 16.1.6(@babel/core@7.28.5)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   generator-function@2.0.1: {}
 

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
 import ReactQueryProvider from "@/context/Providers/ReactQueryProvider";
 import { PermissionProvider } from "@/context/auth/PermissionContext";
@@ -7,6 +8,10 @@ import { SidebarProvider } from "@/context/SidebarContext";
 import { DateProvider } from "@/context/auth/PrimaryDateContext";
 import { ToasterProvider } from "@/components/Toast/ToasterProvider";
 import { Toaster } from "react-hot-toast";
+
+const inter = Inter({ 
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
   title: "School management system",
@@ -19,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.className}>
       <body suppressHydrationWarning>
         <ReactQueryProvider>
           <PermissionProvider>
@@ -29,7 +34,7 @@ export default function RootLayout({
                   <SidebarProvider>
                     <ToasterProvider />
                     {children}
-                     <Toaster
+                    <Toaster
                       position="top-right"
                       toastOptions={{
                         duration: 3000,
