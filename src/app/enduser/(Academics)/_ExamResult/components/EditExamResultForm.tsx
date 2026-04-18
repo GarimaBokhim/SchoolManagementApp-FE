@@ -31,22 +31,19 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const { data: ExamResultData } = useGetExamResultById(ExamResultId)
   const [selectedClassId, setSelectedClassId] = useState<string | null>('')
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null
-  )
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>()
+
   useEffect(() => {
     if (selectedStudent) {
       setSelectedClassId(selectedStudent.classId || '')
     }
   }, [selectedStudent])
+
   const { data: allExam } = useGetAllExams()
   const { data: allStudents } = useGetAllStudents('?IsPagination=false')
-
   const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
-  const [, setSelectedSubjectIds] = useState<{
-    [key: number]: string | null
-  }>({})
+  const [, setSelectedSubjectIds] = useState<{ [key: number]: string | null }>({})
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -66,10 +63,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     setSelectedExamId(ExamResultData.examId)
     setSelectedStudentId(ExamResultData.studentId)
 
-    const student = allStudents?.Items?.find(
-      (s) => s.id === ExamResultData.studentId
-    )
-
+    const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
     if (student?.classId) {
       setSelectedClassId(student.classId)
     }
@@ -80,7 +74,6 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     ExamResultData.marksObtained?.forEach((item, index) => {
       initialSubjects[index] = item.subjectId
     })
-
     setSelectedSubjectIds(initialSubjects)
   }, [ExamResultData, allStudents, reset, replace])
 
@@ -91,19 +84,14 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError()
-
     try {
       await toast.promise(
-        editExamResult.mutateAsync({
-          id: ExamResultId,
-          data,
-        }),
+        editExamResult.mutateAsync({ id: ExamResultId, data }),
         {
           loading: 'Updating Exam Result...',
           success: 'Successfully Updated Exam Result',
         }
       )
-
       handleClose()
     } catch (error) {
       const errorMsg = handleError(error)
@@ -145,9 +133,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 dropdownPositionClass="absolute"
                 value={selectedExamId}
                 options={allExam?.Items ?? []}
-                selected={
-                  allExam?.Items?.find((e) => e.id === selectedExamId) || null
-                }
+                selected={allExam?.Items?.find((e) => e.id === selectedExamId) || null}
                 onSelect={(exam) => {
                   const id = exam?.id ?? ''
                   setSelectedExamId(id)
@@ -164,10 +150,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 dropdownPositionClass="absolute"
                 value={selectedStudentId}
                 options={allStudents?.Items ?? []}
-                selected={
-                  allStudents?.Items?.find((s) => s.id === selectedStudentId) ||
-                  null
-                }
+                selected={allStudents?.Items?.find((s) => s.id === selectedStudentId) || null}
                 onSelect={(student) => {
                   const id = student?.id ?? ''
                   setSelectedStudentId(id)
@@ -185,6 +168,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 placeholder="Enter remark"
               />
             </div>
+
             <div className="mt-10">
               <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
@@ -193,6 +177,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   key={field.id}
                   className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
                 >
+                  {/* Subject dropdown — 5 cols */}
                   <div className="col-span-12 md:col-span-5">
                     <AppCombobox
                       dropDownWidth="w-full"
@@ -204,9 +189,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                       value={form.watch(`marksObtained.${index}.subjectId`)}
                       selected={
                         allSubject?.find(
-                          (subj) =>
-                            subj.id ===
-                            form.watch(`marksObtained.${index}.subjectId`)
+                          (subj) => subj.id === form.watch(`marksObtained.${index}.subjectId`)
                         ) || null
                       }
                       onSelect={(subject) => {
@@ -214,16 +197,14 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                         form.setValue(`marksObtained.${index}.subjectId`, id, {
                           shouldValidate: true,
                         })
-                        setSelectedSubjectIds((prev) => ({
-                          ...prev,
-                          [index]: id,
-                        }))
+                        setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
                       }}
                       getLabel={(s) => s?.subjectName ?? ''}
                       getValue={(s) => s?.id ?? ''}
                     />
                   </div>
 
+                  {/* Marks Obtained — 5 cols */}
                   <div className="col-span-12 md:col-span-5">
                     <InputElement
                       label="Marks Obtained"
@@ -233,18 +214,18 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                       placeholder="Enter marks"
                     />
                   </div>
-                  {/* Full Marks Input */}
-                  <div className="mt-1">
-                    <InputElement
-                      label="Full Marks"
-                      form={form}
-                      name={`marksObtained.${index}.fullMarks`}
-                      inputType="number"
-                      placeholder="Full marks"
-                      readOnly
-                    />
-                  </div>
 
+                  {/*
+                   * Full Marks field is intentionally hidden from the UI.
+                   * The field stays registered in the form schema so the
+                   * existing API payload shape is not broken.
+                   */}
+                  <input
+                    type="hidden"
+                    {...form.register(`marksObtained.${index}.fullMarks`)}
+                  />
+
+                  {/* Remove row — 2 cols */}
                   <div className="col-span-12 md:col-span-2 flex justify-center">
                     <button
                       type="button"
@@ -263,6 +244,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   </div>
                 </div>
               ))}
+
               <ButtonElement
                 type="button"
                 text="Add Subject"
@@ -270,11 +252,12 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
-                    fullMarks: 0,
+                    fullMarks: 0, // kept in payload, not shown in UI
                   })
                 }
               />
             </div>
+
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text="Submit" />
             </div>
