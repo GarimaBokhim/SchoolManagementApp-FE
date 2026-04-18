@@ -24,13 +24,11 @@ function normalizeDetail(d: unknown): IStudentFeeDetails {
   return base;
 }
 
-/**
- * Map list/API row (camelCase or PascalCase) into form shape for reset + edit modal.
- */
+
 export function normalizeStudentFeeRowForEdit(
   row: IStudentFee & { id?: string; Id?: string }
 ): IStudentFee & { id: string } {
-  const r = row as Record<string, unknown>;
+  const r = row as unknown as Record<string, unknown>;
   const id = String(row.id ?? row.Id ?? r.Id ?? "");
   const studentId = String(row.studentId ?? r.StudentId ?? "");
   const classId = String(row.classId ?? r.ClassId ?? "");
