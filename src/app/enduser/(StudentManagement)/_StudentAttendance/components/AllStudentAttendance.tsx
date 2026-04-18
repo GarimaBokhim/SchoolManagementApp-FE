@@ -21,21 +21,25 @@ import { useGetAllAcademicTeams } from "@/app/enduser/(Staff)/AcademicStaff/hook
 import MonthlyAttendanceSheet from "./StudentAttendanceDetail";
 import { IClass } from "@/app/enduser/(Academics)/Class/types/IClass";
 import { useFilterClassByDate } from "@/app/enduser/(Academics)/Class/hooks";
+
 const AllStudentAttendanceForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+  
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  
   const { data: allStudent } = useGetAllStudents();
   const [selectedStudent, setSelectedStudent] = useState<string | null>("");
   const [addModal, setAddModal] = useState(false);
@@ -57,16 +61,20 @@ const AllStudentAttendanceForm = () => {
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+  
   const {
     data: filteredClass,
     refetch,
     isLoading,
   } = useFilterClassByDate(fullQuery);
+  
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  
   const onSubmit: SubmitHandler<IFilterStudentAttendanceByDate> = async (
     formData,
   ) => {
@@ -107,7 +115,9 @@ const AllStudentAttendanceForm = () => {
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+  
   const formRef = useRef<DateRangeFilterRef>(null);
+  
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -115,6 +125,12 @@ const AllStudentAttendanceForm = () => {
     setSelectedStudent("");
     form.reset();
   };
+  
+  // Calculate the starting serial number for the current page
+  const getSerialNumber = (index: number) => {
+    return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
+  };
+  
   return (
     <>
       <Toaster position="top-right" />
@@ -142,6 +158,7 @@ const AllStudentAttendanceForm = () => {
               )}
             </div>
           </div>
+          
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -198,12 +215,13 @@ const AllStudentAttendanceForm = () => {
               </form>
             </div>
           )}
+          
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 ">Class Name</th>
+                  <th className="px-4 py-3 text-center">Class Name</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
@@ -217,21 +235,23 @@ const AllStudentAttendanceForm = () => {
                 ) : filteredClass?.Items && filteredClass?.Items.length > 0 ? (
                   filteredClass?.Items.map((Class: IClass, index: number) => (
                     <tr
-                      key={index}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      key={Class.id || index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-3 px-4 text-center">{index + 1}</td>
+                      <td className="py-3 px-4 text-center">{getSerialNumber(index)}</td>
                       <td className="py-3 px-4 text-center">{Class.name}</td>
                       <td className="py-1 px-4">
-                        <ButtonElement
-                          text=""
-                          icon={<Eye size={14} />}
-                          className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
-                          onClick={() => {
-                            setSelectedClassId(Class?.id ?? "");
-                            setViewModal(true);
-                          }}
-                        />
+                        <div className="flex justify-center">
+                          <ButtonElement
+                            text=""
+                            icon={<Eye size={14} />}
+                            className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                            onClick={() => {
+                              setSelectedClassId(Class?.id ?? "");
+                              setViewModal(true);
+                            }}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -248,6 +268,7 @@ const AllStudentAttendanceForm = () => {
               </tbody>
             </table>
           </div>
+          
           <AddStudentAttendance
             visible={addModal}
             onClose={() => setAddModal(false)}
@@ -279,6 +300,7 @@ const AllStudentAttendanceForm = () => {
             />
           </div>
         )}
+        
         {ViewModal && (
           <MonthlyAttendanceSheet
             visible={ViewModal}
