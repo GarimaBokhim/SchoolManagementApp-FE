@@ -30,48 +30,36 @@ import ImportButtonForm from "@/components/Buttons/importbutton";
 import ExportButtonForm from "@/components/Buttons/exportbuttonform";
 import ExcelParentTable from "./Excelprint";
 
-
 const AllParentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+
   const { data: allParents } = useGetAllParents();
   const [showParents, setShowParents] = useState(false);
-  const [selectedParentName, setSelectedParentName] = useState<string | null>(
-    ""
-  );
-  // const { mutateAsync: importParent } = useImportParents();
+  const [selectedParentName, setSelectedParentName] = useState<string | null>("");
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
   const [selectedId, setSelectedId] = useState<string>("");
-  const buttonElement = (id: string) => {
-    return (
-      <ButtonElement
-        icon={<Edit size={14} />}
-        type="button"
-        text=""
-        onClick={() => {
-          setShowParents(true);
-          setSelectedId(id);
-        }}
-        className="!text-xs font-bold !bg-teal-500"
-      />
-    );
-  };
   const [params, setParams] = useState("");
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
+  const fullQuery = query + (params || "");
+
   const form = useForm<IFilterParentByDate>({
     defaultValues: {
       firstName: "",
@@ -79,21 +67,24 @@ const AllParentForm = () => {
       endDate: "",
     },
   });
-  const fullQuery = query + (params || "");
 
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+
   const {
     data: filteredParent,
     refetch,
     isLoading,
   } = useFilterParentByDate(fullQuery);
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+
   const onSubmit: SubmitHandler<IFilterParentByDate> = async (formData) => {
     clearError();
     try {
@@ -132,8 +123,10 @@ const AllParentForm = () => {
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteParent = useRemoveParent();
+
   const handleDelete = async (id: string) => {
     try {
       await deleteParent.mutateAsync(id);
@@ -143,6 +136,7 @@ const AllParentForm = () => {
       toast.error("Error deleting user.");
     }
   };
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -150,15 +144,45 @@ const AllParentForm = () => {
     setSelectedParentName("");
     form.reset();
   };
- 
+
+  
+  const handleEditSuccess = () => {
+    setShowParents(false);
+    setSelectedId("");
+    refetch();
+  };
+
+
+  const getSerialNumber = (index: number) => {
+    const pageIndex = Array.isArray(filteredParent)
+      ? 1
+      : filteredParent?.PageIndex ?? 1;
+    const pageSize = paginationParams.pageSize;
+    return (pageIndex - 1) * pageSize + index + 1;
+  };
+
+  const buttonElement = (id: string) => {
+    return (
+      <ButtonElement
+        icon={<Edit size={14} />}
+        type="button"
+        text=""
+        onClick={() => {
+          setShowParents(true);
+          setSelectedId(id);
+        }}
+        className="!text-xs font-bold !bg-teal-500"
+      />
+    );
+  };
 
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All Parents</h1>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All Parents</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
@@ -167,8 +191,6 @@ const AllParentForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-
-
               {canAdd && (
                 <ButtonElement
                   icon={<Plus size={24} />}
@@ -178,34 +200,33 @@ const AllParentForm = () => {
                   className="!text-md !font-bold"
                 />
               )}
-          
-        <ImportButtonForm
-            handleExcelImport={async (file) => {
-              // await toast.promise(importParent(file), {
-              //   loading: "Uploading...",
-              //   success: "Parents uploaded successfully!",
-              //   error: "Upload failed! Please Check the format",
-              // });
-            }}
-          />
-         <ExportButtonForm
-          file="/template/ledgerTemplate.xlsx"
-          data={
-            <AllPrintFormForParents
-              startDate={form.watch("startDate")}
-              endDate={form.watch("endDate")}
-            />
-          }
-          excelData={
-            <ExcelParentTable
-              startDate={form.watch("startDate")}
-              endDate={form.watch("endDate")}
-            />
-          }
-        />
-
+              <ImportButtonForm
+                handleExcelImport={async (file) => {
+                  // await toast.promise(importParent(file), {
+                  //   loading: "Uploading...",
+                  //   success: "Parents uploaded successfully!",
+                  //   error: "Upload failed! Please Check the format",
+                  // });
+                }}
+              />
+              <ExportButtonForm
+                file="/template/ledgerTemplate.xlsx"
+                data={
+                  <AllPrintFormForParents
+                    startDate={form.watch("startDate")}
+                    endDate={form.watch("endDate")}
+                  />
+                }
+                excelData={
+                  <ExcelParentTable
+                    startDate={form.watch("startDate")}
+                    endDate={form.watch("endDate")}
+                  />
+                }
+              />
             </div>
           </div>
+
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -243,7 +264,6 @@ const AllParentForm = () => {
                     getValue={(g) => g?.fullName ?? ""}
                   />
                 </div>
-
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
@@ -262,17 +282,19 @@ const AllParentForm = () => {
               </form>
             </div>
           )}
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
+              
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Parent Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">Phone Number</th>
-                  <th className="px-4 py-3 text-left">Occupation</th>
-                  <th className="px-4 py-3 text-left">Address</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-left align-middle w-[60px]">S.N</th>
+                  <th className="px-4 py-3 text-left align-middle">Parent Name</th>
+                  <th className="px-4 py-3 text-left align-middle">Email</th>
+                  <th className="px-4 py-3 text-left align-middle">Phone Number</th>
+                  <th className="px-4 py-3 text-left align-middle">Occupation</th>
+                  <th className="px-4 py-3 text-left align-middle">Address</th>
+                  <th className="px-4 py-3 text-center align-middle w-[180px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -282,47 +304,40 @@ const AllParentForm = () => {
                       Loading Parents...
                     </td>
                   </tr>
-                ) : filteredParent?.Items &&
-                  filteredParent?.Items.length > 0 ? (
-                  filteredParent?.Items.map(
-                    (Parent: IParent, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                      >
-                        <td className="py-1 px-4">{index + 1}</td>
-                        <td className="py-1 px-4">{Parent.fullName}</td>
-                        <td className="py-1 px-4">{Parent.email}</td>
-                        <td className="py-1 px-4">{Parent.phoneNumber}</td>
-                        <td className="py-1 px-4">{Parent.occupation}</td>
-                        <td className="py-1 px-4">{Parent.address}</td>
-                        <td className="py-1 px-4">
-                          <div className="flex justify-center gap-2">
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(Parent.id ? Parent.id : "")
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this Parent?"
-                              />
-                            )}
-                            {canEdit && (
-                              <EditButton
-                                button={buttonElement(Parent.id ?? "")}
-                              />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                ) : filteredParent?.Items && filteredParent?.Items.length > 0 ? (
+                  filteredParent?.Items.map((Parent: IParent, index: number) => (
+                    <tr
+                      key={Parent.id ?? index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                    >
+                  
+                      <td className="py-3 px-4 align-middle">{getSerialNumber(index)}</td>
+                      <td className="py-3 px-4 align-middle">{Parent.fullName}</td>
+                      <td className="py-3 px-4 align-middle">{Parent.email}</td>
+                      <td className="py-3 px-4 align-middle">{Parent.phoneNumber}</td>
+                      <td className="py-3 px-4 align-middle">{Parent.occupation}</td>
+                      <td className="py-3 px-4 align-middle">{Parent.address}</td>
+                      <td className="py-3 px-4 align-middle">
+                        <div className="flex justify-center items-center gap-2">
+                          {canDelete && (
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(Parent.id ? Parent.id : "")
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this Parent?"
+                            />
+                          )}
+                          {canEdit && (
+                            <EditButton button={buttonElement(Parent.id ?? "")} />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
+                    <td colSpan={7} className="p-4 text-center text-gray-500 italic">
                       No Parents found.
                     </td>
                   </tr>
@@ -330,13 +345,17 @@ const AllParentForm = () => {
               </tbody>
             </table>
           </div>
+
+          {/*Pass onSuccess callback so modal closes and list refreshes */}
           {showParents && selectedId && (
             <EditParent
               ParentId={selectedId}
               visible={showParents}
               onClose={() => setShowParents(false)}
+              onSuccess={handleEditSuccess}
             />
           )}
+
           <AddParent visible={addModal} onClose={() => setAddModal(false)} />
         </div>
 

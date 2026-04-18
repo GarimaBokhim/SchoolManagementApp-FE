@@ -33,15 +33,18 @@ const AllRegistrationForm = () => {
     pageIndex: 1,
     isPagination: true,
   });
+  
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+  
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+  
   const { data: allAcademicYear } = useGetAllAcademicYear();
   const {data: allStudents} = useGetAllStudents()
   const {data: allClasses} = useGetAllClass()
@@ -51,6 +54,7 @@ const AllRegistrationForm = () => {
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
   const [selectedId, setSelectedId] = useState<string>("");
+  
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -65,6 +69,7 @@ const AllRegistrationForm = () => {
       />
     );
   };
+  
   const [params, setParams] = useState("");
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const form = useForm<IFilterRegistrationByDate>({
@@ -79,16 +84,20 @@ const AllRegistrationForm = () => {
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+  
   const {
     data: filteredRegistration,
     refetch,
     isLoading,
   } = useFilterRegistrationByDate(fullQuery);
+  
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+  
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+  
   const onSubmit: SubmitHandler<IFilterRegistrationByDate> = async (formData) => {
     clearError();
     try {
@@ -127,8 +136,10 @@ const AllRegistrationForm = () => {
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+  
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteRegistration = useRemoveRegistration();
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteRegistration.mutateAsync(id);
@@ -138,6 +149,7 @@ const AllRegistrationForm = () => {
       toast.error("Error deleting user.");
     }
   };
+  
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -145,7 +157,11 @@ const AllRegistrationForm = () => {
     setSelectedAcademicYearId(null);
     form.reset();
   };
- 
+  
+  // Calculate the starting serial number for the current page
+  const getSerialNumber = (index: number) => {
+    return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
+  };
 
   return (
     <>
@@ -163,7 +179,6 @@ const AllRegistrationForm = () => {
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
 
-
               {canAdd && (
                 <ButtonElement
                   icon={<Plus size={24} />}
@@ -173,10 +188,9 @@ const AllRegistrationForm = () => {
                   className="!text-md !font-bold"
                 />
               )}
-          
-
             </div>
           </div>
+          
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -233,14 +247,15 @@ const AllRegistrationForm = () => {
               </form>
             </div>
           )}
+          
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 ">Student Name</th>
-                  <th className="px-4 py-3 ">Class</th>
-                  <th className="px-4 py-3 ">Academic Year</th>
+                  <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Class</th>
+                  <th className="px-4 py-3">Academic Year</th>
                   <th className="px-4 py-3 text-center w-[180px]">Actions</th>
                 </tr>
               </thead>
@@ -256,13 +271,19 @@ const AllRegistrationForm = () => {
                   filteredRegistration?.Items.map(
                     (Registration: IRegistration, index: number) => (
                       <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600  transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        key={Registration.id || index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
-                        <td className="py-1 px-4">{index + 1}</td>
-                        <td className="py-1 px-4">{allStudents?.Items.find((i)=>i.id=== Registration.studentId)?.firstName}</td>
-                        <td className="py-1 px-4">{allClasses?.Items.find((i)=>i.id=== Registration.classId)?.name}</td>
-                        <td className="py-1 px-4">{allAcademicYear?.Items.find((i)=>i.Id=== Registration.academicYearId)?.Name}</td>
+                        <td className="py-1 px-4">{getSerialNumber(index)}</td>
+                        <td className="py-1 px-4">
+                          {allStudents?.Items.find((i) => i.id === Registration.studentId)?.firstName || 'N/A'}
+                        </td>
+                        <td className="py-1 px-4">
+                          {allClasses?.Items.find((i) => i.id === Registration.classId)?.name || 'N/A'}
+                        </td>
+                        <td className="py-1 px-4">
+                          {allAcademicYear?.Items.find((i) => i.Id === Registration.academicYearId)?.Name || 'N/A'}
+                        </td>
                         <td className="py-1 px-4">
                           <div className="flex justify-center gap-2">
                             {canDelete && (
@@ -297,6 +318,7 @@ const AllRegistrationForm = () => {
               </tbody>
             </table>
           </div>
+          
           {showRegistrations && selectedId && (
             <EditRegistration
               RegistrationId={selectedId}

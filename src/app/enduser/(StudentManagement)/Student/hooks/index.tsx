@@ -19,25 +19,23 @@ const filterQueryKey = "filteredStudent";
 type StudentRequest = {
   id?: string;
   firstName: string;
+  feeCategoryId?: string | null;
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
-  genderStatus: number; //  FIX: was literal `0`, changed to `number`
-  studentStatus: number; //  FIX: was literal `0`, changed to `number`
-  dateOfBirth: Date;
+  genderStatus: number;
+  studentStatus: number;
+  dateOfBirth: string | Date;
   email: string;
   phoneNumber: string;
-  studentImg: File;
+  imageUrl?: string | null;
   address: string;
-  enrollmentDate: Date;
+  enrollmentDate: string | Date;
   parentId: string;
-  classSectionId?: string | "";
+  classSectionId?: string | null;
   provinceId: number;
   districtId: number;
-  enrollmentStatus?: number;
   wardNumber?: number | null;
-  municipalityId: number | 0;
-  vdcid: number | 0;
 };
 
 export const useAddStudent = () => {

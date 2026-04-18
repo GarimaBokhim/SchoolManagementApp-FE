@@ -9,18 +9,23 @@ import { IParent } from "../types/IParents";
 import { useEditParent, useGetParentById } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
+
 type Props = {
   form: UseFormReturn<IParent>;
   onClose: () => void;
+  onSuccess?: () => void; 
   ParentId: string;
 };
-const EditParentForm = ({ form, onClose, ParentId }: Props) => {
+
+const EditParentForm = ({ form, onClose, onSuccess, ParentId }: Props) => {
   const editParent = useEditParent();
   const { handleError, clearError } = useErrorHandler();
   const { data: ParentData } = useGetParentById(ParentId);
+
   const handleClose = () => {
     form.reset();
   };
+
   useEffect(() => {
     if (ParentData) {
       form.reset({
@@ -33,9 +38,9 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
       });
     }
   }, [ParentData]);
+
   const onSubmit: SubmitHandler<IParent> = async (data) => {
     clearError();
-
     try {
       clearError();
       await toast.promise(
@@ -45,15 +50,17 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
         }),
         {
           loading: "Submitting Data",
-          success: "Successfully Edited Income",
+          success: "Successfully Edited Parent",
         }
       );
       handleClose();
+      onSuccess?.(); //Close modal + refresh list after success
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
     }
   };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
@@ -73,7 +80,7 @@ const EditParentForm = ({ form, onClose, ParentId }: Props) => {
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
             </button>
