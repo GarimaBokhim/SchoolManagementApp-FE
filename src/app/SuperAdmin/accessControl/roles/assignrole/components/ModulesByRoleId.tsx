@@ -27,10 +27,13 @@ const ModuleByRoleId = ({ roleId, visible, onClose }: Props) => {
     if (data) {
       setModuleStatuses((prev) => {
         const newStatuses = { ...prev };
-        data.forEach((mod) => {
-          if (!(mod.Id in newStatuses)) {
-            newStatuses[mod.Id] = mod.IsActive;
-          }
+        // New schema: data is IModulesByRoleId[] — iterate over each app group's modules
+        data.forEach((appGroup) => {
+          appGroup.Modules.forEach((mod) => {
+            if (!(mod.Id in newStatuses)) {
+              newStatuses[mod.Id] = mod.IsActive;
+            }
+          });
         });
         return newStatuses;
       });
@@ -88,33 +91,44 @@ const ModuleByRoleId = ({ roleId, visible, onClose }: Props) => {
           )}
 
           {data && data.length > 0 ? (
-            <div className="space-y-6">
-              {data.map((mod) => (
-                <div key={mod.Id} className="flex flex-col w-full">
-                  <div className="flex items-center space-x-5 mb-3 border-b pb-2 dark:border-gray-600">
-                    <span className="font-medium text-gray-700 dark:text-gray-200 text-lg">
-                      {mod.Name}
-                    </span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={moduleStatuses[mod.Id]}
-                        onChange={() => handleToggle(mod.Id)}
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
-                      <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
-                    </label>
+            <div className="space-y-8">
+              {data.map((appGroup) => (
+                <div key={appGroup.AppName}>
+                  {/* App Name Section Header */}
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3 border-b border-blue-100 dark:border-blue-900 pb-1">
+                    {appGroup.AppName}
+                  </h2>
+
+                  <div className="space-y-4 pl-1">
+                    {appGroup.Modules.map((mod) => (
+                      <div key={mod.Id} className="flex flex-col w-full">
+                        <div className="flex items-center space-x-5 mb-3 border-b pb-2 dark:border-gray-600">
+                          <span className="font-medium text-gray-700 dark:text-gray-200 text-lg">
+                            {mod.Name}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={moduleStatuses[mod.Id] ?? mod.IsActive}
+                              onChange={() => handleToggle(mod.Id)}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
+                            <div className="absolute left-1 w-4 h-4 bg-white rounded-full shadow transform transition-all peer-checked:translate-x-5"></div>
+                          </label>
+                        </div>
+                        {(moduleStatuses[mod.Id] ?? mod.IsActive) && (
+                          <div className="flex flex-wrap gap-3">
+                            <SubModulesByRoleId
+                              roleId={roleId}
+                              moduleId={mod.Id}
+                              activateAll={moduleStatuses[mod.Id] ?? mod.IsActive}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  {moduleStatuses[mod.Id] && (
-                    <div className="flex flex-wrap gap-3">
-                      <SubModulesByRoleId
-                        roleId={roleId}
-                        moduleId={mod.Id}
-                        activateAll={moduleStatuses[mod.Id]}
-                      />
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
