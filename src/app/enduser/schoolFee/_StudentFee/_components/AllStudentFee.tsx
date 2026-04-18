@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Edit, Filter, Plus, RotateCcw } from "lucide-react";
+import { Edit, Filter, Plus, RotateCcw, Pencil } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -268,7 +268,7 @@ const AllStudentFeeForm = () => {
                       >
                         <td className="py-3 px-4">{index + 1}</td>
 
-                        {/* ✅ Full student name */}
+                        {/*  Full student name */}
                         <td className="py-3 px-4">
                           {getStudentName(StudentFee.studentId)}
                         </td>
@@ -279,21 +279,21 @@ const AllStudentFeeForm = () => {
 
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                            {canEdit && (StudentFee.id ?? StudentFee.Id) && (
-                              <ButtonElement
-                                text=""
-                                icon={<Edit className="text-white" size={15} />}
-                                onClick={() => {
-                                  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-                                  setEditRecord({
-                                    ...StudentFee,
-                                    id: rowId,
-                                  });
-                                  setEditModal(true);
-                                }}
-                                className="!bg-amber-500 hover:!bg-amber-600"
-                              />
-                            )}
+                          {canEdit && (StudentFee.id ?? StudentFee.Id) && (
+  <ButtonElement
+    text=""
+    icon={<Pencil className="text-white" size={15} />}
+    onClick={() => {
+      const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+      setEditRecord({
+        ...StudentFee,
+        id: rowId,
+      });
+      setEditModal(true);
+    }}
+    className="!bg-blue-500 hover:!bg-blue-600"  
+  />
+)}
                             <ButtonElement
                               text=""
                               icon={<Eye className="text-white" size={15} />}
