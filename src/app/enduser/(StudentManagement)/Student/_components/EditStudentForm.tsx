@@ -88,10 +88,32 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
 
     try {
       clearError();
+      
+      const payload = {
+        firstName: data.firstName,
+        feeCategoryId: "",
+        middleName: data.middleName || "",
+        lastName: data.lastName,
+        registrationNumber: data.registrationNumber,
+        genderStatus: data.genderStatus,
+        studentStatus: data.studentStatus,
+        dateOfBirth: data.dateOfBirth,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        imageUrl: typeof data.studentImg === 'string' ? data.studentImg : (data.imageUrl || ""),
+        address: data.address,
+        enrollmentDate: data.enrollmentDate,
+        parentId: data.parentId,
+        classSectionId: data.classSectionId || data.classId || "",
+        provinceId: data.provinceId,
+        districtId: data.districtId,
+        wardNumber: data.wardNumber || 0,
+      };
+
       await toast.promise(
         editStudent.mutateAsync({
           id: studentId,
-          data: data,
+          data: payload as any,
         }),
         {
           loading: "Submitting Data",
@@ -118,7 +140,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         <fieldset className="space-y-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add Student
+              Update Student
             </h1>
             <button
               type="button"
@@ -343,7 +365,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
             </section>
 
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text={"Update"} />
             </div>
           </form>
         </fieldset>
