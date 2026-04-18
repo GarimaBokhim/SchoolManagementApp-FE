@@ -50,7 +50,12 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
       classId: examData.classId,
       schoolId: examData.schoolId,
       isfinalExam: examData.isfinalExam,
-      examSubjects: examData.examSubjects ?? (examData as any).ExamSubjectDTOs ?? [],
+      examSubjects: (examData.examSubjects ?? (examData as any).ExamSubjectDTOs ?? []).map((s: any) => ({
+        examSubjectId: s.id ?? s.examSubjectId ?? "",
+        subjectId: s.subjectId,
+        passMarks: s.passMarks,
+        fullMarks: s.fullMarks
+      })),
     })
 
     isInitialLoad.current = false
@@ -68,10 +73,29 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
     clearError()
 
     try {
+      const payload: any = {
+        id: ExamId,
+        name: data.name,
+        examDate: data.examDate,
+        isfinalExam: data.isfinalExam,
+        classId: data.classId,
+        updateExamSubjectDTOs: (data.examSubjects ?? []).map((s) => {
+          const dto: any = {
+            subjectId: s.subjectId,
+            passMarks: Number(s.passMarks),
+            fullMarks: Number(s.fullMarks),
+          }
+          if (s.examSubjectId) {
+            dto.examSubjectId = s.examSubjectId
+          }
+          return dto
+        }),
+      }
+
       await toast.promise(
         editExam.mutateAsync({
           id: ExamId,
-          data,
+          data: payload,
         }),
         {
           loading: 'Updating Exam...',
