@@ -10,6 +10,18 @@ export interface IModules {
   IsActive: boolean;
 }
 
+export interface IModuleItem {
+  Id: string;
+  Name: string;
+  TargetUrl?: string;
+  IsActive: boolean;
+}
+
+export interface IModulesByRoleId {
+  AppName: string;
+  Modules: IModuleItem[];
+}
+
 export interface IAppName {
   Id: string;
   Name: string;

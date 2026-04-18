@@ -105,25 +105,35 @@ const AssignSubModuleForm = ({
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {ModuleData && ModuleData.length > 0 ? (
-              ModuleData.map((mod) => (
-                <div
-                  key={mod.Id}
-                  className="border rounded-xl p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer dark:border-gray-600"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                      {mod.Name}
-                    </span>
-                  </div>
+              // New schema: ModuleData is IModulesByRoleId[] — grouped by AppName
+              ModuleData.map((appGroup) => (
+                <div key={appGroup.AppName} className="space-y-3">
+                  {/* App group label */}
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900 pb-1">
+                    {appGroup.AppName}
+                  </h2>
 
-                  <div className="flex flex-wrap gap-3">
-                    <SubModuleList
-                      moduleId={mod.Id}
-                      selectedSubModules={selectedSubModules}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleSelectAllChange={handleSelectAllChange}
-                    />
-                  </div>
+                  {appGroup.Modules.map((mod) => (
+                    <div
+                      key={mod.Id}
+                      className="border rounded-xl p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer dark:border-gray-600"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                          {mod.Name}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <SubModuleList
+                          moduleId={mod.Id}
+                          selectedSubModules={selectedSubModules}
+                          handleCheckboxChange={handleCheckboxChange}
+                          handleSelectAllChange={handleSelectAllChange}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))
             ) : !isLoading ? (

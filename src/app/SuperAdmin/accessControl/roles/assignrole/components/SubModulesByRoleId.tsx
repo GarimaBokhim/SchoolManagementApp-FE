@@ -2,7 +2,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useGetSubModuleByRoleId } from "@/app/SuperAdmin/navigation/subModules/hooks";
-import { useGetSubModulesByModuleId } from "@/app/SuperAdmin/navigation/subModules/hooks";
 import MenuByRoleId from "./MenuByRoleId";
 import { useUpdateAssignSubModules } from "../hooks";
 
@@ -15,7 +14,6 @@ interface Props {
 const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
   const editSubModule = useUpdateAssignSubModules();
   const { data, isLoading, refetch } = useGetSubModuleByRoleId(roleId);
-  const { data: subModule } = useGetSubModulesByModuleId(moduleId);
   const [subModuleStatuses, setSubModuleStatuses] = useState<{
     [key: string]: boolean;
   }>({});
@@ -26,18 +24,20 @@ const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
 
   useEffect(() => {
     if (data) {
-      const normalizedData = Array.isArray(data) ? data : [data];
-      const statusMap = normalizedData.reduce((acc, subMod) => {
-        acc[subMod.id] = subMod.isActive;
-        return acc;
-      }, {} as { [key: string]: boolean });
-
-      setSubModuleStatuses(statusMap);
+      setSubModuleStatuses((prev) => {
+        const newStatuses = { ...prev };
+        data.forEach((subMod) => {
+          if (!(subMod.id in newStatuses)) {
+            newStatuses[subMod.id] = subMod.isActive;
+          }
+        });
+        return newStatuses;
+      });
     }
   }, [data]);
 
   const handleToggle = async (subModuleId: string) => {
-    const currentStatus = subModuleStatuses[subModuleId] ?? true;
+    const currentStatus = subModuleStatuses[subModuleId] ?? false;
     const newStatus = !currentStatus;
     setSubModuleStatuses((prev) => ({ ...prev, [subModuleId]: newStatus }));
 
@@ -57,15 +57,16 @@ const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
     }
   };
 
-  if (!data || !subModule) return null;
+  if (isLoading) return null;
 
-  const filteredSubModules = subModule.filter((mod) =>
-    data.some((roleMod) => roleMod.id === mod.id)
+  // Filter the role's submodules to only those belonging to this specific module
+  const filteredSubModules = (data ?? []).filter(
+    (subMod) => subMod.modulesId === moduleId
   );
 
-  if (!filteredSubModules.length && !isLoading) {
+  if (!filteredSubModules.length) {
     return (
-      <p className="text-gray-600 text-base font-normal ml-2">
+      <p className="text-gray-600 dark:text-gray-400 text-base font-normal ml-2">
         No submodules found
       </p>
     );
@@ -76,15 +77,17 @@ const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
       {filteredSubModules.map((subMod) => (
         <div
           key={subMod.id}
-          className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition cursor-pointer w-60"
+          className="border dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-[#2a2a2a] hover:bg-gray-100 dark:hover:bg-[#303030] transition cursor-pointer w-60"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-gray-700">{subMod.name}</span>
+            <span className="font-medium text-gray-700 dark:text-gray-200">
+              {subMod.name}
+            </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 className="sr-only peer"
-                checked={subModuleStatuses[subMod.id] ?? true}
+                checked={subModuleStatuses[subMod.id] ?? subMod.isActive}
                 onChange={() => handleToggle(subMod.id)}
               />
               <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-blue-500 transition-all"></div>
@@ -93,7 +96,7 @@ const SubModulesByRoleId = ({ roleId, moduleId }: Props) => {
           </div>
 
           {/* Horizontal nested menus */}
-          {subModuleStatuses[subMod.id] && (
+          {(subModuleStatuses[subMod.id] ?? subMod.isActive) && (
             <div className="mt-2">
               <MenuByRoleId subModuleId={subMod.id} roleId={roleId} />
             </div>
