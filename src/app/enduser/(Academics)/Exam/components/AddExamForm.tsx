@@ -36,12 +36,10 @@ const AddExamForm = ({ form, onClose }: Props) => {
     control: form.control,
   });
 
-  const isFinalExam = form.watch("isfinalExam");
-
   const handleClose = () => {
     form.reset({
       name: "",
-      examDate: undefined,
+      examDate: undefined, // Explicitly set to undefined
       isfinalExam: false,
       classId: "",
       examSubjects: [],
@@ -54,8 +52,8 @@ const AddExamForm = ({ form, onClose }: Props) => {
 
     const formattedData = {
       name: data.name,
-      examDate: new Date(data.examDate).toISOString(),
-      isfinalExam: data.isfinalExam,
+      examDate: data.examDate ? new Date(data.examDate).toISOString() : new Date().toISOString(), // Handle if date is empty
+      isfinalExam: data.isfinalExam || false,
       classId: data.classId,
       examSubjects: (data.examSubjects ?? []).map((s) => ({
         subjectId: s.subjectId,
@@ -88,10 +86,9 @@ const AddExamForm = ({ form, onClose }: Props) => {
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Basic Info — FIX 1: items-start prevents the toggle from shifting when the combobox dropdown opens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-
+        <form onSubmit={form.handleSubmit(onSubmit)} className="overflow-visible">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible">
             <InputElement
               label="Exam Name"
               form={form}
@@ -100,60 +97,43 @@ const AddExamForm = ({ form, onClose }: Props) => {
               required
             />
 
-            {/* FIX 2: Remove isExpiryDate prop and do NOT pass a defaultValue so the field starts empty */}
             <InputElement
               label="Exam Date"
               form={form}
               name="examDate"
               inputType="date"
+              isExpiryDate={true}
               required
+              // Don't pass any defaultValue or value prop
             />
 
-            <AppCombobox
-              label="Class"
-              name="classId"
-              form={form}
-              value={selectedClass}
-              options={allClass?.Items ?? []}
-              selected={
-                allClass?.Items?.find((e) => e.id === selectedClass) || null
-              }
-              onSelect={(cls) => {
-                const id = cls?.id ?? "";
-                setSelectedClass(id);
-                form.setValue("classId", id);
-                form.setValue("examSubjects", []);
-              }}
-              getLabel={(e) => e?.name ?? ""}
-              getValue={(e) => e?.id ?? ""}
-            />
-
-            {/* Toggle — stays aligned because of items-start on the grid */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">Is Final Exam</label>
-              <div className="h-10 flex items-center">
-                <button
-                  type="button"
-                  onClick={() => form.setValue("isfinalExam", !isFinalExam)}
-                  className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
-                    isFinalExam ? "bg-teal-500" : "bg-gray-300 dark:bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`inline-block w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${
-                      isFinalExam ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-                <span className="ml-2 text-sm">
-                  {isFinalExam ? "Yes" : "No"}
-                </span>
-              </div>
+            {/* Wrapper with relative positioning and proper z-index context */}
+            <div className="relative z-0">
+              <AppCombobox
+                label="Class"
+                name="classId"
+                form={form}
+                value={selectedClass}
+                options={allClass?.Items ?? []}
+                selected={
+                  allClass?.Items?.find((e) => e.id === selectedClass) || null
+                }
+                onSelect={(cls) => {
+                  const id = cls?.id ?? "";
+                  setSelectedClass(id);
+                  form.setValue("classId", id);
+                  form.setValue("examSubjects", []);
+                  setSelectedSubjectIds({}); // Reset subject selections
+                }}
+                getLabel={(e) => e?.name ?? ""}
+                getValue={(e) => e?.id ?? ""}
+                dropdownPositionClass="absolute top-full left-0 right-0 mt-1 z-50"
+              />
             </div>
           </div>
 
-          {/* Subjects */}
-          <div className="mt-6">
+          {/* Subjects Section - Add relative positioning and higher z-index context */}
+          <div className="relative mt-6 z-0">
             <h2 className="font-semibold mb-2">Exam Subjects</h2>
 
             {fields.map((field, index) => (
@@ -161,37 +141,40 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 key={field.id}
                 className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 mb-2 items-start"
               >
-                <AppCombobox
-                  label="Subject"
-                  name={`examSubjects.${index}.subjectId`}
-                  form={form}
-                  value={selectedSubjectIds[index] ?? ""}
-                  options={(allSubjects ?? []).filter((subj) => {
-                    const selectedIds = Object.values(selectedSubjectIds);
-                    return (
-                      subj.id === selectedSubjectIds[index] ||
-                      !selectedIds.includes(subj.id)
-                    );
-                  })}
-                  selected={
-                    allSubjects?.find(
-                      (s) => s.id === selectedSubjectIds[index]
-                    ) || null
-                  }
-                  onSelect={(subject) => {
-                    const id = subject?.id ?? "";
-                    form.setValue(`examSubjects.${index}.subjectId`, id, {
-                      shouldValidate: true,
-                    });
-                    setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }));
-                    form.setValue(
-                      `examSubjects.${index}.fullMarks`,
-                      Number(subject?.fullMarks || 100)
-                    );
-                  }}
-                  getLabel={(s) => s?.subjectName ?? ""}
-                  getValue={(s) => s?.id ?? ""}
-                />
+                <div className="relative z-0">
+                  <AppCombobox
+                    label="Subject"
+                    name={`examSubjects.${index}.subjectId`}
+                    form={form}
+                    value={selectedSubjectIds[index] ?? ""}
+                    options={(allSubjects ?? []).filter((subj) => {
+                      const selectedIds = Object.values(selectedSubjectIds);
+                      return (
+                        subj.id === selectedSubjectIds[index] ||
+                        !selectedIds.includes(subj.id)
+                      );
+                    })}
+                    selected={
+                      allSubjects?.find(
+                        (s) => s.id === selectedSubjectIds[index]
+                      ) || null
+                    }
+                    onSelect={(subject) => {
+                      const id = subject?.id ?? "";
+                      form.setValue(`examSubjects.${index}.subjectId`, id, {
+                        shouldValidate: true,
+                      });
+                      setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }));
+                      form.setValue(
+                        `examSubjects.${index}.fullMarks`,
+                        Number(subject?.fullMarks || 100)
+                      );
+                    }}
+                    getLabel={(s) => s?.subjectName ?? ""}
+                    getValue={(s) => s?.id ?? ""}
+                    dropdownPositionClass="absolute top-full left-0 right-0 mt-1 z-50"
+                  />
+                </div>
 
                 <InputElement
                   label="Full Marks"

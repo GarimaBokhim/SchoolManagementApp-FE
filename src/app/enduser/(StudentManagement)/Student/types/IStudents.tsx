@@ -1,6 +1,7 @@
 export interface IStudent {
   id?: string;
   firstName: string;
+  feeCategoryId?: string;
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
@@ -22,7 +23,7 @@ export interface IStudent {
   municipalityId: number | 0;
   vdcid: number | 0;
   wardNumber?: number | null;
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 export interface IFilterStudentByDate {
