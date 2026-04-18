@@ -229,7 +229,13 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                       })}
                     </tr>
                   ))
-                : 'No attendance report of this month'}
+                : (
+                    <tr>
+                      <td colSpan={days.length + 2} className="px-4 py-8 text-center text-gray-500">
+                        No attendance report of this month
+                      </td>
+                    </tr>
+                  )}
             </tbody>
           </table>
         </div>
