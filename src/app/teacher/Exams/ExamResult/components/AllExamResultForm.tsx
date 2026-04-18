@@ -20,7 +20,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExamResult from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import { useGetAllStudents } from "@/app/teacher/Students/Student/hooks";
 import { useGetAllExams } from "../../Exam/hooks";
 import SchoolMarkSheet from "./SchoolMarkSheet";
 const AllExamResultForm = () => {

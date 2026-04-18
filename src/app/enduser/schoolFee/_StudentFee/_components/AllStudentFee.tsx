@@ -8,7 +8,7 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash } from "lucide-react";
+import { Edit, Filter, Plus, RotateCcw, Pencil } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
@@ -17,6 +17,7 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudentFee from "../pages/Add";
+import EditStudentFee from "../pages/Edit";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { Eye } from "lucide-react";
 import { CreditCard } from "lucide-react";
@@ -43,14 +44,18 @@ const AllStudentFeeForm = () => {
   };
 
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [editRecord, setEditRecord] = useState<
+    (IStudentFee & { id: string }) | null
+  >(null);
   const [viewModal, setViewModal] = useState(false);
   const [viewpaymentModal, setViewpaymentModal] = useState(false);
   const { menuStatus } = usePermissions();
-  const { canAdd } = useMenuPermissionData(menuStatus);
+  const { canAdd, canEdit } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
 
-  const { data: allStudent } = useGetAllStudents()
+  const { data: allStudent } = useGetAllStudents("?IsPagination=false");
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
@@ -131,12 +136,22 @@ const AllStudentFeeForm = () => {
 
   //  to get full student name
   const getStudentName = (studentId: string): string => {
-    const student = allStudent?.Items?.find((i) => i.id === studentId)
-    if (!student) return '-'
+    const student = allStudent?.Items?.find(
+      (i) => i.id != null && String(i.id) === String(studentId)
+    );
+    if (!student) return "-";
     return [student.firstName, student.middleName, student.lastName]
       .filter(Boolean)
-      .join(' ')
-  }
+      .join(" ");
+  };
+
+  const formatFeeStructureCell = (
+    v: IStudentFee["feeStructureId"] | undefined
+  ): string => {
+    if (v == null) return "-";
+    if (Array.isArray(v)) return v.length ? v.join(", ") : "-";
+    return String(v).trim() || "-";
+  };
 
   return (
     <>
@@ -253,21 +268,32 @@ const AllStudentFeeForm = () => {
                       >
                         <td className="py-3 px-4">{index + 1}</td>
 
-                        {/* ✅ Full student name */}
+                        {/*  Full student name */}
                         <td className="py-3 px-4">
                           {getStudentName(StudentFee.studentId)}
                         </td>
 
                         <td className="py-3 px-4">
-                          {Array.isArray(StudentFee.feeStructureId) ?
-                            StudentFee.feeStructureId.map((fee, idx) => (
-                              <div key={idx}>{fee}</div>
-                            )) :
-                            "-"}
+                          {formatFeeStructureCell(StudentFee.feeStructureId)}
                         </td>
 
                         <td className="py-3 px-4 text-center">
-                          <div className="flex justify-center gap-2">
+                          <div className="flex justify-center gap-2 flex-wrap">
+                          {canEdit && (StudentFee.id ?? StudentFee.Id) && (
+  <ButtonElement
+    text=""
+    icon={<Pencil className="text-white" size={15} />}
+    onClick={() => {
+      const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+      setEditRecord({
+        ...StudentFee,
+        id: rowId,
+      });
+      setEditModal(true);
+    }}
+    className="!bg-blue-500 hover:!bg-blue-600"  
+  />
+)}
                             <ButtonElement
                               text=""
                               icon={<Eye className="text-white" size={15} />}
@@ -322,6 +348,16 @@ const AllStudentFeeForm = () => {
         )}
 
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
+
+        <EditStudentFee
+          visible={editModal}
+          editRecord={editRecord}
+          onClose={() => {
+            setEditModal(false);
+            setEditRecord(null);
+            refetch();
+          }}
+        />
       </div>
 
       {/* View Student Fee Modal */}

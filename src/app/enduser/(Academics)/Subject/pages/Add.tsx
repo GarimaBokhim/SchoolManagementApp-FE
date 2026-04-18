@@ -11,12 +11,14 @@ interface Props {
 const AddSubject = ({ visible, onClose }: Props) => {
   const form = useForm<ISubject>({
     defaultValues: {
-      Id: "",
       name: "",
       code: "",
+      creditHours: 0,
       description: "",
       classId: "",
       examId: "",
+      fullMarks: 0,
+      passMarks: 0,
     },
 
     // resolver: yupResolver(SubjectValidator),

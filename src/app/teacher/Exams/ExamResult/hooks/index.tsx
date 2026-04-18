@@ -5,7 +5,7 @@ import { IExamResult, IMarkSheet } from "../types/IExamResults";
 const ExamResultEndPoints = {
   getAllExamResults: "/api/Academics/all-examResult",
   createExamResults: "/api/Academics/AddExamResult",
-  removeExamResults: "/api/Academics/Delete",
+  removeExamResults: "/api/Academics/DeleteExamResult",
   updateExamResults: "/api/Academics/UpdateExamResult",
   getExamResultsById: "/api/Academics/ExamResult",
   generateMarkSheet: "/api/Academics/MarkSheet",

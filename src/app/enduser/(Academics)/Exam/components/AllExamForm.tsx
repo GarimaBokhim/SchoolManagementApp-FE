@@ -22,6 +22,8 @@ import AddExam from '../pages/Add'
 import DeleteButton from '@/components/Buttons/DeleteButton'
 import PrintAdmitCard from './printcard'
 import { useGetAllStudents } from '@/app/teacher/Students/Student/hooks'
+import { useGetAllClass } from '../../Class/hooks'
+
 const AllExamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -42,6 +44,18 @@ const AllExamForm = () => {
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
+  
+  // Fetch all classes to map class IDs to class names
+  const { data: allClasses } = useGetAllClass()
+  
+  // Create a mapping from class ID to class name
+  const classMap = new Map<string, string>()
+  allClasses?.Items?.forEach((classItem) => {
+    if (classItem.id && classItem.name) {
+      classMap.set(classItem.id, classItem.name)
+    }
+  })
+  
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -136,6 +150,12 @@ const AllExamForm = () => {
     setSelectedExamName('')
     form.reset()
   }
+  
+  // Helper function to get class name from class ID
+  const getClassName = (classId: string) => {
+    return classMap.get(classId) || classId || 'N/A'
+  }
+  
   return (
     <>
       <div className="px-2 md:px-4">
@@ -224,19 +244,19 @@ const AllExamForm = () => {
                   </th>
                   <th className="px-2 md:px-4 py-3 text-left">Exam Name</th>
                   <th className="px-2 md:px-4 py-3 text-left">Total Mark</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Is Final Exam</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Class Name</th>
                   <th className="px-2 md:px-4 py-3 text-left">Exam Date</th>
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                    <td colSpan={6} className="p-4 text-center text-gray-500">
                       Loading Exams...
-                    </td>
+                     </td>
                   </tr>
                 ) : filteredExam?.Items?.length ? (
                   filteredExam?.Items.map((Exam: IExam, index: number) => (
@@ -249,9 +269,8 @@ const AllExamForm = () => {
                         {Exam.name}
                       </td>
                       <td className="py-3 px-2 md:px-4">{Exam.totalMarks}</td>
-
                       <td className="py-3 px-2 md:px-4">
-                        {Exam.isfinalExam ? 'Yes' : 'No'}
+                        {getClassName(Exam.classId)}
                       </td>
                       <td className="py-3 px-2 md:px-4">
                         {new Date(Exam.examDate).toISOString().split('T')[0]}
@@ -278,7 +297,7 @@ const AllExamForm = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="p-4 text-center text-gray-500 italic text-sm"
                     >
                       No Exams found.

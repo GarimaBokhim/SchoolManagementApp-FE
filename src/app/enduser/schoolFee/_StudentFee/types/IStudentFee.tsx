@@ -1,18 +1,22 @@
 export interface IStudentFee {
+  /** Present when row comes from API (needed for PATCH). */
+  id?: string;
+  Id?: string;
   studentId: string;
-  feeStructureId: string;
+  feeStructureId: string | string[];
   classId: string;
   discountPercentage: number;
   studentFeeDetailsDTOs: IStudentFeeDetails[];
 }
 
 export interface IStudentFeeDetails {
+  id?: string;
   feeTypeId: string;
   discountAmount: number;
   amount: number;
   times: number;
   totalAmount: number;
-  feePaidType: number; // 1 = Monthly, 2 = OneTime, etc.
+  feePaidType: number; // 1 = One Time, 2 = Monthly, etc.
 }
 
 export interface IFilterStudentFee {

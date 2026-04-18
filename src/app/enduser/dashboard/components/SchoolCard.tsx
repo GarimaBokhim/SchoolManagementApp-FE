@@ -19,6 +19,15 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   const logoUrl = resolveImageUrl(schoolData?.imageUrl);
 
+
+// Add this log
+console.log('School Info:', {
+  id: schoolData?.id,
+  name: schoolData?.name,
+  imageUrl: schoolData?.imageUrl,
+  resolvedUrl: logoUrl
+});
+
   if (isLoading) {
     return (
       <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">

@@ -16,7 +16,6 @@ const queryKey = "Subjects";
 const queryKeyForClassID = "SubjectsByClass";
 const filteredSubjectQuery = "FilteredSubjects";
 type SubjectRequest = {
-  id?: string;
   name: string;
   code: string;
   creditHours: number;
@@ -27,18 +26,33 @@ type SubjectRequest = {
   passMarks: number;
 };
 
+const normalizeAddSubjectPayload = (data: SubjectRequest): SubjectRequest => ({
+  name: String(data.name ?? "").trim(),
+  code: String(data.code ?? "").trim(),
+  creditHours: Number(data.creditHours) || 0,
+  description: String(data.description ?? "").trim(),
+  classId: String(data.classId ?? "").trim(),
+  examId: String(data.examId ?? "").trim(),
+  fullMarks: Number(data.fullMarks) || 0,
+  passMarks: Number(data.passMarks) || 0,
+});
+
 export const useAddSubject = () => {
   const queryClient = useQueryClient();
   return useMutation<ISubject, Error, SubjectRequest>({
     mutationFn: async (data: SubjectRequest): Promise<ISubject> => {
-      console.log("Add Subject", data);
-      const response = await api.post(SubjectEndPoints.createSubjects, data);
+      const payload = normalizeAddSubjectPayload(data);
+      const response = await api.post(
+        SubjectEndPoints.createSubjects,
+        payload
+      );
 
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKey] });
       queryClient.invalidateQueries({ queryKey: [filteredSubjectQuery] });
+      queryClient.invalidateQueries({ queryKey: [queryKeyForClassID] });
     },
     onError: (error) => {
       console.error("Error adding Subject:", error);

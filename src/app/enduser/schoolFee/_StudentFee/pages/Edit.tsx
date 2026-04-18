@@ -1,44 +1,78 @@
-// import { useForm } from "react-hook-form";
-// import { IStudent } from "../types/IContributor";
-// import EditStudentForm from "../_components/EditStudentForm";
-// import { useGetStudentById } from "../hooks";
+"use client";
+import { useForm } from "react-hook-form";
+import { useEffect, useRef } from "react";
+import AddStudentFeeForm from "../_components/AddStudentFee";
+import { IStudentFee } from "../types/IStudentFee";
+import {
+  feeStructureIdToString,
+  normalizeStudentFeeRowForEdit,
+} from "../utils/studentFeeForm";
 
-// interface Props {
-//   visible: boolean;
-//   onClose: () => void;
-//   StudentId: string;
-// }
+interface Props {
+  visible: boolean;
+  onClose?: () => void;
+  editRecord: (IStudentFee & { id: string }) | null;
+}
 
-// const EditStudent = ({ visible, onClose, StudentId }: Props) => {
-//   const { data: StudentData } = useGetStudentById(StudentId);
+/**
+ * Same pattern as `_FeeCategory/pages/Update.tsx`: parent owns `useForm` and
+ * `form.reset` when the record loads. Dependency on `editRecord.id` only avoids
+ * resetting on every parent re-render. Child syncs combobox / table local state.
+ */
+const EditStudentFee = ({ visible, onClose, editRecord }: Props) => {
+  const form = useForm<IStudentFee>({
+    defaultValues: {
+      studentId: "",
+      feeStructureId: "",
+      classId: "",
+      discountPercentage: 0,
+      studentFeeDetailsDTOs: [],
+    },
+  });
 
-//   const form = useForm<IStudent>({
-//     defaultValues: {
-//       firstName: StudentData?.firstName ?? "",
-//       middleName: StudentData?.middleName ?? "",
-//       lastName: StudentData?.lastName ?? "",
-//       registrationNumber: StudentData?.registrationNumber ?? "",
-//       genderStatus: StudentData?.genderStatus ?? 0,
-//       studentStatus: StudentData?.studentStatus ?? 0,
-//       dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
-//       email: StudentData?.email ?? "",
-//       phoneNumber: StudentData?.phoneNumber ?? "",
-//       studentImg: StudentData?.studentImg,
-//       address: StudentData?.address ?? "",
-//       enrollmentDate: StudentData?.enrollmentDate ?? new Date(),
-//       parentId: StudentData?.parentId ?? "",
-//       classId: StudentData?.classId ?? "",
-//       provinceId: StudentData?.provinceId ?? 0,
-//       districtId: StudentData?.districtId ?? 0,
-//       wardNumber: StudentData?.wardNumber ?? 0,
-//     },
-//   });
+  const editRecordRef = useRef(editRecord);
+  editRecordRef.current = editRecord;
 
-//   if (!visible) return null;
+  useEffect(() => {
+    const row = editRecordRef.current;
+    if (!row?.id) return;
+    const n = normalizeStudentFeeRowForEdit(row);
+    form.reset({
+      studentId: n.studentId,
+      feeStructureId: feeStructureIdToString(n.feeStructureId),
+      classId: n.classId,
+      discountPercentage: n.discountPercentage ?? 0,
+      studentFeeDetailsDTOs: n.studentFeeDetailsDTOs ?? [],
+    });
+  }, [editRecord?.id, form]);
 
-//   return (
-//     <EditStudentForm form={form} onClose={onClose} studentId={StudentId} />
-//   );
-// };
+  const handleOnClose = () => {
+    onClose?.();
+  };
 
-// export default EditStudent;
+  if (!visible || !editRecord?.id) return null;
+
+  const normalized = normalizeStudentFeeRowForEdit(editRecord);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+    >
+      <div
+        className="bg-[#FBFBFB] dark:bg-[#27272a] 
+               w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+               max-h-[95vh] md:max-h-[92vh] h-full 
+               rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
+      >
+        <AddStudentFeeForm
+          form={form}
+          onClose={handleOnClose}
+          editRecord={normalized}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default EditStudentFee;

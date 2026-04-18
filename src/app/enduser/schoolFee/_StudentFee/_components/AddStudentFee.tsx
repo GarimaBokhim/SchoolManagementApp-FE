@@ -4,11 +4,15 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { X, Plus, Trash2 } from "lucide-react";
 import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
-import { useAddStudentFee, useGetFeeStructureByClassId } from "../hooks";
+import {
+  useAddStudentFee,
+  useEditStudentFee,
+  useGetFeeStructureByClassId,
+} from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetAllFeeTypes } from "../../_FeeType/hooks";
@@ -16,6 +20,7 @@ import {
   useGetFeeStructureById,
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
+import { feeStructureIdToString } from "../utils/studentFeeForm";
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -67,11 +72,15 @@ const createEmptyManualRow = (): IStudentFeeDetails => ({
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
+  /** When set (with `id`), form PATCHes instead of POST. */
+  editRecord?: IStudentFee & { id: string };
 };
 
-const AddStudentFeeForm = ({ form, onClose }: Props) => {
+const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const addStudentFee = useAddStudentFee();
+  const editStudentFee = useEditStudentFee();
   const { handleError, clearError } = useErrorHandler();
+  const isEditMode = Boolean(editRecord?.id);
 
   const { data: allStudents } = useGetAllStudents();
   const { data: allClasses } = useGetAllClass();
@@ -83,6 +92,10 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
   const [autoRows, setAutoRows] = useState<IStudentFeeDetails[]>([]);
   const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  /** Only reset fee structure when the selected student actually changes (not when student list refetches). */
+  const prevStudentIdRef = useRef<string | null>(null);
+  /** Avoid re-hydrating edit state on every parent re-render with the same record id. */
+  const lastHydratedEditIdRef = useRef<string | null>(null);
 
   const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
 
@@ -102,6 +115,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
 
   // ── Auto-populate auto rows when fee structure data arrives ──────────────────────
   useEffect(() => {
+    if (isEditMode) return;
     if (!feeStructureDetail?.feeStructureDTOs?.length) {
       setAutoRows([]);
       return;
@@ -112,15 +126,19 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
       0 // No discount for auto rows
     );
     setAutoRows(autoPopulated);
-  }, [feeStructureDetail]);
+  }, [feeStructureDetail, isEditMode]);
 
   // ── Update manual rows when discount changes ─────────────────────────
   useEffect(() => {
-    const updatedManualRows = manualRows.map(row => {
-      const { discountAmount, totalAmount } = calculateRowTotals(row, discountPercentage);
-      return { ...row, discountAmount, totalAmount };
-    });
-    setManualRows(updatedManualRows);
+    setManualRows((prev) =>
+      prev.map((row) => {
+        const { discountAmount, totalAmount } = calculateRowTotals(
+          row,
+          discountPercentage
+        );
+        return { ...row, discountAmount, totalAmount };
+      })
+    );
   }, [discountPercentage]);
 
   const handleClose = () => {
@@ -131,36 +149,72 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     setAutoRows([]);
     setManualRows([]);
     setDiscountPercentage(0);
+    lastHydratedEditIdRef.current = null;
     onClose();
   };
 
-  // ── Auto-set classId when student is selected ────────────────────────────────
-  useEffect(() => {
-    const student = allStudents?.Items?.find((s) => s.id === selectedStudentId);
-    if (student) {
-      setSelectedClassId(student.classId ?? "");
-      setSelectedFeeStructureId("");
-      setAutoRows([]);
-      setManualRows([]);
-      setDiscountPercentage(0);
-      form.setValue("feeStructureId", "");
-      form.setValue("discountPercentage", 0);
-      form.setValue("studentFeeDetailsDTOs", []);
+  // ── Hydrate local UI state when editing (form.reset runs in Edit.tsx like UpdateFeeCategory) ──
+  useLayoutEffect(() => {
+    if (!editRecord?.id) {
+      lastHydratedEditIdRef.current = null;
+      return;
     }
-  }, [selectedStudentId, allStudents, form]);
+    if (lastHydratedEditIdRef.current === editRecord.id) {
+      return;
+    }
+    lastHydratedEditIdRef.current = editRecord.id;
+    const fsId = feeStructureIdToString(editRecord.feeStructureId);
+    setSelectedStudentId(editRecord.studentId);
+    setSelectedClassId(editRecord.classId);
+    setSelectedFeeStructureId(fsId);
+    setDiscountPercentage(editRecord.discountPercentage ?? 0);
+    prevStudentIdRef.current = editRecord.studentId;
+    setAutoRows([]);
+    setManualRows(
+      (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }))
+    );
+  }, [editRecord]);
+
+  // ── Sync class when student is selected; clear fee fields only when student changes ──
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!selectedStudentId) {
+      prevStudentIdRef.current = null;
+      return;
+    }
+    const student = allStudents?.Items?.find(
+      (s) => s.id != null && String(s.id) === String(selectedStudentId)
+    );
+    if (!student) return;
+
+    setSelectedClassId(student.classId ?? "");
+
+    if (prevStudentIdRef.current === selectedStudentId) {
+      return;
+    }
+    prevStudentIdRef.current = selectedStudentId;
+    setSelectedFeeStructureId("");
+    setAutoRows([]);
+    setManualRows([]);
+    setDiscountPercentage(0);
+    form.setValue("feeStructureId", "");
+    form.setValue("discountPercentage", 0);
+    form.setValue("studentFeeDetailsDTOs", []);
+  }, [selectedStudentId, allStudents, form, isEditMode]);
 
   useEffect(() => {
     form.setValue("classId", selectedClassId);
   }, [selectedClassId, form]);
 
-  // ── Clear everything when fee structure is deselected ─────────────────────────
+  // ── Clear rows when fee structure is deselected (add flow only) ───────────────
   useEffect(() => {
+    if (isEditMode) return;
     if (!selectedFeeStructureId) {
       setAutoRows([]);
       setManualRows([]);
       form.setValue("studentFeeDetailsDTOs", []);
     }
-  }, [selectedFeeStructureId, form]);
+  }, [selectedFeeStructureId, form, isEditMode]);
 
   // ── Manual Row Management ────────────────────────────────────────────────────
   const addManualRow = () => {
@@ -222,18 +276,31 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
     }
 
     try {
-      const finalData: IStudentFee = {
+      const fsId = feeStructureIdToString(
+        data.feeStructureId as string | string[]
+      );
+      const finalData = {
         studentId: data.studentId,
-        feeStructureId: data.feeStructureId,
+        feeStructureId: fsId,
         classId: data.classId,
-        discountPercentage: discountPercentage,
+        discountPercentage,
         studentFeeDetailsDTOs: allDetails,
       };
 
-      await toast.promise(addStudentFee.mutateAsync(finalData), {
-        loading: "Adding Student Fee...",
-        success: "Successfully added Student Fee",
-      });
+      if (isEditMode && editRecord?.id) {
+        await toast.promise(
+          editStudentFee.mutateAsync({ id: editRecord.id, data: finalData }),
+          {
+            loading: "Updating Student Fee...",
+            success: "Successfully updated Student Fee",
+          }
+        );
+      } else {
+        await toast.promise(addStudentFee.mutateAsync(finalData), {
+          loading: "Adding Student Fee...",
+          success: "Successfully added Student Fee",
+        });
+      }
       handleClose();
     } catch (error) {
       const errorMsg = handleError(error);
@@ -253,7 +320,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
-              Add Student Fee
+              {isEditMode ? "Edit Student Fee" : "Add Student Fee"}
             </h1>
             <button
               type="button"
@@ -278,6 +345,7 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 name="studentId"
                 form={form}
                 required
+                disabled={isEditMode}
                 options={allStudents?.Items}
                 selected={allStudents?.Items?.find((s) => s.id === selectedStudentId) || null}
                 onSelect={(s) => {
@@ -314,21 +382,24 @@ const AddStudentFeeForm = ({ form, onClose }: Props) => {
                 form={form}
                 options={feeStructuresByClass?.Items ?? []}
                 selected={
-                  feeStructuresByClass?.Items?.find((f) => f.id === selectedFeeStructureId) ?? null
+                  feeStructuresByClass?.Items?.find((f) => {
+                    const fid = f.id ?? (f as { Id?: string }).Id ?? "";
+                    return String(fid) === String(selectedFeeStructureId);
+                  }) ?? null
                 }
                 onSelect={(f) => {
-                  const id = f?.id ?? "";
+                  const id = f?.id ?? (f as { Id?: string }).Id ?? "";
                   setSelectedFeeStructureId(id);
-                  form.setValue("feeStructureId", id);
-                  setAutoRows([]);
+                  form.setValue("feeStructureId", id, { shouldValidate: true });
                   setManualRows([]);
                   form.setValue("studentFeeDetailsDTOs", []);
+                  setAutoRows([]);
                 }}
                 getLabel={(f) => {
                   if (!f) return "";
                   return f.feeCategoryName?.trim() ? f.feeCategoryName : "Empty Fee Structure";
                 }}
-                getValue={(f) => f?.id ?? ""}
+                getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
               />
 
               {/* Discount Percentage - Only applies to custom rows */}
