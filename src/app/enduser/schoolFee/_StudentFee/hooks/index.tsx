@@ -7,7 +7,7 @@ const StudentFeeEndPoints = {
   getAllStudentFees: "/api/Finance/StudentFee",
   createStudentFees: "/api/Finance/AddStudentFee",
   removeStudentFees: "/api/Finance/DeleteStudentFees",
-  updateStudentFees: "/api/Finance/UpdateStudentFees",
+  updateStudentFees: "/api/Finance/UpdateStudentFee",
   filterStudentFeeByDate: "/api/Finance/FilterStudentFee",
   addpaymentrecords: "/api/Finance/AddPaymentsRecords",
   studentfeesummary: "/api/Finance/StudentFeeSummary",

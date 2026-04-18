@@ -41,7 +41,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     }
   }, [selectedStudent])
   const { data: allExam } = useGetAllExams()
-  const { data: allStudents } = useGetAllStudents()
+  const { data: allStudents } = useGetAllStudents('?IsPagination=false')
 
   const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
   const [, setSelectedSubjectIds] = useState<{

@@ -24,17 +24,47 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const handleClose = () => {
-    form.reset();
+    form.reset({
+      name: "",
+      code: "",
+      creditHours: 0,
+      description: "",
+      classId: "",
+      examId: "",
+      fullMarks: 0,
+      passMarks: 0,
+    });
+    setSelectedClassId(null);
+    setSelectedExamId("");
   };
 
   const onSubmit: SubmitHandler<ISubject> = async (data) => {
     clearError();
+    const classId = String(data.classId ?? "").trim();
+    const examId = String(data.examId ?? "").trim();
+    if (!classId || !examId) {
+      Toast.error("Please select both class and exam.");
+      return;
+    }
     try {
-      await toast.promise(addSubject.mutateAsync(data), {
-        loading: "Adding Subject...",
-        success: "Successfully added Subject",
-      });
+      await toast.promise(
+        addSubject.mutateAsync({
+          name: data.name,
+          code: data.code,
+          creditHours: data.creditHours,
+          description: data.description,
+          classId,
+          examId,
+          fullMarks: data.fullMarks,
+          passMarks: data.passMarks,
+        }),
+        {
+          loading: "Adding Subject...",
+          success: "Successfully added Subject",
+        }
+      );
       handleClose();
+      onClose();
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
@@ -50,7 +80,10 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
             </h1>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                handleClose();
+                onClose();
+              }}
               className="text-red-400 text-2xl hover:text-red-500 "
             >
               <X strokeWidth={3} />
@@ -102,9 +135,12 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 }
                 onSelect={(group) => {
                   if (group) {
-                    setSelectedClassId(group.id || null);
+                    const id = group.id ?? "";
+                    setSelectedClassId(id || null);
+                    form.setValue("classId", id, { shouldValidate: true });
                   } else {
                     setSelectedClassId(null);
+                    form.setValue("classId", "", { shouldValidate: true });
                   }
                 }}
                 getLabel={(g) => g?.name ?? ""}
@@ -124,9 +160,12 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 }
                 onSelect={(group) => {
                   if (group) {
-                    setSelectedExamId(group.id || "");
+                    const id = group.id ?? "";
+                    setSelectedExamId(id);
+                    form.setValue("examId", id, { shouldValidate: true });
                   } else {
                     setSelectedExamId("");
+                    form.setValue("examId", "", { shouldValidate: true });
                   }
                 }}
                 getLabel={(g) => g?.name ?? ""}
