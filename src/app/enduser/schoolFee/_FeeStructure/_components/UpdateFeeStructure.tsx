@@ -74,34 +74,51 @@ const UpdateFeeStructureForm = ({ form, onClose, feeStructureId, initialData }: 
   const editFeeStructure = useEditFeeStructure();
   const { handleError, clearError } = useErrorHandler();
 
-  const { data: allClass } = useGetAllClass();
-  const { data: allFeeType } = useGetAllFeeTypes();
-  const { data: allFeeCategory } = useFilterFeeCategoryByDate();
+  const { data: allClass } = useGetAllClass("?IsPagination=false");
+  const { data: allFeeType } = useGetAllFeeTypes("?IsPagination=false");
+  const { data: allFeeCategory } = useFilterFeeCategoryByDate("?IsPagination=false");
 
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState("");
   const [rows, setRows] = useState<IFeeStructureDTO[]>([emptyRow()]);
 
-  // Initialize form with existing data
+  // Initialize local state from initialData whenever it changes
   useEffect(() => {
-    if (initialData) {
-      setSelectedClassId(initialData.classId || "");
-      setSelectedFeeCategoryId(initialData.feeCategoryId || "");
-      
-      if (initialData.feeStructureDTOs && initialData.feeStructureDTOs.length > 0) {
-        setRows(initialData.feeStructureDTOs.map(dto => ({
-          id: dto.id || "",
-          feeTypeId: dto.feeTypeId || "",
-          amount: dto.amount || 0,
-          discountAmount: dto.discountAmount || 0,
-          times: dto.times || 1,
-          totalAmount: dto.totalAmount || 0,
-          feePaidType: dto.feePaidType || 1,
-          discountPercentage: dto.discountPercentage || 0,
-        })));
-      }
+    if (!initialData) return;
+
+    setSelectedClassId(initialData.classId ?? "");
+    setSelectedFeeCategoryId(initialData.feeCategoryId ?? "");
+
+    if (initialData.feeStructureDTOs && initialData.feeStructureDTOs.length > 0) {
+      setRows(
+        initialData.feeStructureDTOs.map((dto) => ({
+          id: dto.id ?? "",
+          feeTypeId: dto.feeTypeId ?? "",
+          amount: dto.amount ?? 0,
+          discountAmount: dto.discountAmount ?? 0,
+          times: dto.times ?? 1,
+          totalAmount: dto.totalAmount ?? 0,
+          feePaidType: dto.feePaidType ?? 1,
+          discountPercentage: dto.discountPercentage ?? 0,
+        }))
+      );
+    } else {
+      setRows([emptyRow()]);
     }
   }, [initialData]);
+
+  // Re-sync class/category IDs once async dropdown data arrives
+  // (handles the race where initialData loads before allClass/allFeeCategory)
+  useEffect(() => {
+    if (!initialData) return;
+    if (allClass?.Items && initialData.classId) {
+      setSelectedClassId(initialData.classId);
+    }
+    if (allFeeCategory?.Items && initialData.feeCategoryId) {
+      setSelectedFeeCategoryId(initialData.feeCategoryId);
+    }
+  }, [initialData, allClass, allFeeCategory]);
+
 
   const handleClose = () => {
     form.reset();

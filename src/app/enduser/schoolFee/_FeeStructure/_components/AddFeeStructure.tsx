@@ -71,9 +71,9 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
   const addFeeStructure = useAddFeeStructure();
   const { handleError, clearError } = useErrorHandler();
 
-  const { data: allClass } = useGetAllClass();
-  const { data: allFeeType } = useGetAllFeeTypes();
-  const { data: allFeeCategory } = useFilterFeeCategoryByDate();
+  const { data: allClass } = useGetAllClass("?IsPagination=false");
+  const { data: allFeeType } = useGetAllFeeTypes("?IsPagination=false");
+  const { data: allFeeCategory } = useFilterFeeCategoryByDate("?IsPagination=false");
 
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState("");

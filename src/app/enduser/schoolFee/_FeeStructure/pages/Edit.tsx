@@ -1,8 +1,8 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
 import UpdateFeeStructureForm from "../_components/UpdateFeeStructure";
 import { IFeeStructure } from "../types/IFeeStructure";
+import { useGetFeeStructureById } from "../hooks";
 
 interface Props {
   visible: boolean;
@@ -20,17 +20,10 @@ const UpdateFeeStructure = ({ visible, onClose, feeStructure }: Props) => {
     },
   });
 
-  // Reset form when feeStructure changes
-  useEffect(() => {
-    if (feeStructure) {
-      form.reset({
-        id: feeStructure.id,
-        classId: feeStructure.classId,
-        feeCategoryId: feeStructure.feeCategoryId,
-        feeStructureDTOs: feeStructure.feeStructureDTOs,
-      });
-    }
-  }, [feeStructure, form]);
+  // Fetch the full record by ID so we get feeStructureDTOs (the list API omits them)
+  const { data: fullRecord, isLoading } = useGetFeeStructureById(
+    feeStructure?.id
+  );
 
   if (!visible || !feeStructure) return null;
 
@@ -45,15 +38,21 @@ const UpdateFeeStructure = ({ visible, onClose, feeStructure }: Props) => {
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
-        <UpdateFeeStructureForm
-          form={form}
-          onClose={onClose}
-          feeStructureId={feeStructure.id!}
-          initialData={feeStructure}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            Loading fee structure details...
+          </div>
+        ) : (
+          <UpdateFeeStructureForm
+            form={form}
+            onClose={onClose}
+            feeStructureId={feeStructure.id!}
+            initialData={fullRecord ?? feeStructure}
+          />
+        )}
       </div>
     </div>
   );
 };
 
-export default UpdateFeeStructure;
+export default UpdateFeeStructure;

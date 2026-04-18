@@ -123,3 +123,18 @@ export const useGetFeeStructureByClassId = (classId?: string) => {
     retry: false,
   });
 };
+
+export const useGetFeeStructureById = (id?: string) => {
+  return useQuery({
+    queryKey: [queryKey, "byId", id],
+    queryFn: async () => {
+      const response = await api.get<IFeeStructure>(
+        `${FeeStructureEndPoints.getAllFeeStructure}/${id}`
+      );
+      return response.data;
+    },
+    enabled: !!id,
+    staleTime: 0,
+    retry: false,
+  });
+};
