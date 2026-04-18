@@ -215,13 +215,31 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                         })()}
                       </td>
                       {days.map((day) => {
-                        const dateKey = getDateKey(day)
-                        const status = student.Attendance?.[dateKey]?.Status
+                        const dayStr = String(day).padStart(2, '0')
+                        let status: string | null | undefined = null
+
+                        if (student.Attendance) {
+                          for (const key in student.Attendance) {
+                            // The key is in format YYYY-MM-DD. We match the DD part.
+                            if (key.endsWith(`-${dayStr}`)) {
+                              status = student.Attendance[key].Status
+                              break
+                            }
+                          }
+                        }
+
+                        // Determine cell styling based on status
+                        let statusClass = 'text-gray-400 hover:bg-gray-50 dark:hover:bg-[#3f3f3f]'
+                        if (status === 'P') statusClass = 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 font-bold'
+                        else if (status === 'A') statusClass = 'text-red-600 bg-red-50 dark:bg-red-900/20 font-bold'
+                        else if (status === 'T') statusClass = 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 font-bold'
+                        else if (status === 'E') statusClass = 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 font-bold'
+                        else if (status === 'U') statusClass = 'text-gray-600 bg-gray-100 dark:bg-gray-800 font-bold'
 
                         return (
                           <td
                             key={day}
-                            className="border px-2 py-2 text-center hover:bg-emerald-100 dark:hover:bg-emerald-800"
+                            className={`border px-2 py-2 text-center transition-colors ${statusClass}`}
                           >
                             {status ?? '-'}
                           </td>
@@ -229,7 +247,13 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                       })}
                     </tr>
                   ))
-                : 'No attendance report of this month'}
+                : (
+                    <tr>
+                      <td colSpan={days.length + 2} className="px-4 py-8 text-center text-gray-500">
+                        No attendance report of this month
+                      </td>
+                    </tr>
+                  )}
             </tbody>
           </table>
         </div>

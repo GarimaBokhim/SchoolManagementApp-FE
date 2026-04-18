@@ -38,7 +38,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   >(0);
   const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const { data: allParents } = useGetAllParents();
+  const { data: allParents } = useGetAllParents('?IsPagination=false');
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
     number | null
@@ -187,6 +187,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   label="Gender"
                   dropdownPositionClass="absolute"
                   name="genderStatus"
+                  form={form}
                   value={genderStatus}
                   options={[
                     { id: 1, name: "Male" },
@@ -201,7 +202,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                       { id: 3, name: "Other" },
                     ].find((g) => g.id === genderStatus) || null
                   }
-                  onSelect={(option) => setGenderStatus(option?.id ?? null)}
+                  onSelect={(option) => {
+                    setGenderStatus(option?.id ?? null)
+                    form.setValue('genderStatus', option?.id ?? 0)
+                  }}
                   getLabel={(o) => o?.name || ""}
                   getValue={(o) => o?.id ?? ""}
                 />

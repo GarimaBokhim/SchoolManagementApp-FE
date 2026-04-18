@@ -18,6 +18,7 @@ import {
 } from '@/components/common/hooks'
 import { useGetAllParents } from '../../_Parent/hooks'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import { useFilterFeeCategoryByDate } from '@/app/enduser/schoolFee/_FeeCategory/hooks'
 type Props = {
   form: UseFormReturn<IStudent>
   onClose: () => void
@@ -27,6 +28,8 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler()
   const { data: allProvince } = useGetAllProvince()
   const { data: allClass } = useGetAllClass()
+  const { data: allFeeCategories } = useFilterFeeCategoryByDate('?IsPagination=false')
+  const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<string | null>(null)
   const [selectedClassId, setSelectedClassId] = useState<string | null>('')
   const [genderStatus, setGenderStatus] = useState<number | null>(null)
   const [selectedProvinceId, setSelectedProvinceId] = useState<
@@ -55,25 +58,25 @@ const AddStudentForm = ({ form, onClose }: Props) => {
     try {
       const formData = new FormData()
       formData.append('firstName', data.firstName)
+      formData.append('feeCategoryId', data.feeCategoryId ?? '')
       formData.append('middleName', data.middleName ?? '')
       formData.append('lastName', data.lastName)
       formData.append('registrationNumber', data.registrationNumber)
-      formData.append('genderStatus', String(genderStatus))
-      formData.append('dateOfBirth', new Date(data.dateOfBirth).toISOString())
+      formData.append('genderStatus', String(genderStatus ?? data.genderStatus ?? 0))
+      formData.append('studentStatus', String(data.studentStatus ?? 0))
+      formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '')
       formData.append('email', data.email)
       formData.append('phoneNumber', data.phoneNumber)
       formData.append('address', data.address)
-      formData.append(
-        'enrollmentDate',
-        new Date(data.enrollmentDate).toISOString()
-      )
+      formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '')
       formData.append('parentId', data.parentId)
       formData.append('classId', data.classId)
-      formData.append('provinceId', String(data.provinceId))
-      formData.append('districtId', String(data.districtId))
+      formData.append('classSectionId', data.classSectionId ?? '')
+      formData.append('provinceId', String(data.provinceId ?? 0))
+      formData.append('districtId', String(data.districtId ?? 0))
       formData.append('municipalityId', String(data.municipalityId ?? 0))
-      formData.append('vdcid', String(data.vdcid ?? 0))
-      formData.append('wardNumber', String(data.wardNumber))
+      formData.append('vdcId', String(data.vdcid ?? 0))  // API uses vdcId
+      formData.append('wardNumber', String(data.wardNumber ?? 0))
       if (data.studentImg instanceof File) {
         formData.append('studentImg', data.studentImg)
       }
@@ -84,6 +87,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
       })
 
       handleClose()
+      onClose()
     } catch (error) {
       const errorMsg = handleError(error)
       Toast.error(errorMsg)
@@ -103,7 +107,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   }
 
   const [selectedParenId, setSelectedParenId] = useState<string | null>(null)
-  const { data: allParents } = useGetAllParents()
+  const { data: allParents } = useGetAllParents('?IsPagination=false')
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -183,6 +187,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     label="Gender"
                     dropdownPositionClass="absolute"
                     name="genderStatus"
+                    form={form}
                     value={genderStatus}
                     options={[
                       { id: 1, name: 'Male' },
@@ -197,7 +202,10 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                         { id: 3, name: 'Other' },
                       ].find((g) => g.id === genderStatus) || null
                     }
-                    onSelect={(option) => setGenderStatus(option?.id ?? null)}
+                    onSelect={(option) => {
+                      setGenderStatus(option?.id ?? null)
+                      form.setValue('genderStatus', option?.id ?? 0)
+                    }}
                     getLabel={(o) => o?.name || ''}
                     getValue={(o) => o?.id ?? ''}
                   />
@@ -349,6 +357,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   form={form}
                   name="enrollmentDate"
                   inputType="date"
+                  isExpiryDate={true}
                 />
                 <AppCombobox
                   value={selectedClassId}
@@ -367,14 +376,46 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   getLabel={(g) => g?.name ?? ''}
                   getValue={(g) => g?.id ?? ''}
                 />
+                <InputElement
+                  label="Class Section ID"
+                  form={form}
+                  name="classSectionId"
+                  placeholder="Enter Class Section ID"
+                />
+                <AppCombobox
+                  value={selectedFeeCategoryId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Fee Category"
+                  name="feeCategoryId"
+                  form={form}
+                  options={allFeeCategories?.Items}
+                  selected={
+                    allFeeCategories?.Items?.find(
+                      (g) => g.id === selectedFeeCategoryId
+                    ) || null
+                  }
+                  onSelect={(group) => {
+                    setSelectedFeeCategoryId(group?.id ?? null)
+                    form.setValue('feeCategoryId', group?.id ?? '')
+                  }}
+                  getLabel={(g) => g?.name ?? ''}
+                  getValue={(g) => g?.id ?? ''}
+                />
               </div>
             </section>
 
             {/* Submit Button */}
             <div className="flex justify-center mt-8">
               <ButtonElement
-                type="submit"
+                type="button"
                 text="Submit"
+                onClick={() =>
+                  form.handleSubmit(onSubmit, (errors) => {
+                    console.error('Form validation errors:', errors)
+                    Toast.error('Please fill in all required fields.')
+                  })()
+                }
                 className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
               />
             </div>
