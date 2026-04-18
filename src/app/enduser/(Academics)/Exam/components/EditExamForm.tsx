@@ -11,7 +11,7 @@ import { useEditExam, useGetExamById } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { useGetAllClass } from '../../Class/hooks'
+import { useFilterClassByDate } from '../../Class/hooks'
 import { useGetSubjectByClassId } from '../../Subject/hooks'
 
 type Props = {
@@ -24,7 +24,7 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   const editExam = useEditExam()
   const { handleError, clearError } = useErrorHandler()
 
-  const { data: allClass } = useGetAllClass()
+  const { data: allClass } = useFilterClassByDate('?IsPagination=false')
   const { data: examData } = useGetExamById(ExamId)
 
   const { control, reset, setValue, watch } = form
@@ -42,19 +42,24 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   // Populate form from API
   useEffect(() => {
     if (!examData) return
+    console.log("ExamData structure from API:", examData)
 
     reset({
       name: examData.name,
       examDate: examData.examDate,
       classId: examData.classId,
+      schoolId: examData.schoolId,
       isfinalExam: examData.isfinalExam,
-      examSubjects: examData.examSubjects ?? [],
+      examSubjects: (examData.examSubjects ?? (examData as any).ExamSubjectDTOs ?? []).map((s: any) => ({
+        examSubjectId: s.id ?? s.examSubjectId ?? "",
+        subjectId: s.subjectId,
+        passMarks: s.passMarks,
+        fullMarks: s.fullMarks
+      })),
     })
 
-    replace(examData.examSubjects ?? [])
-
     isInitialLoad.current = false
-  }, [examData, reset, replace])
+  }, [examData, reset])
 
   // ❌ DO NOT clear subjects automatically on classId change
   // handled manually in onSelect
@@ -68,10 +73,29 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
     clearError()
 
     try {
+      const payload: any = {
+        id: ExamId,
+        name: data.name,
+        examDate: data.examDate,
+        isfinalExam: data.isfinalExam,
+        classId: data.classId,
+        updateExamSubjectDTOs: (data.examSubjects ?? []).map((s) => {
+          const dto: any = {
+            subjectId: s.subjectId,
+            passMarks: Number(s.passMarks),
+            fullMarks: Number(s.fullMarks),
+          }
+          if (s.examSubjectId) {
+            dto.examSubjectId = s.examSubjectId
+          }
+          return dto
+        }),
+      }
+
       await toast.promise(
         editExam.mutateAsync({
           id: ExamId,
-          data,
+          data: payload,
         }),
         {
           loading: 'Updating Exam...',

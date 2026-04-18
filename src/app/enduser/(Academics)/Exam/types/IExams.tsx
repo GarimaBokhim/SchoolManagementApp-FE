@@ -11,6 +11,7 @@ export interface IExam {
 }
 
 export interface IExamSubjects{
+  examSubjectId?: string;
   subjectId:string;
   passMarks:number;
   fullMarks:number;
