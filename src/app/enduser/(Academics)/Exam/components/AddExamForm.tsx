@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState } from "react";
-import { useGetAllClass } from "../../Class/hooks";
+import { useFilterClassByDate } from "../../Class/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
 
 type Props = {
@@ -22,7 +22,7 @@ type Props = {
 const AddExamForm = ({ form, onClose }: Props) => {
   const addExam = useAddExam();
   const { handleError, clearError } = useErrorHandler();
-  const { data: allClass } = useGetAllClass();
+  const { data: allClass } = useFilterClassByDate('?IsPagination=false');
 
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<{

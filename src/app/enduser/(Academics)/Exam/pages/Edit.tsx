@@ -19,6 +19,9 @@ const EditExam = ({ visible, onClose, ExamId }: Props) => {
       totalMarks: ExamData?.totalMarks ?? 0,
       passingMarks: ExamData?.passingMarks ?? 0,
       isfinalExam: ExamData?.isfinalExam ?? true,
+      classId: ExamData?.classId ?? '',
+      schoolId: ExamData?.schoolId ?? '',
+      examSubjects: (ExamData as any)?.ExamSubjectDTOs ?? [],
     },
   })
 
