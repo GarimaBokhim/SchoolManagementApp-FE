@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useEffect, useRef } from "react";
-import AddStudentFeeForm from "../_components/AddStudentFee";
+import EditStudentFeeForm from "../_components/EditFeeStudentFeeForm";
 import { IStudentFee } from "../types/IStudentFee";
 import {
   feeStructureIdToString,
@@ -14,11 +14,6 @@ interface Props {
   editRecord: (IStudentFee & { id: string }) | null;
 }
 
-/**
- * Same pattern as `_FeeCategory/pages/Update.tsx`: parent owns `useForm` and
- * `form.reset` when the record loads. Dependency on `editRecord.id` only avoids
- * resetting on every parent re-render. Child syncs combobox / table local state.
- */
 const EditStudentFee = ({ visible, onClose, editRecord }: Props) => {
   const form = useForm<IStudentFee>({
     defaultValues: {
@@ -65,7 +60,8 @@ const EditStudentFee = ({ visible, onClose, editRecord }: Props) => {
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
-        <AddStudentFeeForm
+        {/* ← Now uses EditStudentFeeForm, not AddStudentFeeForm */}
+        <EditStudentFeeForm
           form={form}
           onClose={handleOnClose}
           editRecord={normalized}
