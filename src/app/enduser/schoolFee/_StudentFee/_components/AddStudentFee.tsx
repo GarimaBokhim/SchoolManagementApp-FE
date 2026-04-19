@@ -7,8 +7,8 @@ import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
 import {
   useAddStudentFee,
   useEditStudentFee,
-  useGetFeeStructureByClassId,
 } from "../hooks";
+import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -97,7 +97,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   /** Avoid re-hydrating edit state on every parent re-render with the same record id. */
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
-  const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
+  const { data: allFeeStructures } = useGetAllFeeStructure();
 
   // Watch discount percentage from form
   const watchedDiscount = form.watch("discountPercentage");
@@ -380,9 +380,9 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 label="Fee Structure (Optional)"
                 name="feeStructureId"
                 form={form}
-                options={feeStructuresByClass?.Items ?? []}
+                options={allFeeStructures?.Items ?? []}
                 selected={
-                  feeStructuresByClass?.Items?.find((f) => {
+                  allFeeStructures?.Items?.find((f) => {
                     const fid = f.id ?? (f as { Id?: string }).Id ?? "";
                     return String(fid) === String(selectedFeeStructureId);
                   }) ?? null

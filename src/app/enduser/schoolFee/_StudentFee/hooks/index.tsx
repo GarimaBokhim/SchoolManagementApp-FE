@@ -18,7 +18,7 @@ const queryKey = "StudentFees";
 const filterQueryKey = "filteredStudentFee";
 const paymentRecordKey = "PaymentRecords";
 
-// ✅ Updated to include studentFeeDetailsDTOs to match API schema
+//  Updated to include studentFeeDetailsDTOs to match API schema
 type StudentFeeRequest = {
   id?: string;
   studentId: string;

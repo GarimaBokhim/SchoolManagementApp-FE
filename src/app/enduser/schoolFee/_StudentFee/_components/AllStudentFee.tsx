@@ -80,8 +80,6 @@ const AllStudentFeeForm = () => {
     },
   });
 
-
-
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
 
@@ -134,7 +132,7 @@ const AllStudentFeeForm = () => {
     form.reset();
   };
 
-  //  to get full student name
+  // To get full student name
   const getStudentName = (studentId: string): string => {
     const student = allStudent?.Items?.find(
       (i) => i.id != null && String(i.id) === String(studentId)
@@ -151,6 +149,11 @@ const AllStudentFeeForm = () => {
     if (v == null) return "-";
     if (Array.isArray(v)) return v.length ? v.join(", ") : "-";
     return String(v).trim() || "-";
+  };
+
+  // Calculate the serial number offset based on current page
+  const getSerialNumber = (index: number): number => {
+    return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
   };
 
   return (
@@ -266,9 +269,10 @@ const AllStudentFeeForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        <td className="py-3 px-4">{index + 1}</td>
+                        {/* ✅ Fixed: SN now accounts for pagination offset */}
+                        <td className="py-3 px-4">{getSerialNumber(index)}</td>
 
-                        {/*  Full student name */}
+                        {/* Full student name */}
                         <td className="py-3 px-4">
                           {getStudentName(StudentFee.studentId)}
                         </td>
@@ -279,21 +283,21 @@ const AllStudentFeeForm = () => {
 
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                          {canEdit && (StudentFee.id ?? StudentFee.Id) && (
-  <ButtonElement
-    text=""
-    icon={<Pencil className="text-white" size={15} />}
-    onClick={() => {
-      const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-      setEditRecord({
-        ...StudentFee,
-        id: rowId,
-      });
-      setEditModal(true);
-    }}
-    className="!bg-blue-500 hover:!bg-blue-600"  
-  />
-)}
+                            {canEdit && (StudentFee.id ?? StudentFee.Id) && (
+                              <ButtonElement
+                                text=""
+                                icon={<Pencil className="text-white" size={15} />}
+                                onClick={() => {
+                                  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+                                  setEditRecord({
+                                    ...StudentFee,
+                                    id: rowId,
+                                  });
+                                  setEditModal(true);
+                                }}
+                                className="!bg-blue-500 hover:!bg-blue-600"
+                              />
+                            )}
                             <ButtonElement
                               text=""
                               icon={<Eye className="text-white" size={15} />}
