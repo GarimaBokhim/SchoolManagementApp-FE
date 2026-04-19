@@ -2,10 +2,8 @@
 import { forwardRef, useImperativeHandle, useCallback, useState } from "react";
 import { UseFormReturn, FieldValues, Path } from "react-hook-form";
 import { adToBs } from "@sbmdkl/nepali-date-converter";
-// import { useType } from "@/context/auth/ReportContext";
 import { ButtonElement } from "../Buttons/ButtonElement";
 import { InputElement } from "../Input/InputElement";
-// import { useGetFiscalYearStartedDate } from "@/modules/admin/Settings/hooks";
 
 export type DateRangeFilterRef = {
   handleClear: () => void;
@@ -31,20 +29,23 @@ function DateRangeFilterInner<T extends FieldValues>(
 ) {
   const [isRunning] = useState(true);
   const [activeRange, setActiveRange] = useState<number | null>(null);
+
   const handleClear = useCallback(() => {
     form.reset();
     setParams("");
-    setActiveRange(null); // clear active button
+    setActiveRange(null);
   }, [form, setParams]);
 
   useImperativeHandle(ref, () => ({ handleClear }));
 
   const setDateRange = async (startOffset: number, endOffset: number = 0) => {
-    setActiveRange(startOffset); // highlight the selected button
+    setActiveRange(startOffset);
     setParams("");
+
     const today = new Date();
     const start = new Date();
     const end = new Date();
+
     start.setDate(today.getDate() - startOffset);
     end.setDate(today.getDate() - endOffset);
 
@@ -52,60 +53,56 @@ function DateRangeFilterInner<T extends FieldValues>(
       startDateKey,
       adToBs(start.toISOString().split("T")[0]) as any
     );
-    form.setValue(endDateKey, adToBs(end.toISOString().split("T")[0]) as any);
+    form.setValue(
+      endDateKey,
+      adToBs(end.toISOString().split("T")[0]) as any
+    );
+
     await form.handleSubmit(onSubmit)();
   };
 
+  // ✅ FIXED button style (no jump, scaling preserved)
+  const getButtonClass = (value: number) =>
+    `sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border rounded-md transition-all duration-200 transform ${
+      activeRange === value
+        ? "bg-teal-800 text-white border-teal-500 scale-105"
+        : "bg-teal-600 text-white border border-transparent hover:bg-teal-700"
+    }`;
+
   return (
-    <div className="flex flex-wrap items-end gap-4 ">
+    <div className="flex flex-wrap items-end gap-4">
       {isRunning ? (
         <div className="flex flex-wrap md:flex-row md:items-end gap-2 w-full">
           <ButtonElement
-            className={`sm:w-[7rem] md:w-[6.5rem] text-sm transition-all duration-300 ease-in-out ${
-              activeRange === 1
-                ? "bg-teal-800 text-white border border-teal-500 shadow-md scale-105"
-                : "bg-teal-600 text-white hover:bg-teal-700"
-            }`}
+            className={getButtonClass(1)}
             onClick={() => setDateRange(1)}
             type="button"
             text="Yesterday"
           />
+
           <ButtonElement
-            className={`sm:w-[7rem] md:w-[6.5rem] text-sm transition-all duration-200 ease-in-out ${
-              activeRange === 7
-                ? "bg-teal-800 text-white border border-teal-500 shadow-md scale-105"
-                : "bg-teal-600 text-white hover:bg-teal-700"
-            }`}
+            className={getButtonClass(7)}
             onClick={() => setDateRange(7)}
             type="button"
             text="7 Days"
           />
+
           <ButtonElement
-            className={`sm:w-[7rem] md:w-[6.5rem] text-sm transition-all duration-200 ease-in-out ${
-              activeRange === 30
-                ? "bg-teal-800 text-white border border-teal-500 shadow-md scale-105"
-                : "bg-teal-600 text-white hover:bg-teal-700 "
-            }`}
+            className={getButtonClass(30)}
             onClick={() => setDateRange(30)}
             type="button"
             text="This Month"
           />
+
           <ButtonElement
-            className={`sm:w-[7rem] md:w-[6.5rem] text-sm transition-all duration-200 ease-in-out ${
-              activeRange === 365
-                ? "bg-teal-800 text-white border border-teal-500 shadow-md scale-105"
-                : "bg-teal-600 text-white hover:bg-teal-700"
-            }`}
+            className={getButtonClass(365)}
             onClick={() => setDateRange(365)}
             type="button"
             text="This Year"
           />
+
           <ButtonElement
-            className={`sm:w-[7rem] md:w-[6.5rem] text-sm transition-all duration-200 ease-in-out ${
-              activeRange === 999
-                ? "bg-teal-800 text-white border border-teal-500 shadow-md scale-105"
-                : "bg-teal-600 text-white hover:bg-teal-700"
-            }`}
+            className="sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border border-transparent bg-gray-600 text-white hover:bg-gray-700"
             type="submit"
             text="Submit"
           />
@@ -138,11 +135,12 @@ function DateRangeFilterInner<T extends FieldValues>(
 
           <div className="w-full md:w-auto">
             <ButtonElement
-              className=" md:w-[5rem]"
+              className="md:w-[5rem]"
               type="submit"
               text="Submit"
             />
           </div>
+
           <div className="w-full md:w-auto">
             <ButtonElement
               className="md:w-[5rem]"

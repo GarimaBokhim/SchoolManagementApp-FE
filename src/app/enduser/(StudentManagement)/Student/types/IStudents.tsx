@@ -11,7 +11,7 @@ export interface IStudent {
   dateOfBirth: Date;
   email: string;
   phoneNumber: string;
-  studentImg: File;
+  studentImg: File| string;
   address: string;
   enrollmentDate: Date;
   parentId: string;
