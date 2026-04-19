@@ -11,9 +11,9 @@ import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllExams } from "../../Exam/hooks";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
+import { useGetAllStudents } from "@/app/teacher/Students/Student/hooks";
 import { useGetSubjectByClassId } from "@/app/enduser/(Academics)/Subject/hooks";
-import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
+import { IStudent } from "@/app/teacher/Students/Student/types/IStudents";
 
 type Props = {
   form: UseFormReturn<IExamResult>;

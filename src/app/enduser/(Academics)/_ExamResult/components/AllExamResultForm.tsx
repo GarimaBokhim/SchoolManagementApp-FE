@@ -24,6 +24,43 @@ import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hoo
 import { useGetAllExams } from '../../Exam/hooks'
 import SchoolMarkSheet from './SchoolMarkSheet'
 import SchoolMarkSheetSecond from './SchoolMarkSheetSecond'
+import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
+
+const formatStudentDisplayName = (s: IStudent | undefined) => {
+  if (!s) return ''
+  return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim()
+}
+
+/** Some endpoints return `Items`, others `items`. */
+function paginationItems<T>(data: unknown): T[] {
+  if (data == null || typeof data !== 'object') return []
+  const o = data as { Items?: T[]; items?: T[] }
+  if (Array.isArray(o.Items)) return o.Items
+  if (Array.isArray(o.items)) return o.items
+  return []
+}
+
+/** Filter/list APIs may serialize exam rows in PascalCase. */
+type ApiExamResultRow = IExamResult & {
+  StudentId?: string
+  ExamId?: string
+  Id?: string
+}
+
+const examResultStudentId = (row: ApiExamResultRow): string | undefined => {
+  const v = row.studentId ?? row.StudentId
+  if (v == null || String(v).trim() === '') return undefined
+  return String(v)
+}
+
+const examResultExamId = (row: ApiExamResultRow): string | undefined => {
+  const v = row.examId ?? row.ExamId
+  if (v == null || String(v).trim() === '') return undefined
+  return String(v)
+}
+
+const examResultRowId = (row: ApiExamResultRow): string | undefined =>
+  row.id ?? row.Id
 
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -64,8 +101,9 @@ const AllExamResultForm = () => {
   
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
-  const { data: allStudent } = useGetAllStudents()
+  const { data: allStudent } = useGetAllStudents('?IsPagination=false')
   const { data: allExam } = useGetAllExams()
+  const studentList = paginationItems<IStudent>(allStudent)
   const [showStudentPrint, setShowStudentPrint] = useState(false)
   const [showStudentPrintSecond, setShowStudentPrintSecond] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<string | null>('')
@@ -88,6 +126,7 @@ const AllExamResultForm = () => {
     refetch,
     isLoading,
   } = useFilterExamResultByDate(fullQuery)
+  const examResultRows = paginationItems<ApiExamResultRow>(filteredExamResult)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null
   )
@@ -204,15 +243,16 @@ const AllExamResultForm = () => {
                     form={form}
                     dropdownPositionClass="fixed"
                     value={selectedStudentId}
-                    options={allStudent?.Items ?? []}
+                    options={studentList}
                     selected={
-                      allStudent
-                        ? (allStudent?.Items?.find(
-                            (g) => g.id === selectedStudentId
-                          ) ?? null)
-                        : null
+                      studentList.find((g) => String(g.id) === String(selectedStudentId)) ??
+                      null
                     }
-                    onSelect={(user) => setSelectedStudentId(user?.id ?? '')}
+                    onSelect={(user) => {
+                      const id = user?.id ?? ''
+                      setSelectedStudentId(id)
+                      form.setValue('studentId', id)
+                    }}
                     getLabel={(g) => g?.firstName ?? ''}
                     getValue={(g) => g?.id ?? ''}
                   />
@@ -255,28 +295,32 @@ const AllExamResultForm = () => {
                       Loading ExamResults...
                     </td>
                   </tr>
-                ) : filteredExamResult?.Items &&
-                  filteredExamResult?.Items.length > 0 ? (
-                  filteredExamResult?.Items.map(
-                    (ExamResult: IExamResult, index: number) => (
+                ) : examResultRows.length > 0 ? (
+                  examResultRows.map((ExamResult: ApiExamResultRow, index: number) => {
+                    const sid = examResultStudentId(ExamResult)
+                    const eid = examResultExamId(ExamResult)
+                    return (
                       <tr
-                        key={index}
+                        key={examResultRowId(ExamResult) ?? index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                       >
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">
                           {
-                            allExam?.Items.find(
-                              (i) => i.id === ExamResult.examId
-                            )?.name
+                            paginationItems<{ id?: string; name?: string }>(
+                              allExam
+                            ).find((i) => String(i.id) === String(eid))?.name
                           }
                         </td>
                         <td className="py-3 px-4">
-                          {
-                            allStudent?.Items.find(
-                              (i) => i.id === ExamResult.studentId
-                            )?.firstName
-                          }
+                          {formatStudentDisplayName(
+                            studentList.find(
+                              (i) =>
+                                i.id != null &&
+                                sid != null &&
+                                String(i.id) === String(sid)
+                            )
+                          ) || '—'}
                         </td>
                         <td className="px-2 md:px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">
@@ -288,8 +332,8 @@ const AllExamResultForm = () => {
                               type="button"
                               onClick={() => {
                                 setShowStudentPrint(true)
-                                setSelectedExamId(ExamResult.examId)
-                                setSelectedStudent(ExamResult.studentId)
+                                setSelectedExamId(eid ?? null)
+                                setSelectedStudent(sid ?? '')
                               }}
                               className="!text-xs !bg-blue-500 hover:!bg-blue-600"
                             />
@@ -301,8 +345,8 @@ const AllExamResultForm = () => {
                               type="button"
                               onClick={() => {
                                 setShowStudentPrintSecond(true)
-                                setSelectedExamId(ExamResult.examId)
-                                setSelectedStudent(ExamResult.studentId)
+                                setSelectedExamId(eid ?? null)
+                                setSelectedStudent(sid ?? '')
                               }}
                               className="!text-xs !bg-blue-500 hover:!bg-blue-600"
                             />
@@ -310,7 +354,9 @@ const AllExamResultForm = () => {
                             {/* Edit Button - Conditional */}
                             {canEdit && (
                               <EditButton
-                                button={editButtonElement(ExamResult.id ?? '')}
+                                button={editButtonElement(
+                                  examResultRowId(ExamResult) ?? ''
+                                )}
                               />
                             )}
                             
@@ -319,7 +365,7 @@ const AllExamResultForm = () => {
                               <DeleteButton
                                 onConfirm={() =>
                                   handleDelete(
-                                    ExamResult.id ? ExamResult.id : ''
+                                    examResultRowId(ExamResult) ?? ''
                                   )
                                 }
                                 headerText={<Trash />}
@@ -330,7 +376,7 @@ const AllExamResultForm = () => {
                         </td>
                       </tr>
                     )
-                  )
+                  })
                 ) : (
                   <tr>
                     <td
@@ -372,7 +418,7 @@ const AllExamResultForm = () => {
             onClose={() => setAddModal(false)}
           />
         </div>
-        {filteredExamResult?.Items && filteredExamResult?.Items.length > 0 && (
+        {examResultRows.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={handleSubmit}
