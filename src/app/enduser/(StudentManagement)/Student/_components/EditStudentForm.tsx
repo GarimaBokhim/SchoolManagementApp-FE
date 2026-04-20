@@ -1,10 +1,10 @@
-"use client";
+'use client';
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { X } from "lucide-react";
 import { IStudent } from "../types/IStudents";
 import { useEditStudent, useGetStudentById } from "../hooks";
@@ -18,40 +18,55 @@ import {
 } from "@/components/common/hooks";
 import { useGetAllParents } from "../../_Parent/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+import { useGetAllFeeCategories } from "@/app/enduser/schoolFee/_FeeCategory/hooks";
+
 type Props = {
   form: UseFormReturn<IStudent>;
   onClose: () => void;
   studentId: string;
 };
+
 const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const editStudent = useEditStudent();
   const { handleError, clearError } = useErrorHandler();
   const { data: allProvince } = useGetAllProvince();
   const { data: StudentData } = useGetStudentById(studentId);
   const { data: allClass } = useGetAllClass();
+  const { data: allFeeCategories } = useGetAllFeeCategories('?IsPagination=false'); 
+
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<
-    number | undefined
-  >(0);
-  const [selectedDistrictId, setSelectedDistrictId] = useState<
-    number | undefined
-  >(0);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0);
   const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<string | null>(null);
   const { data: allParents } = useGetAllParents('?IsPagination=false');
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
-  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
-    number | null
-  >(null);
-  const { data: filteredDistrict } =
-    useGetDistrictByProvince(selectedProvinceId);
+  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | null>(null);
+
+  const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId);
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
-  const { data: filteredMunicipality } =
-    useGetMunicipalityByDistrict(selectedDistrictId);
+  const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId);
+
+  // Image upload states
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [studentImgPath, setStudentImgPath] = useState<string>('');
+  const [existingImageUrl, setExistingImageUrl] = useState<string>('');
+
+  const handleImageClick = () => fileInputRef.current?.click();
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setStudentImgPath(URL.createObjectURL(file));
+      form.setValue('studentImg', file);
+    }
+  };
 
   const handleClose = () => {
     form.reset();
   };
+
   useEffect(() => {
     if (StudentData) {
       form.reset({
@@ -70,62 +85,85 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         parentId: StudentData?.parentId ?? "",
         classSectionId: StudentData?.classSectionId ?? undefined,
         classId: StudentData?.classId ?? "",
+        feeCategoryId: StudentData?.feeCategoryId ?? "",
         provinceId: StudentData?.provinceId ?? 0,
         districtId: StudentData?.districtId ?? 0,
+        municipalityId: StudentData?.municipalityId ?? 0,
+        vdcid: StudentData?.vdcid ?? 0,
         wardNumber: StudentData?.wardNumber ?? 0,
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
+      // Fix: initialize all dropdown states from StudentData
+      setGenderStatus(StudentData.genderStatus ?? null);
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
       setSelectedParenId(StudentData.parentId);
       setSelectedVdcId(StudentData.vdcid);
       setSelectedClassId(StudentData.classId);
       setSelectedMunicipalityId(StudentData.municipalityId);
+      setSelectedFeeCategoryId(StudentData.feeCategoryId ?? null);
+
+      // Fix: show existing image preview
+      if (StudentData.studentImg && typeof StudentData.studentImg === 'string') {
+        setStudentImgPath(StudentData.studentImg);
+        setExistingImageUrl(StudentData.studentImg);
+      }
     }
   }, [StudentData]);
+
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError();
 
     try {
       clearError();
-      
-      const payload = {
-        firstName: data.firstName,
-        feeCategoryId: "",
-        middleName: data.middleName || "",
-        lastName: data.lastName,
-        registrationNumber: data.registrationNumber,
-        genderStatus: data.genderStatus,
-        studentStatus: data.studentStatus,
-        dateOfBirth: data.dateOfBirth,
-        email: data.email,
-        phoneNumber: data.phoneNumber,
-        imageUrl: typeof data.studentImg === 'string' ? data.studentImg : (data.imageUrl || ""),
-        address: data.address,
-        enrollmentDate: data.enrollmentDate,
-        parentId: data.parentId,
-        classSectionId: data.classSectionId || data.classId || "",
-        provinceId: data.provinceId,
-        districtId: data.districtId,
-        wardNumber: data.wardNumber || 0,
-      };
+
+      const formData = new FormData();
+      formData.append('firstName', data.firstName);
+      formData.append('feeCategoryId', data.feeCategoryId ?? '');
+      formData.append('middleName', data.middleName ?? '');
+      formData.append('lastName', data.lastName);
+      formData.append('registrationNumber', data.registrationNumber);
+      formData.append('genderStatus', String(data.genderStatus ?? 0));
+      formData.append('studentStatus', String(data.studentStatus ?? 0));
+      formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '');
+      formData.append('email', data.email);
+      formData.append('phoneNumber', data.phoneNumber);
+      formData.append('address', data.address);
+      formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '');
+      formData.append('parentId', data.parentId);
+      formData.append('classId', data.classId);
+      formData.append('classSectionId', data.classSectionId ?? '');
+      formData.append('provinceId', String(data.provinceId ?? 0));
+      formData.append('districtId', String(data.districtId ?? 0));
+      formData.append('municipalityId', String(data.municipalityId ?? 0));
+      formData.append('vdcId', String(data.vdcid ?? 0));
+      formData.append('wardNumber', String(data.wardNumber ?? 0));
+
+      // Handle image - send new file if uploaded, otherwise keep existing
+      if (data.studentImg instanceof File) {
+        formData.append('studentImg', data.studentImg);
+      } else if (data.studentImg && typeof data.studentImg === 'string') {
+        formData.append('studentImgUrl', data.studentImg);
+      }
 
       await toast.promise(
         editStudent.mutateAsync({
           id: studentId,
-          data: payload as any,
+          data: formData as any,
         }),
         {
-          loading: "Submitting Data",
-          success: "Successfully Edited Income",
+          loading: "Updating Student...",
+          success: "Successfully Updated Student",
         }
       );
       handleClose();
+      onClose();
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
     }
   };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
@@ -145,18 +183,53 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
             </button>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
             {/* ===== Personal Details Section ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Personal Details
               </h2>
+
+              {/* Image Upload Section */}
+              <div className="flex justify-center mb-6">
+                <div className="flex flex-col items-center">
+                  <div
+                    onClick={handleImageClick}
+                    className="w-28 h-28 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-4 hover:ring-teal-500 transition-all"
+                  >
+                    {studentImgPath ? (
+                      <img
+                        src={studentImgPath}
+                        alt="Profile"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm text-center px-2">
+                        Click to add image
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    name="imageUrl"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  {existingImageUrl && !(form.getValues('studentImg') instanceof File) && (
+                    <p className="text-xs text-gray-500 mt-2">Current image shown</p>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
                 <InputElement
                   label="First Name"
@@ -183,6 +256,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   name="dateOfBirth"
                   inputType="date"
                 />
+                {/* Fix: genderStatus now properly pre-fills via setGenderStatus in useEffect */}
                 <AppCombobox
                   label="Gender"
                   dropdownPositionClass="absolute"
@@ -203,8 +277,8 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                     ].find((g) => g.id === genderStatus) || null
                   }
                   onSelect={(option) => {
-                    setGenderStatus(option?.id ?? null)
-                    form.setValue('genderStatus', option?.id ?? 0)
+                    setGenderStatus(option?.id ?? null);
+                    form.setValue('genderStatus', option?.id ?? 0);
                   }}
                   getLabel={(o) => o?.name || ""}
                   getValue={(o) => o?.id ?? ""}
@@ -219,8 +293,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={allParents?.Items}
                   selected={
-                    allParents?.Items?.find((g) => g.id === selectedParenId) ||
-                    null
+                    allParents?.Items?.find((g) => g.id === selectedParenId) || null
                   }
                   onSelect={(group) => setSelectedParenId(group?.id ?? null)}
                   getLabel={(g) => g?.fullName ?? ""}
@@ -228,6 +301,8 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 />
               </div>
             </section>
+
+            {/* ===== Address Details Section ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Address Details
@@ -249,9 +324,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={allProvince?.Items}
                   selected={
-                    allProvince?.Items?.find(
-                      (g) => g.Id === selectedProvinceId
-                    ) || null
+                    allProvince?.Items?.find((g) => g.Id === selectedProvinceId) || null
                   }
                   onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
@@ -267,9 +340,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={filteredDistrict}
                   selected={
-                    filteredDistrict?.find(
-                      (g) => g.Id === selectedDistrictId
-                    ) || null
+                    filteredDistrict?.find((g) => g.Id === selectedDistrictId) || null
                   }
                   onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
@@ -284,13 +355,9 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   options={filteredMunicipality}
                   selected={
-                    filteredMunicipality?.find(
-                      (g) => g.Id === selectedMunicipalityId
-                    ) || null
+                    filteredMunicipality?.find((g) => g.Id === selectedMunicipalityId) || null
                   }
-                  onSelect={(group) =>
-                    setSelectedMunicipalityId(group?.Id ?? null)
-                  }
+                  onSelect={(group) => setSelectedMunicipalityId(group?.Id ?? null)}
                   getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -318,6 +385,8 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 />
               </div>
             </section>
+
+            {/* ===== Educational Details Section ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Educational Details
@@ -358,10 +427,29 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={allClass?.Items}
                   selected={
-                    allClass?.Items?.find((g) => g.id === selectedClassId) ||
-                    null
+                    allClass?.Items?.find((g) => g.id === selectedClassId) || null
                   }
                   onSelect={(group) => setSelectedClassId(group?.id ?? null)}
+                  getLabel={(g) => g?.name ?? ""}
+                  getValue={(g) => g?.id ?? ""}
+                />
+
+                {/* ✅ NEW: Fee Category combobox */}
+                <AppCombobox
+                  value={selectedFeeCategoryId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Fee Category"
+                  name="feeCategoryId"
+                  form={form}
+                  options={allFeeCategories?.Items}
+                  selected={
+                    allFeeCategories?.Items?.find((g) => g.id === selectedFeeCategoryId) || null
+                  }
+                  onSelect={(group) => {
+                    setSelectedFeeCategoryId(group?.id ?? null);
+                    form.setValue('feeCategoryId', group?.id ?? '');
+                  }}
                   getLabel={(g) => g?.name ?? ""}
                   getValue={(g) => g?.id ?? ""}
                 />
