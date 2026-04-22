@@ -22,6 +22,45 @@ type FeeStructureRequest = {
   feeStructureDTOs: IFeeStructureDTO[];
 };
 
+const normalizeFeeStructureDto = (raw: Record<string, unknown>): IFeeStructureDTO => ({
+  id: String(raw.id ?? raw.Id ?? ""),
+  feeTypeId: String(raw.feeTypeId ?? raw.FeeTypeId ?? ""),
+  amount: Number(raw.amount ?? raw.Amount ?? 0),
+  discountAmount: Number(raw.discountAmount ?? raw.DiscountAmount ?? 0),
+  times: Number(raw.times ?? raw.Times ?? 1),
+  totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+  feePaidType: Number(raw.feePaidType ?? raw.FeePaidType ?? 1),
+  discountPercentage: Number(raw.discountPercentage ?? raw.DiscountPercentage ?? 0),
+  feeTypeName: String(raw.feeTypeName ?? raw.FeeTypeName ?? ""),
+});
+
+const normalizeFeeStructure = (data: unknown): IFeeStructure => {
+  const raw = data as Record<string, unknown>;
+  const dtoRaw =
+    raw.feeStructureDTOs ??
+    raw.FeeStructureDTOs ??
+    raw.feeStructureDtos ??
+    [];
+  const dtoArray = Array.isArray(dtoRaw) ? dtoRaw : [];
+
+  return {
+    ...(data as IFeeStructure),
+    id: String(raw.id ?? raw.Id ?? ""),
+    classId: String(raw.classId ?? raw.ClassId ?? ""),
+    feeCategoryId: String(raw.feeCategoryId ?? raw.FeeCategoryId ?? ""),
+    feeCategoryName: String(raw.feeCategoryName ?? raw.FeeCategoryName ?? ""),
+    totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+    discountAmount: Number(raw.discountAmount ?? raw.DiscountAmount ?? 0),
+    isActive:
+      typeof (raw.isActive ?? raw.IsActive) === "boolean"
+        ? (raw.isActive ?? raw.IsActive) as boolean
+        : true,
+    feeStructureDTOs: dtoArray.map((item) =>
+      normalizeFeeStructureDto(item as Record<string, unknown>)
+    ),
+  };
+};
+
 export const useAddFeeStructure = () => {
   const queryClient = useQueryClient();
   return useMutation<IFeeStructure, Error, FeeStructureRequest>({
@@ -128,13 +167,13 @@ export const useGetFeeStructureById = (id?: string) => {
   return useQuery({
     queryKey: [queryKey, "byId", id],
     queryFn: async () => {
-      const response = await api.get<IFeeStructure>(
+      const response = await api.get<unknown>(
         `${FeeStructureEndPoints.getAllFeeStructure}/${id}`
       );
-      return response.data;
+      return normalizeFeeStructure(response.data);
     },
     enabled: !!id,
     staleTime: 0,
     retry: false,
   });
-};
+};
