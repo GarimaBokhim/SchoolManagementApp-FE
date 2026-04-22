@@ -25,25 +25,21 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
 import { useGetAllFeeCategories } from "@/app/enduser/schoolFee/_FeeCategory/hooks";
-
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
-
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
-
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-
   const [showStudents, setShowStudents] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
@@ -52,7 +48,9 @@ const AllStudentForm = () => {
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const { data: allStudent } = useGetAllStudents();
-  const [selectedStudentName, setSelectedStudentName] = useState<string | null>("");
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
+    ""
+  );
   const fullQuery = query + (params || "");
 
   const {
@@ -60,9 +58,7 @@ const AllStudentForm = () => {
     refetch,
     isLoading,
   } = useFilterStudentByDate(fullQuery);
-
   const { data: allFeeCategories } = useGetAllFeeCategories("?IsPagination=false");
-
   const feeCategoryMap = useMemo(() => {
     const map = new Map<string, string>();
     allFeeCategories?.Items?.forEach((category) => {
@@ -72,11 +68,9 @@ const AllStudentForm = () => {
     });
     return map;
   }, [allFeeCategories]);
-
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
-
   const form = useForm<IFilterStudentByDate>({
     defaultValues: {
       firstName: "",
@@ -87,7 +81,6 @@ const AllStudentForm = () => {
 
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
-
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError();
     try {
@@ -121,15 +114,12 @@ const AllStudentForm = () => {
       console.error("Error during form submission:", error);
     }
   };
-
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
-
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteStudent = useRemoveStudent();
-
   const handleDelete = async (id: string) => {
     try {
       await deleteStudent.mutateAsync(id);
@@ -139,21 +129,19 @@ const AllStudentForm = () => {
       toast.error("Error deleting user.");
     }
   };
-
   const onClearClick = () => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
     form.reset();
   };
-
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-            <h1 className="text-xl font-semibold">All Students</h1>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
+            <h1 className=" text-xl font-semibold ">All Students</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -173,7 +161,6 @@ const AllStudentForm = () => {
               )}
             </div>
           </div>
-
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -207,6 +194,7 @@ const AllStudentForm = () => {
                     getValue={(g) => g?.firstName ?? ""}
                   />
                 </div>
+
                 <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
                   <ButtonElement
                     type="submit"
@@ -225,7 +213,6 @@ const AllStudentForm = () => {
               </form>
             </div>
           )}
-
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
@@ -236,12 +223,10 @@ const AllStudentForm = () => {
                   <th className="px-4 py-3 text-left hidden md:table-cell">
                     Gender
                   </th>
-                  {/* ✅ Changed: lg → md */}
-                  <th className="px-4 py-3 text-left hidden md:table-cell">
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
                     Fee Category
                   </th>
-                  {/* ✅ Changed: lg → xl */}
-                  <th className="px-4 py-3 text-left hidden xl:table-cell">
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
                     Email
                   </th>
                   <th className="px-4 py-3 text-left hidden xl:table-cell">
@@ -260,7 +245,7 @@ const AllStudentForm = () => {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={9}
                       className="p-4 text-center text-gray-500 dark:text-gray-300"
                     >
                       Loading students...
@@ -275,16 +260,16 @@ const AllStudentForm = () => {
                       >
                         <td className="py-3 px-4">{index + 1}</td>
                         <td className="py-3 px-4">{student.firstName}</td>
-                        <td className="py-3 px-4">{student.registrationNumber}</td>
+                        <td className="py-3 px-4">
+                          {student.registrationNumber}
+                        </td>
                         <td className="py-3 px-4 hidden md:table-cell">
                           {student.genderStatus === 0 ? "M" : "F"}
                         </td>
-                        {/* ✅ Changed: lg → md */}
-                        <td className="py-3 px-4 hidden md:table-cell">
+                        <td className="py-3 px-4 hidden lg:table-cell">
                           {feeCategoryMap.get(student.feeCategoryId ?? "") ?? "-"}
                         </td>
-                        {/* ✅ Changed: lg → xl */}
-                        <td className="py-3 px-4 hidden xl:table-cell">
+                        <td className="py-3 px-4 hidden lg:table-cell">
                           {student.email}
                         </td>
                         <td className="py-3 px-4 hidden xl:table-cell">
@@ -331,7 +316,7 @@ const AllStudentForm = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={9}
                       className="p-4 text-center text-gray-500 italic"
                     >
                       No students found.
@@ -342,7 +327,6 @@ const AllStudentForm = () => {
             </table>
           </div>
         </div>
-
         {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -358,7 +342,6 @@ const AllStudentForm = () => {
             />
           </div>
         )}
-
         {showStudents && selectedId && (
           <EditStudent
             StudentId={selectedId}

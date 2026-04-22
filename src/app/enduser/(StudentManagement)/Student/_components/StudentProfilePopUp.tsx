@@ -1,10 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { IStudent } from '../types/IStudents'
 import { useGetClassById } from '@/app/enduser/(Academics)/Class/hooks'
 import { useGetParentById } from '../../_Parent/hooks'
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 const ENROLLMENT_STATUS_MAP: Record<number, { label: string; color: string }> = {
   1: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
@@ -64,6 +66,8 @@ interface StudentProfilePopupProps {
 }
 
 const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfilePopupProps) => {
+  const [imgError, setImgError] = useState(false)
+
   // Fetch class name using the student's classId
   const { data: classDetail, isLoading: isClassLoading } = useGetClassById(
     student?.classId ?? ''
@@ -82,6 +86,11 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
 
   const className = isClassLoading ? 'Loading...' : (classDetail?.name || '-')
   const parentName = isParentLoading ? 'Loading...' : (parentDetail?.fullName || '-')
+
+  // Build full image URL from the relative path returned by the API
+  const imageUrl = student.imageUrl
+    ? `${BASE_URL}/${student.imageUrl}`
+    : null
 
   return (
     <div
@@ -114,11 +123,12 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                 {/* Avatar + Name */}
                 <div className="text-center mb-6">
                   <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    {student.imageUrl ? (
+                    {imageUrl && !imgError ? (
                       <img
-                        src={student.imageUrl}
+                        src={imageUrl}
                         alt={displayName}
                         className="w-full h-full object-cover"
+                        onError={() => setImgError(true)}
                       />
                     ) : (
                       <span className="text-3xl font-bold text-white">
