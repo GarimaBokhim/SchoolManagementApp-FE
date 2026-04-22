@@ -1,6 +1,7 @@
 export interface IStudent {
   id?: string;
   firstName: string;
+  feeCategoryId?: string;
   middleName?: string | null;
   lastName: string;
   registrationNumber: string;
