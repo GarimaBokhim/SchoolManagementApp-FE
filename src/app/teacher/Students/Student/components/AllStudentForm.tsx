@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IFilterStudentByDate, IStudent } from "../types/IStudents";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -24,6 +24,7 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudent from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+import { useGetAllFeeCategories } from "@/app/enduser/schoolFee/_FeeCategory/hooks";
 const AllStudentForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -57,6 +58,16 @@ const AllStudentForm = () => {
     refetch,
     isLoading,
   } = useFilterStudentByDate(fullQuery);
+  const { data: allFeeCategories } = useGetAllFeeCategories("?IsPagination=false");
+  const feeCategoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    allFeeCategories?.Items?.forEach((category) => {
+      if (category?.id) {
+        map.set(category.id, category.name);
+      }
+    });
+    return map;
+  }, [allFeeCategories]);
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -213,6 +224,9 @@ const AllStudentForm = () => {
                     Gender
                   </th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">
+                    Fee Category
+                  </th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
                     Email
                   </th>
                   <th className="px-4 py-3 text-left hidden xl:table-cell">
@@ -251,6 +265,9 @@ const AllStudentForm = () => {
                         </td>
                         <td className="py-3 px-4 hidden md:table-cell">
                           {student.genderStatus === 0 ? "M" : "F"}
+                        </td>
+                        <td className="py-3 px-4 hidden lg:table-cell">
+                          {feeCategoryMap.get(student.feeCategoryId ?? "") ?? "-"}
                         </td>
                         <td className="py-3 px-4 hidden lg:table-cell">
                           {student.email}
