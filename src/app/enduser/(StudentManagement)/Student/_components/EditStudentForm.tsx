@@ -18,7 +18,16 @@ import {
 } from "@/components/common/hooks";
 import { useGetAllParents } from "../../_Parent/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { useGetAllFeeCategories } from "@/app/enduser/schoolFee/_FeeCategory/hooks";
+import { useFilterFeeCategoryByDate } from "@/app/enduser/schoolFee/_FeeCategory/hooks";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
+
+// Fix: align ids with API values (genderStatus: 0=Male, 1=Female, 2=Other)
+const GENDER_OPTIONS = [
+  { id: 0, name: "Male" },
+  { id: 1, name: "Female" },
+  { id: 2, name: "Other" },
+]
 
 type Props = {
   form: UseFormReturn<IStudent>;
@@ -32,7 +41,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const { data: allProvince } = useGetAllProvince();
   const { data: StudentData } = useGetStudentById(studentId);
   const { data: allClass } = useGetAllClass();
-  const { data: allFeeCategories } = useGetAllFeeCategories('?IsPagination=false'); 
+
+  const { data: allFeeCategories } = useFilterFeeCategoryByDate(
+    '?startDate=2080-01-01&endDate=2090-01-01&IsPagination=false'
+  );
 
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0);
@@ -48,7 +60,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
   const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId);
 
-  // Image upload states
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [studentImgPath, setStudentImgPath] = useState<string>('');
   const [existingImageUrl, setExistingImageUrl] = useState<string>('');
@@ -63,9 +74,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
     }
   };
 
-  const handleClose = () => {
-    form.reset();
-  };
+  const handleClose = () => form.reset();
 
   useEffect(() => {
     if (StudentData) {
@@ -93,7 +102,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         wardNumber: StudentData?.wardNumber ?? 0,
       });
 
-      // Fix: initialize all dropdown states from StudentData
+      // Fix: genderStatus from API is 0/1/2 — now matches GENDER_OPTIONS ids directly
       setGenderStatus(StudentData.genderStatus ?? null);
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
@@ -103,20 +112,17 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       setSelectedMunicipalityId(StudentData.municipalityId);
       setSelectedFeeCategoryId(StudentData.feeCategoryId ?? null);
 
-      // Fix: show existing image preview
-      if (StudentData.studentImg && typeof StudentData.studentImg === 'string') {
-        setStudentImgPath(StudentData.studentImg);
-        setExistingImageUrl(StudentData.studentImg);
+      if (StudentData.imageUrl) {
+        const fullUrl = `${BASE_URL}/${StudentData.imageUrl}`
+        setStudentImgPath(fullUrl)
+        setExistingImageUrl(fullUrl)
       }
     }
   }, [StudentData]);
 
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError();
-
     try {
-      clearError();
-
       const formData = new FormData();
       formData.append('firstName', data.firstName);
       formData.append('feeCategoryId', data.feeCategoryId ?? '');
@@ -139,18 +145,14 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       formData.append('vdcId', String(data.vdcid ?? 0));
       formData.append('wardNumber', String(data.wardNumber ?? 0));
 
-      // Handle image - send new file if uploaded, otherwise keep existing
       if (data.studentImg instanceof File) {
         formData.append('studentImg', data.studentImg);
-      } else if (data.studentImg && typeof data.studentImg === 'string') {
-        formData.append('studentImgUrl', data.studentImg);
+      } else if (existingImageUrl) {
+        formData.append('studentImgUrl', existingImageUrl);
       }
 
       await toast.promise(
-        editStudent.mutateAsync({
-          id: studentId,
-          data: formData as any,
-        }),
+        editStudent.mutateAsync({ id: studentId, data: formData as any }),
         {
           loading: "Updating Student...",
           success: "Successfully Updated Student",
@@ -191,13 +193,12 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-            {/* ===== Personal Details Section ===== */}
+            {/* ===== Personal Details ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Personal Details
               </h2>
 
-              {/* Image Upload Section */}
               <div className="flex justify-center mb-6">
                 <div className="flex flex-col items-center">
                   <div
@@ -209,6 +210,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                         src={studentImgPath}
                         alt="Profile"
                         className="object-cover w-full h-full"
+                        onError={() => setStudentImgPath('')}
                       />
                     ) : (
                       <span className="text-gray-400 text-sm text-center px-2">
@@ -231,51 +233,21 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                <InputElement
-                  label="First Name"
-                  form={form}
-                  name="firstName"
-                  placeholder="Enter First Name"
-                  required
-                />
-                <InputElement
-                  label="Middle Name"
-                  form={form}
-                  name="middleName"
-                  placeholder="Enter Middle Name"
-                />
-                <InputElement
-                  label="Last Name"
-                  form={form}
-                  name="lastName"
-                  placeholder="Enter Last Name"
-                />
-                <InputElement
-                  label="Date of Birth"
-                  form={form}
-                  name="dateOfBirth"
-                  inputType="date"
-                />
-                {/* Fix: genderStatus now properly pre-fills via setGenderStatus in useEffect */}
+                <InputElement label="First Name" form={form} name="firstName" placeholder="Enter First Name" required />
+                <InputElement label="Middle Name" form={form} name="middleName" placeholder="Enter Middle Name" />
+                <InputElement label="Last Name" form={form} name="lastName" placeholder="Enter Last Name" />
+                <InputElement label="Date of Birth" form={form} name="dateOfBirth" inputType="date" />
+
+                {/* Fix: GENDER_OPTIONS now uses 0/1/2 to match API values */}
                 <AppCombobox
                   label="Gender"
                   dropdownPositionClass="absolute"
                   name="genderStatus"
                   form={form}
                   value={genderStatus}
-                  options={[
-                    { id: 1, name: "Male" },
-                    { id: 2, name: "Female" },
-                    { id: 3, name: "Other" },
-                  ]}
+                  options={GENDER_OPTIONS}
                   dropDownWidth="w-full"
-                  selected={
-                    [
-                      { id: 1, name: "Male" },
-                      { id: 2, name: "Female" },
-                      { id: 3, name: "Other" },
-                    ].find((g) => g.id === genderStatus) || null
-                  }
+                  selected={GENDER_OPTIONS.find((g) => g.id === genderStatus) || null}
                   onSelect={(option) => {
                     setGenderStatus(option?.id ?? null);
                     form.setValue('genderStatus', option?.id ?? 0);
@@ -292,9 +264,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   required
                   options={allParents?.Items}
-                  selected={
-                    allParents?.Items?.find((g) => g.id === selectedParenId) || null
-                  }
+                  selected={allParents?.Items?.find((g) => g.id === selectedParenId) || null}
                   onSelect={(group) => setSelectedParenId(group?.id ?? null)}
                   getLabel={(g) => g?.fullName ?? ""}
                   getValue={(g) => g?.id ?? ""}
@@ -302,18 +272,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
               </div>
             </section>
 
-            {/* ===== Address Details Section ===== */}
+            {/* ===== Address Details ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Address Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                <InputElement
-                  label="Address"
-                  form={form}
-                  name="address"
-                  placeholder="Enter Address"
-                />
+                <InputElement label="Address" form={form} name="address" placeholder="Enter Address" />
                 <AppCombobox
                   value={selectedProvinceId}
                   dropDownWidth="w-full"
@@ -323,9 +288,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   required
                   options={allProvince?.Items}
-                  selected={
-                    allProvince?.Items?.find((g) => g.Id === selectedProvinceId) || null
-                  }
+                  selected={allProvince?.Items?.find((g) => g.Id === selectedProvinceId) || null}
                   onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
@@ -339,9 +302,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   required
                   options={filteredDistrict}
-                  selected={
-                    filteredDistrict?.find((g) => g.Id === selectedDistrictId) || null
-                  }
+                  selected={filteredDistrict?.find((g) => g.Id === selectedDistrictId) || null}
                   onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
@@ -354,9 +315,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   name="municipalityId"
                   form={form}
                   options={filteredMunicipality}
-                  selected={
-                    filteredMunicipality?.find((g) => g.Id === selectedMunicipalityId) || null
-                  }
+                  selected={filteredMunicipality?.find((g) => g.Id === selectedMunicipalityId) || null}
                   onSelect={(group) => setSelectedMunicipalityId(group?.Id ?? null)}
                   getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
@@ -369,54 +328,25 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   name="vdcid"
                   form={form}
                   options={filteredVdc}
-                  selected={
-                    filteredVdc?.find((g) => g.Id === selectedVdcId) || null
-                  }
+                  selected={filteredVdc?.find((g) => g.Id === selectedVdcId) || null}
                   onSelect={(group) => setSelectedVdcId(group?.Id ?? null)}
                   getLabel={(g) => g?.VdcNameInNepali ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
-                <InputElement
-                  label="Ward Number"
-                  form={form}
-                  name="wardNumber"
-                  inputType="number"
-                  placeholder="Enter Ward Number"
-                />
+                <InputElement label="Ward Number" form={form} name="wardNumber" inputType="number" placeholder="Enter Ward Number" />
               </div>
             </section>
 
-            {/* ===== Educational Details Section ===== */}
+            {/* ===== Educational Details ===== */}
             <section className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
                 Educational Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                <InputElement
-                  label="Registration Number"
-                  form={form}
-                  name="registrationNumber"
-                  placeholder="Enter Registration Number"
-                />
-                <InputElement
-                  label="Email"
-                  form={form}
-                  name="email"
-                  type="email"
-                  placeholder="Enter Email"
-                />
-                <InputElement
-                  label="Phone Number"
-                  form={form}
-                  name="phoneNumber"
-                  placeholder="Enter Phone Number"
-                />
-                <InputElement
-                  label="Enrollment Date"
-                  form={form}
-                  name="enrollmentDate"
-                  inputType="date"
-                />
+                <InputElement label="Registration Number" form={form} name="registrationNumber" placeholder="Enter Registration Number" />
+                <InputElement label="Email" form={form} name="email" type="email" placeholder="Enter Email" />
+                <InputElement label="Phone Number" form={form} name="phoneNumber" placeholder="Enter Phone Number" />
+                <InputElement label="Enrollment Date" form={form} name="enrollmentDate" inputType="date" />
                 <AppCombobox
                   value={selectedClassId}
                   dropDownWidth="w-full"
@@ -426,15 +356,11 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   required
                   options={allClass?.Items}
-                  selected={
-                    allClass?.Items?.find((g) => g.id === selectedClassId) || null
-                  }
+                  selected={allClass?.Items?.find((g) => g.id === selectedClassId) || null}
                   onSelect={(group) => setSelectedClassId(group?.id ?? null)}
                   getLabel={(g) => g?.name ?? ""}
                   getValue={(g) => g?.id ?? ""}
                 />
-
-                {/* ✅ NEW: Fee Category combobox */}
                 <AppCombobox
                   value={selectedFeeCategoryId}
                   dropDownWidth="w-full"
@@ -443,9 +369,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   name="feeCategoryId"
                   form={form}
                   options={allFeeCategories?.Items}
-                  selected={
-                    allFeeCategories?.Items?.find((g) => g.id === selectedFeeCategoryId) || null
-                  }
+                  selected={allFeeCategories?.Items?.find((g) => g.id === selectedFeeCategoryId) || null}
                   onSelect={(group) => {
                     setSelectedFeeCategoryId(group?.id ?? null);
                     form.setValue('feeCategoryId', group?.id ?? '');
