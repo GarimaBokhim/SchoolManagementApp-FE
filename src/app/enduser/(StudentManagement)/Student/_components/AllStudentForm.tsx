@@ -263,8 +263,8 @@ const AllStudentForm = () => {
 
   const items = filteredStudent?.Items ?? []
   const totalStudents = filteredStudent?.TotalItems ?? items.length
-  const maleCount = items.filter((s) => s.genderStatus === 0).length
-  const femaleCount = items.filter((s) => s.genderStatus === 1).length
+  const maleCount = items.filter((s) => s.genderStatus === 1).length
+  const femaleCount = items.filter((s) => s.genderStatus === 2).length
   const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
   
   return (
@@ -451,7 +451,11 @@ const AllStudentForm = () => {
                         {student.registrationNumber || 'N/A'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
-                        {student.genderStatus === 0 ? 'Male' : student.genderStatus === 1 ? 'Female' : 'Other'}
+                        {student.genderStatus === 1
+                          ? 'Male'
+                          : student.genderStatus === 2
+                            ? 'Female'
+                            : 'Other'}
                       </td>
                       <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell" title={student.email}>
                         {student.email || 'N/A'}
