@@ -73,7 +73,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
     '?startDate=2080-01-01&endDate=2090-01-01&IsPagination=false'
   );
 
-  const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0);
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
@@ -93,6 +92,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [studentImgPath, setStudentImgPath] = useState<string>('');
   const [existingImageUrl, setExistingImageUrl] = useState<string>('');
+  const selectedGenderStatus = normalizeGenderStatus(form.watch("genderStatus"));
 
   const handleImageClick = () => fileInputRef.current?.click();
 
@@ -134,7 +134,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         wardNumber: StudentData?.wardNumber ?? 0,
       });
 
-      setGenderStatus(normalizedGenderStatus);
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
       setSelectedParentId(StudentData.parentId ?? null);
@@ -288,14 +287,16 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   dropdownPositionClass="absolute"
                   name="genderStatus"
                   form={form}
-                  value={genderStatus}
+                  value={selectedGenderStatus}
                   options={GENDER_OPTIONS}
                   dropDownWidth="w-full"
-                 selected={GENDER_OPTIONS.find((g) => g.id === Number(genderStatus)) || null}
-onSelect={(option) => {
-  setGenderStatus(option?.id ?? null);
-  form.setValue('genderStatus', option?.id ?? 1);
-}}
+                  selected={
+                    GENDER_OPTIONS.find((g) => g.id === selectedGenderStatus) ||
+                    null
+                  }
+                  onSelect={(option) => {
+                    form.setValue('genderStatus', option?.id ?? 1);
+                  }}
                   getLabel={(o) => o?.name || ""}
                   getValue={(o) => o?.id ?? ""}
                 />
