@@ -22,7 +22,6 @@ import { useFilterFeeCategoryByDate } from "@/app/enduser/schoolFee/_FeeCategory
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
-// Fix: align ids with API values (genderStatus: 0=Male, 1=Female, 2=Other)
 const GENDER_OPTIONS = [
   { id: 0, name: "Male" },
   { id: 1, name: "Female" },
@@ -49,10 +48,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const [genderStatus, setGenderStatus] = useState<number | null>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0);
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0);
-  const [selectedParenId, setSelectedParenId] = useState<string | null>(null);
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<string | null>(null);
+
+  // Fetch ALL parents (no pagination) so mapping works reliably
   const { data: allParents } = useGetAllParents('?IsPagination=false');
+
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | null>(null);
 
@@ -76,6 +78,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
 
   const handleClose = () => form.reset();
 
+  // ✅ FIX 1: Sync selectedParentId whenever StudentData loads
   useEffect(() => {
     if (StudentData) {
       form.reset({
@@ -83,7 +86,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         middleName: StudentData?.middleName ?? "",
         lastName: StudentData?.lastName ?? "",
         registrationNumber: StudentData?.registrationNumber ?? "",
-        genderStatus: StudentData?.genderStatus ?? 0,
+        genderStatus: Number(StudentData?.genderStatus) ?? 0,
         studentStatus: StudentData?.studentStatus ?? 0,
         dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
         email: StudentData?.email ?? "",
@@ -102,11 +105,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         wardNumber: StudentData?.wardNumber ?? 0,
       });
 
-      // Fix: genderStatus from API is 0/1/2 — now matches GENDER_OPTIONS ids directly
-      setGenderStatus(StudentData.genderStatus ?? null);
+      setGenderStatus(Number(StudentData.genderStatus) ?? null);
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
-      setSelectedParenId(StudentData.parentId);
+      setSelectedParentId(StudentData.parentId ?? null);
       setSelectedVdcId(StudentData.vdcid);
       setSelectedClassId(StudentData.classId);
       setSelectedMunicipalityId(StudentData.municipalityId);
@@ -119,6 +121,20 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       }
     }
   }, [StudentData]);
+
+  // ✅ FIX 2: Re-sync selected parent when allParents data arrives AFTER StudentData
+  // This handles the race condition where StudentData loads before allParents
+  useEffect(() => {
+    if (allParents?.Items && StudentData?.parentId) {
+      const parentExists = allParents.Items.find(
+        (p) => p.id === StudentData.parentId
+      );
+      if (parentExists) {
+        setSelectedParentId(StudentData.parentId);
+        form.setValue('parentId', StudentData.parentId);
+      }
+    }
+  }, [allParents, StudentData?.parentId]);
 
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError();
@@ -238,7 +254,6 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                 <InputElement label="Last Name" form={form} name="lastName" placeholder="Enter Last Name" />
                 <InputElement label="Date of Birth" form={form} name="dateOfBirth" inputType="date" />
 
-                {/* Fix: GENDER_OPTIONS now uses 0/1/2 to match API values */}
                 <AppCombobox
                   label="Gender"
                   dropdownPositionClass="absolute"
@@ -247,16 +262,17 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   value={genderStatus}
                   options={GENDER_OPTIONS}
                   dropDownWidth="w-full"
-                  selected={GENDER_OPTIONS.find((g) => g.id === genderStatus) || null}
-                  onSelect={(option) => {
-                    setGenderStatus(option?.id ?? null);
-                    form.setValue('genderStatus', option?.id ?? 0);
-                  }}
+                 selected={GENDER_OPTIONS.find((g) => g.id === Number(genderStatus)) || null}
+onSelect={(option) => {
+  setGenderStatus(option?.id ?? null);
+  form.setValue('genderStatus', option?.id ?? 0);
+}}
                   getLabel={(o) => o?.name || ""}
                   getValue={(o) => o?.id ?? ""}
                 />
+
                 <AppCombobox
-                  value={selectedParenId}
+                  value={selectedParentId}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
                   label="Parent Name"
@@ -264,8 +280,14 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   required
                   options={allParents?.Items}
-                  selected={allParents?.Items?.find((g) => g.id === selectedParenId) || null}
-                  onSelect={(group) => setSelectedParenId(group?.id ?? null)}
+                  selected={
+                    allParents?.Items?.find((g) => g.id === selectedParentId) ?? null
+                  }
+                  onSelect={(group) => {
+                    // ✅ FIX 4: Also update form value on selection
+                    setSelectedParentId(group?.id ?? null);
+                    form.setValue('parentId', group?.id ?? '');
+                  }}
                   getLabel={(g) => g?.fullName ?? ""}
                   getValue={(g) => g?.id ?? ""}
                 />
@@ -357,7 +379,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={allClass?.Items}
                   selected={allClass?.Items?.find((g) => g.id === selectedClassId) || null}
-                  onSelect={(group) => setSelectedClassId(group?.id ?? null)}
+                  onSelect={(group) => {
+                    setSelectedClassId(group?.id ?? null);
+                    form.setValue('classId', group?.id ?? '');
+                  }}
                   getLabel={(g) => g?.name ?? ""}
                   getValue={(g) => g?.id ?? ""}
                 />
