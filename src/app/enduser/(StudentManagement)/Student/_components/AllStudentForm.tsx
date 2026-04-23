@@ -159,6 +159,12 @@ const AllStudentForm = () => {
     isLoading,
   } = useFilterStudentByDate(fullQuery)
 
+  const handleCloseEditModal = async () => {
+    setShowStudents(false)
+    setSelectedId('')
+    await refetch()
+  }
+
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
@@ -549,7 +555,7 @@ const AllStudentForm = () => {
           <EditStudent
             StudentId={selectedId}
             visible={showStudents}
-            onClose={() => setShowStudents(false)}
+            onClose={handleCloseEditModal}
           />
         )}
 
