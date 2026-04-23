@@ -6,6 +6,20 @@ import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStude
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+const resolveStudentImageUrl = (student: IStudent): string => {
+  const rawPath =
+    (student.imageUrl ||
+      (typeof student.studentImg === "string" ? student.studentImg : "") ||
+      "").trim();
+  if (!rawPath) return "";
+  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith("blob:")) return rawPath;
+  const base = BASE_URL.replace(/\/+$/, "");
+  const path = rawPath.replace(/^\/+/, "");
+  return base ? `${base}/${path}` : `/${path}`;
+};
+
 type Props = {
   StudentId: string | number;
 };
@@ -43,6 +57,7 @@ const StudentIDCard = forwardRef<HTMLDivElement, Props>(
     // Find class name
     const className = allClass?.Items?.find((c) => c.id === student.classId)?.name || "N/A";
     const sectionName = student.classSectionId || "N/A";
+    const imageUrl = resolveStudentImageUrl(student);
 
     return (
       <div
@@ -67,15 +82,15 @@ const StudentIDCard = forwardRef<HTMLDivElement, Props>(
         <div className="flex h-[200px] px-6 py-4">
           <div className="w-[160px] flex flex-col items-center justify-center border-r pr-4">
             <div className="w-[110px] h-[110px] rounded-full border-4 border-indigo-600 overflow-hidden shadow-md flex items-center justify-center bg-gray-100">
-              {student.imageUrl ? (
+              {imageUrl ? (
                 <img
-                  src={student.imageUrl}
+                  src={imageUrl}
                   alt="Student Photo"
                   className="object-cover w-full h-full"
                 />
-              ) : student.genderStatus === 0 ? (
-                <img src="/assets/male.jpg" alt="Male" className="w-12 h-12" />
               ) : student.genderStatus === 1 ? (
+                <img src="/assets/male.jpg" alt="Male" className="w-12 h-12" />
+              ) : student.genderStatus === 2 ? (
                 <img src="/assets/female.jpg" alt="Female" className="w-12 h-12" />
               ) : (
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">

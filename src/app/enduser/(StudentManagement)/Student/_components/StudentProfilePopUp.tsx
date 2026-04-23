@@ -19,9 +19,9 @@ const ENROLLMENT_STATUS_MAP: Record<number, { label: string; color: string }> = 
 }
 
 const GENDER_STATUS_MAP: Record<number, string> = {
-  0: 'Male',
-  1: 'Female',
-  2: 'Other',
+  1: 'Male',
+  2: 'Female',
+  3: 'Other',
 }
 
 const STUDENT_STATUS_MAP: Record<number, { label: string; color: string }> = {

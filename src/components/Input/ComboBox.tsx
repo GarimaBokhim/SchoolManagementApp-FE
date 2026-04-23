@@ -58,17 +58,23 @@ function InnerCombobox<T>(
 ) {
   const [query, setQuery] = useState("");
   const [isActive, setIsActive] = useState(false);
+
   const filteredOptions =
     query === ""
       ? options
       : options?.filter((option) =>
           getLabel(option).toLowerCase().includes(query.toLowerCase())
         );
+
+  // ✅ THE FIX: sync display text whenever `selected` changes (including on load)
   useEffect(() => {
-    if (!selected) {
-      setQuery(""); // clears the input when parent clears selected
+    if (selected) {
+      setQuery(getLabel(selected));
+    } else {
+      setQuery("");
     }
   }, [selected]);
+
   return (
     <div className="w-full">
       <Combobox
@@ -92,8 +98,9 @@ function InnerCombobox<T>(
           <div className="relative mt-1">
             <div className="relative items-center flex">
               <ComboboxInput
-                {...(isFiler ? { value: query } : {})}
-                className={`w-full p-2  py-1.5 border  rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white  ${
+                // ✅ THE FIX: always controlled via query, not just when isFiler is true
+                value={query}
+                className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white ${
                   form?.formState?.errors?.[name]
                     ? "border-red-500"
                     : "border-gray-400"
@@ -112,7 +119,13 @@ function InnerCombobox<T>(
                     setIsActive(true);
                   }
                 }}
-                onBlur={() => setIsActive(false)}
+                onBlur={() => {
+                  setIsActive(false);
+                  // ✅ restore label if user blurs without selecting
+                  if (selected) {
+                    setQuery(getLabel(selected));
+                  }
+                }}
                 onChange={(e) => {
                   setQuery(e.target.value);
                 }}
@@ -121,7 +134,7 @@ function InnerCombobox<T>(
               />
               <label
                 htmlFor={name}
-                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[1.2em] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[1.1rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200  dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500  transition-all pointer-events-none ${
+                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[1.2em] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[1.1rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500 transition-all pointer-events-none ${
                   value || (form ? form.watch(name) : value)
                     ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
                     : ""
@@ -142,12 +155,11 @@ function InnerCombobox<T>(
                     } ${dropDownWidth}`}
                   >
                     {filteredOptions.map((option, index) => (
-                    <ComboboxOption
-                      key={`${getValue(option)}-${index}`}
-                      value={option}
-                      className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
-                    >
-
+                      <ComboboxOption
+                        key={`${getValue(option)}-${index}`}
+                        value={option}
+                        className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
+                      >
                         {({ active }) => (
                           <div
                             className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${
