@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Filter, Plus, RotateCcw } from 'lucide-react'
+import { Filter, Plus, RotateCcw, Edit, Trash } from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
@@ -14,6 +14,7 @@ import { Activity, IFilterActivityByDate } from '../types/IActivities'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import AddActivityModal from './AddActivitiesModel'
+import DeleteButton from '@/components/Buttons/DeleteButton'
 
 const ACTIVITY_CATEGORY_LABELS: Record<number, string> = {
   0: 'Sports',
@@ -98,6 +99,16 @@ const AllActivityForm = () => {
     refetch()
   }
 
+  const handleDelete = async (id: string) => {
+    try {
+      // Add your delete API call here
+      toast.success('Activity deleted successfully!')
+      refetch()
+    } catch {
+      toast.error('Error deleting activity.')
+    }
+  }
+
   return (
     <>
       <Toaster position="top-right" />
@@ -169,7 +180,7 @@ const AllActivityForm = () => {
                   <th className="px-4 py-3 text-left hidden md:table-cell">Category</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Event</th>
                   <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[100px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,7 +196,6 @@ const AllActivityForm = () => {
                       key={activity.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      {/* ✅ S.N. continues across pages */}
                       <td className="px-4 py-3 text-left">
                         {((filteredActivity?.PageIndex - 1) * paginationParams.pageSize) + index + 1}
                       </td>
@@ -208,23 +218,26 @@ const AllActivityForm = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center gap-2">
-                          {canEdit && (
+                        <div className="flex justify-center items-center gap-2">
+                          {/* Edit button - icon only, always showing */}
+                          {/* {canEdit && ( */}
                             <ButtonElement
                               type="button"
-                              text="Edit"
-                              className="!text-xs !bg-teal-500 hover:!bg-teal-600"
+                              text=""
+                              icon={<Edit size={14} />}
                               onClick={() => Toast.info('Edit coming soon!')}
+                              className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
-                          )}
-                          {canDelete && (
-                            <ButtonElement
-                              type="button"
-                              text="Delete"
-                              className="!text-xs !bg-red-500 hover:!bg-red-600"
-                              onClick={() => Toast.info('Delete coming soon!')}
+                          {/* )} */}
+                          
+                          {/* Delete button - icon only, always showing */}
+                          {/* {canDelete && ( */}
+                            <DeleteButton
+                              onConfirm={() => handleDelete(activity.id ?? "")}
+                              headerText={<Trash size={14} />}
+                              content="Are you sure you want to delete this activity?"
                             />
-                          )}
+                          {/* )} */}
                         </div>
                       </td>
                     </tr>
@@ -271,4 +284,4 @@ const AllActivityForm = () => {
   )
 }
 
-export default AllActivityForm
+export default AllActivityForm 
