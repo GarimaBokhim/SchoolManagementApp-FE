@@ -23,10 +23,38 @@ import { useFilterFeeCategoryByDate } from "@/app/enduser/schoolFee/_FeeCategory
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 const GENDER_OPTIONS = [
-  { id: 0, name: "Male" },
-  { id: 1, name: "Female" },
-  { id: 2, name: "Other" },
+  { id: 1, name: "Male" },
+  { id: 2, name: "Female" },
+  { id: 3, name: "Other" },
 ]
+
+const normalizeGenderStatus = (raw: unknown): number => {
+  if (typeof raw === "number") {
+    if (raw >= 1 && raw <= 3) return raw;
+    if (raw >= 0 && raw <= 2) return raw + 1; // legacy 0/1/2 -> 1/2/3
+  }
+  if (typeof raw === "string") {
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === "male") return 1;
+    if (normalized === "female") return 2;
+    if (normalized === "other") return 3;
+    const asNumber = Number(normalized);
+    if (!Number.isNaN(asNumber)) {
+      if (asNumber >= 1 && asNumber <= 3) return asNumber;
+      if (asNumber >= 0 && asNumber <= 2) return asNumber + 1;
+    }
+  }
+  return 1;
+};
+
+const resolveStudentImageUrl = (student: IStudent): string => {
+  const rawPath = (student.imageUrl || (typeof student.studentImg === "string" ? student.studentImg : "") || "").trim();
+  if (!rawPath) return "";
+  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith("blob:")) return rawPath;
+  const base = BASE_URL.replace(/\/+$/, "");
+  const path = rawPath.replace(/^\/+/, "");
+  return base ? `${base}/${path}` : `/${path}`;
+};
 
 type Props = {
   form: UseFormReturn<IStudent>;
@@ -81,12 +109,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   // ✅ FIX 1: Sync selectedParentId whenever StudentData loads
   useEffect(() => {
     if (StudentData) {
+      const normalizedGenderStatus = normalizeGenderStatus(StudentData?.genderStatus);
       form.reset({
         firstName: StudentData?.firstName ?? "",
         middleName: StudentData?.middleName ?? "",
         lastName: StudentData?.lastName ?? "",
         registrationNumber: StudentData?.registrationNumber ?? "",
-        genderStatus: Number(StudentData?.genderStatus) ?? 0,
+        genderStatus: normalizedGenderStatus,
         studentStatus: StudentData?.studentStatus ?? 0,
         dateOfBirth: StudentData?.dateOfBirth ?? new Date(),
         email: StudentData?.email ?? "",
@@ -105,7 +134,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         wardNumber: StudentData?.wardNumber ?? 0,
       });
 
-      setGenderStatus(Number(StudentData.genderStatus) ?? null);
+      setGenderStatus(normalizedGenderStatus);
       setSelectedDistrictId(StudentData.districtId);
       setSelectedProvinceId(StudentData.provinceId);
       setSelectedParentId(StudentData.parentId ?? null);
@@ -114,13 +143,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       setSelectedMunicipalityId(StudentData.municipalityId);
       setSelectedFeeCategoryId(StudentData.feeCategoryId ?? null);
 
-      if (StudentData.imageUrl) {
-        const fullUrl = `${BASE_URL}/${StudentData.imageUrl}`
+      const fullUrl = resolveStudentImageUrl(StudentData);
+      if (fullUrl) {
         setStudentImgPath(fullUrl)
         setExistingImageUrl(fullUrl)
       }
     }
-  }, [StudentData]);
+  }, [StudentData, form]);
 
   // ✅ FIX 2: Re-sync selected parent when allParents data arrives AFTER StudentData
   // This handles the race condition where StudentData loads before allParents
@@ -145,7 +174,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       formData.append('middleName', data.middleName ?? '');
       formData.append('lastName', data.lastName);
       formData.append('registrationNumber', data.registrationNumber);
-      formData.append('genderStatus', String(data.genderStatus ?? 0));
+      formData.append('genderStatus', String(data.genderStatus ?? 1));
       formData.append('studentStatus', String(data.studentStatus ?? 0));
       formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '');
       formData.append('email', data.email);
@@ -265,7 +294,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                  selected={GENDER_OPTIONS.find((g) => g.id === Number(genderStatus)) || null}
 onSelect={(option) => {
   setGenderStatus(option?.id ?? null);
-  form.setValue('genderStatus', option?.id ?? 0);
+  form.setValue('genderStatus', option?.id ?? 1);
 }}
                   getLabel={(o) => o?.name || ""}
                   getValue={(o) => o?.id ?? ""}
