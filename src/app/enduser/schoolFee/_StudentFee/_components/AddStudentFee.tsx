@@ -2,13 +2,14 @@
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, AlertCircle, Info } from "lucide-react";
 import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
 import {
   useAddStudentFee,
   useEditStudentFee,
 } from "../hooks";
 import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
+import { IFeeStructure } from "../../_FeeStructure/types/IFeeStructure";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -21,6 +22,8 @@ import {
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
 import { feeStructureIdToString } from "../utils/studentFeeForm";
+import { useGetFeeStructureByStudent } from "../hooks/uae_feestructure_by_id";
+
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -33,18 +36,12 @@ const FEE_PAID_TYPE_OPTIONS = [
 // Helper to get default times based on feePaidType
 const getDefaultTimes = (feePaidType: number): number => {
   switch (feePaidType) {
-    case 1: // One Time
-      return 1;
-    case 2: // Monthly
-      return 12;
-    case 3: // Quarterly
-      return 4;
-    case 4: // Yearly
-      return 1;
-    case 5: // Semester
-      return 6;
-    default:
-      return 1;
+    case 1: return 1;
+    case 2: return 12;
+    case 3: return 4;
+    case 4: return 1;
+    case 5: return 6;
+    default: return 1;
   }
 };
 
@@ -72,7 +69,6 @@ const createEmptyManualRow = (): IStudentFeeDetails => ({
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
-  /** When set (with `id`), form PATCHes instead of POST. */
   editRecord?: IStudentFee & { id: string };
 };
 
@@ -92,17 +88,34 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [autoRows, setAutoRows] = useState<IStudentFeeDetails[]>([]);
   const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
-  /** Only reset fee structure when the selected student actually changes (not when student list refetches). */
+
   const prevStudentIdRef = useRef<string | null>(null);
-  /** Avoid re-hydrating edit state on every parent re-render with the same record id. */
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
   const { data: allFeeStructures } = useGetAllFeeStructure();
 
+  // ── Fetch fee structure info for selected student ────────────────────────────
+  const {
+    data: feeStructureByStudent,
+    isLoading: isFeeStructureByStudentLoading,
+  } = useGetFeeStructureByStudent(
+    !isEditMode && selectedStudentId ? selectedStudentId : undefined
+  );
+
+  // Derived flags
+  const studentHasNoFeeStructure =
+    !isEditMode &&
+    !!selectedStudentId &&
+    !isFeeStructureByStudentLoading &&
+    feeStructureByStudent &&
+    !feeStructureByStudent.feeStructureId?.trim();
+
+  const studentFeeStructureCategoryName =
+    feeStructureByStudent?.categoryName?.trim() || "";
+
   // Watch discount percentage from form
   const watchedDiscount = form.watch("discountPercentage");
 
-  // Update local state when form discount changes
   useEffect(() => {
     if (watchedDiscount !== undefined && watchedDiscount !== discountPercentage) {
       setDiscountPercentage(watchedDiscount || 0);
@@ -120,22 +133,34 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
       setAutoRows([]);
       return;
     }
-
     const autoPopulated = mapFeeStructureDTOsToDetails(
       feeStructureDetail.feeStructureDTOs,
-      0 // No discount for auto rows
+      0
     );
     setAutoRows(autoPopulated);
   }, [feeStructureDetail, isEditMode]);
+
+  // ── Auto-select fee structure from student's assigned fee structure ──────────
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!feeStructureByStudent) return;
+
+    const fsId = feeStructureByStudent.feeStructureId?.trim();
+    if (fsId) {
+      setSelectedFeeStructureId(fsId);
+      form.setValue("feeStructureId", fsId, { shouldValidate: true });
+    } else {
+      // No fee structure assigned — clear it
+      setSelectedFeeStructureId("");
+      form.setValue("feeStructureId", "");
+    }
+  }, [feeStructureByStudent, isEditMode, form]);
 
   // ── Update manual rows when discount changes ─────────────────────────
   useEffect(() => {
     setManualRows((prev) =>
       prev.map((row) => {
-        const { discountAmount, totalAmount } = calculateRowTotals(
-          row,
-          discountPercentage
-        );
+        const { discountAmount, totalAmount } = calculateRowTotals(row, discountPercentage);
         return { ...row, discountAmount, totalAmount };
       })
     );
@@ -153,16 +178,15 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     onClose();
   };
 
-  // ── Hydrate local UI state when editing (form.reset runs in Edit.tsx like UpdateFeeCategory) ──
+  // ── Hydrate local UI state when editing ──────────────────────────────────────
   useLayoutEffect(() => {
     if (!editRecord?.id) {
       lastHydratedEditIdRef.current = null;
       return;
     }
-    if (lastHydratedEditIdRef.current === editRecord.id) {
-      return;
-    }
+    if (lastHydratedEditIdRef.current === editRecord.id) return;
     lastHydratedEditIdRef.current = editRecord.id;
+
     const fsId = feeStructureIdToString(editRecord.feeStructureId);
     setSelectedStudentId(editRecord.studentId);
     setSelectedClassId(editRecord.classId);
@@ -175,7 +199,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     );
   }, [editRecord]);
 
-  // ── Sync class when student is selected; clear fee fields only when student changes ──
+  // ── Sync class when student is selected ──────────────────────────────────────
   useEffect(() => {
     if (isEditMode) return;
     if (!selectedStudentId) {
@@ -189,10 +213,10 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
     setSelectedClassId(student.classId ?? "");
 
-    if (prevStudentIdRef.current === selectedStudentId) {
-      return;
-    }
+    if (prevStudentIdRef.current === selectedStudentId) return;
     prevStudentIdRef.current = selectedStudentId;
+
+    // Reset fee details when student changes
     setSelectedFeeStructureId("");
     setAutoRows([]);
     setManualRows([]);
@@ -211,59 +235,52 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     if (isEditMode) return;
     if (!selectedFeeStructureId) {
       setAutoRows([]);
-      setManualRows([]);
       form.setValue("studentFeeDetailsDTOs", []);
     }
   }, [selectedFeeStructureId, form, isEditMode]);
 
-  // ── Manual Row Management ────────────────────────────────────────────────────
+  // ── Manual Row Management ─────────────────────────────────────────────────────
   const addManualRow = () => {
-    const newRow = createEmptyManualRow();
-    setManualRows(prev => [...prev, newRow]);
+    setManualRows((prev) => [...prev, createEmptyManualRow()]);
   };
 
   const updateManualRow = (index: number, updates: Partial<IStudentFeeDetails>) => {
-    setManualRows(prev => {
+    setManualRows((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], ...updates };
-      
-      // If feePaidType is being updated, auto-update the times field
       if (updates.feePaidType !== undefined) {
         updated[index].times = getDefaultTimes(updates.feePaidType);
       }
-      
-      // Recalculate totals with current discount
       const { discountAmount, totalAmount } = calculateRowTotals(updated[index], discountPercentage);
       updated[index].discountAmount = discountAmount;
       updated[index].totalAmount = totalAmount;
-      
       return updated;
     });
   };
 
   const removeManualRow = (index: number) => {
-    setManualRows(prev => prev.filter((_, i) => i !== index));
+    setManualRows((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ── Handle discount change ───────────────────────────────────────────────────
+  // ── Handle discount change ────────────────────────────────────────────────────
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     setDiscountPercentage(value);
     form.setValue("discountPercentage", value);
   };
 
-  // ── Prepare final data for submission ────────────────────────────────────────
+  // ── Sync all rows into form ───────────────────────────────────────────────────
   useEffect(() => {
     const allDetails = [...autoRows, ...manualRows];
     form.setValue("studentFeeDetailsDTOs", allDetails);
   }, [autoRows, manualRows, form]);
 
-  // ── Submit ───────────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────────
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
 
     const allDetails = [...autoRows, ...manualRows];
-    
+
     if (allDetails.length === 0) {
       toast.error("Please add at least one fee detail.");
       return;
@@ -276,9 +293,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     }
 
     try {
-      const fsId = feeStructureIdToString(
-        data.feeStructureId as string | string[]
-      );
+      const fsId = feeStructureIdToString(data.feeStructureId as string | string[]);
       const finalData = {
         studentId: data.studentId,
         feeStructureId: fsId,
@@ -311,6 +326,13 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const autoRowsTotal = autoRows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
   const manualRowsTotal = manualRows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
   const grandTotal = autoRowsTotal + manualRowsTotal;
+
+  // ── Resolve display label for the fee structure combobox ─────────────────────
+  const getFeeStructureLabel = (f: IFeeStructure | null): string => {
+    if (!f) return "";
+    const name = f.feeCategoryName?.trim();
+    return name || "Empty Name";
+  };
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
@@ -372,37 +394,70 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
               <input type="hidden" {...form.register("classId")} value={selectedClassId} />
 
-              {/* Fee Structure */}
-              <AppCombobox
-                value={selectedFeeStructureId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Fee Structure (Optional)"
-                name="feeStructureId"
-                form={form}
-                options={allFeeStructures?.Items ?? []}
-                selected={
-                  allFeeStructures?.Items?.find((f) => {
-                    const fid = f.id ?? (f as { Id?: string }).Id ?? "";
-                    return String(fid) === String(selectedFeeStructureId);
-                  }) ?? null
-                }
-                onSelect={(f) => {
-                  const id = f?.id ?? (f as { Id?: string }).Id ?? "";
-                  setSelectedFeeStructureId(id);
-                  form.setValue("feeStructureId", id, { shouldValidate: true });
-                  setManualRows([]);
-                  form.setValue("studentFeeDetailsDTOs", []);
-                  setAutoRows([]);
-                }}
-                getLabel={(f) => {
-                  if (!f) return "";
-                  return f.feeCategoryName?.trim() ? f.feeCategoryName : "Empty Fee Structure";
-                }}
-                getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
-              />
+              {/* Fee Structure — auto-selected from student's assigned structure */}
+              <div className="space-y-1">
+                <AppCombobox
+                  value={selectedFeeStructureId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Fee Structure (Optional)"
+                  name="feeStructureId"
+                  form={form}
+                  options={allFeeStructures?.Items ?? []}
+                  selected={
+                    allFeeStructures?.Items?.find((f) => {
+                      const fid = f.id ?? (f as { Id?: string }).Id ?? "";
+                      return String(fid) === String(selectedFeeStructureId);
+                    }) ?? null
+                  }
+                  onSelect={(f) => {
+                    const id = f?.id ?? (f as { Id?: string }).Id ?? "";
+                    setSelectedFeeStructureId(id);
+                    form.setValue("feeStructureId", id, { shouldValidate: true });
+                    setManualRows([]);
+                    form.setValue("studentFeeDetailsDTOs", []);
+                    setAutoRows([]);
+                  }}
+                  getLabel={getFeeStructureLabel}
+                  getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
+                />
 
-              {/* Discount Percentage - Only applies to custom rows */}
+                {/* ── Status indicators shown below the combobox ── */}
+
+                {/* Loading indicator */}
+                {!isEditMode && selectedStudentId && isFeeStructureByStudentLoading && (
+                  <p className="flex items-center gap-1.5 text-xs text-gray-400 animate-pulse px-1">
+                    <Info size={12} />
+                    Fetching fee structure for student...
+                  </p>
+                )}
+
+                {/* No fee structure assigned warning */}
+                {studentHasNoFeeStructure && (
+                  <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2 mt-1">
+                    <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
+                    <p className="text-xs text-amber-700 dark:text-amber-300 leading-tight">
+                      No fee structure is assigned to this student. You can still add custom fee rows below.
+                    </p>
+                  </div>
+                )}
+
+                {/* Fee structure found — show category name */}
+                {!isEditMode &&
+                  selectedStudentId &&
+                  !isFeeStructureByStudentLoading &&
+                  feeStructureByStudent?.feeStructureId?.trim() && (
+                    <p className="flex items-center gap-1.5 text-xs text-teal-600 dark:text-teal-400 px-1">
+                      <Info size={12} />
+                      Auto-selected:{" "}
+                      <span className="font-semibold">
+                        {studentFeeStructureCategoryName || "Empty Name"}
+                      </span>
+                    </p>
+                  )}
+              </div>
+
+              {/* Discount Percentage */}
               <InputElement
                 label="Discount (%) for Custom Rows"
                 form={form}
@@ -419,7 +474,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                   Fee Details
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   {isFeeStructureLoading && (
                     <span className="text-sm text-gray-400 animate-pulse">
                       Loading fee structure...
@@ -453,7 +508,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                   </thead>
                   <tbody>
                     {isFeeStructureLoading ? (
-                      // Skeleton rows while fetching
                       [1, 2, 3].map((i) => (
                         <tr key={i} className="border-t border-gray-100 dark:border-gray-600">
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((j) => (
@@ -465,13 +519,13 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                       ))
                     ) : (
                       <>
-                        {/* Auto-populated Rows (Read-only, no discount applied) */}
+                        {/* Auto-populated Rows (Read-only) */}
                         {autoRows.map((detail, index) => {
                           const feeTypeName =
-                            allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ?? 
-                            (detail.feeTypeId || '—');
+                            allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ??
+                            (detail.feeTypeId || "—");
                           const paidTypeLabel =
-                            FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? '—';
+                            FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? "—";
 
                           return (
                             <tr
@@ -493,18 +547,12 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                               <td className="px-3 py-3 text-right text-gray-800 dark:text-gray-100">
                                 {detail.times}
                               </td>
-                              <td className="px-3 py-3 text-right text-gray-400">
-                                —
-                              </td>
-                              <td className="px-3 py-3 text-right text-gray-400">
-                                —
-                              </td>
+                              <td className="px-3 py-3 text-right text-gray-400">—</td>
+                              <td className="px-3 py-3 text-right text-gray-400">—</td>
                               <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
                                 {detail.totalAmount.toFixed(2)}
                               </td>
-                              <td className="px-3 py-3 text-center">
-                                {/* No delete button for auto rows */}
-                              </td>
+                              <td className="px-3 py-3 text-center" />
                             </tr>
                           );
                         })}
@@ -512,7 +560,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                         {/* Custom Rows (Editable, with discount applied) */}
                         {manualRows.map((detail, index) => {
                           const actualIndex = autoRows.length + index;
-                          
                           return (
                             <tr
                               key={`manual-${index}`}
@@ -521,8 +568,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                               <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
                                 {actualIndex + 1}
                               </td>
-                              
-                              {/* Fee Type - Editable */}
+
+                              {/* Fee Type */}
                               <td className="px-3 py-3">
                                 <select
                                   className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
@@ -537,16 +584,13 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                                   ))}
                                 </select>
                               </td>
-                              
-                              {/* Paid Type - Editable */}
+
+                              {/* Paid Type */}
                               <td className="px-3 py-3">
                                 <select
                                   className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
                                   value={detail.feePaidType}
-                                  onChange={(e) => {
-                                    const value = Number(e.target.value);
-                                    updateManualRow(index, { feePaidType: value });
-                                  }}
+                                  onChange={(e) => updateManualRow(index, { feePaidType: Number(e.target.value) })}
                                 >
                                   {FEE_PAID_TYPE_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
@@ -555,8 +599,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                                   ))}
                                 </select>
                               </td>
-                              
-                              {/* Amount - Editable */}
+
+                              {/* Amount */}
                               <td className="px-3 py-3">
                                 <input
                                   type="number"
@@ -567,8 +611,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                                   onChange={(e) => updateManualRow(index, { amount: Number(e.target.value) })}
                                 />
                               </td>
-                              
-                              {/* Times - Editable */}
+
+                              {/* Times */}
                               <td className="px-3 py-3">
                                 <input
                                   type="number"
@@ -578,23 +622,23 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                                   onChange={(e) => updateManualRow(index, { times: Number(e.target.value) })}
                                 />
                               </td>
-                              
-                              {/* Discount Percentage (display only) */}
+
+                              {/* Discount % display */}
                               <td className="px-3 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">
                                 {discountPercentage}%
                               </td>
-                              
-                              {/* Discount Amount */}
+
+                              {/* Discount Rs. */}
                               <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
-                                {detail.discountAmount?.toFixed(2) || '0.00'}
+                                {detail.discountAmount?.toFixed(2) || "0.00"}
                               </td>
-                              
-                              {/* Total Amount */}
+
+                              {/* Total */}
                               <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
-                                {detail.totalAmount?.toFixed(2) || '0.00'}
+                                {detail.totalAmount?.toFixed(2) || "0.00"}
                               </td>
-                              
-                              {/* Delete Button */}
+
+                              {/* Delete */}
                               <td className="px-3 py-3 text-center">
                                 <button
                                   type="button"
@@ -609,11 +653,13 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                           );
                         })}
 
-                        {/* No rows message */}
+                        {/* Empty state */}
                         {autoRows.length === 0 && manualRows.length === 0 && (
-                          <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
-                            <td colSpan={9} className="px-3 py-8 text-center">
-                              No fee details added. Please select a fee structure or add custom rows.
+                          <tr className="border-t border-gray-100 dark:border-gray-600">
+                            <td colSpan={9} className="px-3 py-8 text-center text-gray-400 dark:text-gray-500">
+                              {studentHasNoFeeStructure
+                                ? "This student has no fee structure assigned. Add custom rows using the button above."
+                                : "No fee details added. Please select a fee structure or add custom rows."}
                             </td>
                           </tr>
                         )}
@@ -621,19 +667,19 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     )}
                   </tbody>
 
-             {/* Grand Total footer */}
-{(autoRows.length > 0 || manualRows.length > 0) && (
-  <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
-    <tr>
-      <td colSpan={7} className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-base">
-        Grand Total:
-      </td>
-      <td colSpan={2} className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white text-base">
-        Rs. {grandTotal.toFixed(2)}
-      </td>
-    </tr>
-  </tfoot>
-)}
+                  {/* Grand Total footer */}
+                  {(autoRows.length > 0 || manualRows.length > 0) && (
+                    <tfoot className="bg-gray-50 dark:bg-gray-600 border-t-2 border-gray-200 dark:border-gray-500">
+                      <tr>
+                        <td colSpan={7} className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-200 text-base">
+                          Grand Total:
+                        </td>
+                        <td colSpan={2} className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white text-base">
+                          Rs. {grandTotal.toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
             </div>

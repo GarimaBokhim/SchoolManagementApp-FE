@@ -16,6 +16,77 @@ const StudentEndPoints = {
 const queryKey = "Students";
 const filterQueryKey = "filteredStudent";
 
+const normalizeGenderStatus = (raw: unknown): number => {
+  if (typeof raw === "number") {
+    if (raw >= 1 && raw <= 3) return raw;
+    if (raw >= 0 && raw <= 2) return raw + 1;
+  }
+  if (typeof raw === "string") {
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === "male") return 1;
+    if (normalized === "female") return 2;
+    if (normalized === "other") return 3;
+    const asNumber = Number(normalized);
+    if (!Number.isNaN(asNumber)) {
+      if (asNumber >= 1 && asNumber <= 3) return asNumber;
+      if (asNumber >= 0 && asNumber <= 2) return asNumber + 1;
+    }
+  }
+  return 1;
+};
+
+const normalizeStudent = (data: unknown): IStudent => {
+  const raw = data as Record<string, unknown>;
+  return {
+    ...(data as IStudent),
+    id: String(raw.id ?? raw.Id ?? ""),
+    feeCategoryId: String(raw.feeCategoryId ?? raw.FeeCategoryId ?? ""),
+    firstName: String(raw.firstName ?? raw.FirstName ?? ""),
+    middleName: String(raw.middleName ?? raw.MiddleName ?? ""),
+    lastName: String(raw.lastName ?? raw.LastName ?? ""),
+    registrationNumber: String(
+      raw.registrationNumber ?? raw.RegistrationNumber ?? ""
+    ),
+    genderStatus: normalizeGenderStatus(
+      raw.genderStatus ?? raw.GenderStatus ?? raw.gender ?? raw.Gender
+    ),
+    studentStatus: Number(
+      raw.studentStatus ?? raw.StudentStatus ?? raw.status ?? raw.Status ?? 0
+    ),
+    dateOfBirth: (raw.dateOfBirth ?? raw.DateOfBirth ?? "") as Date,
+    email: String(raw.email ?? raw.Email ?? ""),
+    phoneNumber: String(raw.phoneNumber ?? raw.PhoneNumber ?? ""),
+    studentImg: (raw.studentImg ?? raw.StudentImg ?? "") as string,
+    imageUrl: String(raw.imageUrl ?? raw.ImageUrl ?? ""),
+    address: String(raw.address ?? raw.Address ?? ""),
+    enrollmentDate: (raw.enrollmentDate ?? raw.EnrollmentDate ?? "") as Date,
+    parentId: String(raw.parentId ?? raw.ParentId ?? ""),
+    classSectionId: String(raw.classSectionId ?? raw.ClassSectionId ?? ""),
+    classId: String(raw.classId ?? raw.ClassId ?? ""),
+    provinceId: Number(raw.provinceId ?? raw.ProvinceId ?? 0),
+    districtId: Number(raw.districtId ?? raw.DistrictId ?? 0),
+    municipalityId: Number(raw.municipalityId ?? raw.MunicipalityId ?? 0),
+    vdcid: Number(raw.vdcid ?? raw.VdcId ?? raw.VDCId ?? 0),
+    wardNumber: Number(raw.wardNumber ?? raw.WardNumber ?? 0),
+    enrollmentStatus: Number(raw.enrollmentStatus ?? raw.EnrollmentStatus ?? 0),
+  };
+};
+
+const normalizeStudentPaginationResponse = (
+  data: IPaginationResponse<IStudent> | unknown
+): IPaginationResponse<IStudent> => {
+  const raw = data as Record<string, unknown>;
+  const itemsRaw = raw.Items ?? raw.items ?? [];
+  const items = Array.isArray(itemsRaw)
+    ? itemsRaw.map((item) => normalizeStudent(item))
+    : [];
+
+  return {
+    ...(data as IPaginationResponse<IStudent>),
+    Items: items,
+  };
+};
+
 type StudentRequest = {
   id?: string;
   firstName: string;
@@ -115,10 +186,10 @@ export const useGetStudentById = (StudentId: string) => {
       if (!StudentId) {
         throw new Error("Id is required to get a Student");
       }
-      const response = await api.get<IStudent>(
+      const response = await api.get<unknown>(
         `${StudentEndPoints.getStudentsById}/${StudentId}`
       );
-      return response.data;
+      return normalizeStudent(response.data);
     },
     enabled: !!StudentId,
     staleTime: 0,
@@ -135,7 +206,7 @@ export const useGetAllStudents = (params?: string) => {
         : `${StudentEndPoints.getAllStudents}`;
       const response = await api.get<IPaginationResponse<IStudent>>(url);
       return (
-        response.data ?? {
+        normalizeStudentPaginationResponse(response.data) ?? {
           data: [],
           PageIndex: 0,
           isPagination: 1,
@@ -154,7 +225,7 @@ export const useFilterStudentByDate = (params?: string) => {
         ? `${StudentEndPoints.filterStudentByDate}${params}`
         : StudentEndPoints.filterStudentByDate;
       const response = await api.get<IPaginationResponse<IStudent>>(url);
-      return response.data;
+      return normalizeStudentPaginationResponse(response.data);
     },
     staleTime: 0,
     retry: false,
@@ -171,7 +242,7 @@ export const useGetStudentByClass = (ClassId: string) => {
       const response = await api.get<IPaginationResponse<IStudent>>(
         `${StudentEndPoints.getStudentsByClass}/${ClassId}?classId=${ClassId}`
       );
-      return response.data;
+      return normalizeStudentPaginationResponse(response.data);
     },
     enabled: !!ClassId,
     staleTime: 0,
