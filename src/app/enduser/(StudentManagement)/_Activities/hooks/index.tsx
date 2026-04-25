@@ -148,15 +148,15 @@ export const useGetAllClasses = () => {
   })
 }
 
-// hooks/index.ts  — add these two hooks
-
+// ── Update & Delete ───────────────────────────────────────────────
 export const useUpdateActivity = () => {
   const queryClient = useQueryClient()
   return useMutation<Activity, Error, AddActivityPayload & { id: string }>({
     mutationFn: async (payload) => {
-      const response = await api.put(
-        `/api/CocurricularActivities/UpdateActivity`,
-        payload
+      const { id, ...body } = payload
+      const response = await api.patch(
+        `/api/CocurricularActivities/UpdateActivity/${id}`,
+        { ...body, id }                       
       )
       return response.data
     },
@@ -174,7 +174,7 @@ export const useDeleteActivity = () => {
   return useMutation<void, Error, string>({
     mutationFn: async (id) => {
       await api.delete(
-        `/api/CocurricularActivities/DeleteActivity?id=${id}`
+        `/api/CocurricularActivities/DeleteActivity/${id}`
       )
     },
     onSuccess: () => {
