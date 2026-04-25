@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Filter, Plus, RotateCcw, Scroll } from 'lucide-react'
+import { Filter, Plus, RotateCcw, Scroll, Edit, Trash } from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
@@ -11,6 +11,8 @@ import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddParticipationModal from './AddParticipationModel'
 import CertificateModal from './ParticipentCertificateModel'
+import EditParticipationModal from './EditParticipationModal'
+import DeleteButton from '@/components/Buttons/DeleteButton'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { IFilterActivityByDate, Participation } from '../../_Activities/types/IActivities'
@@ -19,6 +21,7 @@ import {
   useGetAllActivitiesDropdown,
   useGetAllStudents,
 } from '../../_Activities/hooks'
+import { useDeleteParticipation } from '../hooks'
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
   1: 'First Place',
@@ -62,6 +65,7 @@ const AllParticipationForm = () => {
 
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
+  const [editTarget, setEditTarget] = useState<Participation | null>(null)
   const [certificateTarget, setCertificateTarget] = useState<CertificateTarget | null>(null)
   const [params, setParams] = useState('')
   const formRef = useRef<DateRangeFilterRef>(null)
@@ -77,13 +81,11 @@ const AllParticipationForm = () => {
   const handleSubmitForm = useForm<SearchParam>({ defaultValues: {} })
 
   const { data: filteredParticipation, refetch, isLoading } = useFilterParticipation(fullQuery)
+  const { mutateAsync: deleteParticipation } = useDeleteParticipation()
 
-  // ✅ useGetAllActivitiesDropdown fetches from /api/CocurricularActivities/Activity
-  // which returns { id, name } — correct endpoint
   const { data: activities = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
   const { data: students = [] } = useGetAllStudents()
 
-  // ✅ map id → name correctly
   const activityMap = Object.fromEntries(activities.map((a) => [a.id, a.name]))
   const studentMap = Object.fromEntries(
     students.map((s) => [
@@ -130,6 +132,21 @@ const AllParticipationForm = () => {
     })
   }
 
+  const handleDelete = async (id: string) => {
+    await toast.promise(
+      deleteParticipation(id),
+      {
+        loading: 'Deleting participation...',
+        success: 'Participation deleted successfully!',
+        error: 'Error deleting participation.',
+      }
+    )
+  }
+
+  const handleEditClick = (participation: Participation) => {
+    setEditTarget(participation)
+  }
+
   return (
     <>
       <Toaster position="top-right" />
@@ -147,7 +164,7 @@ const AllParticipationForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {canAdd && (
+              {/* {canAdd && ( */}
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
@@ -155,7 +172,7 @@ const AllParticipationForm = () => {
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
-              )}
+              {/* )} */}
             </div>
           </div>
 
@@ -201,7 +218,7 @@ const AllParticipationForm = () => {
                   <th className="px-4 py-3 text-left hidden md:table-cell">Activity</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Award Position</th>
                   <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-center w-[220px]">Actions</th>
+                  <th className="px-4 py-3 text-center w-[120px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,7 +241,6 @@ const AllParticipationForm = () => {
                         {studentMap[p.studentId] ?? p.studentId}
                       </td>
                       <td className="px-4 py-3 text-left hidden md:table-cell">
-                        {/* ✅ show name from map, fallback to 'Unknown Activity' */}
                         {activityMap[p.activityId] ?? 'Unknown Activity'}
                       </td>
                       <td className="px-4 py-3 text-left hidden lg:table-cell">
@@ -252,22 +268,23 @@ const AllParticipationForm = () => {
                             <Scroll size={14} />
                           </button>
 
-                          {canEdit && (
+                          {/* {canEdit && ( */}
                             <ButtonElement
                               type="button"
-                              text="Edit"
-                              className="!text-xs !bg-teal-500 hover:!bg-teal-600"
-                              onClick={() => Toast.info('Edit coming soon!')}
+                              text=""
+                              icon={<Edit size={14} />}
+                              onClick={() => handleEditClick(p)}
+                              className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
-                          )}
-                          {canDelete && (
-                            <ButtonElement
-                              type="button"
-                              text="Delete"
-                              className="!text-xs !bg-red-500 hover:!bg-red-600"
-                              onClick={() => Toast.info('Delete coming soon!')}
+                          {/* )} */}
+                          
+                          {/* {canDelete && ( */}
+                            <DeleteButton
+                              onConfirm={() => handleDelete(p.id)}
+                              headerText={<Trash size={14} />}
+                              content="Are you sure you want to delete this participation?"
                             />
-                          )}
+                          {/* )} */}
                         </div>
                       </td>
                     </tr>
@@ -307,6 +324,20 @@ const AllParticipationForm = () => {
         onClose={() => setAddModal(false)}
         onSuccess={() => {
           setAddModal(false)
+          refetch()
+        }}
+      />
+      <EditParticipationModal
+        visible={!!editTarget}
+        participation={editTarget}
+        students={students.map((s) => ({
+          id: s.id,
+          label: [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
+        }))}
+        activities={activities.map((a) => ({ id: a.id, label: a.name }))}
+        onClose={() => setEditTarget(null)}
+        onSuccess={() => {
+          setEditTarget(null)
           refetch()
         }}
       />
