@@ -439,6 +439,83 @@ enum NameOfMonthsEnum {
 }
 ```
 
+**Filter Interface (`IFilterSchoolItem`):**
+```ts
+{ startDate: string; endDate: string; name: string; }
+```
+
+---
+
+### 9.3 Contributor
+
+| Hook | Method | Endpoint | UI Usage |
+|------|--------|----------|---------|
+| `useGetAllContributors` | `GET` | `/api/SchoolAssetsControllers/all-Contributors` | Contributor list |
+| `useGetContributorById` | `GET` | `/api/SchoolAssetsControllers/ContributorsBy/{id}` | Edit prefill |
+| `useAddContributor` | `POST` | `/api/SchoolAssetsControllers/AddContributors` | Add contributor form |
+| `useEditContributor` | `PATCH` | `/api/SchoolAssetsControllers/UpdateContributors/{id}` | Edit contributor |
+| `useRemoveContributor` | `DELETE` | `/api/SchoolAssetsControllers/DeleteContributors/{Id}` | Delete |
+| `useFilterContributorByDate` | `GET` | `/api/SchoolAssetsControllers/FilterContributors` | Date filter |
+
+**Interface (`IContributor`):**
+```ts
+{
+  id?: string;
+  name: string;
+  organization: string;
+  contactNumber: string;
+  email: string;
+}
+```
+
+---
+
+### 9.4 School Item History
+
+| Hook | Method | Endpoint | UI Usage |
+|------|--------|----------|---------|
+| `useGetAllHistory` | `GET` | `/api/SchoolAssetsControllers/all-History` | History list |
+| `useGetHistoryById` | `GET` | `/api/SchoolAssetsControllers/HistoryBy/{id}` | Edit prefill |
+| `useAddHistory` | `POST` | `/api/SchoolAssetsControllers/AddSchoolItemHistory` | Add history record |
+| `useEditHistory` | `PATCH` | `/api/SchoolAssetsControllers/UpdateHistory/{id}` | Edit history |
+| `useRemoveHistory` | `DELETE` | `/api/SchoolAssetsControllers/DeleteHistory/{Id}` | Delete |
+| `useFilterHistoryByDate` | `GET` | `/api/SchoolAssetsControllers/FilterSchoolItemsHistory` | Date filter |
+
+**Interface (`IHistory`):**
+```ts
+{
+  id?: string;
+  schoolItemId: string;
+  previousStatus: number;
+  currentStatus: number;
+  remarks: string;
+}
+```
+
+---
+
+### 9.5 Assets Report
+
+| Hook | Method | Endpoint | UI Usage |
+|------|--------|----------|---------|
+| `useGetAssetsReportByFyId` | `GET` | `/api/SchoolAssetsControllers/SchoolAssetsReport` | Assets report view |
+
+**Response Interface (`IAssetsReportResponse`):**
+```ts
+{ Items: IAssetsReportItem[]; }
+```
+
+**Interface (`IAssetsReportItem`):**
+```ts
+{
+  contributorName: string;
+  fiscalYearName: string;
+  totalEstimatedValue: number;
+  totalItemsCount: number;
+  itemsName: string;
+}
+```
+
 ---
 
 ## 10. Enduser - Notice Module
@@ -474,39 +551,114 @@ interface IPublish { noticeId: string; }
 |------|--------|----------|----------|
 | `useGetPartiesDetails` | `GET` | `/api/Report/FilterPartyStatement` | Ledger statement report |
 
+**Interface (`ILedgerStatementDetails`):**
+```ts
+{
+  dateTime: string;
+  billNumber: string;
+  transactions: string;
+  debitAmount: number;
+  amount: number;
+  creditAmount: number;
+  affectedLedgerId: string;
+  transactionId: string;
+  paymentMethodId: string;
+  referenceNumber: string;
+}
+```
+
+**Filter Interface (`IFilterLedgerDetailsByDate`):**
+```ts
+{ endDate: string; startDate: string; partyId: string; }
+```
+
+---
+
 ### 11.2 Trial Balance
 
 | Hook | Method | Endpoint | UI Usage |
 |------|--------|----------|----------|
 | `useGetTrialBalance` | `GET` | `/api/Report/GetTrialBalance` | Trial balance report |
 
+**Interface (`ITrialBalance`):**
+```ts
+{
+  masterId: string;
+  debitAmount: number;
+  creditAmount: number;
+  ledgerGroupLevels: ILedgerGroupLevels[];
+}
+```
+
+**Interface (`ILedgerGroupLevels`):**
+```ts
+{
+  subLedgerGroupId: string;
+  debitAmount: number;
+  creditAmount: number;
+  ledgersLevels: ILedgerLevels[];
+}
+```
+
+**Interface (`ILedgerLevels`):**
+```ts
+{ ledgerId: string; creditAmount: number; debitAmount: number; }
+```
+
+---
+
 ### 11.3 Payment Statement
 
-> Uses hooks from the Finance module (`useGetStudentFeesummary`).
+| Hook | Method | Endpoint | UI Usage |
+|------|--------|----------|----------|
+| `useGetPaymentDetailReport` | `GET` | `/api/SchoolReportsControllers/PaymentDetailsReport` | Payment detail report |
+| `useGetPaymentStatements` | `GET` | `/api/SchoolReportsControllers/PaymentStatements?studentId=` | Student payment statement |
+
+**Interface (`IPaymentDetailReport`):**
+```ts
+{
+  studentName: string;
+  totalAmount: number;
+  paidAmount: number;
+  discountAmount: number;
+  dueAmount: number;
+}
+```
+
+**Interface (`IPaymentStatement`):**
+```ts
+{
+  schoolId: string;
+  studentId: string;
+  date: string;
+  receiptNumber?: string;
+  debitAmount: number;
+  creditAmount: number;
+  adjustment: number;
+  balance: number;
+  remarks: string;
+}
+```
+
+---
 
 ### 11.4 Attendance Report
 
-> Uses hooks from Student Attendance module (`useGetAttendanceReport`).
+> Uses hooks from Student Attendance module (`useGetAttendanceReport`, `useGetAttendenceCount`).
+> See [Part 1 → Section 4.4 Student Attendance](./API_DOCUMENTATION_PART1.md#44-student-attendance) for full details.
 
 ---
 
 ## 12. Teacher Module
 
-### 12.1 Teacher → Exam
+The Teacher module reuses the same backend API endpoints as the Enduser module. Below is the mapping:
 
-> Mirrors the Enduser Exam module with the same API endpoints under `/api/Academics/`.
-
-### 12.2 Teacher → Exam Result
-
-> Mirrors the Enduser Exam Result module with the same API endpoints under `/api/Academics/`.
-
-### 12.3 Teacher → Student
-
-> Mirrors the Enduser Student module with the same API endpoints under `/api/Student/`.
-
-### 12.4 Teacher → Parent
-
-> Mirrors the Enduser Parent module with the same API endpoints under `/api/Student/`.
+| Teacher SubModule | Reused API Controller | Same Endpoints As |
+|---|---|---|
+| Teacher → Exam | `/api/Academics/` | [Enduser → Academics → Exam (Part 1, §3.3)](./API_DOCUMENTATION_PART1.md#33-exam) |
+| Teacher → Exam Result | `/api/Academics/` | [Enduser → Academics → Exam Result (Part 1, §3.4)](./API_DOCUMENTATION_PART1.md#34-exam-result) |
+| Teacher → Student | `/api/Student/` | [Enduser → Student Management → Student (Part 1, §4.1)](./API_DOCUMENTATION_PART1.md#41-student) |
+| Teacher → Parent | `/api/Student/` | [Enduser → Student Management → Parent (Part 1, §4.2)](./API_DOCUMENTATION_PART1.md#42-parent) |
 
 ---
 
