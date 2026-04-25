@@ -19,9 +19,16 @@ import { IFilterActivityByDate, Participation } from '../../_Activities/types/IA
 import {
   useFilterParticipation,
   useGetAllActivitiesDropdown,
-  useGetAllStudents,
 } from '../../_Activities/hooks'
 import { useDeleteParticipation } from '../hooks'
+import { useGetAllStudents } from '../../Student/hooks'
+
+type StudentItem = {
+  id: string
+  firstName: string
+  middleName: string
+  lastName: string
+}
 
 const AWARD_POSITION_LABELS: Record<number, string> = {
   1: 'First Place',
@@ -82,13 +89,15 @@ const AllParticipationForm = () => {
 
   const { data: filteredParticipation, refetch, isLoading } = useFilterParticipation(fullQuery)
   const { mutateAsync: deleteParticipation } = useDeleteParticipation()
-
   const { data: activities = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
-  const { data: students = [] } = useGetAllStudents()
+
+  // ✅ Student/hooks returns IPaginationResponse — extract Items
+  const { data: studentsData, isLoading: studentsLoading } = useGetAllStudents()
+  const students: StudentItem[] = ((studentsData as any)?.Items ?? []) as StudentItem[]
 
   const activityMap = Object.fromEntries(activities.map((a) => [a.id, a.name]))
   const studentMap = Object.fromEntries(
-    students.map((s) => [
+    students.map((s: StudentItem) => [
       s.id,
       [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
     ])
@@ -126,8 +135,8 @@ const AllParticipationForm = () => {
 
   const handleGenerateCertificate = (p: Participation) => {
     setCertificateTarget({
-      studentName: studentMap[p.studentId] ?? String(p.studentId),
-      activityName: activityMap[p.activityId] ?? String(p.activityId),
+      studentName: studentMap[p.studentId] ?? p.studentId,
+      activityName: activityMap[p.activityId] ?? 'Unknown Activity',
       awardPosition: p.awardPosition,
     })
   }
@@ -222,7 +231,7 @@ const AllParticipationForm = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLoading || activitiesLoading ? (
+                {isLoading || activitiesLoading || studentsLoading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
                       Loading Participations...
@@ -277,7 +286,7 @@ const AllParticipationForm = () => {
                               className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
                           {/* )} */}
-                          
+
                           {/* {canDelete && ( */}
                             <DeleteButton
                               onConfirm={() => handleDelete(p.id)}
@@ -327,10 +336,11 @@ const AllParticipationForm = () => {
           refetch()
         }}
       />
+
       <EditParticipationModal
         visible={!!editTarget}
         participation={editTarget}
-        students={students.map((s) => ({
+        students={students.map((s: StudentItem) => ({
           id: s.id,
           label: [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
         }))}
