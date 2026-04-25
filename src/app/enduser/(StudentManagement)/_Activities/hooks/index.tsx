@@ -147,3 +147,41 @@ export const useGetAllClasses = () => {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+// hooks/index.ts  — add these two hooks
+
+export const useUpdateActivity = () => {
+  const queryClient = useQueryClient()
+  return useMutation<Activity, Error, AddActivityPayload & { id: string }>({
+    mutationFn: async (payload) => {
+      const response = await api.put(
+        `/api/CocurricularActivities/UpdateActivity`,
+        payload
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [activityQueryKey] })
+    },
+    onError: (error) => {
+      console.error('Error updating activity:', error)
+    },
+  })
+}
+
+export const useDeleteActivity = () => {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      await api.delete(
+        `/api/CocurricularActivities/DeleteActivity?id=${id}`
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [activityQueryKey] })
+    },
+    onError: (error) => {
+      console.error('Error deleting activity:', error)
+    },
+  })
+}
