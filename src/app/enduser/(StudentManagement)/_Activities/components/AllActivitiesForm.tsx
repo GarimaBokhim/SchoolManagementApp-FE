@@ -9,12 +9,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import toast, { Toaster } from 'react-hot-toast'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useFilterActivity, useGetAllEvents } from '../hooks'
+import { useFilterActivity, useGetAllEvents, useDeleteActivity } from '../hooks'
 import { Activity, IFilterActivityByDate } from '../types/IActivities'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import AddActivityModal from './AddActivitiesModel'
 import DeleteButton from '@/components/Buttons/DeleteButton'
+import EditActivityModal from './EditActivityModel'
 
 const ACTIVITY_CATEGORY_LABELS: Record<number, string> = {
   0: 'Sports',
@@ -50,6 +51,8 @@ const AllActivityForm = () => {
 
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
+  const [editModal, setEditModal] = useState(false)
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [params, setParams] = useState('')
   const formRef = useRef<DateRangeFilterRef>(null)
   const { handleError, clearError } = useErrorHandler()
@@ -64,9 +67,9 @@ const AllActivityForm = () => {
   const handleSubmitForm = useForm<SearchParam>({ defaultValues: {} })
 
   const { data: filteredActivity, refetch, isLoading } = useFilterActivity(fullQuery)
-
-  // ✅ Event lookup map
   const { data: events = [] } = useGetAllEvents()
+  const { mutateAsync: deleteActivity } = useDeleteActivity()
+
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
   const onSubmit: SubmitHandler<IFilterActivityByDate> = async (formData) => {
@@ -100,13 +103,19 @@ const AllActivityForm = () => {
   }
 
   const handleDelete = async (id: string) => {
-    try {
-      // Add your delete API call here
-      toast.success('Activity deleted successfully!')
-      refetch()
-    } catch {
-      toast.error('Error deleting activity.')
-    }
+    await toast.promise(
+      deleteActivity(id),
+      {
+        loading: 'Deleting activity...',
+        success: 'Activity deleted successfully!',
+        error: 'Error deleting activity.',
+      }
+    )
+  }
+
+  const handleEditClick = (activity: Activity) => {
+    setSelectedActivity(activity)
+    setEditModal(true)
   }
 
   return (
@@ -126,7 +135,7 @@ const AllActivityForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {canAdd && (
+              {/* {canAdd && ( */}
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
@@ -134,7 +143,7 @@ const AllActivityForm = () => {
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
-              )}
+              {/* )} */}
             </div>
           </div>
 
@@ -181,7 +190,7 @@ const AllActivityForm = () => {
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Event</th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-center w-[100px]">Actions</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -219,21 +228,18 @@ const AllActivityForm = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex justify-center items-center gap-2">
-                          {/* Edit button - icon only, always showing */}
                           {/* {canEdit && ( */}
                             <ButtonElement
                               type="button"
                               text=""
                               icon={<Edit size={14} />}
-                              onClick={() => Toast.info('Edit coming soon!')}
+                              onClick={() => handleEditClick(activity)}
                               className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
                           {/* )} */}
-                          
-                          {/* Delete button - icon only, always showing */}
                           {/* {canDelete && ( */}
                             <DeleteButton
-                              onConfirm={() => handleDelete(activity.id ?? "")}
+                              onConfirm={() => handleDelete(activity.id ?? '')}
                               headerText={<Trash size={14} />}
                               content="Are you sure you want to delete this activity?"
                             />
@@ -272,6 +278,7 @@ const AllActivityForm = () => {
         )}
       </div>
 
+      {/* Add Modal */}
       <AddActivityModal
         visible={addModal}
         onClose={() => setAddModal(false)}
@@ -280,8 +287,23 @@ const AllActivityForm = () => {
           refetch()
         }}
       />
+
+      {/* Edit Modal */}
+      <EditActivityModal
+        visible={editModal}
+        activity={selectedActivity}
+        onClose={() => {
+          setEditModal(false)
+          setSelectedActivity(null)
+        }}
+        onSuccess={() => {
+          setEditModal(false)
+          setSelectedActivity(null)
+          refetch()
+        }}
+      />
     </>
   )
 }
 
-export default AllActivityForm 
+export default AllActivityForm
