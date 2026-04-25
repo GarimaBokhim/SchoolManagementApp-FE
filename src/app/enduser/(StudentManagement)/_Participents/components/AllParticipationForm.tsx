@@ -78,9 +78,12 @@ const AllParticipationForm = () => {
 
   const { data: filteredParticipation, refetch, isLoading } = useFilterParticipation(fullQuery)
 
-  const { data: activities = [] } = useGetAllActivitiesDropdown()
+  // ✅ useGetAllActivitiesDropdown fetches from /api/CocurricularActivities/Activity
+  // which returns { id, name } — correct endpoint
+  const { data: activities = [], isLoading: activitiesLoading } = useGetAllActivitiesDropdown()
   const { data: students = [] } = useGetAllStudents()
 
+  // ✅ map id → name correctly
   const activityMap = Object.fromEntries(activities.map((a) => [a.id, a.name]))
   const studentMap = Object.fromEntries(
     students.map((s) => [
@@ -202,7 +205,7 @@ const AllParticipationForm = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
+                {isLoading || activitiesLoading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
                       Loading Participations...
@@ -221,7 +224,8 @@ const AllParticipationForm = () => {
                         {studentMap[p.studentId] ?? p.studentId}
                       </td>
                       <td className="px-4 py-3 text-left hidden md:table-cell">
-                        {activityMap[p.activityId] ?? p.activityId}
+                        {/* ✅ show name from map, fallback to 'Unknown Activity' */}
+                        {activityMap[p.activityId] ?? 'Unknown Activity'}
                       </td>
                       <td className="px-4 py-3 text-left hidden lg:table-cell">
                         {AWARD_POSITION_LABELS[p.awardPosition] ?? `Position ${p.awardPosition}`}
@@ -237,7 +241,6 @@ const AllParticipationForm = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex justify-center items-center gap-2">
-                          {/* Certificate icon button */}
                           <button
                             type="button"
                             title="Generate Certificate"
