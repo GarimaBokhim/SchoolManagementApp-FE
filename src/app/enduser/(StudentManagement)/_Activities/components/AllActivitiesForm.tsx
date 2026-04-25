@@ -135,7 +135,7 @@ const AllActivityForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {canAdd && (
+              {/* {canAdd && ( */}
                 <ButtonElement
                   icon={<Plus size={24} />}
                   type="button"
@@ -143,7 +143,7 @@ const AllActivityForm = () => {
                   onClick={() => setAddModal(true)}
                   className="!text-md !font-bold"
                 />
-              )}
+              {/* )} */}
             </div>
           </div>
 
@@ -190,7 +190,7 @@ const AllActivityForm = () => {
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Event</th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-center w-[100px]">Actions</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -228,7 +228,7 @@ const AllActivityForm = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex justify-center items-center gap-2">
-                          {canEdit && (
+                          {/* {canEdit && ( */}
                             <ButtonElement
                               type="button"
                               text=""
@@ -236,14 +236,14 @@ const AllActivityForm = () => {
                               onClick={() => handleEditClick(activity)}
                               className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
-                          )}
-                          {canDelete && (
+                          {/* )} */}
+                          {/* {canDelete && ( */}
                             <DeleteButton
                               onConfirm={() => handleDelete(activity.id ?? '')}
                               headerText={<Trash size={14} />}
                               content="Are you sure you want to delete this activity?"
                             />
-                          )}
+                          {/* )} */}
                         </div>
                       </td>
                     </tr>
