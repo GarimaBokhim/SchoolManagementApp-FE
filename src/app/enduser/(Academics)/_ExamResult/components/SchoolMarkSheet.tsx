@@ -323,9 +323,9 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
                   ? data.MarksWithGrades.map((m, index) => {
                       const subjectName =
-                        allSubject?.Items.find((i) => i.Id === m.subjectId)?.name ||
-                        m.subjectId ||
-                        '-'
+  allSubject?.Items.find((i) => (i.Id ?? i.id) === m.subjectId)?.name ||
+  m.subjectId ||
+  '-'
                       const gradePoint =
                         m.GPA !== undefined && m.GPA !== null
                           ? m.GPA

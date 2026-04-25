@@ -47,7 +47,9 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
         descriptions: activity.descriptions,
         activityCategory: activity.activityCategory,
         eventId: activity.eventId,
-        classIds: activity.classIds,
+        classIds: activity.classIds ?? [],
+        // startTime, endTime, activityDate are not in Activity type
+        // so we leave them empty for user to fill
         startTime: '',
         endTime: '',
         activityDate: '',
@@ -95,7 +97,8 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
@@ -182,9 +185,12 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                 </label>
                 <input
                   type="time"
-                  {...register('startTime', { required: 'Start time required' })}
+                  {...register('startTime', { required: 'Start time is required' })}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
+                {errors.startTime && (
+                  <p className="text-red-500 text-xs mt-1">{errors.startTime.message}</p>
+                )}
               </div>
 
               {/* End Time */}
@@ -194,9 +200,12 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                 </label>
                 <input
                   type="time"
-                  {...register('endTime', { required: 'End time required' })}
+                  {...register('endTime', { required: 'End time is required' })}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
+                {errors.endTime && (
+                  <p className="text-red-500 text-xs mt-1">{errors.endTime.message}</p>
+                )}
               </div>
 
               {/* Classes (multi-select) */}
@@ -219,6 +228,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                   <p className="text-xs text-gray-400 mt-1">Hold Ctrl / Cmd to select multiple</p>
                 </div>
               )}
+
             </div>
 
             {/* Actions */}
