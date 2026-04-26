@@ -248,12 +248,11 @@ const AllLeadsForm = () => {
     setConversionData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleConvertSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedLead) return
-    const success = await handleConvert(selectedLead, conversionData)
-    if (success) setShowConvertModal(false)
-  }
+const handleConvertSubmit = async (data: ConvertToApplicantPayload) => {
+  if (!selectedLead) return
+  const success = await handleConvert(selectedLead, data)
+  if (success) setShowConvertModal(false)
+}
 
   const handleSearch = (searchParams: SearchParam) => {
     searchParams.pageSize = paginationParams.pageSize

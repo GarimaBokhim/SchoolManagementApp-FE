@@ -1,5 +1,4 @@
 // src/app/crm/applications/leads/types/ILeads.ts
-
 export interface Lead {
   id: string;
   userId: string;
@@ -75,7 +74,6 @@ export interface SearchParam {
   isPagination: boolean;
 }
 
-// ── Updated payload matching new API schema ──
 export interface ConvertToApplicantPayload {
   userId: string;
   passportNo: string;
@@ -84,7 +82,6 @@ export interface ConvertToApplicantPayload {
   courseId: string;
 }
 
-// ── Form data (without userId) ──
 export interface ConvertToApplicantData {
   passportNo: string;
   countryId: string;
@@ -92,13 +89,13 @@ export interface ConvertToApplicantData {
   courseId: string;
 }
 
-// ── Convert form props ──
+// ✅ onSubmit now receives the payload directly, not a FormEvent
 export interface ConvertToApplicantFormProps {
   selectedLead: SelectedLead;
   conversionData?: ConvertToApplicantData;
   convertingId?: string | null;
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onSubmit?: (e: React.FormEvent) => void;
+  onSubmit?: (data: ConvertToApplicantPayload) => void;
   onClose: () => void;
 }
 
@@ -110,5 +107,5 @@ export interface ConvertToApplicantModalProps {
   conversionData?: ConvertToApplicantData;
   convertingId?: string | null;
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onSubmit?: (e: React.FormEvent) => void;
+  onSubmit?: (data: ConvertToApplicantPayload) => void;
 }
