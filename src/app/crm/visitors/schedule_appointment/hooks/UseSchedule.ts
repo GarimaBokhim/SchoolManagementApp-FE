@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
-import { FlatAppointment, ScheduleResponse } from "../ISchedule";
+import { FlatAppointment, ScheduleResponse } from "../types/ISchedule";
 
 
 export const scheduleQueryKey = "ScheduleAppointments";
