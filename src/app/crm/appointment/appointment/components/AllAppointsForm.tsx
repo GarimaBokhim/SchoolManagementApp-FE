@@ -1,11 +1,16 @@
 "use client";
 
 import { useRef, useState, useMemo } from "react";
-import { Filter, RotateCcw, Plus, X, CalendarDays } from "lucide-react";
+import { Filter, RotateCcw, Plus, CalendarDays } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
-import { useGetAllAppointments, useAddAppointment, useGetAllLeads, useGetAllCounselorDetails } from "../hooks";
+import {
+  useGetAllAppointments,
+  useAddAppointment,
+  useGetAllLeads,
+  useGetAllCounselorDetails,
+} from "../hooks";
 import { Appointment } from "../types/IAppointment";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -16,6 +21,9 @@ import { Toast } from "@/components/Toast/toast";
 import { AppointmentActionMenu } from "./AppointmentActionMenu";
 import { AddAppointmentModal } from "../model/AddAppointmentModel";
 import { AppCombobox } from "@/components/Input/ComboBox";
+import { useGetAllCountries, useGetAllCourses, useGetUniversities } from "@/app/crm/university/_university/hooks";
+import AppointmentDetailModal from "./AppointmentDetailModel";
+
 
 interface FilterFormData {
   search: string;
@@ -86,7 +94,29 @@ const AllAppointmentsForm = () => {
   const addAppointment = useAddAppointment();
   const { handleError, clearError } = useErrorHandler();
 
-  // Build lookup maps id → name
+  // For resolving names in enquiry detail
+  const { data: countries = [] } = useGetAllCountries()
+  const { data: universities = [] } = useGetUniversities()
+  const { data: courses = [] } = useGetAllCourses()
+
+  const countryMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    countries.forEach((c: any) => { map[c.id] = c.name })
+    return map
+  }, [countries])
+
+  const universityMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    universities.forEach((u: any) => { map[u.id] = u.name })
+    return map
+  }, [universities])
+
+  const courseMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    courses.forEach((c: any) => { map[c.id] = c.title })
+    return map
+  }, [courses])
+
   const leadMap = useMemo(() => {
     const map: Record<string, string> = {};
     leads.forEach((l: any) => { map[l.id] = l.fullName; });
@@ -112,19 +142,14 @@ const AllAppointmentsForm = () => {
       ]
         .filter(Boolean)
         .join("&");
-
       const fullQuery = queryParams ? `&${queryParams}` : "";
-
       await toast.promise(
         (async () => {
           setParams(fullQuery);
           setCurrentPage(1);
           await refetch();
         })(),
-        {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
-        }
+        { loading: "Fetching data...", success: "Data fetched successfully!" }
       );
     } catch (error) {
       const errorMsg = handleError(error);
@@ -198,7 +223,7 @@ const AllAppointmentsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
           </div>
         </div>
       </div>
@@ -369,61 +394,20 @@ const AllAppointmentsForm = () => {
           onSubmit={handleAdd}
         />
 
-        {/* View Detail Modal */}
+        {/*  View Detail Modal — now a separate component */}
         {showDetailModal && selectedAppointment && (
-          <div
-            className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-            onClick={() => setShowDetailModal(false)}
-          >
-            <div
-              className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Appointment Details</h2>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <X size={18} className="text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-              <div className="overflow-y-auto px-6 py-4 flex-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
-                    <CalendarDays size={20} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">
-                      {formatDate(selectedAppointment.appointmentDate)}
-                    </p>
-                    <StatusBadge status={selectedAppointment.appointmentStatus} />
-                  </div>
-                </div>
-                {[
-                  { label: "Lead", value: leadMap[selectedAppointment.leadId] || "Unknown" },
-                  { label: "Counselor", value: counselorMap[selectedAppointment.counselorId] || "Unknown" },
-                  { label: "Start Time", value: selectedAppointment.startTime },
-                  { label: "End Time", value: selectedAppointment.endTime },
-                  { label: "Notes", value: selectedAppointment.notes },
-                  { label: "Modified At", value: formatDate(selectedAppointment.modifiedAt) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide sm:w-48 shrink-0">{label}</span>
-                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || "N/A"}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
+          <AppointmentDetailModal
+            appointment={selectedAppointment}
+            leadMap={leadMap}
+            counselorMap={counselorMap}
+            countryMap={countryMap}
+            universityMap={universityMap}
+            courseMap={courseMap}
+            onClose={() => {
+              setShowDetailModal(false)
+              setSelectedAppointment(null)
+            }}
+          />
         )}
 
         {/* Pagination */}

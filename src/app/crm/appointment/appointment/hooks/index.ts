@@ -80,3 +80,17 @@ export const useGetAllCounselorDetails = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useGetLeadEnquiryDetails = (leadId: string) => {
+  return useQuery({
+    queryKey: ['LeadEnquiryDetails', leadId],
+    queryFn: async () => {
+      const response = await api.get(
+        `/api/Enrolments/ShowLeadEnqueryDetails?leadId=${leadId}`
+      )
+      return response.data
+    },
+    enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+  })
+}
