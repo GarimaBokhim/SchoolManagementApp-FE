@@ -18,7 +18,7 @@ import { useFilterEventsByDate, useRemoveEvent } from "../hooks";
 import { IEvents, IfilterEvents } from "../types/IEvents";
 import AddEventForm from "./AddEvents";
 import EditEventForm from "./EditEvents";
-import { AppCombobox } from "@/components/Input/ComboBox"; // ✅ added
+import { AppCombobox } from "@/components/Input/ComboBox";
 
 const AllEventsForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -134,18 +134,17 @@ const AllEventsForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {canAdd && (
-                <ButtonElement
-                  icon={<Plus size={18} />}
-                  type="button"
-                  text="Add New"
-                  onClick={() => setAddModal(true)}
-                />
-              )}
+              {/* Add button - always visible */}
+              <ButtonElement
+                icon={<Plus size={18} />}
+                type="button"
+                text="Add New"
+                onClick={() => setAddModal(true)}
+              />
             </div>
           </div>
 
-          {/*  Updated filter panel matching exam result style */}
+          {/* Filter panel matching exam result style */}
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -247,7 +246,8 @@ const AllEventsForm = () => {
                       <td className="px-4 py-2 text-center">{event.mentor}</td>
                       <td className="px-4 py-2 text-center">
                         <div className="flex gap-2 items-center justify-center">
-                          {canDelete && event.id && (
+                          {/* Delete Button - always visible */}
+                          {event.id && (
                             <DeleteButton
                               onConfirm={async () => {
                                 await deleteEvent.mutateAsync(event.id);
@@ -257,17 +257,17 @@ const AllEventsForm = () => {
                               content="Are you sure you want to delete this Event?"
                             />
                           )}
-                          {canEdit && (
-                            <ButtonElement
-                              icon={<Edit size={14} />}
-                              text=""
-                              type="button"
-                              onClick={() => {
-                                setEditModal(true);
-                                setSelectedEvent(event);
-                              }}
-                            />
-                          )}
+                          
+                          {/* Edit Button - always visible */}
+                          <ButtonElement
+                            icon={<Edit size={14} />}
+                            text=""
+                            type="button"
+                            onClick={() => {
+                              setEditModal(true);
+                              setSelectedEvent(event);
+                            }}
+                          />
                         </div>
                       </td>
                     </tr>
