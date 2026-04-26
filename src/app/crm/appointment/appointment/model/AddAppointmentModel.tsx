@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { X } from 'lucide-react';
+import { X, Save, Calendar, Clock, User, FileText, AlertCircle, Briefcase } from 'lucide-react';
 import { AddAppointmentPayload } from '../types/IAppointment';
 import { useGetAllLeads, useGetAllCounselorDetails } from '../hooks';
 import { AppCombobox } from '@/components/Input/ComboBox';
@@ -15,10 +15,10 @@ enum AppointmentStatus {
 }
 
 const APPOINTMENT_STATUSES = [
-  { value: AppointmentStatus.Scheduled, label: 'Scheduled' },
-  { value: AppointmentStatus.Completed, label: 'Completed' },
-  { value: AppointmentStatus.Cancelled, label: 'Cancelled' },
-  { value: AppointmentStatus.Pending, label: 'Pending' },
+  { id: AppointmentStatus.Scheduled, name: 'Scheduled' },
+  { id: AppointmentStatus.Completed, name: 'Completed' },
+  { id: AppointmentStatus.Cancelled, name: 'Cancelled' },
+  { id: AppointmentStatus.Pending, name: 'Pending' },
 ];
 
 interface FormValues {
@@ -37,8 +37,19 @@ interface AddAppointmentModalProps {
   onSubmit: (payload: AddAppointmentPayload) => Promise<void>;
 }
 
+// Styles matching AddLeadModal
+const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
+  bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
+  focus:ring-2 focus:ring-green-500 focus:border-transparent
+  placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm`
+
+const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`
+
+const sectionHeaderClass = `text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`
+
 export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmentModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [selectedCounselor, setSelectedCounselor] = useState<any>(null);
 
@@ -55,17 +66,34 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
   } = useForm<FormValues>({
     defaultValues: {
       appointmentStatus: AppointmentStatus.Scheduled,
+      leadId: '',
+      counselorId: '',
+      appointmentDate: '',
+      startTime: '',
+      endTime: '',
+      notes: '',
     },
   });
 
   const handleClose = () => {
-    reset();
-    setSelectedLead(null);
-    setSelectedCounselor(null);
-    onClose();
+    if (!isSubmitting) {
+      reset();
+      setSelectedLead(null);
+      setSelectedCounselor(null);
+      setError(null);
+      onClose();
+    }
   };
 
   const onFormSubmit = async (data: FormValues) => {
+    setError(null);
+    
+    // Validate end time is after start time
+    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
+      setError('End time must be after start time');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const appointmentDate = new Date(data.appointmentDate).toISOString();
@@ -81,7 +109,10 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
       reset();
       setSelectedLead(null);
       setSelectedCounselor(null);
+      setError(null);
       onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save appointment');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,213 +127,270 @@ export const AddAppointmentModal = ({ isOpen, onClose, onSubmit }: AddAppointmen
       onClick={handleClose}
     >
       <div
-        className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
+                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+                   max-h-[95vh] md:max-h-[92vh]
+                   rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Add Appointment</h2>
-          <button
-            onClick={handleClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <X size={18} className="text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
+        <fieldset disabled={isSubmitting} className="min-w-0">
 
-        {/* Body */}
-        <div className="overflow-y-auto px-6 py-4 flex-1">
-          <form id="add-appointment-form" onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+                Add New Appointment
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Schedule a consultation or meeting with a lead
+              </p>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleClose} 
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={24} strokeWidth={2} />
+            </button>
+          </div>
 
-            {/* Lead */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Lead <span className="text-red-500">*</span>
-              </label>
-              {leadsLoading ? (
-                <div className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] text-gray-400">
-                  Loading leads...
+          {/* Error */}
+          {error && (
+            <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          <form id="add-appointment-form" onSubmit={handleSubmit(onFormSubmit)}>
+
+            {/* Attendees Section */}
+            <p className={sectionHeaderClass}>
+              Attendees
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-6">
+              {/* Lead Selection */}
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Lead <span className="text-red-500">*</span>
+                </label>
+                {leadsLoading ? (
+                  <div className={`${inputClass} bg-gray-50 dark:bg-gray-800/50 text-gray-400`}>
+                    Loading leads...
+                  </div>
+                ) : (
+                  <Controller
+                    name="leadId"
+                    control={control}
+                    rules={{ required: 'Lead is required' }}
+                    render={({ field }) => (
+                      <AppCombobox
+                        label=""
+                        name="leadId"
+                        form={null}
+                        options={leads}
+                        selected={selectedLead}
+                        dropDownWidth="w-full"
+                        dropdownPositionClass="absolute"
+                        onSelect={(lead) => {
+                          setSelectedLead(lead);
+                          field.onChange(lead?.id ?? '');
+                        }}
+                        onFocus={() => {}}
+                        getLabel={(lead) => lead?.fullName ?? ''}
+                        getValue={(lead) => lead?.id ?? ''}
+                        renderOptionExtra={(lead) => (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {lead?.email}
+                          </div>
+                        )}
+                      />
+                    )}
+                  />
+                )}
+                {errors.leadId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.leadId.message}</p>
+                )}
+              </div>
+
+              {/* Counselor Selection */}
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Counselor <span className="text-red-500">*</span>
+                </label>
+                {counselorsLoading ? (
+                  <div className={`${inputClass} bg-gray-50 dark:bg-gray-800/50 text-gray-400`}>
+                    Loading counselors...
+                  </div>
+                ) : (
+                  <Controller
+                    name="counselorId"
+                    control={control}
+                    rules={{ required: 'Counselor is required' }}
+                    render={({ field }) => (
+                      <AppCombobox
+                        label=""
+                        name="counselorId"
+                        form={null}
+                        options={counselors}
+                        selected={selectedCounselor}
+                        dropDownWidth="w-full"
+                        dropdownPositionClass="absolute"
+                        onSelect={(counselor) => {
+                          setSelectedCounselor(counselor);
+                          field.onChange(counselor?.id ?? '');
+                        }}
+                        onFocus={() => {}}
+                        getLabel={(counselor) => counselor?.fullName ?? ''}
+                        getValue={(counselor) => counselor?.id ?? ''}
+                        renderOptionExtra={(counselor) => (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {counselor?.email}
+                          </div>
+                        )}
+                      />
+                    )}
+                  />
+                )}
+                {errors.counselorId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.counselorId.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Schedule Details Section */}
+            <p className={sectionHeaderClass}>
+              Schedule Details
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
+              {/* Appointment Date */}
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Appointment Date <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="date"
+                    {...register('appointmentDate', { required: 'Date is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
                 </div>
-              ) : (
-                <Controller
-                  name="leadId"
-                  control={control}
-                  rules={{ required: 'Lead is required' }}
-                  render={() => (
-                    <AppCombobox
-                      value={selectedLead?.fullName || ''}
-                      dropDownWidth="w-full"
-                      dropdownPositionClass="absolute"
-                      label=""
-                      name="leadId"
-                      form={null}
-                      options={leads}
-                      selected={selectedLead}
-                      onSelect={(lead) => {
-                        setSelectedLead(lead);
-                        setValue('leadId', lead?.id ?? '', { shouldValidate: true });
-                      }}
-                      onFocus={() => {}}
-                      getLabel={(lead) => lead?.fullName ?? ''}
-                      getValue={(lead) => lead?.id ?? ''}
-                      renderOptionExtra={(lead) => (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {lead.id}
-                        </div>
-                      )}
-                    />
-                  )}
-                />
-              )}
-              {errors.leadId && (
-                <p className="text-xs text-red-500">{errors.leadId.message}</p>
-              )}
-            </div>
+                {errors.appointmentDate && (
+                  <p className="text-xs text-red-500 mt-1">{errors.appointmentDate.message}</p>
+                )}
+              </div>
 
-            {/* Counselor */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Counselor <span className="text-red-500">*</span>
-              </label>
-              {counselorsLoading ? (
-                <div className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] text-gray-400">
-                  Loading counselors...
-                </div>
-              ) : (
-                <Controller
-                  name="counselorId"
-                  control={control}
-                  rules={{ required: 'Counselor is required' }}
-                  render={() => (
-                    <AppCombobox
-                      value={selectedCounselor?.fullName || ''}
-                      dropDownWidth="w-full"
-                      dropdownPositionClass="absolute"
-                      label=""
-                      name="counselorId"
-                      form={null}
-                      options={counselors}
-                      selected={selectedCounselor}
-                      onSelect={(counselor) => {
-                        setSelectedCounselor(counselor);
-                        setValue('counselorId', counselor?.id ?? '', { shouldValidate: true });
-                      }}
-                      onFocus={() => {}}
-                      getLabel={(counselor) => counselor?.fullName ?? ''}
-                      getValue={(counselor) => counselor?.id ?? ''}
-                      renderOptionExtra={(counselor) => (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {counselor.email}
-                        </div>
-                      )}
-                    />
-                  )}
-                />
-              )}
-              {errors.counselorId && (
-                <p className="text-xs text-red-500">{errors.counselorId.message}</p>
-              )}
-            </div>
-
-            {/* Appointment Date */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Appointment Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                {...register('appointmentDate', { required: 'Date is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              {errors.appointmentDate && (
-                <p className="text-xs text-red-500">{errors.appointmentDate.message}</p>
-              )}
-            </div>
-
-            {/* Start Time & End Time */}
-            <div className="flex gap-4">
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              {/* Start Time */}
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
                   Start Time <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="time"
-                  {...register('startTime', { required: 'Start time is required' })}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                <div className="relative">
+                  <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="time"
+                    {...register('startTime', { required: 'Start time is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
+                </div>
                 {errors.startTime && (
-                  <p className="text-xs text-red-500">{errors.startTime.message}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.startTime.message}</p>
                 )}
               </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+
+              {/* End Time */}
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
                   End Time <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="time"
-                  {...register('endTime', { required: 'End time is required' })}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                <div className="relative">
+                  <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="time"
+                    {...register('endTime', { required: 'End time is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
+                </div>
                 {errors.endTime && (
-                  <p className="text-xs text-red-500">{errors.endTime.message}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.endTime.message}</p>
                 )}
               </div>
             </div>
 
-            {/* Status */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Status <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('appointmentStatus', { required: 'Status is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {APPOINTMENT_STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-              {errors.appointmentStatus && (
-                <p className="text-xs text-red-500">{errors.appointmentStatus.message}</p>
-              )}
+            {/* Status Section */}
+            <p className={sectionHeaderClass}>
+              Appointment Status
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  {...register('appointmentStatus', { required: 'Status is required', valueAsNumber: true })}
+                  className={inputClass}
+                >
+                  {APPOINTMENT_STATUSES.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.appointmentStatus && (
+                  <p className="text-xs text-red-500 mt-1">{errors.appointmentStatus.message}</p>
+                )}
+              </div>
             </div>
 
-            {/* Notes */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Notes
-              </label>
-              <textarea
-                {...register('notes')}
-                rows={3}
-                placeholder="Add any notes..."
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-              />
+            {/* Additional Information Section */}
+            <p className={sectionHeaderClass}>
+              Additional Information
+            </p>
+            <div className="grid grid-cols-1 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Notes
+                </label>
+                <div className="relative">
+                  <FileText size={18} className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" />
+                  <textarea
+                    {...register('notes')}
+                    placeholder="Enter any additional notes, agenda items, or discussion points..."
+                    rows={4}
+                    className={`${inputClass} pl-10 resize-none`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 
+                           bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 
+                           rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700
+                           text-white rounded-lg font-medium shadow-md transition-colors
+                           disabled:bg-green-300 disabled:cursor-not-allowed"
+              >
+                <Save size={18} />
+                {isSubmitting ? 'Saving...' : 'Save Appointment'}
+              </button>
             </div>
 
           </form>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="add-appointment-form"
-            disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-          >
-            {isSubmitting ? 'Saving...' : 'Save Appointment'}
-          </button>
-        </div>
+        </fieldset>
       </div>
     </div>
   );
