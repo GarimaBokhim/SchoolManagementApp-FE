@@ -162,21 +162,23 @@ const AppointmentDetailModal = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center
-                 bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0 p-4"
+                 bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
       onClick={onClose}
     >
       <div
-        className="relative bg-white dark:bg-[#2c2c2e] rounded-2xl shadow-2xl
-                   w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
+                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+                   max-h-[95vh] md:max-h-[92vh]
+                   rounded-lg overflow-auto shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Modal Header ── */}
-        <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 md:px-8 py-5">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
           >
-            <X size={16} className="text-white" />
+            <X size={18} className="text-white" />
           </button>
 
           <div className="flex items-center gap-3">
@@ -184,56 +186,58 @@ const AppointmentDetailModal = ({
               <CalendarDays size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Appointment Details</h2>
-              <p className="text-emerald-100 text-xs mt-0.5">
+              <h2 className="text-xl font-bold text-white">Appointment Details</h2>
+              <p className="text-emerald-100 text-sm mt-0.5">
                 {formatDate(appointment.appointmentDate)}
               </p>
             </div>
           </div>
 
           {/* Status Badge */}
-          <div className="mt-3">
-            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusStyle}`}>
+          <div className="mt-4">
+            <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold ${statusStyle}`}>
               {statusLabel}
             </span>
           </div>
         </div>
 
         {/* ── Modal Body ── */}
-        <div className="overflow-y-auto flex-1 px-6 py-4">
+        <div className="px-6 md:px-8 py-6">
 
           {/* Appointment Info */}
-          <div className="mb-5">
-            <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
-              Appointment Info
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+              Appointment Information
             </p>
-            <div className="bg-gray-50 dark:bg-[#353535] rounded-xl px-4">
-              <InfoRow
-                icon={<User size={14} className="text-emerald-600 dark:text-emerald-400" />}
-                label="Lead"
-                value={leadMap[appointment.leadId] || 'Unknown'}
-              />
-              <InfoRow
-                icon={<UserCheck size={14} className="text-blue-600 dark:text-blue-400" />}
-                label="Counselor"
-                value={counselorMap[appointment.counselorId] || 'Unknown'}
-              />
-              <InfoRow
-                icon={<Clock size={14} className="text-purple-600 dark:text-purple-400" />}
-                label="Time"
-                value={`${appointment.startTime} – ${appointment.endTime}`}
-              />
-              <InfoRow
-                icon={<FileText size={14} className="text-orange-500 dark:text-orange-400" />}
-                label="Notes"
-                value={appointment.notes || 'N/A'}
-              />
+            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <InfoRow
+                  icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                  label="Lead"
+                  value={leadMap[appointment.leadId] || 'Unknown'}
+                />
+                <InfoRow
+                  icon={<UserCheck size={16} className="text-blue-600 dark:text-blue-400" />}
+                  label="Counselor"
+                  value={counselorMap[appointment.counselorId] || 'Unknown'}
+                />
+                <InfoRow
+                  icon={<Clock size={16} className="text-purple-600 dark:text-purple-400" />}
+                  label="Time"
+                  value={`${appointment.startTime} – ${appointment.endTime}`}
+                />
+                <InfoRow
+                  icon={<FileText size={16} className="text-orange-500 dark:text-orange-400" />}
+                  label="Notes"
+                  value={appointment.notes || 'N/A'}
+                />
+              </div>
             </div>
           </div>
 
           {/* Enquiry Details */}
           <div>
-            <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Enquiry Details
             </p>
             <EnquirySection
@@ -246,10 +250,10 @@ const AppointmentDetailModal = ({
         </div>
 
         {/* ── Modal Footer ── */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-[#353535]">
+        <div className="sticky bottom-0 px-6 md:px-8 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/50">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 rounded-lg transition-colors"
+            className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 rounded-lg transition-colors"
           >
             Close
           </button>
