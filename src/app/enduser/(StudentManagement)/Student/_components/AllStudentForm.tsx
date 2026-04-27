@@ -1,5 +1,50 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
+
+const getInitials = (firstName?: string, lastName?: string, middleName?: string | null) => {
+  const first = firstName?.charAt(0) || ''
+  const last = lastName?.charAt(0) || ''
+  const middle = middleName?.charAt(0) || ''
+  return (first + middle + last).toUpperCase().substring(0, 2) || 'S'
+}
+
+/** Larger avatar used inside the table row with name below */
+const StudentAvatar = ({ student }: { student: any }) => {
+  const [imgError, setImgError] = useState(false)
+  const imageUrl = student.imageUrl ? `${BASE_URL}/${student.imageUrl}` : null
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-16 h-16 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-md">
+        {imageUrl && !imgError ? (
+          <img
+            src={imageUrl}
+            alt={`${student.firstName} ${student.lastName}`}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <span className="text-lg font-bold text-white">
+            {getInitials(student.firstName, student.lastName, student.middleName)}
+          </span>
+        )}
+      </div>
+      <button
+        onClick={() => {
+          // You'll need to pass a click handler from parent
+          const event = new CustomEvent('studentNameClick', { detail: student })
+          window.dispatchEvent(event)
+        }}
+        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors text-center"
+      >
+        {student.firstName} {student.middleName} {student.lastName}
+      </button>
+    </div>
+  )
+}
+
 import { IFilterStudentByDate, IStudent } from '../types/IStudents'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
@@ -267,6 +312,20 @@ const AllStudentForm = () => {
     return allclass?.name || 'N/A'
   }
 
+  // Listen for custom event from StudentAvatar
+  useEffect(() => {
+    const handleStudentClick = (event: Event) => {
+      const customEvent = event as CustomEvent
+      handleNameClick(customEvent.detail)
+    }
+    
+    window.addEventListener('studentNameClick', handleStudentClick)
+    
+    return () => {
+      window.removeEventListener('studentNameClick', handleStudentClick)
+    }
+  }, [])
+
   const items = filteredStudent?.Items ?? []
   const totalStudents = filteredStudent?.TotalItems ?? items.length
   const maleCount = items.filter((s) => s.genderStatus === 1).length
@@ -418,7 +477,7 @@ const AllStudentForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-16">S.N</th>
-                  <th className="px-4 py-3 text-left w-48">Name</th>
+                  <th className="px-4 py-3 text-left w-48">Student Details</th>
                   <th className="px-4 py-3 text-left w-32">Reg. No</th>
                   <th className="px-4 py-3 text-left w-20 hidden md:table-cell">Gender</th>
                   <th className="px-4 py-3 text-left w-48 hidden lg:table-cell">Email</th>
@@ -427,7 +486,7 @@ const AllStudentForm = () => {
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">Phone</th>
                   <th className="px-4 py-3 text-left w-32 hidden md:table-cell">DOB</th>
                   <th className="px-4 py-3 text-center w-40">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -442,40 +501,35 @@ const AllStudentForm = () => {
                       key={student.id || index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                     >
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap align-top">
                         {((paginationParams.pageIndex - 1) * paginationParams.pageSize) + index + 1}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <button
-                          onClick={() => handleNameClick(student)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors"
-                        >
-                          {student.firstName} {student.middleName} {student.lastName}
-                        </button>
+                        <StudentAvatar student={student} />
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap align-middle">
                         {student.registrationNumber || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                      <td className="px-4 py-3 whitespace-nowrap align-middle hidden md:table-cell">
                         {student.genderStatus === 1
                           ? 'Male'
                           : student.genderStatus === 2
                             ? 'Female'
                             : 'Other'}
                       </td>
-                      <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell" title={student.email}>
+                      <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell align-middle" title={student.email}>
                         {student.email || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+                      <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell align-middle">
                         {getClassName(student.classId)}
                       </td>
-                      <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell" title={student.address}>
+                      <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell align-middle" title={student.address}>
                         {student.address || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
                         {student.phoneNumber || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
                         {formatDate(student.dateOfBirth)}
                       </td>
                       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">

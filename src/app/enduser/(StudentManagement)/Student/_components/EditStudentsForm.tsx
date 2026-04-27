@@ -29,31 +29,62 @@ const GENDER_OPTIONS = [
 ]
 
 const normalizeGenderStatus = (raw: unknown): number => {
+  console.log('[EditStudentForm] normalizeGenderStatus input:', raw, typeof raw);
   if (typeof raw === "number") {
-    if (raw >= 1 && raw <= 3) return raw;
-    if (raw >= 0 && raw <= 2) return raw + 1; // legacy 0/1/2 -> 1/2/3
+    if (raw >= 1 && raw <= 3) {
+      console.log('[EditStudentForm] normalizeGenderStatus output (valid number):', raw);
+      return raw;
+    }
+    if (raw >= 0 && raw <= 2) {
+      const converted = raw + 1;
+      console.log('[EditStudentForm] normalizeGenderStatus output (legacy conversion):', converted);
+      return converted;
+    }
   }
   if (typeof raw === "string") {
     const normalized = raw.trim().toLowerCase();
-    if (normalized === "male") return 1;
-    if (normalized === "female") return 2;
-    if (normalized === "other") return 3;
+    if (normalized === "male") {
+      console.log('[EditStudentForm] normalizeGenderStatus output (male string):', 1);
+      return 1;
+    }
+    if (normalized === "female") {
+      console.log('[EditStudentForm] normalizeGenderStatus output (female string):', 2);
+      return 2;
+    }
+    if (normalized === "other") {
+      console.log('[EditStudentForm] normalizeGenderStatus output (other string):', 3);
+      return 3;
+    }
     const asNumber = Number(normalized);
     if (!Number.isNaN(asNumber)) {
-      if (asNumber >= 1 && asNumber <= 3) return asNumber;
-      if (asNumber >= 0 && asNumber <= 2) return asNumber + 1;
+      if (asNumber >= 1 && asNumber <= 3) {
+        console.log('[EditStudentForm] normalizeGenderStatus output (number string):', asNumber);
+        return asNumber;
+      }
+      if (asNumber >= 0 && asNumber <= 2) {
+        const converted = asNumber + 1;
+        console.log('[EditStudentForm] normalizeGenderStatus output (legacy number string):', converted);
+        return converted;
+      }
     }
   }
+  console.log('[EditStudentForm] normalizeGenderStatus output (default):', 1);
   return 1;
 };
 
 const resolveStudentImageUrl = (student: IStudent): string => {
   const rawPath = (student.imageUrl || (typeof student.studentImg === "string" ? student.studentImg : "") || "").trim();
+  console.log('[EditStudentForm] resolveStudentImageUrl rawPath:', rawPath);
   if (!rawPath) return "";
-  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith("blob:")) return rawPath;
+  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith("blob:")) {
+    console.log('[EditStudentForm] resolveStudentImageUrl absolute URL:', rawPath);
+    return rawPath;
+  }
   const base = BASE_URL.replace(/\/+$/, "");
   const path = rawPath.replace(/^\/+/, "");
-  return base ? `${base}/${path}` : `/${path}`;
+  const fullUrl = base ? `${base}/${path}` : `/${path}`;
+  console.log('[EditStudentForm] resolveStudentImageUrl constructed URL:', fullUrl);
+  return fullUrl;
 };
 
 type Props = {
@@ -63,6 +94,8 @@ type Props = {
 };
 
 const EditStudentForm = ({ form, onClose, studentId }: Props) => {
+  console.log('[EditStudentForm] Component rendering with studentId:', studentId);
+  
   const editStudent = useEditStudent();
   const { handleError, clearError } = useErrorHandler();
   const { data: allProvince } = useGetAllProvince();
@@ -94,23 +127,117 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   const [existingImageUrl, setExistingImageUrl] = useState<string>('');
   const selectedGenderStatus = normalizeGenderStatus(form.watch("genderStatus"));
 
+  // Debug: Log state updates
+  useEffect(() => {
+    console.log('[EditStudentForm] State updated:', {
+      selectedProvinceId,
+      selectedDistrictId,
+      selectedParentId,
+      selectedClassId,
+      selectedVdcId,
+      selectedMunicipalityId,
+      selectedFeeCategoryId
+    });
+  }, [selectedProvinceId, selectedDistrictId, selectedParentId, selectedClassId, selectedVdcId, selectedMunicipalityId, selectedFeeCategoryId]);
+
+  // Debug: Log API data
+  useEffect(() => {
+    if (allProvince) {
+      console.log('[EditStudentForm] allProvince loaded:', {
+        items: allProvince.Items,
+        count: allProvince.Items?.length
+      });
+    }
+  }, [allProvince]);
+
+  useEffect(() => {
+    if (StudentData) {
+      console.log('[EditStudentForm] StudentData loaded:', {
+        id: StudentData.id,
+        provinceId: StudentData.provinceId,
+        districtId: StudentData.districtId,
+        municipalityId: StudentData.municipalityId,
+        vdcid: StudentData.vdcid,
+        wardNumber: StudentData.wardNumber,
+        parentId: StudentData.parentId,
+        classId: StudentData.classId
+      });
+    }
+  }, [StudentData]);
+
+  useEffect(() => {
+    if (allClass) {
+      console.log('[EditStudentForm] allClass loaded:', {
+        items: allClass.Items,
+        count: allClass.Items?.length
+      });
+    }
+  }, [allClass]);
+
+  useEffect(() => {
+    if (allParents) {
+      console.log('[EditStudentForm] allParents loaded:', {
+        items: allParents.Items,
+        count: allParents.Items?.length
+      });
+    }
+  }, [allParents]);
+
+  useEffect(() => {
+    if (filteredDistrict) {
+      console.log('[EditStudentForm] filteredDistrict loaded:', {
+        provinceId: selectedProvinceId,
+        districts: filteredDistrict,
+        count: filteredDistrict?.length
+      });
+    }
+  }, [filteredDistrict, selectedProvinceId]);
+
+  useEffect(() => {
+    if (filteredMunicipality) {
+      console.log('[EditStudentForm] filteredMunicipality loaded:', {
+        districtId: selectedDistrictId,
+        municipalities: filteredMunicipality,
+        count: filteredMunicipality?.length
+      });
+    }
+  }, [filteredMunicipality, selectedDistrictId]);
+
+  useEffect(() => {
+    if (filteredVdc) {
+      console.log('[EditStudentForm] filteredVdc loaded:', {
+        districtId: selectedDistrictId,
+        vdcs: filteredVdc,
+        count: filteredVdc?.length
+      });
+    }
+  }, [filteredVdc, selectedDistrictId]);
+
   const handleImageClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('[EditStudentForm] New image selected:', file.name);
       setStudentImgPath(URL.createObjectURL(file));
       form.setValue('studentImg', file);
     }
   };
 
-  const handleClose = () => form.reset();
+  const handleClose = () => {
+    console.log('[EditStudentForm] Form closed');
+    form.reset();
+  };
 
   // ✅ FIX 1: Sync selectedParentId whenever StudentData loads
   useEffect(() => {
     if (StudentData) {
+      console.log('[EditStudentForm] Syncing StudentData to form...');
+      
       const normalizedGenderStatus = normalizeGenderStatus(StudentData?.genderStatus);
-      form.reset({
+      console.log('[EditStudentForm] Normalized gender status:', normalizedGenderStatus);
+      
+      const formValues = {
         firstName: StudentData?.firstName ?? "",
         middleName: StudentData?.middleName ?? "",
         lastName: StudentData?.lastName ?? "",
@@ -132,6 +259,19 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         municipalityId: StudentData?.municipalityId ?? 0,
         vdcid: StudentData?.vdcid ?? 0,
         wardNumber: StudentData?.wardNumber ?? 0,
+      };
+      
+      console.log('[EditStudentForm] Setting form values:', formValues);
+      form.reset(formValues);
+
+      console.log('[EditStudentForm] Setting state values:', {
+        districtId: StudentData.districtId,
+        provinceId: StudentData.provinceId,
+        parentId: StudentData.parentId,
+        vdcid: StudentData.vdcid,
+        classId: StudentData.classId,
+        municipalityId: StudentData.municipalityId,
+        feeCategoryId: StudentData.feeCategoryId
       });
 
       setSelectedDistrictId(StudentData.districtId);
@@ -144,6 +284,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
 
       const fullUrl = resolveStudentImageUrl(StudentData);
       if (fullUrl) {
+        console.log('[EditStudentForm] Setting image URL:', fullUrl);
         setStudentImgPath(fullUrl)
         setExistingImageUrl(fullUrl)
       }
@@ -151,20 +292,24 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   }, [StudentData, form]);
 
   // ✅ FIX 2: Re-sync selected parent when allParents data arrives AFTER StudentData
-  // This handles the race condition where StudentData loads before allParents
   useEffect(() => {
     if (allParents?.Items && StudentData?.parentId) {
+      console.log('[EditStudentForm] Checking parent exists in allParents...');
       const parentExists = allParents.Items.find(
         (p) => p.id === StudentData.parentId
       );
       if (parentExists) {
+        console.log('[EditStudentForm] Parent found, setting selectedParentId:', StudentData.parentId);
         setSelectedParentId(StudentData.parentId);
         form.setValue('parentId', StudentData.parentId);
+      } else {
+        console.log('[EditStudentForm] Parent not found in list');
       }
     }
-  }, [allParents, StudentData?.parentId]);
+  }, [allParents, StudentData?.parentId, form]);
 
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
+    console.log('[EditStudentForm] Submitting form with data:', data);
     clearError();
     try {
       const formData = new FormData();
@@ -189,9 +334,16 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       formData.append('vdcId', String(data.vdcid ?? 0));
       formData.append('wardNumber', String(data.wardNumber ?? 0));
 
+      console.log('[EditStudentForm] FormData entries:');
+      for (let pair of formData.entries()) {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+      }
+
       if (data.studentImg instanceof File) {
+        console.log('[EditStudentForm] Adding new image file:', data.studentImg.name);
         formData.append('studentImg', data.studentImg);
       } else if (existingImageUrl) {
+        console.log('[EditStudentForm] Using existing image URL:', existingImageUrl);
         formData.append('studentImgUrl', existingImageUrl);
       }
 
@@ -202,9 +354,11 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
           success: "Successfully Updated Student",
         }
       );
+      console.log('[EditStudentForm] Update successful');
       handleClose();
       onClose();
     } catch (error) {
+      console.error('[EditStudentForm] Error submitting form:', error);
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
     }
@@ -254,7 +408,11 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                         src={studentImgPath}
                         alt="Profile"
                         className="object-cover w-full h-full"
-                        onError={() => setStudentImgPath('')}
+                        onError={() => {
+                          console.log('[EditStudentForm] Image failed to load:', studentImgPath);
+                          setStudentImgPath('');
+                        }}
+                        onLoad={() => console.log('[EditStudentForm] Image loaded successfully:', studentImgPath)}
                       />
                     ) : (
                       <span className="text-gray-400 text-sm text-center px-2">
@@ -295,6 +453,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                     null
                   }
                   onSelect={(option) => {
+                    console.log('[EditStudentForm] Gender selected:', option);
                     form.setValue('genderStatus', option?.id ?? 1);
                   }}
                   getLabel={(o) => o?.name || ""}
@@ -314,7 +473,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                     allParents?.Items?.find((g) => g.id === selectedParentId) ?? null
                   }
                   onSelect={(group) => {
-                    // ✅ FIX 4: Also update form value on selection
+                    console.log('[EditStudentForm] Parent selected:', group);
                     setSelectedParentId(group?.id ?? null);
                     form.setValue('parentId', group?.id ?? '');
                   }}
@@ -341,7 +500,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={allProvince?.Items}
                   selected={allProvince?.Items?.find((g) => g.Id === selectedProvinceId) || null}
-                  onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
+                  onSelect={(group) => {
+                    console.log('[EditStudentForm] Province selected:', group);
+                    setSelectedProvinceId(group?.Id ?? 0);
+                  }}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -355,7 +517,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   required
                   options={filteredDistrict}
                   selected={filteredDistrict?.find((g) => g.Id === selectedDistrictId) || null}
-                  onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
+                  onSelect={(group) => {
+                    console.log('[EditStudentForm] District selected:', group);
+                    setSelectedDistrictId(group?.Id ?? 0);
+                  }}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -368,7 +533,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   options={filteredMunicipality}
                   selected={filteredMunicipality?.find((g) => g.Id === selectedMunicipalityId) || null}
-                  onSelect={(group) => setSelectedMunicipalityId(group?.Id ?? null)}
+                  onSelect={(group) => {
+                    console.log('[EditStudentForm] Municipality selected:', group);
+                    setSelectedMunicipalityId(group?.Id ?? null);
+                  }}
                   getLabel={(g) => g?.MunicipalityNameinEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -381,7 +549,10 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   form={form}
                   options={filteredVdc}
                   selected={filteredVdc?.find((g) => g.Id === selectedVdcId) || null}
-                  onSelect={(group) => setSelectedVdcId(group?.Id ?? null)}
+                  onSelect={(group) => {
+                    console.log('[EditStudentForm] VDC selected:', group);
+                    setSelectedVdcId(group?.Id ?? null);
+                  }}
                   getLabel={(g) => g?.VdcNameInNepali ?? ""}
                   getValue={(g) => g?.Id ?? ""}
                 />
@@ -410,6 +581,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   options={allClass?.Items}
                   selected={allClass?.Items?.find((g) => g.id === selectedClassId) || null}
                   onSelect={(group) => {
+                    console.log('[EditStudentForm] Class selected:', group);
                     setSelectedClassId(group?.id ?? null);
                     form.setValue('classId', group?.id ?? '');
                   }}
@@ -426,6 +598,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   options={allFeeCategories?.Items}
                   selected={allFeeCategories?.Items?.find((g) => g.id === selectedFeeCategoryId) || null}
                   onSelect={(group) => {
+                    console.log('[EditStudentForm] Fee Category selected:', group);
                     setSelectedFeeCategoryId(group?.id ?? null);
                     form.setValue('feeCategoryId', group?.id ?? '');
                   }}

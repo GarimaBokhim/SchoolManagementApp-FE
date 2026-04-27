@@ -50,33 +50,41 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     name: 'marksObtained',
   })
 
-  useEffect(() => {
-    if (!ExamResultData) return
+  // In EditExamResultForm, inside the useEffect that calls reset(...)
 
-    reset({
-      examId: ExamResultData.examId,
-      studentId: ExamResultData.studentId,
-      remarks: ExamResultData.remarks,
-      marksObtained: ExamResultData.marksObtained ?? [],
-    })
+useEffect(() => {
+  if (!ExamResultData) return
 
-    setSelectedExamId(ExamResultData.examId)
-    setSelectedStudentId(ExamResultData.studentId)
+  // Normalize API response: "marksObtaineds" → "marksObtained"
+  const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item) => ({
+    subjectId: item.subjectId,
+    marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
+    fullMarks: item.fullMarks ?? 0,
+  }))
 
-    const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
-    if (student?.classId) {
-      setSelectedClassId(student.classId)
-    }
+  reset({
+    examId: ExamResultData.examId,
+    studentId: ExamResultData.studentId,
+    remarks: ExamResultData.remarks,
+    marksObtained: normalizedMarks,
+  })
 
-    replace(ExamResultData.marksObtained ?? [])
+  setSelectedExamId(ExamResultData.examId)
+  setSelectedStudentId(ExamResultData.studentId)
 
-    const initialSubjects: { [key: number]: string } = {}
-    ExamResultData.marksObtained?.forEach((item, index) => {
-      initialSubjects[index] = item.subjectId
-    })
-    setSelectedSubjectIds(initialSubjects)
-  }, [ExamResultData, allStudents, reset, replace])
+  const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
+  if (student?.classId) {
+    setSelectedClassId(student.classId)
+  }
 
+  replace(normalizedMarks) // <-- also pass the normalized version here
+
+  const initialSubjects: { [key: number]: string } = {}
+  normalizedMarks.forEach((item, index) => {
+    initialSubjects[index] = item.subjectId
+  })
+  setSelectedSubjectIds(initialSubjects)
+}, [ExamResultData, allStudents, reset, replace])
   const handleClose = () => {
     reset()
     onClose()

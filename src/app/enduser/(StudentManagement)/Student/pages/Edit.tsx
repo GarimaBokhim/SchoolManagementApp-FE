@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { IStudent } from "../types/IStudents";
-import EditStudentForm from "../_components/EditStudentForm";
+import EditStudentForm from "../_components/EditStudentsForm";
 import { useGetStudentById } from "../hooks";
 import { useEffect } from "react";
 
