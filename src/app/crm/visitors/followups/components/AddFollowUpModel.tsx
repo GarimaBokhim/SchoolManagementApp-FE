@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { X } from 'lucide-react'
+import { X, Save, Calendar, Clock, User, FileText, AlertCircle } from 'lucide-react'
 import { AddFollowUpPayload } from '../types/IFollowUps'
 import { useFollowUpMutations } from '../hooks/UseFollowMutation'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -40,15 +40,26 @@ interface Props {
 }
 
 const FOLLOW_UP_STATUS_OPTIONS = [
-  { value: 1, label: 'Scheduled' },
-  { value: 2, label: 'Completed' },
-  { value: 3, label: 'Cancelled' },
-  { value: 4, label: 'Rescheduled' },
+  { id: 1, name: 'Scheduled' },
+  { id: 2, name: 'Completed' },
+  { id: 3, name: 'Cancelled' },
+  { id: 4, name: 'Rescheduled' },
 ]
+
+// Styles matching AddLeadModal
+const inputClass = `w-full px-4 py-2.5 border rounded-lg border-gray-300 dark:border-gray-600 
+  bg-white dark:bg-[#1f1f22] text-gray-800 dark:text-gray-100
+  focus:ring-2 focus:ring-green-500 focus:border-transparent
+  placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm`
+
+const labelClass = `block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300`
+
+const sectionHeaderClass = `text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`
 
 const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props) => {
   const { isAdding, handleAdd } = useFollowUpMutations(fetchFollowUps)
   const { data: leadOptions = [], isLoading: leadsLoading } = useLeadOptions()
+  const [error, setError] = useState<string | null>(null)
 
   const [selectedLead, setSelectedLead] = useState<LeadOption | null>(null)
 
@@ -70,12 +81,23 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
   })
 
   const handleClose = () => {
-    reset()
-    setSelectedLead(null)
-    onClose()
+    if (!isAdding) {
+      reset()
+      setSelectedLead(null)
+      setError(null)
+      onClose()
+    }
   }
 
   const onFormSubmit = async (data: AddFollowUpPayload) => {
+    setError(null)
+    
+    // Validate end time is after start time
+    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
+      setError('End time must be after start time')
+      return
+    }
+
     const success = await handleAdd({
       ...data,
       followUpDate: new Date(data.followUpDate).toISOString(),
@@ -83,6 +105,7 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
     if (success) {
       reset()
       setSelectedLead(null)
+      setError(null)
       onSuccess()
     }
   }
@@ -96,152 +119,206 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
       onClick={handleClose}
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[500px]
-                   max-h-[95vh] rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
+                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+                   max-h-[95vh] md:max-h-[92vh]
+                   rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Add Follow Up
-          </h2>
-          <button
-            onClick={handleClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <X size={18} className="text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
+        <fieldset disabled={isAdding} className="min-w-0">
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+                Add New Follow Up
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Schedule a follow-up activity for an existing lead
+              </p>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleClose} 
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X size={24} strokeWidth={2} />
+            </button>
+          </div>
 
-          {/* Lead — Separate label with AppCombobox */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Lead <span className="text-red-500">*</span>
-            </label>
-            <Controller
-              name="leadId"
-              control={control}
-              rules={{ required: 'Lead is required' }}
-              render={({ field }) => (
-                <AppCombobox<LeadOption>
+          {/* Error */}
+          {error && (
+            <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onFormSubmit)}>
+
+            {/* Lead Information Section */}
+            <p className={sectionHeaderClass}>
+              Lead Information
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Select Lead <span className="text-red-500">*</span>
+                </label>
+                <Controller
                   name="leadId"
-                  label="" // Empty label prevents floating label behavior
-                  required
-                  options={leadsLoading ? [] : leadOptions}
-                  selected={selectedLead ?? undefined}
-                  getLabel={(opt) => opt.fullName}
-                  getValue={(opt) => opt.userId}
-                  placeholder={leadsLoading ? 'Loading leads...' : 'Search lead...'} // Placeholder text
-                  onSelect={(opt) => {
-                    setSelectedLead(opt)
-                    field.onChange(opt ? opt.userId : '')
-                  }}
+                  control={control}
+                  rules={{ required: 'Lead is required' }}
+                  render={({ field }) => (
+                    <AppCombobox<LeadOption>
+                      name="leadId"
+                      label=""
+                      required
+                      options={leadsLoading ? [] : leadOptions}
+                      selected={selectedLead ?? undefined}
+                      getLabel={(opt) => opt.fullName}
+                      getValue={(opt) => opt.userId}
+                      placeholder={leadsLoading ? 'Loading leads...' : 'Search lead by name...'}
+                      onSelect={(opt) => {
+                        setSelectedLead(opt)
+                        field.onChange(opt ? opt.userId : '')
+                      }}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.leadId && (
-              <p className="text-xs text-red-500">{errors.leadId.message}</p>
-            )}
-          </div>
-
-          {/* Follow Up Date */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Follow Up Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              {...register('followUpDate', { required: 'Follow up date is required' })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Select date"
-            />
-            {errors.followUpDate && (
-              <p className="text-xs text-red-500">{errors.followUpDate.message}</p>
-            )}
-          </div>
-
-          {/* Start Time & End Time */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Start Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                {...register('startTime', { required: 'Start time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="Select start time"
-              />
-              {errors.startTime && (
-                <p className="text-xs text-red-500">{errors.startTime.message}</p>
-              )}
+                {errors.leadId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.leadId.message}</p>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                End Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                {...register('endTime', { required: 'End time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="Select end time"
-              />
-              {errors.endTime && (
-                <p className="text-xs text-red-500">{errors.endTime.message}</p>
-              )}
+
+            {/* Schedule Details Section */}
+            <p className={sectionHeaderClass}>
+              Schedule Details
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Follow Up Date <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="date"
+                    {...register('followUpDate', { required: 'Follow up date is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
+                </div>
+                {errors.followUpDate && (
+                  <p className="text-xs text-red-500 mt-1">{errors.followUpDate.message}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Start Time <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="time"
+                    {...register('startTime', { required: 'Start time is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
+                </div>
+                {errors.startTime && (
+                  <p className="text-xs text-red-500 mt-1">{errors.startTime.message}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  End Time <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Clock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="time"
+                    {...register('endTime', { required: 'End time is required' })}
+                    className={`${inputClass} pl-10`}
+                  />
+                </div>
+                {errors.endTime && (
+                  <p className="text-xs text-red-500 mt-1">{errors.endTime.message}</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Status */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Status <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register('followUpStatus', { valueAsNumber: true })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {FOLLOW_UP_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Status Section */}
+            <p className={sectionHeaderClass}>
+              Follow Up Status
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  {...register('followUpStatus', { valueAsNumber: true })}
+                  className={inputClass}
+                >
+                  {FOLLOW_UP_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          {/* Notes */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Notes
-            </label>
-            <textarea
-              {...register('notes')}
-              placeholder="Add any notes..."
-              rows={3}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-            />
-          </div>
+            {/* Notes Section */}
+            <p className={sectionHeaderClass}>
+              Additional Information
+            </p>
+            <div className="grid grid-cols-1 gap-4 items-start mb-6">
+              <div className="flex flex-col gap-1">
+                <label className={labelClass}>
+                  Notes
+                </label>
+                <div className="relative">
+                  <FileText size={18} className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" />
+                  <textarea
+                    {...register('notes')}
+                    placeholder="Enter any additional notes, discussion points, or reminders..."
+                    rows={4}
+                    className={`${inputClass} pl-10 resize-none`}
+                  />
+                </div>
+              </div>
+            </div>
 
-          {/* Footer */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isAdding}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-            >
-              {isAdding ? 'Saving...' : 'Save Follow Up'}
-            </button>
-          </div>
-        </form>
+            {/* Submit Buttons */}
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 
+                           bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 
+                           rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isAdding}
+                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700
+                           text-white rounded-lg font-medium shadow-md transition-colors
+                           disabled:bg-green-300 disabled:cursor-not-allowed"
+              >
+                <Save size={18} />
+                {isAdding ? 'Saving...' : 'Save Follow Up'}
+              </button>
+            </div>
+
+          </form>
+        </fieldset>
       </div>
     </div>
   )

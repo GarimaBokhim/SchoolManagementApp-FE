@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { format, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { FlatEventSchedule } from '../types/Ievent'
 import { useScheduleEvents, useActivitiesByEvent } from '../hooks/useEventSchedule'
@@ -254,6 +255,7 @@ const EventModal = ({
 // ── Main EventSchedule ────────────────────────────────────────────
 
 const EventSchedule = () => {
+  const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [weekStart, setWeekStart] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState<FlatEventSchedule | null>(null)
@@ -278,6 +280,10 @@ const EventSchedule = () => {
 
   const getEventsForDate = (date: Date): FlatEventSchedule[] =>
     events.filter((e) => isSameDay(e.date, date))
+
+  const handleAddClick = () => {
+    router.push('/enduser/miscellaneous/Events')
+  }
 
   if (isLoading) {
     return (
@@ -333,7 +339,10 @@ const EventSchedule = () => {
           </div>
 
           {/* Right — Add button */}
-          <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={handleAddClick}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -445,7 +454,10 @@ const EventSchedule = () => {
                       )
                     })
                   ) : (
-                    <button className="w-full mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center py-8">
+                    <button 
+                      onClick={handleAddClick}
+                      className="w-full mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center py-8"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>

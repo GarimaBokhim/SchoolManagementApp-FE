@@ -35,10 +35,26 @@ const CrmTitleHeader = ({ title }: Props) => {
           </h1>
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
             {pathParts.map((part, index) => {
-              const partialPath = "/" + pathParts.slice(0, index + 1).join("/");
+              // For the role root segment (e.g. "crm"), always link to /<role>/dashboard
+              // because /crm has no page.tsx — only /crm/dashboard exists.
+              const isRoleRoot = index === 0;
+              const partialPath = isRoleRoot
+                ? "/" + part + "/dashboard"
+                : "/" + pathParts.slice(0, index + 1).join("/");
 
-              if (index === pathParts.length - 2) {
+              // Skip the second-to-last segment only for paths deeper than 2 levels
+              if (index === pathParts.length - 2 && pathParts.length > 2) {
                 return null;
+              }
+
+              // Skip the last segment (current page — not a link)
+              if (index === pathParts.length - 1 && pathParts.length > 1) {
+                return (
+                  <span key={index + 1} className="text-gray-700 dark:text-gray-300 capitalize">
+                    {" / "}
+                    {part.replace(/-/g, ' ')}
+                  </span>
+                );
               }
 
               const uuidRegex =

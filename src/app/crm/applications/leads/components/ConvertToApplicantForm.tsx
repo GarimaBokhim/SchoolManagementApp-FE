@@ -1,16 +1,16 @@
 'use client';
 
 import { UserPlus, X } from 'lucide-react';
-import { ConvertToApplicantFormProps } from '../types/ILeads';
+import { ConvertToApplicantFormProps, ConvertToApplicantPayload } from '../types/ILeads';
 import { useGetAllCountries } from '@/app/crm/university/_university/hooks';
-import { 
-  useGetCoursesByUniversity, 
+import {
+  useGetCoursesByUniversity,
   useGetUniversitiesByCountry,
   IUniversityByCountry,
-  ICourseByUniversity
+  ICourseByUniversity,
 } from '../hooks/cascadingHooks';
 import LeadEnquiryCard from './LeadInquiryCard';
-import { AppCombobox } from '@/components/Input/ComboBox'; 
+import { AppCombobox } from '@/components/Input/ComboBox';
 import { ICountry } from '@/app/crm/university/_university/types/ICountry';
 import { useForm } from 'react-hook-form';
 
@@ -25,12 +25,10 @@ const ConvertToApplicantForm = ({
   selectedLead,
   conversionData,
   convertingId,
-  onInputChange,
   onSubmit,
   onClose,
 }: ConvertToApplicantFormProps) => {
-  
-  // Use react-hook-form for better integration with AppCombobox
+
   const form = useForm<ConversionFormData>({
     defaultValues: {
       passportNo: conversionData?.passportNo ?? '',
@@ -54,28 +52,16 @@ const ConvertToApplicantForm = ({
   const selectedUniversityObj = universities.find((u) => u.id === selectedUniversityId) ?? null;
   const selectedCourseObj = courses.find((c) => c.id === form.watch('courseId')) ?? null;
 
+  // ✅ Receives typed form data, builds the full payload, passes it up
   const handleFormSubmit = (data: ConversionFormData) => {
-    // Create a synthetic event to match the expected onInputChange signature
-    const syntheticEvent = {
-      target: { 
-        name: 'passportNo', 
-        value: data.passportNo 
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    onInputChange?.(syntheticEvent);
-    
-    // Update conversionData with all form values
-    const updatedData = {
-      ...conversionData,
+    const payload: ConvertToApplicantPayload = {
+      userId: selectedLead.userId,
       passportNo: data.passportNo,
       countryId: data.countryId,
       universityId: data.universityId,
       courseId: data.courseId,
     };
-    
-    // Call onSubmit with the updated data
-    onSubmit?.(updatedData as any);
+    onSubmit?.(payload);
   };
 
   const handleCountrySelect = (option: ICountry | null) => {
@@ -123,7 +109,7 @@ const ConvertToApplicantForm = ({
         <form onSubmit={form.handleSubmit(handleFormSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start">
 
-            {/* Passport Number - With floating label matching AppCombobox exactly */}
+            {/* Passport Number */}
             <div className="w-full">
               <div className="relative mt-1">
                 <div className="relative items-center flex">
@@ -132,8 +118,8 @@ const ConvertToApplicantForm = ({
                     id="passportNo"
                     {...form.register('passportNo', { required: 'Passport number is required' })}
                     placeholder="e.g., AB1234567"
-                    className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-white dark:bg-[#353535] focus:border-[#4788CD] border-gray-400 dark:border-gray-600 dark:text-white text-sm
-                      ${form.formState.errors.passportNo ? 'border-red-500' : 'border-gray-400'}`}
+                    className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-white dark:bg-[#353535] focus:border-[#4788CD] dark:text-white text-sm
+                      ${form.formState.errors.passportNo ? 'border-red-500' : 'border-gray-400 dark:border-gray-600'}`}
                   />
                   <label
                     htmlFor="passportNo"

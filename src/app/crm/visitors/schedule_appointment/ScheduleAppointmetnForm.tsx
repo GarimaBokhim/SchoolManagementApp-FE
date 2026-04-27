@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { format, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns'
-import { FlatAppointment } from './ISchedule'
+import { useRouter } from 'next/navigation'
+
 import { useScheduleAppointments } from './hooks/UseSchedule'
+import { FlatAppointment } from './types/ISchedule'
 
 const statusLegend = [
   { status: 'confirmed', label: 'Confirmed', color: 'bg-green-500' },
@@ -30,8 +32,6 @@ const getInitials = (name: string) => {
 
 const parseHour = (timeStr: string): number => {
   if (!timeStr) return -1;
-
-  // 12-hour format — has AM or PM
   if (timeStr.includes('AM') || timeStr.includes('PM')) {
     const [hourStr] = timeStr.split(':');
     const period = timeStr.includes('PM') ? 'PM' : 'AM';
@@ -40,14 +40,9 @@ const parseHour = (timeStr: string): number => {
     if (period === 'AM' && hour === 12) hour = 0;
     return hour;
   }
-
-  // 24-hour format — "HH:MM:SS" or "HH:MM"
   return parseInt(timeStr.split(':')[0], 10);
 }
 
-/**
- * Formats a raw time string (any format) into a display string like "10:35 PM"
- */
 const formatDisplayTime = (timeStr: string): string => {
   if (!timeStr) return '';
   if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
@@ -59,9 +54,6 @@ const formatDisplayTime = (timeStr: string): string => {
   return `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
 }
 
-/**
- * Converts a 24h hour number to a slot label like "10:00 AM"
- */
 const hourToSlotLabel = (hour: number): string => {
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -74,6 +66,7 @@ const appointmentMatchesSlot = (appointment: FlatAppointment, slotHour: number):
 }
 
 const ScheduleAppointment = () => {
+  const router = useRouter()                          //added
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [weekStart, setWeekStart] = useState(new Date())
 
@@ -85,13 +78,9 @@ const ScheduleAppointment = () => {
     setSelectedDate(today)
   }, [])
 
-  /**
-   * Dynamically build time slots based on actual appointment hours.
-   * Falls back to 9 AM–5 PM if no data yet.
-   */
   const timeSlots: number[] = useMemo(() => {
     if (appointments.length === 0) {
-      return Array.from({ length: 9 }, (_, i) => i + 9) // 9–17
+      return Array.from({ length: 9 }, (_, i) => i + 9)
     }
     const hours = appointments.map((apt) => parseHour(apt.startTime)).filter((h) => h >= 0)
     const minHour = Math.min(...hours, 9)
@@ -167,8 +156,11 @@ const ScheduleAppointment = () => {
           ))}
         </div>
 
-        {/* Right — Add button */}
-        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        {/* Right — Add button  navigates to /crm/appointment */}
+        <button
+          onClick={() => router.push('/crm/appointment')}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -269,7 +261,11 @@ const ScheduleAppointment = () => {
                         </div>
                       ))
                     ) : (
-                      <button className="w-full h-full min-h-[120px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center">
+                      // empty slot button also navigates to add appointment
+                      <button
+                        onClick={() => router.push('/crm/appointment')}
+                        className="w-full h-full min-h-[120px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>

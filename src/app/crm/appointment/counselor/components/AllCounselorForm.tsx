@@ -2,7 +2,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Filter, RotateCcw, Plus, X, Users } from "lucide-react";
+import { Filter, RotateCcw, Plus, Users } from "lucide-react";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -17,6 +17,7 @@ import { CounselorActionMenu } from "./CounselorActionMenu";
 import { AddCounselorModal } from "./AddCounselorModel";
 import { useAddCounselor, useGetAllCounselors } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
+import CounselorDetailModal from "./CounselorDetailModel";
 
 interface FilterFormData {
   search: string;
@@ -88,19 +89,14 @@ const AllCounselorsForm = () => {
       ]
         .filter(Boolean)
         .join("&");
-
       const fullQuery = queryParams ? `&${queryParams}` : "";
-
       await toast.promise(
         (async () => {
           setParams(fullQuery);
           setCurrentPage(1);
           await refetch();
         })(),
-        {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
-        }
+        { loading: "Fetching data...", success: "Data fetched successfully!" }
       );
     } catch (error) {
       const errorMsg = handleError(error);
@@ -166,7 +162,7 @@ const AllCounselorsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
           </div>
         </div>
       </div>
@@ -323,57 +319,14 @@ const AllCounselorsForm = () => {
           onSubmit={handleAdd}
         />
 
-        {/* View Detail Modal */}
         {showDetailModal && selectedCounselor && (
-          <div
-            className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-            onClick={() => setShowDetailModal(false)}
-          >
-            <div
-              className="relative bg-white dark:bg-[#353535] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Counselor Details</h2>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <X size={18} className="text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-              <div className="overflow-y-auto px-6 py-4 flex-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold text-lg shrink-0">
-                    {selectedCounselor.fullName?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedCounselor.fullName}</p>
-                    <StatusBadge isActive={selectedCounselor.isActive} />
-                  </div>
-                </div>
-                {[
-                  { label: "Email", value: selectedCounselor.email },
-                  { label: "Contact Number", value: selectedCounselor.contactNumber },
-                  { label: "Created At", value: formatDate(selectedCounselor.createdAt) },
-                  { label: "Modified At", value: formatDate(selectedCounselor.modifiedAt) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide sm:w-48 shrink-0">{label}</span>
-                    <span className="text-sm text-gray-800 dark:text-gray-200">{value || "N/A"}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
+          <CounselorDetailModal
+            counselor={selectedCounselor}
+            onClose={() => {
+              setShowDetailModal(false)
+              setSelectedCounselor(null)
+            }}
+          />
         )}
 
         {/* Pagination */}
