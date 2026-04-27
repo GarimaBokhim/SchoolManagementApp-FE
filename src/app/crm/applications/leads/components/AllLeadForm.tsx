@@ -233,7 +233,7 @@ const AllLeadsForm = () => {
   }
 
   const handleViewDetails = (lead: Lead) => {
-    setSelectedUserId(lead.userId)
+    setSelectedUserId(lead.id)
     setShowDetailModal(true)
   }
 
@@ -469,7 +469,7 @@ const handleConvertSubmit = async (data: ConvertToApplicantPayload) => {
       <LeadDetailModal
         isOpen={showDetailModal}
         onClose={() => { setShowDetailModal(false); setSelectedUserId(null) }}
-        userId={selectedUserId}
+        leadId={selectedUserId}
       />
     </>
   )
