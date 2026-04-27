@@ -208,7 +208,7 @@ const AllLeadsForm = () => {
   const [showConvertModal, setShowConvertModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
 
   // ── Updated payload shape ──
   const [conversionData, setConversionData] = useState<ConvertToApplicantPayload>({
@@ -233,7 +233,7 @@ const AllLeadsForm = () => {
   }
 
   const handleViewDetails = (lead: Lead) => {
-    setSelectedUserId(lead.id)
+    setSelectedLeadId(lead.id)
     setShowDetailModal(true)
   }
 
@@ -468,8 +468,8 @@ const handleConvertSubmit = async (data: ConvertToApplicantPayload) => {
 
       <LeadDetailModal
         isOpen={showDetailModal}
-        onClose={() => { setShowDetailModal(false); setSelectedUserId(null) }}
-        leadId={selectedUserId}
+        onClose={() => { setShowDetailModal(false); setSelectedLeadId(null) }}
+        leadId={selectedLeadId}
       />
     </>
   )
