@@ -19,20 +19,19 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   const logoUrl = resolveImageUrl(schoolData?.imageUrl);
 
-
-// Add this log
-console.log('School Info:', {
-  id: schoolData?.id,
-  name: schoolData?.name,
-  imageUrl: schoolData?.imageUrl,
-  resolvedUrl: logoUrl
-});
+  // Add this log
+  console.log('School Info:', {
+    id: schoolData?.id,
+    name: schoolData?.name,
+    imageUrl: schoolData?.imageUrl,
+    resolvedUrl: logoUrl
+  });
 
   if (isLoading) {
     return (
       <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">
         <div className="absolute top-1/2 left-6 -translate-y-1/2">
-          <div className="w-28 h-28 bg-white/20 rounded-full animate-pulse" />
+          <div className="w-20 h-20 bg-white/20 rounded-full animate-pulse" />
         </div>
         <div className="py-4 px-8 flex flex-col items-center justify-center text-center animate-pulse">
           <div className="h-7 w-48 bg-white/20 rounded mb-4" />
@@ -47,10 +46,10 @@ console.log('School Info:', {
   }
 
   return (
-    <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">
-      {/* School Logo - Left Center Circular */}
-      <div className="absolute top-1/2 left-6 -translate-y-1/2">
-        <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+    <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden p-6">
+      {/* School Logo - Left Side */}
+      <div className="flex justify-start mb-4">
+        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
           {logoUrl && !logoError ? (
             <img
               src={logoUrl}
@@ -59,30 +58,30 @@ console.log('School Info:', {
               onError={() => setLogoError(true)}
             />
           ) : (
-            <School className="w-14 h-14 text-green-700" />
+            <School className="w-10 h-10 text-green-700" />
           )}
         </div>
       </div>
 
-      {/* Centered Content */}
-      <div className="py-4 px-8 flex flex-col items-center text-center">
-        <h2 className="text-2xl font-bold">
+      {/* School Details */}
+      <div className="flex flex-col">
+        <h2 className="text-2xl font-bold mb-2">
           {schoolData?.name ?? "—"}
           <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
         </h2>
 
-        <div className="mt-2 space-y-1.5 text-sm">
-          <div className="flex items-center justify-center">
-            <LocateIcon className="mr-3 shrink-0" />
-            {schoolData?.address ?? "—"}
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center">
+            <LocateIcon className="mr-3 shrink-0 w-4 h-4" />
+            <span>{schoolData?.address ?? "—"}</span>
           </div>
-          <div className="flex items-center justify-center">
-            <Mail className="mr-3 shrink-0" />
-            {schoolData?.email ?? "—"}
+          <div className="flex items-center">
+            <Mail className="mr-3 shrink-0 w-4 h-4" />
+            <span>{schoolData?.email ?? "—"}</span>
           </div>
-          <div className="flex items-center justify-center">
-            <Phone className="mr-3 shrink-0" />
-            {schoolData?.contactNumber ?? "—"}
+          <div className="flex items-center">
+            <Phone className="mr-3 shrink-0 w-4 h-4" />
+            <span>{schoolData?.contactNumber ?? "—"}</span>
           </div>
         </div>
       </div>

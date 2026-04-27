@@ -1,3 +1,4 @@
+// types/IExamResults.ts
 export interface IExamResult {
   id?: string
   examId: string
@@ -5,7 +6,8 @@ export interface IExamResult {
   remarks?: string
   marksObtained: {
     subjectId: string
-    marksObtained: number
+    marksObtained: number 
+    marksObtaineds?: number
     fullMarks: number
   }[]
 }

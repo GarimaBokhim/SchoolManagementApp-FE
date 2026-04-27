@@ -31,8 +31,8 @@ const formatStudentDisplayName = (s: IStudent | undefined) => {
   return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim()
 }
 
-/** Some endpoints return `Items`, others `items`. */
 function paginationItems<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[]           // <-- add this line
   if (data == null || typeof data !== 'object') return []
   const o = data as { Items?: T[]; items?: T[] }
   if (Array.isArray(o.Items)) return o.Items
