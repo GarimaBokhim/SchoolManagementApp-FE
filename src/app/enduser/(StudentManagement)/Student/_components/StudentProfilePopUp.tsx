@@ -5,59 +5,61 @@ import { X } from 'lucide-react'
 import { IStudent } from '../types/IStudents'
 import { useGetClassById } from '@/app/enduser/(Academics)/Class/hooks'
 import { useGetParentById } from '../../_Parent/hooks'
+import { useGetStudentById } from '../hooks'
+import {
+  useGetAllProvince,
+  useGetDistrictByProvince,
+  useGetMunicipalityByDistrict,
+  useGetVDCByDistrict,
+} from '@/components/common/hooks'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
+// ─── maps ─────────────────────────────────────────────────────────────────────
+
 const ENROLLMENT_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  2: { label: 'Promoted', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-  3: { label: 'Repeated', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  1: { label: 'Active',    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  2: { label: 'Promoted',  color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  3: { label: 'Repeated',  color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
   4: { label: 'Graduated', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-  5: { label: 'Dropped', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-  6: { label: 'Added', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
-  7: { label: 'Enrolled', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  5: { label: 'Dropped',   color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  6: { label: 'Added',     color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
+  7: { label: 'Enrolled',  color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
 }
 
-const GENDER_STATUS_MAP: Record<number, string> = {
-  1: 'Male',
-  2: 'Female',
-  3: 'Other',
-}
+const GENDER_STATUS_MAP: Record<number, string> = { 1: 'Male', 2: 'Female', 3: 'Other' }
 
 const STUDENT_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  0: { label: 'Active',   color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
   1: { label: 'Inactive', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 const getEnrollmentInfo = (type?: number) =>
-  type ? ENROLLMENT_STATUS_MAP[type] ?? { label: 'Unknown', color: 'bg-gray-100 text-gray-700' }
-  : { label: 'Not Set', color: 'bg-gray-100 text-gray-700' }
+  type ? (ENROLLMENT_STATUS_MAP[type] ?? { label: 'Unknown', color: 'bg-gray-100 text-gray-700' })
+       : { label: 'Not Set', color: 'bg-gray-100 text-gray-700' }
 
 const getStudentStatusInfo = (status?: number) =>
-  status !== undefined ? STUDENT_STATUS_MAP[status] ?? { label: 'Unknown', color: 'bg-gray-100 text-gray-700' }
-  : { label: 'Not Set', color: 'bg-gray-100 text-gray-700' }
+  status !== undefined
+    ? (STUDENT_STATUS_MAP[status] ?? { label: 'Unknown', color: 'bg-gray-100 text-gray-700' })
+    : { label: 'Not Set', color: 'bg-gray-100 text-gray-700' }
 
-const getInitials = (firstName?: string, lastName?: string, middleName?: string | null) => {
-  const first = firstName?.charAt(0) || ''
-  const last = lastName?.charAt(0) || ''
-  const middle = middleName?.charAt(0) || ''
-  return (first + middle + last).toUpperCase().substring(0, 2) || 'S'
-}
+const getInitials = (firstName?: string, lastName?: string, middleName?: string | null) =>
+  ((firstName?.charAt(0) ?? '') + (middleName?.charAt(0) ?? '') + (lastName?.charAt(0) ?? ''))
+    .toUpperCase()
+    .substring(0, 2) || 'S'
 
 const formatDate = (date?: Date | string | null) => {
   if (!date) return '-'
   try {
-    const dateObj = date instanceof Date ? date : new Date(date)
-    if (isNaN(dateObj.getTime())) return '-'
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    const d = date instanceof Date ? date : new Date(date)
+    if (isNaN(d.getTime())) return '-'
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   } catch {
     return '-'
   }
 }
+
+// ─── component ────────────────────────────────────────────────────────────────
 
 interface StudentProfilePopupProps {
   student: IStudent | null
@@ -68,29 +70,61 @@ interface StudentProfilePopupProps {
 const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfilePopupProps) => {
   const [imgError, setImgError] = useState(false)
 
-  // Fetch class name using the student's classId
-  const { data: classDetail, isLoading: isClassLoading } = useGetClassById(
-    student?.classId ?? ''
-  )
+  // ── Fetch FULL student record so location IDs are populated ──────────────────
+  // The list API returns provinceId/districtId as 0; the detail API has the real values.
+  const { data: fullStudent } = useGetStudentById(student?.id ?? '')
 
-  // Fetch parent details using the student's parentId
-  const { data: parentDetail, isLoading: isParentLoading } = useGetParentById(
-    student?.parentId ?? ''
-  )
+  // Use full record when available, fall back to the prop for other fields
+  const s = fullStudent ?? student
 
+  // Numeric IDs derived from the full record (> 0 means actually set)
+  const provinceId     = s?.provinceId     ? Number(s.provinceId)     : undefined
+  const districtId     = s?.districtId     ? Number(s.districtId)     : undefined
+  const municipalityId = s?.municipalityId ? Number(s.municipalityId) : undefined
+  const vdcId          = (s as any)?.vdcid ? Number((s as any).vdcid) : undefined
+
+  // ── All hooks must be called unconditionally before any early return ──────────
+  const { data: classDetail,  isLoading: isClassLoading  } = useGetClassById(s?.classId ?? '')
+  const { data: parentDetail, isLoading: isParentLoading } = useGetParentById(s?.parentId ?? '')
+
+  const { data: allProvince }          = useGetAllProvince()
+  const { data: filteredDistrict }     = useGetDistrictByProvince(provinceId)
+  const { data: filteredMunicipality } = useGetMunicipalityByDistrict(districtId)
+  const { data: filteredVdc }          = useGetVDCByDistrict(districtId)
+
+  // ── Early return after all hooks ─────────────────────────────────────────────
   if (!student) return null
 
-  const displayName = `${student.firstName} ${student.middleName || ''} ${student.lastName}`.trim()
-  const enrollmentInfo = getEnrollmentInfo(student.enrollmentStatus)
+  // ── Derived display values ────────────────────────────────────────────────────
+  const displayName       = `${student.firstName} ${student.middleName || ''} ${student.lastName}`.trim()
+  const enrollmentInfo    = getEnrollmentInfo(student.enrollmentStatus)
   const studentStatusInfo = getStudentStatusInfo(student.studentStatus)
+  const className         = isClassLoading  ? 'Loading...' : (classDetail?.name      || '-')
+  const parentName        = isParentLoading ? 'Loading...' : (parentDetail?.fullName  || '-')
 
-  const className = isClassLoading ? 'Loading...' : (classDetail?.name || '-')
-  const parentName = isParentLoading ? 'Loading...' : (parentDetail?.fullName || '-')
+  // ── Location name resolution ─────────────────────────────────────────────────
+  const provinceName =
+    (provinceId && allProvince?.Items)
+      ? (allProvince.Items.find(p => p.Id === provinceId)?.provinceNameInEnglish || '-')
+      : '-'
 
-  // Build full image URL from the relative path returned by the API
-  const imageUrl = student.imageUrl
-    ? `${BASE_URL}/${student.imageUrl}`
-    : null
+  const districtName =
+    (districtId && filteredDistrict)
+      ? (filteredDistrict.find(d => d.Id === districtId)?.districtNameInEnglish || '-')
+      : '-'
+
+  const municipalityName =
+    (municipalityId && filteredMunicipality)
+      ? (filteredMunicipality.find(m => m.Id === municipalityId)?.MunicipalityNameinEnglish || '-')
+      : '-'
+
+  const vdcName =
+    (vdcId && filteredVdc)
+      ? (filteredVdc.find(v => v.Id === vdcId)?.VdcNameInEnglish || '-')
+      : '-'
+
+  // ── Image URL ─────────────────────────────────────────────────────────────────
+  const imageUrl = student.imageUrl ? `${BASE_URL}/${student.imageUrl}` : null
 
   return (
     <div
@@ -136,13 +170,10 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                       </span>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                    {displayName}
-                  </h3>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-white">{displayName}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {student.email || 'No email provided'}
                   </p>
-                  {/* Enrollment Status Badge */}
                   <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${enrollmentInfo.color}`}>
                     {enrollmentInfo.label}
                   </span>
@@ -150,54 +181,27 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
 
                 {/* Profile Details */}
                 <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Student Status</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${studentStatusInfo.color}`}>
-                      {studentStatusInfo.label}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Registration No</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium">
-                      {student.registrationNumber || '-'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Admission No</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium">
-                      {student.admissionNumber || '-'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Gender</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium">
-                      {GENDER_STATUS_MAP[student.genderStatus] || '-'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Date of Birth</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium">
-                      {formatDate(student.dateOfBirth)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Phone Number</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium">
-                      {student.phoneNumber || '-'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between py-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Address</span>
-                    <span className="text-sm text-gray-800 dark:text-white font-medium text-right">
-                      {student.address || '-'}
-                    </span>
-                  </div>
+                  {[
+                    { label: 'Student Status', value: (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${studentStatusInfo.color}`}>
+                        {studentStatusInfo.label}
+                      </span>
+                    )},
+                    { label: 'Registration No', value: student.registrationNumber || '-' },
+                    { label: 'Admission No',    value: student.admissionNumber    || '-' },
+                    { label: 'Gender',          value: GENDER_STATUS_MAP[student.genderStatus] || '-' },
+                    { label: 'Date of Birth',   value: formatDate(student.dateOfBirth) },
+                    { label: 'Phone Number',    value: student.phoneNumber || '-' },
+                    { label: 'Address',         value: student.address     || '-' },
+                  ].map(({ label, value }, i, arr) => (
+                    <div
+                      key={label}
+                      className={`flex justify-between py-2 ${i < arr.length - 1 ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}
+                    >
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+                      <span className="text-sm text-gray-800 dark:text-white font-medium text-right">{value}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Action Buttons */}
@@ -221,28 +225,21 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                   </svg>
                   Academic Information
                 </h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Class</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {className}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{className}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Section</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {student.classSectionId || '-'}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{student.classSectionId || '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Enrollment Date</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {formatDate(student.enrollmentDate)}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{formatDate(student.enrollmentDate)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Enrollment Status</p>
@@ -271,27 +268,23 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Province</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {student.provinceId || '-'}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{provinceName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">District</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {student.districtId || '-'}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{districtName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Municipality</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {student.municipalityId || '-'}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{municipalityName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">VDC</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{vdcName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Ward Number</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                      {student.wardNumber || '-'}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-white">{s?.wardNumber || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -302,37 +295,27 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  School & Parent Information
+                  School &amp; Parent Information
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-purple-100 dark:border-purple-800">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">School</span>
-                    <span className="text-sm font-medium text-gray-800 dark:text-white">
-                      {schoolDetail?.name || '-'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-purple-100 dark:border-purple-800">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Parent Name</span>
-                    <span className="text-sm font-medium text-gray-800 dark:text-white">
-                      {parentName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-purple-100 dark:border-purple-800">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Parent Phone</span>
-                    <span className="text-sm font-medium text-gray-800 dark:text-white">
-                      {isParentLoading ? 'Loading...' : (parentDetail?.phoneNumber || '-')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">School Address</span>
-                    <span className="text-sm font-medium text-gray-800 dark:text-white text-right">
-                      {schoolDetail?.address || '-'}
-                    </span>
-                  </div>
+                  {[
+                    { label: 'School',         value: schoolDetail?.name    || '-' },
+                    { label: 'Parent Name',    value: parentName },
+                    { label: 'Parent Phone',   value: isParentLoading ? 'Loading...' : (parentDetail?.phoneNumber || '-') },
+                    { label: 'School Address', value: schoolDetail?.address || '-' },
+                  ].map(({ label, value }, i, arr) => (
+                    <div
+                      key={label}
+                      className={`flex justify-between items-center py-2 ${i < arr.length - 1 ? 'border-b border-purple-100 dark:border-purple-800' : ''}`}
+                    >
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-white text-right">{value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
 
