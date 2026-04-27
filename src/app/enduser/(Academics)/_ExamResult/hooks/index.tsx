@@ -102,7 +102,17 @@ export const useGetExamResultById = (ExamResultId: string) => {
       const response = await api.get<IExamResult>(
         `${ExamResultEndPoints.getExamResultsById}/${ExamResultId}`
       )
-      return response.data
+
+      // Normalize API field name: "marksObtaineds" → "marksObtained"
+      const raw = response.data
+      return {
+        ...raw,
+        marksObtained: (raw.marksObtained ?? []).map((item: any) => ({
+          subjectId: item.subjectId,
+          marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
+          fullMarks: item.fullMarks ?? 0,
+        })),
+      }
     },
     enabled: !!ExamResultId,
     staleTime: 0,
