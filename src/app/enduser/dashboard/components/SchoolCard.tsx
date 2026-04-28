@@ -19,25 +19,19 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   const logoUrl = resolveImageUrl(schoolData?.imageUrl);
 
-  // Add this log
-  console.log('School Info:', {
-    id: schoolData?.id,
-    name: schoolData?.name,
-    imageUrl: schoolData?.imageUrl,
-    resolvedUrl: logoUrl
-  });
-
   if (isLoading) {
     return (
       <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-20 h-20 bg-white/20 rounded-full animate-pulse" />
-          <div className="h-7 w-48 bg-white/20 rounded animate-pulse" />
-        </div>
-        <div className="space-y-2">
-          <div className="h-4 w-64 bg-white/20 rounded animate-pulse" />
-          <div className="h-4 w-56 bg-white/20 rounded animate-pulse" />
-          <div className="h-4 w-40 bg-white/20 rounded animate-pulse" />
+        <div className="flex gap-4">
+          <div className="w-20 h-20 bg-white/20 rounded-full animate-pulse flex-shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="h-7 w-48 bg-white/20 rounded animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 w-64 bg-white/20 rounded animate-pulse" />
+              <div className="h-4 w-56 bg-white/20 rounded animate-pulse" />
+              <div className="h-4 w-40 bg-white/20 rounded animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -45,9 +39,8 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   return (
     <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden p-6">
-      {/* First Row: Logo and School Name */}
-      <div className="flex items-center gap-4 mb-6">
-        {/* School Logo */}
+      <div className="flex gap-4">
+        {/* Left: School Logo */}
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
           {logoUrl && !logoError ? (
             <img
@@ -61,26 +54,29 @@ export default function SchoolInfoCard({ schoolId }: Props) {
           )}
         </div>
 
-        {/* School Name */}
-        <h2 className="text-2xl font-bold">
-          {schoolData?.name ?? "—"}
-          <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
-        </h2>
-      </div>
+        {/* Right: School Name and Information Column */}
+        <div className="flex-1 space-y-3">
+          {/* School Name with Estd Year */}
+          <h2 className="text-2xl font-bold">
+            {schoolData?.name ?? "—"}
+            <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
+          </h2>
 
-      {/* Second Row: School Information */}
-      <div className="flex flex-wrap gap-6 text-sm">
-        <div className="flex items-center">
-          <LocateIcon className="mr-2 shrink-0 w-4 h-4" />
-          <span>{schoolData?.address ?? "—"}</span>
-        </div>
-        <div className="flex items-center">
-          <Mail className="mr-2 shrink-0 w-4 h-4" />
-          <span>{schoolData?.email ?? "—"}</span>
-        </div>
-        <div className="flex items-center">
-          <Phone className="mr-2 shrink-0 w-4 h-4" />
-          <span>{schoolData?.contactNumber ?? "—"}</span>
+          {/* School Information Row */}
+          <div className="flex flex-wrap gap-6 text-sm">
+            <div className="flex items-center">
+              <LocateIcon className="mr-2 shrink-0 w-4 h-4" />
+              <span>{schoolData?.address ?? "—"}</span>
+            </div>
+            <div className="flex items-center">
+              <Mail className="mr-2 shrink-0 w-4 h-4" />
+              <span>{schoolData?.email ?? "—"}</span>
+            </div>
+            <div className="flex items-center">
+              <Phone className="mr-2 shrink-0 w-4 h-4" />
+              <span>{schoolData?.contactNumber ?? "—"}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
