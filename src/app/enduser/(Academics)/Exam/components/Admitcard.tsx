@@ -19,7 +19,7 @@ type AdmitCardProps = {
   parent?: IParent | null
 }
 
-const getGenderLabel = (gender: number): string => {
+const getGenderLabel = (gender: number | undefined): string => {
   if (gender === 1) return 'Male'
   if (gender === 2) return 'Female'
   if (gender === 3) return 'Others'
@@ -118,17 +118,17 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
 
           {/* Photo */}
           <div className="w-[160px] p-5 flex items-center justify-center">
-       <img
-  src={
-    student.imageUrl || student.studentImg?.toString()
-      ? (student.imageUrl || student.studentImg?.toString())
-      : student.genderStatus === 2
-      ? '/assets/female.png'
-      : '/assets/male.png'
-  }
-  className="w-[90px] h-[110px] border object-cover"
-  alt="Student"
-/>
+            <img
+              src={
+                student.imageUrl || student.studentImg?.toString()
+                  ? (student.imageUrl || student.studentImg?.toString())
+                  : student.genderStatus === 2
+                  ? '/assets/female.png'
+                  : '/assets/male.png'
+              }
+              className="w-[90px] h-[110px] border object-cover"
+              alt="Student"
+            />
           </div>
         </div>
       </div>
