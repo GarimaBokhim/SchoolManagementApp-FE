@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/utils/instance';
+import { useGetAllCountries, useGetUniversities, useGetAllCourses } from '@/app/crm/university/_university/hooks';
 import { X, User, Mail, Phone, Calendar, MapPin, GraduationCap, BookOpen, Award, Users, Globe, Hash, Flag, Clock, Edit, CheckCircle, XCircle } from 'lucide-react';
 
 interface ApplicantDetail {
@@ -10,7 +11,9 @@ interface ApplicantDetail {
   email: string;
   enrolmentType: number;
   passportNo: string;
-  targetCountry: string;
+  countryId: string;
+  universityId: string;
+  courseId: string;
   isActive: boolean;
   schoolId: string;
   createdBy: string;
@@ -69,6 +72,28 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
   const [detail, setDetail] = useState<ApplicantDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: countries } = useGetAllCountries();
+  const { data: universities } = useGetUniversities();
+  const { data: courses } = useGetAllCourses();
+
+  const getCountryName = (id: string) => {
+    if (!countries || !id) return id;
+    const country = countries.find((c: any) => c.id === id);
+    return country ? country.name : id;
+  };
+
+  const getUniversityName = (id: string) => {
+    if (!universities || !id) return id;
+    const university = universities.find((u: any) => u.id === id);
+    return university ? university.name : id;
+  };
+
+  const getCourseName = (id: string) => {
+    if (!courses || !id) return id;
+    const course = courses.find((c: any) => c.id === id);
+    return course ? (course.title || course.name || course.courseName || id) : id;
+  };
 
   useEffect(() => {
     if (!isOpen || !applicantId) return;
@@ -208,7 +233,17 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                     <InfoRow
                       icon={<Globe size={16} className="text-emerald-600 dark:text-emerald-400" />}
                       label="Target Country"
-                      value={detail.targetCountry}
+                      value={getCountryName(detail.countryId)}
+                    />
+                    <InfoRow
+                      icon={<GraduationCap size={16} className="text-blue-600 dark:text-blue-400" />}
+                      label="University"
+                      value={getUniversityName(detail.universityId)}
+                    />
+                    <InfoRow
+                      icon={<BookOpen size={16} className="text-purple-600 dark:text-purple-400" />}
+                      label="Course"
+                      value={getCourseName(detail.courseId)}
                     />
                     <InfoRow
                       icon={<Clock size={16} className="text-orange-500 dark:text-orange-400" />}
