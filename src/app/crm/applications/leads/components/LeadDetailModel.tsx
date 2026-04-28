@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/utils/instance';
-import { X, User, Mail, Phone, Calendar, MapPin, GraduationCap, BookOpen, Award, Users, Globe } from 'lucide-react';
+import { X, User, Mail, Phone, Calendar, MapPin, GraduationCap, BookOpen, Award, Users, Globe, TrendingUp, MessageCircle, CalendarRange } from 'lucide-react';
 
 interface LeadDetail {
   userId: string;
@@ -14,6 +14,12 @@ interface LeadDetail {
   contactNumber: string;
   permanentAddress: string;
   educationLevel: number;
+  englishProficiency: number;
+  bandScore: number;
+  languageRemarks: string;
+  trainingRemarks: string;
+  trainingStartDate: string;
+  trainingEndDate: string;
   completionYear: string;
   currentGpa: string;
   previousAcademicQualification: string;
@@ -24,7 +30,7 @@ interface LeadDetail {
 interface LeadDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: string | null;
+  leadId: string | null; // Changed from userId to leadId
 }
 
 const getGenderText = (gender: number) => {
@@ -42,6 +48,16 @@ const getEducationLevelText = (level: number) => {
     case 2: return '+2 / A-Level';
     case 3: return "Bachelor's Degree";
     case 4: return "Master's Degree";
+    default: return 'N/A';
+  }
+};
+
+const getEnglishProficiencyText = (level: number) => {
+  switch (level) {
+    case 1: return 'IELTS';
+    case 2: return 'TOEFL';
+    case 3: return 'PTE';
+    case 4: return 'Duolingo';
     default: return 'N/A';
   }
 };
@@ -86,22 +102,23 @@ const InfoRow = ({
   </div>
 );
 
-export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProps) => {
+export const LeadDetailModal = ({ isOpen, onClose, leadId }: LeadDetailModalProps) => {
   const [detail, setDetail] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !userId) return;
+    if (!isOpen || !leadId) return;
 
     const fetchDetail = async () => {
       try {
         setLoading(true);
         setError(null);
         setDetail(null);
-        const response = await api.get<LeadDetail>(`/api/Enrolments/Inquiry/${userId}`);
+        const response = await api.get<LeadDetail>(`/api/Enrolments/Inquiry/${leadId}`);
         setDetail(response.data);
-      } catch {
+      } catch (err) {
+        console.error('Error fetching lead details:', err);
         setError('Failed to load lead details.');
       } finally {
         setLoading(false);
@@ -109,7 +126,7 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
     };
 
     fetchDetail();
-  }, [isOpen, userId]);
+  }, [isOpen, leadId]);
 
   if (!isOpen) return null;
 
@@ -192,7 +209,7 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
                 <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     <InfoRow
-                      icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                      icon={<Mail size={16} className="text-emerald-600 dark:text-emerald-400" />}
                       label="Email"
                       value={detail.email}
                     />
@@ -246,6 +263,53 @@ export const LeadDetailModal = ({ isOpen, onClose, userId }: LeadDetailModalProp
                       icon={<GraduationCap size={16} className="text-indigo-600 dark:text-indigo-400" />}
                       label="Previous Qualification"
                       value={detail.previousAcademicQualification}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* English Proficiency Section */}
+              <div>
+                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                  English Proficiency
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <InfoRow
+                      icon={<TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                      label="Test Type"
+                      value={getEnglishProficiencyText(detail.englishProficiency)}
+                    />
+                    <InfoRow
+                      icon={<Award size={16} className="text-blue-600 dark:text-blue-400" />}
+                      label="Band Score"
+                      value={detail.bandScore}
+                    />
+                    <InfoRow
+                      icon={<MessageCircle size={16} className="text-purple-600 dark:text-purple-400" />}
+                      label="Language Remarks"
+                      value={detail.languageRemarks}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Training Information Section */}
+              <div>
+                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                  Training Information
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <InfoRow
+                      icon={<CalendarRange size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                      label="Training Period"
+                      value={`${formatDate(detail.trainingStartDate)} - ${formatDate(detail.trainingEndDate)}`}
+                    />
+                    <InfoRow
+                      icon={<MessageCircle size={16} className="text-orange-500 dark:text-orange-400" />}
+                      label="Training Remarks"
+                      value={detail.trainingRemarks}
                     />
                   </div>
                 </div>

@@ -20,11 +20,12 @@ import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddExamResult from '../pages/Add'
 import DeleteButton from '@/components/Buttons/DeleteButton'
-import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
+
 import { useGetAllExams } from '../../Exam/hooks'
 import SchoolMarkSheet from './SchoolMarkSheet'
 import SchoolMarkSheetSecond from './SchoolMarkSheetSecond'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
+import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks' // Changed import
 
 const formatStudentDisplayName = (s: IStudent | undefined) => {
   if (!s) return ''
@@ -32,7 +33,7 @@ const formatStudentDisplayName = (s: IStudent | undefined) => {
 }
 
 function paginationItems<T>(data: unknown): T[] {
-  if (Array.isArray(data)) return data as T[]           // <-- add this line
+  if (Array.isArray(data)) return data as T[]
   if (data == null || typeof data !== 'object') return []
   const o = data as { Items?: T[]; items?: T[] }
   if (Array.isArray(o.Items)) return o.Items
@@ -62,6 +63,17 @@ const examResultExamId = (row: ApiExamResultRow): string | undefined => {
 const examResultRowId = (row: ApiExamResultRow): string | undefined =>
   row.id ?? row.Id
 
+// Custom component to fetch and display student name by ID
+const StudentNameCell = ({ studentId }: { studentId: string | undefined }) => {
+  const { data: studentData, isLoading } = useGetStudentById(studentId || '')
+  
+  if (!studentId) return <span>—</span>
+  if (isLoading) return <span className="text-gray-400">Loading...</span>
+  if (!studentData) return <span>—</span>
+  
+  return <span>{formatStudentDisplayName(studentData)}</span>
+}
+
 const AllExamResultForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -83,6 +95,10 @@ const AllExamResultForm = () => {
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
   
+  // State for storing student data for filter dropdown
+  const [studentOptions, setStudentOptions] = useState<IStudent[]>([])
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false)
+  
   // Edit button element
   const editButtonElement = (id: string) => {
     return (
@@ -101,13 +117,13 @@ const AllExamResultForm = () => {
   
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
-  const { data: allStudent } = useGetAllStudents('?IsPagination=false')
   const { data: allExam } = useGetAllExams()
-  const studentList = paginationItems<IStudent>(allStudent)
+  
   const [showStudentPrint, setShowStudentPrint] = useState(false)
   const [showStudentPrintSecond, setShowStudentPrintSecond] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<string | null>('')
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
+  
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   })
@@ -119,6 +135,7 @@ const AllExamResultForm = () => {
       endDate: '',
     },
   })
+  
   const fullQuery = query + (params || '')
 
   const {
@@ -127,15 +144,15 @@ const AllExamResultForm = () => {
     isLoading,
   } = useFilterExamResultByDate(fullQuery)
   const examResultRows = paginationItems<ApiExamResultRow>(filteredExamResult)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null
-  )
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
 
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
+  
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
+  
   const onSubmit: SubmitHandler<IFilterExamResultByDate> = async (formData) => {
     clearError()
     try {
@@ -172,12 +189,15 @@ const AllExamResultForm = () => {
       console.error('Error during form submission:', error)
     }
   }
+  
   const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
     refForInput.current?.focus()
   }, [])
+  
   const formRef = useRef<DateRangeFilterRef>(null)
   const deleteExamResult = useRemoveExamResult()
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteExamResult.mutateAsync(id)
@@ -187,6 +207,7 @@ const AllExamResultForm = () => {
       toast.error('Error deleting user.')
     }
   }
+  
   const onClearClick = () => {
     refetch()
     setParams('')
@@ -195,12 +216,30 @@ const AllExamResultForm = () => {
     form.reset()
   }
 
+  // Function to load student options for filter dropdown
+  // You'll need to get unique student IDs from examResultRows
+  useEffect(() => {
+    const loadStudentOptions = async () => {
+      const uniqueStudentIds = [...new Set(
+        examResultRows.map(row => examResultStudentId(row)).filter(Boolean)
+      )]
+      
+      setIsLoadingStudents(true)
+      // This is a limitation - you might want to create a separate API endpoint
+      // to get students by multiple IDs, or keep using getAllStudentsV2 for the filter
+      // For now, we'll keep the filter simple or you can implement batch fetching
+      setIsLoadingStudents(false)
+    }
+    
+    loadStudentOptions()
+  }, [examResultRows])
+
   return (
     <>
-      <div className="md:px-4  px-4 ">
+      <div className="md:px-4 px-4 ">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All ExamResults</h1>
+            <h1 className="text-xl font-semibold ">All ExamResults</h1>
             <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
@@ -234,28 +273,20 @@ const AllExamResultForm = () => {
                   setParams={setParams}
                 />
 
-                {/* Student name filter */}
+                {/* Student name filter - Simplified for now */}
                 <div className="flex-1 min-w-[240px]">
-                  <AppCombobox
-                    dropDownWidth="w-[25rem]"
-                    label="Student Name"
-                    name="studentId"
-                    form={form}
-                    dropdownPositionClass="fixed"
-                    value={selectedStudentId}
-                    options={studentList}
-                    selected={
-                      studentList.find((g) => String(g.id) === String(selectedStudentId)) ??
-                      null
-                    }
-                    onSelect={(user) => {
-                      const id = user?.id ?? ''
+                  <input
+                    type="text"
+                    placeholder="Enter Student ID"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={selectedStudentId || ''}
+                    onChange={(e) => {
+                      const id = e.target.value
                       setSelectedStudentId(id)
                       form.setValue('studentId', id)
                     }}
-                    getLabel={(g) => g?.firstName ?? ''}
-                    getValue={(g) => g?.id ?? ''}
                   />
+                  <p className="text-xs text-gray-500 mt-1">Enter Student ID to filter</p>
                 </div>
 
                 {/* Action buttons */}
@@ -282,9 +313,9 @@ const AllExamResultForm = () => {
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 ">Exam Name</th>
-                  <th className="px-4 py-3 ">Student Name</th>
-                  <th className="px-4 py-3 ">Remarks</th>
+                  <th className="px-4 py-3">Exam Name</th>
+                  <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Remarks</th>
                   <th className="px-4 py-3 text-center w-[280px]">Actions</th>
                  </tr>
               </thead>
@@ -313,14 +344,8 @@ const AllExamResultForm = () => {
                           }
                         </td>
                         <td className="py-3 px-4">
-                          {formatStudentDisplayName(
-                            studentList.find(
-                              (i) =>
-                                i.id != null &&
-                                sid != null &&
-                                String(i.id) === String(sid)
-                            )
-                          ) || '—'}
+                          {/* Using the new StudentNameCell component with useGetStudentById */}
+                          <StudentNameCell studentId={sid} />
                         </td>
                         <td className="px-2 md:px-4">{ExamResult.remarks}</td>
                         <td className="py-3 px-4">

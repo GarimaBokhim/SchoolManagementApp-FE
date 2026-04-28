@@ -4,7 +4,7 @@ import { SubmitHandler, UseFormReturn, useFieldArray } from 'react-hook-form'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Toast } from '@/components/Toast/toast'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, ChangeEvent } from 'react'
 import { X } from 'lucide-react'
 import { IExamResult } from '../types/IExamResults'
 import { useEditExamResult, useGetExamResultById } from '../hooks'
@@ -12,9 +12,10 @@ import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetAllExams } from '../../Exam/hooks'
-import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
-import { useGetSubjectByClassId } from '../../Subject/hooks'
+import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { useGetSubjectById } from '../../Subject/hooks'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
+import { IExam } from '../../Exam/types/IExams'
 
 type Props = {
   form: UseFormReturn<IExamResult>
@@ -26,65 +27,65 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const editExamResult = useEditExamResult()
   const { handleError, clearError } = useErrorHandler()
 
-  const { control, reset } = form
+  const { control, reset, watch, setValue } = form
 
-  const { data: ExamResultData } = useGetExamResultById(ExamResultId)
-  const [selectedClassId, setSelectedClassId] = useState<string | null>('')
-  const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
-  const [selectedStudent, setSelectedStudent] = useState<IStudent | null>()
-
-  useEffect(() => {
-    if (selectedStudent) {
-      setSelectedClassId(selectedStudent.classId || '')
-    }
-  }, [selectedStudent])
-
-  const { data: allExam } = useGetAllExams()
-  const { data: allStudents } = useGetAllStudents('?IsPagination=false')
-  const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
-  const [, setSelectedSubjectIds] = useState<{ [key: number]: string | null }>({})
-
+  const { data: ExamResultData, isLoading: isLoadingExamResult } = useGetExamResultById(ExamResultId)
+  const { data: allExam, isLoading: isLoadingExams } = useGetAllExams()
+  
+  // Fetch student individually by ID
+  const { data: studentData, isLoading: isLoadingStudent } = useGetStudentById(
+    ExamResultData?.studentId || ''
+  )
+  
+  const [selectedExam, setSelectedExam] = useState<IExam | undefined>(undefined)
+  const [selectedStudent, setSelectedStudent] = useState<IStudent | undefined>(undefined)
+  
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'marksObtained',
   })
 
-  // In EditExamResultForm, inside the useEffect that calls reset(...)
+  // Initialize form with API data
+  useEffect(() => {
+    if (!ExamResultData) {
+      return
+    }
 
-useEffect(() => {
-  if (!ExamResultData) return
+    if (!allExam?.Items) {
+      return
+    }
 
-  // Normalize API response: "marksObtaineds" → "marksObtained"
-  const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item) => ({
-    subjectId: item.subjectId,
-    marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
-    fullMarks: item.fullMarks ?? 0,
-  }))
+    // Find the full exam object from the list
+    const exam = allExam.Items.find((e: IExam) => e.id === ExamResultData.examId)
+    setSelectedExam(exam)
 
-  reset({
-    examId: ExamResultData.examId,
-    studentId: ExamResultData.studentId,
-    remarks: ExamResultData.remarks,
-    marksObtained: normalizedMarks,
-  })
+    // Student will be set separately by the useGetStudentById hook
+    // We'll update selectedStudent when studentData changes
 
-  setSelectedExamId(ExamResultData.examId)
-  setSelectedStudentId(ExamResultData.studentId)
+    // Normalize marks data
+    const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item: any) => ({
+      subjectId: item.subjectId,
+      marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
+      fullMarks: item.fullMarks ?? 0,
+    }))
 
-  const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
-  if (student?.classId) {
-    setSelectedClassId(student.classId)
-  }
+    reset({
+      examId: ExamResultData.examId,
+      studentId: ExamResultData.studentId,
+      remarks: ExamResultData.remarks || '',
+      marksObtained: normalizedMarks,
+    })
 
-  replace(normalizedMarks) // <-- also pass the normalized version here
+    replace(normalizedMarks)
+  }, [ExamResultData, allExam, reset, replace])
 
-  const initialSubjects: { [key: number]: string } = {}
-  normalizedMarks.forEach((item, index) => {
-    initialSubjects[index] = item.subjectId
-  })
-  setSelectedSubjectIds(initialSubjects)
-}, [ExamResultData, allStudents, reset, replace])
+  // Update selected student when studentData is fetched
+  useEffect(() => {
+    if (studentData) {
+      setSelectedStudent(studentData)
+    }
+  }, [studentData])
+
   const handleClose = () => {
     reset()
     onClose()
@@ -93,8 +94,19 @@ useEffect(() => {
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError()
     try {
+      const transformedData = {
+        examId: data.examId,
+        studentId: data.studentId,
+        remarks: data.remarks,
+        marksObtained: data.marksObtained.map((item: any) => ({
+          subjectId: item.subjectId,
+          marksObtaineds: item.marksObtained,
+          fullMarks: item.fullMarks
+        }))
+      }
+      
       await toast.promise(
-        editExamResult.mutateAsync({ id: ExamResultId, data }),
+        editExamResult.mutateAsync({ id: ExamResultId, data: transformedData as any }),
         {
           loading: 'Updating Exam Result...',
           success: 'Successfully Updated Exam Result',
@@ -105,6 +117,30 @@ useEffect(() => {
       const errorMsg = handleError(error)
       Toast.error(errorMsg)
     }
+  }
+
+  const handleMarksBlur = (index: number, currentFullMarks: number | undefined) => (e: ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value)
+    if (currentFullMarks && value > currentFullMarks) {
+      alert(`Obtained marks cannot exceed full marks (${currentFullMarks})`)
+      setValue(`marksObtained.${index}.marksObtained`, currentFullMarks)
+    }
+  }
+
+  // Show loading state
+  if (isLoadingExamResult || isLoadingExams || isLoadingStudent) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0">
+        <div className="bg-[#FBFBFB] dark:bg-[#27272a] w-full h-full max-w-[90vw] max-h-full rounded-lg overflow-auto p-10 shadow-lg">
+          <div className="flex justify-center items-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -133,46 +169,51 @@ useEffect(() => {
 
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <AppCombobox
-                dropDownWidth="w-[25rem]"
+              <AppCombobox<IExam>
                 label="Exam"
                 name="examId"
                 form={form}
-                dropdownPositionClass="absolute"
-                value={selectedExamId}
+                selected={selectedExam}
                 options={allExam?.Items ?? []}
-                selected={allExam?.Items?.find((e) => e.id === selectedExamId) || null}
-                onSelect={(exam) => {
-                  const id = exam?.id ?? ''
-                  setSelectedExamId(id)
-                  form.setValue('examId', id)
+                onSelect={(exam: IExam | null) => {
+                  setSelectedExam(exam || undefined)
+                  setValue('examId', exam?.id ?? '', { 
+                    shouldValidate: true, 
+                    shouldDirty: true 
+                  })
                 }}
-                getLabel={(e) => e?.name ?? ''}
-                getValue={(e) => e?.id ?? ''}
+                getLabel={(e: IExam) => e?.name ?? ''}
+                getValue={(e: IExam) => e?.id ?? ''}
+                placeholder="Select an exam"
               />
-              <AppCombobox
-                dropDownWidth="w-[25rem]"
-                label="Student Name"
-                name="studentId"
-                form={form}
-                dropdownPositionClass="absolute"
-                value={selectedStudentId}
-                options={allStudents?.Items ?? []}
-                selected={allStudents?.Items?.find((s) => s.id === selectedStudentId) || null}
-                onSelect={(student) => {
-                  const id = student?.id ?? ''
-                  setSelectedStudentId(id)
-                  setSelectedStudent(student)
-                  form.setValue('studentId', id)
-                }}
-                getLabel={(s) => s?.firstName ?? ''}
-                getValue={(s) => s?.id ?? ''}
-              />
+              
+              <div className="w-full">
+<AppCombobox<IStudent>
+  label="Student Name"
+  name="studentId"
+  form={form}
+  selected={selectedStudent}
+  options={[]} // Empty array since we don't need options in readOnly mode
+  onSelect={() => {}} // No-op since it's readOnly
+  getLabel={(s: IStudent) => {
+    if (!s) return ''
+    return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
+  }}
+  getValue={(s: IStudent) => s?.id ?? ''}
+  placeholder="Loading student..."
+  readOnly={true} // This makes it read-only
+/>
+                <input
+                  type="hidden"
+                  {...form.register('studentId')}
+                />
+              </div>
+              
               <InputElement
                 label="Remark"
                 form={form}
                 name="remarks"
-                type="string"
+                inputType="text"
                 placeholder="Enter remark"
               />
             </div>
@@ -180,78 +221,69 @@ useEffect(() => {
             <div className="mt-10">
               <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
-                >
-                  {/* Subject dropdown — 5 cols */}
-                  <div className="col-span-12 md:col-span-5">
-                    <AppCombobox
-                      dropDownWidth="w-full"
-                      label="Subject"
-                      name={`marksObtained.${index}.subjectId`}
-                      form={form}
-                      dropdownPositionClass="absolute"
-                      options={allSubject ?? []}
-                      value={form.watch(`marksObtained.${index}.subjectId`)}
-                      selected={
-                        allSubject?.find(
-                          (subj) => subj.id === form.watch(`marksObtained.${index}.subjectId`)
-                        ) || null
-                      }
-                      onSelect={(subject) => {
-                        const id = subject?.id ?? ''
-                        form.setValue(`marksObtained.${index}.subjectId`, id, {
-                          shouldValidate: true,
-                        })
-                        setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
-                      }}
-                      getLabel={(s) => s?.subjectName ?? ''}
-                      getValue={(s) => s?.id ?? ''}
-                    />
-                  </div>
+              {fields.map((field, index: number) => {
+                const currentSubjectId = watch(`marksObtained.${index}.subjectId`)
+                const currentFullMarks = watch(`marksObtained.${index}.fullMarks`)
+                
+                return (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
+                  >
+                    {/* Subject display */}
+                    <div className="col-span-12 md:col-span-5">
+                      {currentSubjectId ? (
+                        <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 dark:bg-gray-700">
+                          <SubjectNameDisplay subjectId={currentSubjectId} />
+                        </div>
+                      ) : (
+                        <InputElement
+                          label="Subject ID"
+                          form={form}
+                          name={`marksObtained.${index}.subjectId`}
+                          inputType="text"
+                          placeholder="Enter Subject ID"
+                        />
+                      )}
+                    </div>
 
-                  {/* Marks Obtained — 5 cols */}
-                  <div className="col-span-12 md:col-span-5">
-                    <InputElement
-                      label="Marks Obtained"
-                      form={form}
-                      name={`marksObtained.${index}.marksObtained`}
-                      type="number"
-                      placeholder="Enter marks"
-                    />
-                  </div>
+                    {/* Marks Obtained */}
+                    <div className="col-span-12 md:col-span-3">
+                      <InputElement
+                        label="Marks Obtained"
+                        form={form}
+                        name={`marksObtained.${index}.marksObtained`}
+                        inputType="number"
+                        placeholder="Enter marks"
+                        onBlur={handleMarksBlur(index, currentFullMarks)}
+                      />
+                    </div>
 
-                  {/*
-                   * Full Marks field is intentionally hidden from the UI.
-                   * The field stays registered in the form schema so the
-                   * existing API payload shape is not broken.
-                   */}
-                  <input
-                    type="hidden"
-                    {...form.register(`marksObtained.${index}.fullMarks`)}
-                  />
+                    {/* Full Marks display */}
+                    <div className="col-span-12 md:col-span-2">
+                      <InputElement
+                        label="Full Marks"
+                        form={form}
+                        name={`marksObtained.${index}.fullMarks`}
+                        inputType="number"
+                        placeholder="Full marks"
+                        readOnly
+                      />
+                    </div>
 
-                  {/* Remove row — 2 cols */}
-                  <div className="col-span-12 md:col-span-2 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        remove(index)
-                        setSelectedSubjectIds((prev) => {
-                          const updated = { ...prev }
-                          delete updated[index]
-                          return updated
-                        })
-                      }}
-                      className="text-red-400 hover:text-red-600 text-xl font-bold"
-                    >
-                      <X />
-                    </button>
+                    {/* Remove row */}
+                    <div className="col-span-12 md:col-span-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="text-red-400 hover:text-red-600 text-xl font-bold"
+                      >
+                        <X />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
               <ButtonElement
                 type="button"
@@ -260,20 +292,38 @@ useEffect(() => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
-                    fullMarks: 0, // kept in payload, not shown in UI
+                    fullMarks: 0,
                   })
                 }
+                className="mt-2"
               />
             </div>
 
-            <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text="Submit" />
+            <div className="flex justify-center mt-6 gap-4">
+              <ButtonElement 
+                type="button" 
+                text="Cancel" 
+                onClick={handleClose}
+                className="bg-gray-500 hover:bg-gray-600"
+              />
+              <ButtonElement type="submit" text="Update" />
             </div>
           </form>
         </fieldset>
       </div>
     </div>
   )
+}
+
+// Component to display subject name by ID
+const SubjectNameDisplay = ({ subjectId }: { subjectId: string }) => {
+  const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
+  
+  if (isLoading) return <span className="text-gray-500">Loading subject...</span>
+  if (error) return <span className="text-red-500">Error loading subject</span>
+  if (!subject) return <span className="text-gray-500">Subject not found</span>
+  
+  return <span className="font-medium">{subject.name}</span>
 }
 
 export default EditExamResultForm

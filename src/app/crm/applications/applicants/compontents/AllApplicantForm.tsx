@@ -123,7 +123,7 @@ const AllApplicantsForm = () => {
 
   // Action handlers
   const handleViewClick = (applicant: Applicant) => {
-    setSelectedApplicantId(applicant.userId ?? applicant.id);
+    setSelectedApplicantId(applicant.id);
     setShowDetailModal(true);
   };
 

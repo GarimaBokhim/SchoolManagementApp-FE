@@ -19,6 +19,7 @@ export interface SelectedLead {
 
 export interface ApiResponse {
   Items: Array<{
+    id: string;
     userId: string;
     fullName: string;
     email: string;

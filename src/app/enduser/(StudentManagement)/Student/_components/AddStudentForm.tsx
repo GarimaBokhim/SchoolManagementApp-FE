@@ -52,47 +52,51 @@ const AddStudentForm = ({ form, onClose }: Props) => {
     form.reset()
   }
 
-  const onSubmit: SubmitHandler<IStudent> = async (data) => {
-    clearError()
+const onSubmit: SubmitHandler<IStudent> = async (data) => {
+  clearError()
 
-    try {
-      const formData = new FormData()
-      formData.append('firstName', data.firstName)
-      formData.append('feeCategoryId', data.feeCategoryId ?? '')
-      formData.append('middleName', data.middleName ?? '')
-      formData.append('lastName', data.lastName)
-      formData.append('registrationNumber', data.registrationNumber)
-      formData.append('genderStatus', String(genderStatus ?? data.genderStatus ?? 0))
-      formData.append('studentStatus', String(data.studentStatus ?? 0))
-      formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '')
-      formData.append('email', data.email)
-      formData.append('phoneNumber', data.phoneNumber)
-      formData.append('address', data.address)
-      formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '')
-      formData.append('parentId', data.parentId)
-      formData.append('classId', data.classId)
-      formData.append('classSectionId', data.classSectionId ?? '')
-      formData.append('provinceId', String(data.provinceId ?? 0))
-      formData.append('districtId', String(data.districtId ?? 0))
-      formData.append('municipalityId', String(data.municipalityId ?? 0))
-      formData.append('vdcId', String(data.vdcid ?? 0))  // API uses vdcId
-      formData.append('wardNumber', String(data.wardNumber ?? 0))
-      if (data.studentImg instanceof File) {
-        formData.append('studentImg', data.studentImg)
-      }
-
-      await toast.promise(addStudent.mutateAsync(formData), {
-        loading: 'Adding Student...',
-        success: 'Successfully added Student',
-      })
-
-      handleClose()
-      onClose()
-    } catch (error) {
-      const errorMsg = handleError(error)
-      Toast.error(errorMsg)
+  try {
+    const formData = new FormData()
+    
+    // Always provide a fallback string for required fields
+    formData.append('firstName', data.firstName)
+    formData.append('feeCategoryId', data.feeCategoryId ?? '')
+    formData.append('middleName', data.middleName ?? '')
+    formData.append('lastName', data.lastName)
+    formData.append('registrationNumber', data.registrationNumber ?? '')
+    formData.append('genderStatus', String(genderStatus ?? data.genderStatus ?? 0))
+    formData.append('studentStatus', String(data.studentStatus ?? 0))
+    formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '')
+    formData.append('email', data.email ?? '')
+    formData.append('phoneNumber', data.phoneNumber ?? '')
+    formData.append('address', data.address ?? '')
+    formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '')
+    formData.append('parentId', data.parentId ?? '')
+    formData.append('classId', data.classId ?? '')
+    formData.append('classSectionId', data.classSectionId ?? '')
+    formData.append('provinceId', String(data.provinceId ?? 0))
+    formData.append('districtId', String(data.districtId ?? 0))
+    formData.append('municipalityId', String(data.municipalityId ?? 0))
+    formData.append('vdcId', String(data.vdcid ?? 0)) // API uses vdcId
+    formData.append('wardNumber', String(data.wardNumber ?? 0))
+    
+    // Only append file if it exists
+    if (data.studentImg instanceof File) {
+      formData.append('studentImg', data.studentImg)
     }
+
+    await toast.promise(addStudent.mutateAsync(formData), {
+      loading: 'Adding Student...',
+      success: 'Successfully added Student',
+    })
+
+    handleClose()
+    onClose()
+  } catch (error) {
+    const errorMsg = handleError(error)
+    Toast.error(errorMsg)
   }
+}
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [studentImgPath, setStudentImgPath] = useState<string>('')

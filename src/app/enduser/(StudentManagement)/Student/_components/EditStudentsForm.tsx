@@ -106,8 +106,9 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
     '?startDate=2080-01-01&endDate=2090-01-01&IsPagination=false'
   );
 
-  const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0);
-  const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0);
+  // FIX 1: Changed from number | undefined to number | null to match state types
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<string | null>(null);
@@ -115,12 +116,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
   // Fetch ALL parents (no pagination) so mapping works reliably
   const { data: allParents } = useGetAllParents('?IsPagination=false');
 
+  // FIX 2: Changed from number | null to number | null (kept same but ensure no undefined)
   const [selectedVdcId, setSelectedVdcId] = useState<number | null>(null);
   const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | null>(null);
 
-  const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId);
-  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId);
-  const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId);
+  const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId ?? undefined);
+  const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId ?? undefined);
+  const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId ?? undefined);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [studentImgPath, setStudentImgPath] = useState<string>('');
@@ -274,12 +276,13 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
         feeCategoryId: StudentData.feeCategoryId
       });
 
-      setSelectedDistrictId(StudentData.districtId);
-      setSelectedProvinceId(StudentData.provinceId);
+      // FIX: Convert undefined to null when setting state
+      setSelectedDistrictId(StudentData.districtId ?? null);
+      setSelectedProvinceId(StudentData.provinceId ?? null);
       setSelectedParentId(StudentData.parentId ?? null);
-      setSelectedVdcId(StudentData.vdcid);
-      setSelectedClassId(StudentData.classId);
-      setSelectedMunicipalityId(StudentData.municipalityId);
+      setSelectedVdcId(StudentData.vdcid ?? null);
+      setSelectedClassId(StudentData.classId ?? null);
+      setSelectedMunicipalityId(StudentData.municipalityId ?? null);
       setSelectedFeeCategoryId(StudentData.feeCategoryId ?? null);
 
       const fullUrl = resolveStudentImageUrl(StudentData);
@@ -313,20 +316,22 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
     clearError();
     try {
       const formData = new FormData();
-      formData.append('firstName', data.firstName);
+      
+      // FIX 3: Add null checks with fallbacks for all formData.append calls
+      formData.append('firstName', data.firstName ?? '');
       formData.append('feeCategoryId', data.feeCategoryId ?? '');
       formData.append('middleName', data.middleName ?? '');
-      formData.append('lastName', data.lastName);
-      formData.append('registrationNumber', data.registrationNumber);
+      formData.append('lastName', data.lastName ?? '');
+      formData.append('registrationNumber', data.registrationNumber ?? '');
       formData.append('genderStatus', String(data.genderStatus ?? 1));
       formData.append('studentStatus', String(data.studentStatus ?? 0));
       formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '');
-      formData.append('email', data.email);
-      formData.append('phoneNumber', data.phoneNumber);
-      formData.append('address', data.address);
+      formData.append('email', data.email ?? '');
+      formData.append('phoneNumber', data.phoneNumber ?? '');
+      formData.append('address', data.address ?? '');
       formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '');
-      formData.append('parentId', data.parentId);
-      formData.append('classId', data.classId);
+      formData.append('parentId', data.parentId ?? '');
+      formData.append('classId', data.classId ?? '');
       formData.append('classSectionId', data.classSectionId ?? '');
       formData.append('provinceId', String(data.provinceId ?? 0));
       formData.append('districtId', String(data.districtId ?? 0));
@@ -502,7 +507,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   selected={allProvince?.Items?.find((g) => g.Id === selectedProvinceId) || null}
                   onSelect={(group) => {
                     console.log('[EditStudentForm] Province selected:', group);
-                    setSelectedProvinceId(group?.Id ?? 0);
+                    setSelectedProvinceId(group?.Id ?? null);
                   }}
                   getLabel={(g) => g?.provinceNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}
@@ -519,7 +524,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
                   selected={filteredDistrict?.find((g) => g.Id === selectedDistrictId) || null}
                   onSelect={(group) => {
                     console.log('[EditStudentForm] District selected:', group);
-                    setSelectedDistrictId(group?.Id ?? 0);
+                    setSelectedDistrictId(group?.Id ?? null);
                   }}
                   getLabel={(g) => g?.districtNameInEnglish ?? ""}
                   getValue={(g) => g?.Id ?? ""}

@@ -54,7 +54,18 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
     clearError()
     try {
-      await toast.promise(addExamResult.mutateAsync(data), {
+      const transformedData = {
+        examId: data.examId,
+        studentId: data.studentId,
+        remarks: data.remarks,
+        marksObtained: data.marksObtained.map(item => ({
+          subjectId: item.subjectId,
+          marksObtaineds: item.marksObtained,
+          fullMarks: item.fullMarks
+        }))
+      }
+      
+      await toast.promise(addExamResult.mutateAsync(transformedData as any), {
         loading: 'Adding ExamResult...',
         success: 'Successfully added ExamResult',
       })
@@ -85,7 +96,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
 
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Exam ComboBox */}
               <AppCombobox
                 dropDownWidth="w-[25rem]"
                 label="Exam"
@@ -105,7 +115,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 getValue={(e) => e?.id ?? ''}
               />
 
-              {/* Student ComboBox */}
               <AppCombobox
                 dropDownWidth="w-[25rem]"
                 label="Student Name"
@@ -138,7 +147,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
               />
             </div>
 
-            {/* Subject Marks */}
             <div className="mt-10">
               <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
@@ -147,7 +155,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                   key={field.id}
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md mb-4 relative"
                 >
-                  {/* Subject ComboBox */}
                   <AppCombobox
                     dropDownWidth="w-[25rem]"
                     label="Subject"
@@ -167,7 +174,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
 
                       form.setValue(`marksObtained.${index}.subjectId`, id, { shouldValidate: true })
                       form.setValue(`marksObtained.${index}.fullMarks`, fullMarksValue, { shouldValidate: true })
-                      // Reset marks obtained when subject changes
                       form.setValue(`marksObtained.${index}.marksObtained`, 0, { shouldValidate: true })
 
                       setSelectedFullMarks((prev) => ({ ...prev, [index]: fullMarksValue }))
@@ -177,7 +183,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     getValue={(s) => s?.id ?? ''}
                   />
 
-                  {/* Marks Obtained Input */}
                   <div className="mt-1">
                     <InputElement
                       label="Marks Obtained"
@@ -201,7 +206,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     />
                   </div>
 
-                  {/* Full Marks Input */}
                   <div className="mt-1">
                     <InputElement
                       label="Full Marks"
@@ -213,7 +217,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     />
                   </div>
 
-                  {/* Remove Button */}
                   <button
                     type="button"
                     onClick={() => {
