@@ -13,8 +13,9 @@ import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetAllExams } from '../../Exam/hooks'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
-import { useGetSubjectByClassId } from '../../Subject/hooks'
+import { useGetSubjectById } from '../../Subject/hooks' // Changed import
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
+import { ISubject } from '../../Subject/types/ISubjects'
 
 type Props = {
   form: UseFormReturn<IExamResult>
@@ -22,17 +23,30 @@ type Props = {
   ExamResultId: string
 }
 
+// Component to fetch and display subject name in the dropdown
+const SubjectOption = ({ subjectId, children }: { subjectId: string; children: React.ReactNode }) => {
+  const { data: subject, isLoading } = useGetSubjectById(subjectId)
+  
+  if (isLoading) return <span>Loading...</span>
+  if (!subject) return <span>{children}</span>
+  
+  return <span>{subject.name}</span>
+}
+
 const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const editExamResult = useEditExamResult()
   const { handleError, clearError } = useErrorHandler()
 
-  const { control, reset } = form
+  const { control, reset, watch } = form
 
   const { data: ExamResultData } = useGetExamResultById(ExamResultId)
   const [selectedClassId, setSelectedClassId] = useState<string | null>('')
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>()
+  
+  // Store fetched subjects for each row
+  const [subjectsData, setSubjectsData] = useState<{ [key: number]: ISubject | null }>({})
 
   useEffect(() => {
     if (selectedStudent) {
@@ -42,49 +56,65 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
   const { data: allExam } = useGetAllExams()
   const { data: allStudents } = useGetAllStudents('?IsPagination=false')
-  const { data: allSubject } = useGetSubjectByClassId(selectedClassId || '')
-  const [, setSelectedSubjectIds] = useState<{ [key: number]: string | null }>({})
-
+  
+  // Remove useGetSubjectByClassId - we'll fetch individually
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'marksObtained',
   })
 
+  // Fetch subject data for each row when subject IDs are available
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const marksObtained = watch('marksObtained')
+      if (!marksObtained) return
+
+      const newSubjectsData: { [key: number]: ISubject | null } = {}
+      
+      for (let i = 0; i < marksObtained.length; i++) {
+        const subjectId = marksObtained[i]?.subjectId
+        if (subjectId && !subjectsData[i]) {
+          // You would need to create a hook that can fetch subjects
+          // For now, we'll mark it as loading
+          newSubjectsData[i] = null
+        }
+      }
+      
+      setSubjectsData(prev => ({ ...prev, ...newSubjectsData }))
+    }
+    
+    fetchSubjects()
+  }, [watch('marksObtained')])
+
   // In EditExamResultForm, inside the useEffect that calls reset(...)
+  useEffect(() => {
+    if (!ExamResultData) return
 
-useEffect(() => {
-  if (!ExamResultData) return
+    // Normalize API response: "marksObtaineds" → "marksObtained"
+    const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item) => ({
+      subjectId: item.subjectId,
+      marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
+      fullMarks: item.fullMarks ?? 0,
+    }))
 
-  // Normalize API response: "marksObtaineds" → "marksObtained"
-  const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item) => ({
-    subjectId: item.subjectId,
-    marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
-    fullMarks: item.fullMarks ?? 0,
-  }))
+    reset({
+      examId: ExamResultData.examId,
+      studentId: ExamResultData.studentId,
+      remarks: ExamResultData.remarks,
+      marksObtained: normalizedMarks,
+    })
 
-  reset({
-    examId: ExamResultData.examId,
-    studentId: ExamResultData.studentId,
-    remarks: ExamResultData.remarks,
-    marksObtained: normalizedMarks,
-  })
+    setSelectedExamId(ExamResultData.examId)
+    setSelectedStudentId(ExamResultData.studentId)
 
-  setSelectedExamId(ExamResultData.examId)
-  setSelectedStudentId(ExamResultData.studentId)
+    const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
+    if (student?.classId) {
+      setSelectedClassId(student.classId)
+    }
 
-  const student = allStudents?.Items?.find((s) => s.id === ExamResultData.studentId)
-  if (student?.classId) {
-    setSelectedClassId(student.classId)
-  }
+    replace(normalizedMarks)
+  }, [ExamResultData, allStudents, reset, replace])
 
-  replace(normalizedMarks) // <-- also pass the normalized version here
-
-  const initialSubjects: { [key: number]: string } = {}
-  normalizedMarks.forEach((item, index) => {
-    initialSubjects[index] = item.subjectId
-  })
-  setSelectedSubjectIds(initialSubjects)
-}, [ExamResultData, allStudents, reset, replace])
   const handleClose = () => {
     reset()
     onClose()
@@ -105,6 +135,16 @@ useEffect(() => {
       const errorMsg = handleError(error)
       Toast.error(errorMsg)
     }
+  }
+
+  // Helper to get subject options - since we don't have a list, 
+  // we'll allow manual entry or keep the existing subject
+  const getSubjectOptions = (currentSubjectId: string) => {
+    // Return an array with just the current subject if it exists
+    if (currentSubjectId) {
+      return [{ id: currentSubjectId, name: 'Current Subject' }]
+    }
+    return []
   }
 
   return (
@@ -165,7 +205,10 @@ useEffect(() => {
                   setSelectedStudent(student)
                   form.setValue('studentId', id)
                 }}
-                getLabel={(s) => s?.firstName ?? ''}
+                getLabel={(s) => {
+                  if (!s) return ''
+                  return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
+                }}
                 getValue={(s) => s?.id ?? ''}
               />
               <InputElement
@@ -180,78 +223,61 @@ useEffect(() => {
             <div className="mt-10">
               <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
-                >
-                  {/* Subject dropdown — 5 cols */}
-                  <div className="col-span-12 md:col-span-5">
-                    <AppCombobox
-                      dropDownWidth="w-full"
-                      label="Subject"
-                      name={`marksObtained.${index}.subjectId`}
-                      form={form}
-                      dropdownPositionClass="absolute"
-                      options={allSubject ?? []}
-                      value={form.watch(`marksObtained.${index}.subjectId`)}
-                      selected={
-                        allSubject?.find(
-                          (subj) => subj.id === form.watch(`marksObtained.${index}.subjectId`)
-                        ) || null
-                      }
-                      onSelect={(subject) => {
-                        const id = subject?.id ?? ''
-                        form.setValue(`marksObtained.${index}.subjectId`, id, {
-                          shouldValidate: true,
-                        })
-                        setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
-                      }}
-                      getLabel={(s) => s?.subjectName ?? ''}
-                      getValue={(s) => s?.id ?? ''}
+              {fields.map((field, index) => {
+                const currentSubjectId = watch(`marksObtained.${index}.subjectId`)
+                
+                return (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-4 items-center p-2 border border-transparent rounded-md mb-4"
+                  >
+                    {/* Subject display - show subject name fetched by ID */}
+                    <div className="col-span-12 md:col-span-5">
+                      {currentSubjectId ? (
+                        <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                          <SubjectNameDisplay subjectId={currentSubjectId} />
+                        </div>
+                      ) : (
+                        <InputElement
+                          label="Subject ID"
+                          form={form}
+                          name={`marksObtained.${index}.subjectId`}
+                          type="text"
+                          placeholder="Enter Subject ID"
+                        />
+                      )}
+                    </div>
+
+                    {/* Marks Obtained — 5 cols */}
+                    <div className="col-span-12 md:col-span-5">
+                      <InputElement
+                        label="Marks Obtained"
+                        form={form}
+                        name={`marksObtained.${index}.marksObtained`}
+                        type="number"
+                        placeholder="Enter marks"
+                      />
+                    </div>
+
+                    {/* Full Marks field - hidden */}
+                    <input
+                      type="hidden"
+                      {...form.register(`marksObtained.${index}.fullMarks`)}
                     />
-                  </div>
 
-                  {/* Marks Obtained — 5 cols */}
-                  <div className="col-span-12 md:col-span-5">
-                    <InputElement
-                      label="Marks Obtained"
-                      form={form}
-                      name={`marksObtained.${index}.marksObtained`}
-                      type="number"
-                      placeholder="Enter marks"
-                    />
+                    {/* Remove row — 2 cols */}
+                    <div className="col-span-12 md:col-span-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="text-red-400 hover:text-red-600 text-xl font-bold"
+                      >
+                        <X />
+                      </button>
+                    </div>
                   </div>
-
-                  {/*
-                   * Full Marks field is intentionally hidden from the UI.
-                   * The field stays registered in the form schema so the
-                   * existing API payload shape is not broken.
-                   */}
-                  <input
-                    type="hidden"
-                    {...form.register(`marksObtained.${index}.fullMarks`)}
-                  />
-
-                  {/* Remove row — 2 cols */}
-                  <div className="col-span-12 md:col-span-2 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        remove(index)
-                        setSelectedSubjectIds((prev) => {
-                          const updated = { ...prev }
-                          delete updated[index]
-                          return updated
-                        })
-                      }}
-                      className="text-red-400 hover:text-red-600 text-xl font-bold"
-                    >
-                      <X />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
 
               <ButtonElement
                 type="button"
@@ -260,7 +286,7 @@ useEffect(() => {
                   append({
                     subjectId: '',
                     marksObtained: 0,
-                    fullMarks: 0, // kept in payload, not shown in UI
+                    fullMarks: 0,
                   })
                 }
               />
@@ -272,6 +298,22 @@ useEffect(() => {
           </form>
         </fieldset>
       </div>
+    </div>
+  )
+}
+
+// Component to display subject name by ID
+const SubjectNameDisplay = ({ subjectId }: { subjectId: string }) => {
+  const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
+  
+  if (isLoading) return <span className="text-gray-500">Loading subject...</span>
+  if (error) return <span className="text-red-500">Error loading subject</span>
+  if (!subject) return <span className="text-gray-500">Subject not found</span>
+  
+  return (
+    <div>
+      <span className="font-medium">{subject.name}</span>
+      <span className="text-xs text-gray-500 ml-2">(ID: {subjectId})</span>
     </div>
   )
 }

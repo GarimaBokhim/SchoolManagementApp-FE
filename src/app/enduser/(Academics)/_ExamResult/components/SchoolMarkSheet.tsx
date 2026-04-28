@@ -2,24 +2,36 @@
 
 import { X } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
-import { useGetAllSubjects } from '../../Subject/hooks'
+import { useGetSubjectById } from '../../Subject/hooks' // Changed import
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
 import { useGetClassById } from '../../Class/hooks'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
-import { useGetAllDistricts ,useGetAllProvinces} from '../hooks/locationoHooks'
+import { useGetAllDistricts, useGetAllProvinces } from '../hooks/locationoHooks'
+import { ISubjectMark } from '../types/IExamResults'
+
 interface Props {
   studentId: string
   examId: string
   onClose: () => void
 }
 
+// Component to fetch and display subject name by ID
+const SubjectNameCell = ({ subjectId }: { subjectId: string }) => {
+  const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
+  
+  if (isLoading) return <span className="text-gray-400">Loading...</span>
+  if (error) return <span className="text-red-500">-</span>
+  if (!subject) return <span>-</span>
+  
+  return <span>{subject.name}</span>
+}
+
 const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId)
-  const { data: allSubject } = useGetAllSubjects()
   const { data: StudentData } = useGetStudentById(studentId)
   const { data: allExam } = useGetAllExams()
   const { data: allclass } = useGetClassById(StudentData?.classId || '')
@@ -321,11 +333,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </thead>
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
-                  ? data.MarksWithGrades.map((m, index) => {
-                      const subjectName =
-  allSubject?.Items.find((i) => (i.Id ?? i.id) === m.subjectId)?.name ||
-  m.subjectId ||
-  '-'
+                  ? data.MarksWithGrades.map((m: ISubjectMark, index: number) => {
                       const gradePoint =
                         m.GPA !== undefined && m.GPA !== null
                           ? m.GPA
@@ -340,7 +348,8 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                             {index + 1}
                           </td>
                           <td className="p-2 text-left px-3" style={{ border: `1px solid ${blue}`, color: blue }}>
-                            {subjectName}
+                            {/* Using the new SubjectNameCell component with useGetSubjectById */}
+                            <SubjectNameCell subjectId={m.subjectId} />
                           </td>
                           <td className="p-2" style={{ border: `1px solid ${blue}` }}>
                             4
@@ -406,7 +415,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                     {gpa}
                   </td>
                   <td className="p-2" style={{ border: `1px solid ${blue}` }} />
-                </tr>
+                 </tr>
               </tbody>
             </table>
 
