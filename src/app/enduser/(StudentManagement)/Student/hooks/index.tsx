@@ -279,3 +279,22 @@ export const useUploadStudents = () => {
     retry: false,
   });
 };
+
+export const useGetAllStudentsV2 = () => {
+  return useQuery({
+    queryKey: ["Students-All"], 
+    
+    queryFn: async (): Promise<IPaginationResponse<IStudent>> => {
+      const response = await api.get("/api/Student/all-Students");
+
+      return normalizeStudentPaginationResponse(response.data);
+    },
+
+   
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+
+    retry: false,
+  });
+};

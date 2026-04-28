@@ -29,17 +29,15 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden">
-        <div className="absolute top-1/2 left-6 -translate-y-1/2">
+      <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden p-6">
+        <div className="flex items-center gap-4 mb-4">
           <div className="w-20 h-20 bg-white/20 rounded-full animate-pulse" />
+          <div className="h-7 w-48 bg-white/20 rounded animate-pulse" />
         </div>
-        <div className="py-4 px-8 flex flex-col items-center justify-center text-center animate-pulse">
-          <div className="h-7 w-48 bg-white/20 rounded mb-4" />
-          <div className="space-y-2">
-            <div className="h-4 w-64 bg-white/20 rounded" />
-            <div className="h-4 w-56 bg-white/20 rounded" />
-            <div className="h-4 w-40 bg-white/20 rounded" />
-          </div>
+        <div className="space-y-2">
+          <div className="h-4 w-64 bg-white/20 rounded animate-pulse" />
+          <div className="h-4 w-56 bg-white/20 rounded animate-pulse" />
+          <div className="h-4 w-40 bg-white/20 rounded animate-pulse" />
         </div>
       </div>
     );
@@ -47,9 +45,10 @@ export default function SchoolInfoCard({ schoolId }: Props) {
 
   return (
     <div className="relative bg-green-700 text-white rounded-lg shadow-md overflow-hidden p-6">
-      {/* School Logo - Left Side */}
-      <div className="flex justify-start mb-4">
-        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+      {/* First Row: Logo and School Name */}
+      <div className="flex items-center gap-4 mb-6">
+        {/* School Logo */}
+        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
           {logoUrl && !logoError ? (
             <img
               src={logoUrl}
@@ -61,28 +60,27 @@ export default function SchoolInfoCard({ schoolId }: Props) {
             <School className="w-10 h-10 text-green-700" />
           )}
         </div>
-      </div>
 
-      {/* School Details */}
-      <div className="flex flex-col">
-        <h2 className="text-2xl font-bold mb-2">
+        {/* School Name */}
+        <h2 className="text-2xl font-bold">
           {schoolData?.name ?? "—"}
           <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
         </h2>
+      </div>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center">
-            <LocateIcon className="mr-3 shrink-0 w-4 h-4" />
-            <span>{schoolData?.address ?? "—"}</span>
-          </div>
-          <div className="flex items-center">
-            <Mail className="mr-3 shrink-0 w-4 h-4" />
-            <span>{schoolData?.email ?? "—"}</span>
-          </div>
-          <div className="flex items-center">
-            <Phone className="mr-3 shrink-0 w-4 h-4" />
-            <span>{schoolData?.contactNumber ?? "—"}</span>
-          </div>
+      {/* Second Row: School Information */}
+      <div className="flex flex-wrap gap-6 text-sm">
+        <div className="flex items-center">
+          <LocateIcon className="mr-2 shrink-0 w-4 h-4" />
+          <span>{schoolData?.address ?? "—"}</span>
+        </div>
+        <div className="flex items-center">
+          <Mail className="mr-2 shrink-0 w-4 h-4" />
+          <span>{schoolData?.email ?? "—"}</span>
+        </div>
+        <div className="flex items-center">
+          <Phone className="mr-2 shrink-0 w-4 h-4" />
+          <span>{schoolData?.contactNumber ?? "—"}</span>
         </div>
       </div>
     </div>

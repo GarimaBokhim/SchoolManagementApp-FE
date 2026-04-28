@@ -20,6 +20,7 @@ import {
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
 import { feeStructureIdToString } from "../utils/studentFeeForm";
+import { useGetFeeStructureByStudent } from "../hooks/uae_feestructure_by_id";
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -78,28 +79,50 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
   const [rows, setRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  // Track whether rows have been hydrated from editRecord so we don't
+  // overwrite them when feeStructureDetail loads
+  const rowsHydratedRef = useRef(false);
 
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
   const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
     useGetFeeStructureById(selectedFeeStructureId);
+    const { data: feeStructureByStudent } = useGetFeeStructureByStudent(
+  selectedStudentId || undefined
+);
 
   // ── Hydrate from editRecord once per record id ────────────────────────────
   useLayoutEffect(() => {
     if (!editRecord?.id) return;
     if (lastHydratedEditIdRef.current === editRecord.id) return;
     lastHydratedEditIdRef.current = editRecord.id;
+    rowsHydratedRef.current = false;
 
     const fsId = feeStructureIdToString(editRecord.feeStructureId);
     setSelectedStudentId(editRecord.studentId);
     setSelectedClassId(editRecord.classId);
     setSelectedFeeStructureId(fsId);
     setDiscountPercentage(editRecord.discountPercentage ?? 0);
-    setRows(
-      (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }))
-    );
+    form.setValue("discountPercentage", editRecord.discountPercentage ?? 0);
+
+    const hydratedRows = (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }));
+    setRows(hydratedRows);
+    rowsHydratedRef.current = true;
   }, [editRecord]);
+
+  // ── When feeStructureDetail loads, only use it if rows are empty ──────────
+  // (i.e. editRecord had no studentFeeDetailsDTOs — rare edge case)
+  useEffect(() => {
+    if (!feeStructureDetail?.feeStructureDTOs?.length) return;
+    if (rowsHydratedRef.current && rows.length > 0) return; // already have rows from editRecord
+
+    const populated = mapFeeStructureDTOsToDetails(
+      feeStructureDetail.feeStructureDTOs,
+      discountPercentage
+    );
+    setRows(populated);
+  }, [feeStructureDetail]);
 
   // ── Keep form in sync with rows ───────────────────────────────────────────
   useEffect(() => {
@@ -151,6 +174,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     setRows([]);
     setDiscountPercentage(0);
     lastHydratedEditIdRef.current = null;
+    rowsHydratedRef.current = false;
     onClose();
   };
 
@@ -194,7 +218,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const grandTotal = rows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
 
-  // Resolve display names for the locked student/class fields
+  // ── Display labels for locked fields ─────────────────────────────────────
   const studentLabel = (() => {
     const s = allStudents?.Items?.find((s) => s.id === selectedStudentId);
     if (!s) return "—";
@@ -204,6 +228,30 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const classLabel =
     allClasses?.Items?.find((c) => c.id === selectedClassId)?.name ?? "—";
+
+const getSelectedFeeStructure = () => {
+  // Try class-based list first
+  const fromList = feeStructuresByClass?.Items?.find((f) => {
+    const fid = f.id ?? (f as { Id?: string }).Id ?? "";
+    return String(fid) === String(selectedFeeStructureId);
+  });
+  if (fromList) return fromList;
+
+  // Fallback: synthesize from the student fee structure API (same as Add form)
+  const categoryName =
+    feeStructureByStudent?.categoryName?.trim() ||
+    feeStructureDetail?.feeCategoryName?.trim() ||
+    (feeStructureDetail as unknown as { categoryName?: string })?.categoryName?.trim();
+
+  if (selectedFeeStructureId && categoryName) {
+    return {
+      id: selectedFeeStructureId,
+      feeCategoryName: categoryName,
+    } as unknown as NonNullable<typeof feeStructuresByClass>["Items"][number];
+  }
+
+  return null;
+};
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
@@ -229,7 +277,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
             {/* Top Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
-              {/* Student — locked in edit mode, display only */}
+              {/* Student — locked, display only */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   Student
@@ -239,7 +287,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 </div>
               </div>
 
-              {/* Class — locked in edit mode, display only */}
+              {/* Class — locked, display only */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   Class
@@ -258,12 +306,8 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 name="feeStructureId"
                 form={form}
                 options={feeStructuresByClass?.Items ?? []}
-                selected={
-                  feeStructuresByClass?.Items?.find((f) => {
-                    const fid = f.id ?? (f as { Id?: string }).Id ?? "";
-                    return String(fid) === String(selectedFeeStructureId);
-                  }) ?? null
-                }
+                // ── FIXED: falls back to feeStructureDetail if list not loaded yet ──
+                selected={getSelectedFeeStructure()}
                 onSelect={(f) => {
                   const id = f?.id ?? (f as { Id?: string }).Id ?? "";
                   setSelectedFeeStructureId(id);
@@ -271,7 +315,11 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 }}
                 getLabel={(f) => {
                   if (!f) return "";
-                  return f.feeCategoryName?.trim() ? f.feeCategoryName : "Empty Fee Structure";
+                  return (
+                    f.feeCategoryName?.trim() ||
+                    (f as unknown as { categoryName?: string }).categoryName?.trim() ||
+                    "Empty Fee Structure"
+                  );
                 }}
                 getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
               />
@@ -293,14 +341,21 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                   Fee Details
                 </h3>
-                <button
-                  type="button"
-                  onClick={addRow}
-                  className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow transition-all"
-                >
-                  <Plus size={15} />
-                  Add Row
-                </button>
+                <div className="flex gap-2 items-center">
+                  {isFeeStructureLoading && (
+                    <span className="text-sm text-gray-400 animate-pulse">
+                      Loading fee structure...
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow transition-all"
+                  >
+                    <Plus size={15} />
+                    Add Row
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
@@ -319,7 +374,17 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.length === 0 ? (
+                    {isFeeStructureLoading ? (
+                      [1, 2, 3].map((i) => (
+                        <tr key={i} className="border-t border-gray-100 dark:border-gray-600">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((j) => (
+                            <td key={j} className="px-3 py-3">
+                              <div className="h-3 rounded bg-gray-200 dark:bg-gray-600 animate-pulse" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : rows.length === 0 ? (
                       <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
                         <td colSpan={9} className="px-3 py-8 text-center">
                           No fee details. Click "Add Row" to add entries.
