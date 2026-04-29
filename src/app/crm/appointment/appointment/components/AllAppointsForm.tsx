@@ -24,7 +24,6 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useGetAllCountries, useGetAllCourses, useGetUniversities } from "@/app/crm/university/_university/hooks";
 import AppointmentDetailModal from "./AppointmentDetailModel";
 
-
 interface FilterFormData {
   search: string;
   startDate: string;
@@ -95,27 +94,27 @@ const AllAppointmentsForm = () => {
   const { handleError, clearError } = useErrorHandler();
 
   // For resolving names in enquiry detail
-  const { data: countries = [] } = useGetAllCountries()
-  const { data: universities = [] } = useGetUniversities()
-  const { data: courses = [] } = useGetAllCourses()
+  const { data: countries = [] } = useGetAllCountries();
+  const { data: universities = [] } = useGetUniversities();
+  const { data: courses = [] } = useGetAllCourses();
 
   const countryMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    countries.forEach((c: any) => { map[c.id] = c.name })
-    return map
-  }, [countries])
+    const map: Record<string, string> = {};
+    countries.forEach((c: any) => { map[c.id] = c.name; });
+    return map;
+  }, [countries]);
 
   const universityMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    universities.forEach((u: any) => { map[u.id] = u.name })
-    return map
-  }, [universities])
+    const map: Record<string, string> = {};
+    universities.forEach((u: any) => { map[u.id] = u.name; });
+    return map;
+  }, [universities]);
 
   const courseMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    courses.forEach((c: any) => { map[c.id] = c.title })
-    return map
-  }, [courses])
+    const map: Record<string, string> = {};
+    courses.forEach((c: any) => { map[c.id] = c.title; });
+    return map;
+  }, [courses]);
 
   const leadMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -221,9 +220,21 @@ const AllAppointmentsForm = () => {
   if (isLoading) {
     return (
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+          {/* Skeleton header */}
+          <div className="flex justify-between items-center p-3 px-4 pt-4">
+            <div className="h-6 w-32 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-9 w-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="h-9 w-24 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          {/* Skeleton table */}
+          <div className="p-5 space-y-3">
+            <div className="h-10 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            ))}
           </div>
         </div>
       </div>
@@ -241,32 +252,32 @@ const AllAppointmentsForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row w-full justify-between p-4 px-4 sm:px-6 gap-4 items-start sm:items-center">
-            <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Appointments</h1>
-            <div className="flex items-center space-x-3 w-full sm:w-auto">
+          {/* Header - Updated to match student component */}
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All Appointments</h1>
+            <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
+                className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {canAdd && (
-                <ButtonElement
-                  icon={<Plus size={20} />}
-                  type="button"
-                  text="Add"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
-                />
-              )}
+              {/* {canAdd && ( - Commented out conditional rendering */}
+              <ButtonElement
+                icon={<Plus size={24} />}
+                type="button"
+                text="Add New Appointment"
+                onClick={() => setIsAddModalOpen(true)}
+                className="!text-md !font-bold"
+              />
+              {/* )} */}
             </div>
           </div>
 
-          {/* Filter Panel */}
+          {/* Filter Panel - Updated to match student component */}
           {openFilter && (
-            <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -277,12 +288,13 @@ const AllAppointmentsForm = () => {
                   onSubmit={onFilterSubmit}
                   setParams={setParams}
                 />
+
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
                     value={selectedProfile?.fullName || ""}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Search by Name"
+                    label="Lead Name"
                     name="search"
                     form={form}
                     options={searchResults}
@@ -301,30 +313,40 @@ const AllAppointmentsForm = () => {
                     )}
                   />
                 </div>
+
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
-                    text="Apply"
+                    text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={handleClearFilters}
-                    className="!bg-gray-500 hover:!bg-gray-600 !text-white"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
                   />
                 </div>
               </form>
             </div>
           )}
 
-          {/* Table */}
+          {/* Table - Updated with loading overlay */}
           <div className="overflow-x-auto relative">
-            <table className="w-full border-collapse text-xs sm:text-sm">
+            {isLoading && (
+              <div className="absolute inset-0 z-10 bg-white/50 dark:bg-black/30 flex items-center justify-center backdrop-blur-[1px]">
+                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            <table
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
+                isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+              }`}
+            >
               <thead>
-                <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Lead</th>
                   <th className="px-4 py-3 text-left">Counselor</th>
@@ -341,29 +363,29 @@ const AllAppointmentsForm = () => {
                   paginatedAppointments.map((appointment: Appointment, index: number) => (
                     <tr
                       key={appointment.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-2 px-4">
-                        {(startIndex + index + 1).toString().padStart(2, "0")}
+                      <td className="py-1 px-4">
+                        {startIndex + index + 1}
                       </td>
-                      <td className="py-2 px-4 font-medium">
+                      <td className="py-1 px-4 font-medium">
                         {leadMap[appointment.leadId] || (
                           <span className="text-gray-400 italic text-xs">Unknown</span>
                         )}
                       </td>
-                      <td className="py-2 px-4">
+                      <td className="py-1 px-4">
                         {counselorMap[appointment.counselorId] || (
                           <span className="text-gray-400 italic text-xs">Unknown</span>
                         )}
                       </td>
-                      <td className="py-2 px-4">{formatDate(appointment.appointmentDate)}</td>
-                      <td className="py-2 px-4">{appointment.startTime}</td>
-                      <td className="py-2 px-4">{appointment.endTime}</td>
-                      <td className="py-2 px-4 max-w-[200px] truncate">{appointment.notes || "N/A"}</td>
-                      <td className="py-2 px-4">
+                      <td className="py-1 px-4">{formatDate(appointment.appointmentDate)}</td>
+                      <td className="py-1 px-4">{appointment.startTime}</td>
+                      <td className="py-1 px-4">{appointment.endTime}</td>
+                      <td className="py-1 px-4 max-w-[200px] truncate">{appointment.notes || "N/A"}</td>
+                      <td className="py-1 px-4">
                         <StatusBadge status={appointment.appointmentStatus} />
                       </td>
-                      <td className="py-2 px-4">
+                      <td className="py-1 px-4">
                         <AppointmentActionMenu
                           appointment={appointment}
                           onView={handleView}
@@ -394,7 +416,7 @@ const AllAppointmentsForm = () => {
           onSubmit={handleAdd}
         />
 
-        {/*  View Detail Modal — now a separate component */}
+        {/* View Detail Modal */}
         {showDetailModal && selectedAppointment && (
           <AppointmentDetailModal
             appointment={selectedAppointment}
@@ -404,8 +426,8 @@ const AllAppointmentsForm = () => {
             universityMap={universityMap}
             courseMap={courseMap}
             onClose={() => {
-              setShowDetailModal(false)
-              setSelectedAppointment(null)
+              setShowDetailModal(false);
+              setSelectedAppointment(null);
             }}
           />
         )}

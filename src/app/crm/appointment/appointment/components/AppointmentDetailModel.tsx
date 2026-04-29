@@ -37,7 +37,7 @@ const formatDate = (dateStr: string) => {
   })
 }
 
-const InfoRow = ({
+const InfoCard = ({
   icon,
   label,
   value,
@@ -46,15 +46,19 @@ const InfoRow = ({
   label: string
   value: React.ReactNode
 }) => (
-  <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700/60 last:border-0">
-    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 mt-0.5">
-      {icon}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">
-        {label}
-      </p>
-      <div className="text-sm text-gray-800 dark:text-gray-200 font-medium">{value || 'N/A'}</div>
+  <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4 border border-gray-200 dark:border-gray-700 transition-all hover:shadow-md">
+    <div className="flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+          {label}
+        </p>
+        <div className="text-sm text-gray-800 dark:text-gray-200 font-medium break-all">
+          {value || 'N/A'}
+        </div>
+      </div>
     </div>
   </div>
 )
@@ -204,34 +208,32 @@ const AppointmentDetailModal = ({
         {/* ── Modal Body ── */}
         <div className="px-6 md:px-8 py-6">
 
-          {/* Appointment Info */}
+          {/* Appointment Info in Grid Format */}
           <div className="mb-6">
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Appointment Information
             </p>
-            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                <InfoRow
-                  icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
-                  label="Lead"
-                  value={leadMap[appointment.leadId] || 'Unknown'}
-                />
-                <InfoRow
-                  icon={<UserCheck size={16} className="text-blue-600 dark:text-blue-400" />}
-                  label="Counselor"
-                  value={counselorMap[appointment.counselorId] || 'Unknown'}
-                />
-                <InfoRow
-                  icon={<Clock size={16} className="text-purple-600 dark:text-purple-400" />}
-                  label="Time"
-                  value={`${appointment.startTime} – ${appointment.endTime}`}
-                />
-                <InfoRow
-                  icon={<FileText size={16} className="text-orange-500 dark:text-orange-400" />}
-                  label="Notes"
-                  value={appointment.notes || 'N/A'}
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoCard
+                icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                label="Lead"
+                value={leadMap[appointment.leadId] || 'Unknown'}
+              />
+              <InfoCard
+                icon={<UserCheck size={16} className="text-blue-600 dark:text-blue-400" />}
+                label="Counselor"
+                value={counselorMap[appointment.counselorId] || 'Unknown'}
+              />
+              <InfoCard
+                icon={<Clock size={16} className="text-purple-600 dark:text-purple-400" />}
+                label="Time"
+                value={`${appointment.startTime} – ${appointment.endTime}`}
+              />
+              <InfoCard
+                icon={<FileText size={16} className="text-orange-500 dark:text-orange-400" />}
+                label="Notes"
+                value={appointment.notes || 'N/A'}
+              />
             </div>
           </div>
 
