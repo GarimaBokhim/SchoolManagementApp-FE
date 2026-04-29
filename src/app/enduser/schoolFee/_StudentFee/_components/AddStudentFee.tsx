@@ -16,14 +16,13 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useGetAllStudentsV2 } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+import { useGetAllFeeTypes, useGetFeeTypeById } from "../../_FeeType/hooks";
 import {
   useGetFeeStructureById,
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
 import { feeStructureIdToString } from "../utils/studentFeeForm";
 import { useGetFeeStructureByStudent } from "../hooks/uae_feestructure_by_id";
-
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -63,6 +62,23 @@ const createEmptyManualRow = (): IStudentFeeDetails => ({
   totalAmount: 0,
 });
 
+// Component to fetch and display fee type name using useGetFeeTypeById
+const FeeTypeName = ({ feeTypeId }: { feeTypeId: string }) => {
+  const { data: feeType, isLoading, error } = useGetFeeTypeById(feeTypeId);
+  
+  if (!feeTypeId) return <span className="text-gray-400">—</span>;
+  
+  if (isLoading) {
+    return <span className="text-gray-400 animate-pulse">Loading...</span>;
+  }
+  
+  if (error || !feeType) {
+    return <span className="text-red-500">{feeTypeId || "Error"}</span>;
+  }
+  
+  return <span className="text-gray-800 dark:text-gray-100">{feeType.name}</span>;
+};
+
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
@@ -77,7 +93,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const { data: allStudents } = useGetAllStudentsV2();
   const { data: allClasses } = useGetAllClass();
-  const { data: allFeeTypes } = useGetAllFeeTypes();
 
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -85,7 +100,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [autoRows, setAutoRows] = useState<IStudentFeeDetails[]>([]);
   const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
-
+const { data: allFeeTypes } = useGetAllFeeTypes();
   const prevStudentIdRef = useRef<string | null>(null);
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
@@ -308,7 +323,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const manualRowsTotal = manualRows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
   const grandTotal = autoRowsTotal + manualRowsTotal;
 
-  // ── FIXED: getFeeStructureLabel now handles categoryName from student API ────
   const getFeeStructureLabel = (f: IFeeStructure | null): string => {
     if (!f) return "";
     return (
@@ -318,9 +332,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     );
   };
 
-  // ── FIXED: selected falls back to synthesized object using student API data ──
   const getSelectedFeeStructure = () => {
-    // First try to find in the full list
     const found = allFeeStructures?.Items?.find((f) => {
       const fid = f.id ?? (f as { Id?: string }).Id ?? "";
       return String(fid) === String(selectedFeeStructureId);
@@ -328,7 +340,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
     if (found) return found;
 
-    // Fallback: synthesize object from student fee structure API response
     if (selectedFeeStructureId && studentFeeStructureCategoryName) {
       return {
         id: selectedFeeStructureId,
@@ -409,7 +420,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                   name="feeStructureId"
                   form={form}
                   options={allFeeStructures?.Items ?? []}
-                  // ── FIXED: uses getSelectedFeeStructure() ──
                   selected={getSelectedFeeStructure()}
                   onSelect={(f) => {
                     const id = f?.id ?? (f as { Id?: string }).Id ?? "";
@@ -504,11 +514,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                       ))
                     ) : (
                       <>
-                        {/* Auto-populated Rows (Read-only) */}
+                        {/* Auto-populated Rows (Read-only) - Now using useGetFeeTypeById */}
                         {autoRows.map((detail, index) => {
-                          const feeTypeName =
-                            allFeeTypes?.Items?.find((ft) => ft.id === detail.feeTypeId)?.name ??
-                            (detail.feeTypeId || "—");
                           const paidTypeLabel =
                             FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? "—";
 
@@ -520,8 +527,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                               <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
                                 {index + 1}
                               </td>
-                              <td className="px-3 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                {feeTypeName}
+                              <td className="px-3 py-3 font-medium">
+                                <FeeTypeName feeTypeId={detail.feeTypeId} />
                               </td>
                               <td className="px-3 py-3 text-gray-600 dark:text-gray-300">
                                 {paidTypeLabel}
@@ -555,18 +562,18 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                               </td>
 
                               <td className="px-3 py-3">
-                                <select
-                                  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                                  value={detail.feeTypeId}
-                                  onChange={(e) => updateManualRow(index, { feeTypeId: e.target.value })}
-                                >
-                                  <option value="">— Select —</option>
-                                  {allFeeTypes?.Items?.map((ft) => (
-                                    <option key={ft.id} value={ft.id}>
-                                      {ft.name}
-                                    </option>
-                                  ))}
-                                </select>
+                              <select
+  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+  value={detail.feeTypeId}
+  onChange={(e) => updateManualRow(index, { feeTypeId: e.target.value })}
+>
+  <option value="">— Select —</option>
+  {allFeeTypes?.Items?.map((ft) => (
+    <option key={ft.id} value={ft.id}>
+      {ft.name}
+    </option>
+  ))}
+</select>
                               </td>
 
                               <td className="px-3 py-3">

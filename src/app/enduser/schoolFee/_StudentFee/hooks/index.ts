@@ -164,3 +164,16 @@ export const useGetStudentFeesummary = (params?: string) => {
     retry: false,
   });
 };
+export const useGetStudentFeeById = (id?: string) => {
+  return useQuery({
+    queryKey: [queryKey, "detail", id],
+    queryFn: async () => {
+      const response = await api.get<IStudentFee>(
+        `${StudentFeeEndPoints.getAllStudentFees}/${id}`
+      );
+      return response.data;
+    },
+    enabled: !!id,
+    staleTime: 0,
+  });
+};
