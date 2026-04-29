@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import Pagination from "@/components/Pagination";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import DateRangeFilter from "@/components/DateFilter/FilterComponent";
+import DateRangeFilter, { DateRangeFilterRef } from "@/components/DateFilter/FilterComponent";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { Toast } from "@/components/Toast/toast";
@@ -71,7 +71,7 @@ const AllCrmStudentsForm = () => {
     onClearClick,
   } = useStudentFilters(setParams, setPaginationParams);
 
-  // ✅ FIX: Use the real mutations hook so delete actually calls the API
+  // Use the real mutations hook so delete actually calls the API
   const { handleDelete, handleEdit } = useStudentMutations(fetchStudents);
 
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -121,32 +121,33 @@ const AllCrmStudentsForm = () => {
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
-        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
-          <div className="flex flex-col sm:flex-row w-full justify-between p-4 px-4 sm:px-6 gap-4 items-start sm:items-center">
-            <h1 className="text-xl font-semibold text-gray-800 dark:text-white">All Students</h1>
-            <div className="flex items-center space-x-3 w-full sm:w-auto">
+          {/* Updated header section to match first component */}
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All Students</h1>
+            <div className="flex items-center space-x-3">
               <ButtonElement
                 type="button"
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
+                className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {canAdd && (
                 <ButtonElement
-                  icon={<Plus size={20} />}
+                  icon={<Plus size={24} />}
                   type="button"
-                  text="Add Student"
+                  text="Add New Student"
                   onClick={handleAddNew}
-                  className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
+                  className="!text-md !font-bold"
                 />
               )}
             </div>
           </div>
 
           {openFilter && (
-            <div className="mb-6 mx-4 sm:mx-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={filterForm.handleSubmit(handleFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -162,7 +163,7 @@ const AllCrmStudentsForm = () => {
                     value={selectedProfile?.fullName || ""}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Search by Name"
+                    label="Applicant Name"
                     name="firstName"
                     form={filterForm}
                     options={searchResults}
@@ -186,16 +187,16 @@ const AllCrmStudentsForm = () => {
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
-                    text="Apply"
+                    text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 !text-white"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-gray-500 hover:!bg-gray-600 !text-white"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
                   />
                 </div>
               </form>
@@ -210,11 +211,11 @@ const AllCrmStudentsForm = () => {
             )}
             <table
               className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
-                isFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'
+                isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
               }`}
             >
               <thead>
-                <tr className="bg-gray-50 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-200 uppercase text-xs font-semibold border-b border-gray-200 dark:border-gray-700">
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Full Name</th>
                   <th className="px-4 py-3 text-left">Email</th>
@@ -227,30 +228,27 @@ const AllCrmStudentsForm = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
-                      Loading students...
+                    <td colSpan={7} className="p-4 text-center text-gray-500">
+                      Loading Students...
                     </td>
                   </tr>
                 ) : students.length > 0 ? (
                   students.map((student, index) => (
                     <tr
                       key={student.userId}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                      <td className="py-2 px-4">
-                        {((currentPage - 1) * paginationParams.pageSize + index + 1)
-                          .toString()
-                          .padStart(2, '0')}
+                      <td className="py-1 px-4">
+                        {(currentPage - 1) * paginationParams.pageSize + index + 1}
                       </td>
-                      <td className="py-2 px-4 font-medium">{student.fullName}</td>
-                      <td className="py-2 px-4">{student.email}</td>
-                      <td className="py-2 px-4">
+                      <td className="py-1 px-4 font-medium">{student.fullName}</td>
+                      <td className="py-1 px-4">{student.email}</td>
+                      <td className="py-1 px-4">
                         <EnrolmentBadge type={student.enrolmentType} />
                       </td>
-                      <td className="py-2 px-4">{student.visaId}</td>
-                      <td className="py-2 px-4">{student.universityName}</td>
-                      <td className="py-2 px-4">
-                        {/* ✅ FIX: Use shared ActionMenu with all required props including onView */}
+                      <td className="py-1 px-4">{student.visaId}</td>
+                      <td className="py-1 px-4">{student.universityName}</td>
+                      <td className="py-1 px-4">
                         <ActionMenu
                           student={student}
                           onView={handleView}
@@ -264,8 +262,8 @@ const AllCrmStudentsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400 italic">
-                      No students found.
+                    <td colSpan={7} className="p-4 text-center text-gray-500 italic">
+                      No Students found.
                     </td>
                   </tr>
                 )}

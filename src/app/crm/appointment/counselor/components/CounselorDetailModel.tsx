@@ -1,20 +1,12 @@
 'use client'
 
-import { X, Mail, Phone, Calendar, User } from 'lucide-react'
+import { X, Mail, Phone, User, BookOpen } from 'lucide-react'
 import { Counselor } from '../types/ICounselor'
+import LeadEnquiryCard from '@/app/crm/applications/leads/components/LeadInquiryCard'
 
 interface Props {
   counselor: Counselor
   onClose: () => void
-}
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr || dateStr.startsWith('0001')) return 'N/A'
-  return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 const StatusBadge = ({ isActive }: { isActive: boolean }) => (
@@ -29,7 +21,7 @@ const StatusBadge = ({ isActive }: { isActive: boolean }) => (
   </span>
 )
 
-const InfoRow = ({
+const InfoCard = ({
   icon,
   label,
   value,
@@ -38,16 +30,18 @@ const InfoRow = ({
   label: string
   value: React.ReactNode
 }) => (
-  <div className="flex items-start gap-3 py-3 border-b border-gray-100 dark:border-gray-700/60 last:border-0">
-    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 mt-0.5">
-      {icon}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">
-        {label}
-      </p>
-      <div className="text-sm text-gray-800 dark:text-gray-200 font-medium break-all">
-        {value || 'N/A'}
+  <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4 border border-gray-200 dark:border-gray-700 transition-all hover:shadow-md">
+    <div className="flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+          {label}
+        </p>
+        <div className="text-sm text-gray-800 dark:text-gray-200 font-medium break-all">
+          {value || 'N/A'}
+        </div>
       </div>
     </div>
   </div>
@@ -61,6 +55,10 @@ const CounselorDetailModal = ({ counselor, onClose }: Props) => {
     .toUpperCase()
     .slice(0, 2)
 
+  // counselor.id is used as leadId — adjust the field name if your Counselor type uses a different key
+  const leadId = counselor.id
+  const leadName = counselor.fullName
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start md:items-center justify-center
@@ -69,13 +67,14 @@ const CounselorDetailModal = ({ counselor, onClose }: Props) => {
     >
       <div
         className="bg-[#FBFBFB] dark:bg-[#27272a]
-                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+                   w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[75vw]
                    max-h-[95vh] md:max-h-[92vh]
-                   rounded-lg overflow-auto shadow-lg"
+                   rounded-lg overflow-hidden shadow-lg flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
+
         {/* ── Header ── */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 md:px-8 py-5">
+        <div className="shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 md:px-8 py-5">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
@@ -84,7 +83,6 @@ const CounselorDetailModal = ({ counselor, onClose }: Props) => {
           </button>
 
           <div className="flex items-center gap-4">
-            {/* Avatar */}
             <div className="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center text-white text-2xl font-bold shrink-0">
               {initials}
             </div>
@@ -99,58 +97,46 @@ const CounselorDetailModal = ({ counselor, onClose }: Props) => {
         </div>
 
         {/* ── Body ── */}
-        <div className="px-6 md:px-8 py-6">
-          
-          {/* Contact Information */}
-          <div className="mb-6">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+
+          {/* Left: Contact Info */}
+          <div className="flex-1 overflow-y-auto px-6 md:px-8 py-6">
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Contact Information
             </p>
-            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                <InfoRow
-                  icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
-                  label="Full Name"
-                  value={counselor.fullName}
-                />
-                <InfoRow
-                  icon={<Mail size={16} className="text-blue-600 dark:text-blue-400" />}
-                  label="Email"
-                  value={counselor.email}
-                />
-                <InfoRow
-                  icon={<Phone size={16} className="text-purple-600 dark:text-purple-400" />}
-                  label="Contact Number"
-                  value={counselor.contactNumber}
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoCard
+                icon={<User size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                label="Full Name"
+                value={counselor.fullName}
+              />
+              <InfoCard
+                icon={<Mail size={16} className="text-blue-600 dark:text-blue-400" />}
+                label="Email"
+                value={counselor.email}
+              />
+              <InfoCard
+                icon={<Phone size={16} className="text-purple-600 dark:text-purple-400" />}
+                label="Contact Number"
+                value={counselor.contactNumber}
+              />
             </div>
           </div>
 
-          {/* Activity Information */}
-          <div>
-            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Activity Information
-            </p>
-            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                <InfoRow
-                  icon={<Calendar size={16} className="text-orange-500 dark:text-orange-400" />}
-                  label="Created At"
-                  value={formatDate(counselor.createdAt)}
-                />
-                <InfoRow
-                  icon={<Calendar size={16} className="text-gray-500 dark:text-gray-400" />}
-                  label="Modified At"
-                  value={formatDate(counselor.modifiedAt)}
-                />
-              </div>
-            </div>
+          {/* Divider */}
+          <div className="hidden lg:block w-px bg-gray-200 dark:bg-gray-700 shrink-0" />
+          <div className="block lg:hidden h-px bg-gray-200 dark:bg-gray-700 mx-6 shrink-0" />
+
+          {/* Right: Lead Enquiry Details */}
+          <div className="lg:w-80 xl:w-96 shrink-0 overflow-y-auto px-6 md:px-8 py-6">
+            
+            <LeadEnquiryCard leadId={leadId} leadName={leadName} />
           </div>
+
         </div>
 
         {/* ── Footer ── */}
-        <div className="sticky bottom-0 px-6 md:px-8 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/50">
+        <div className="shrink-0 px-6 md:px-8 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/50">
           <button
             onClick={onClose}
             className="px-6 py-2.5 text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 rounded-lg transition-colors"
@@ -158,6 +144,7 @@ const CounselorDetailModal = ({ counselor, onClose }: Props) => {
             Close
           </button>
         </div>
+
       </div>
     </div>
   )

@@ -99,6 +99,10 @@ const AllUniversityForm = () => {
     defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
   });
 
+  const handleSearch = (searchParams: { pageSize: number; pageIndex: number; isPagination: boolean }) => {
+    setCurrentPage(searchParams.pageIndex);
+  };
+
   if (error) {
     const isAuthError = (error as any)?.response?.status === 401;
     return (
@@ -176,13 +180,13 @@ const AllUniversityForm = () => {
         <div className="bg-white dark:bg-[#1e1e21] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-sm overflow-hidden">
 
           {/* ── Header ── */}
-          <div className="flex w-full justify-between items-center px-5 py-4 border-b border-gray-100 dark:border-gray-700/50">
+          <div className="flex w-full justify-between items-center p-3 px-4 pt-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
                 <Building2 size={18} className="text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white leading-tight">
                   All Universities
                 </h1>
                 {universities.length > 0 && (
@@ -192,40 +196,32 @@ const AllUniversityForm = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
+            <div className="flex items-center space-x-3">
+              <ButtonElement
                 type="button"
+                text="Filter"
+                icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-all duration-150
-                  ${openFilter
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30"
-                    : "bg-white dark:bg-[#2a2a2e] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600/50 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400"
-                  }`}
-              >
-                <Filter size={14} />
-                Filter
-              </button>
+                className="!bg-emerald-600 hover:!bg-emerald-700"
+              />
               {canAdd && (
-                <button
+                <ButtonElement
+                  icon={<Plus size={24} />}
                   type="button"
+                  text="Add New University"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold
-                    bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600
-                    shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30 transition-all duration-150"
-                >
-                  <Plus size={15} />
-                  Add New
-                </button>
+                  className="!text-md !font-bold"
+                />
               )}
             </div>
           </div>
 
           {/* ── Filter Panel ── */}
           {openFilter && (
-            <div className="mx-5 my-4 bg-gray-50 dark:bg-[#25252a] rounded-xl border border-gray-200 dark:border-gray-700/50 p-4">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={form.handleSubmit(onFilterSubmit)}
-                className="flex flex-wrap items-end gap-3"
+                className="flex flex-wrap items-end gap-4 md:gap-6"
               >
                 <DateRangeFilter
                   ref={formRef}
@@ -233,37 +229,31 @@ const AllUniversityForm = () => {
                   onSubmit={onFilterSubmit}
                   setParams={setParams}
                 />
-                <div className="flex flex-1 items-end gap-2 min-w-[200px]">
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Name or location..."
-                        {...form.register("search")}
-                        className={inputClass}
-                      />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-                    </div>
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by name or location..."
+                      {...form.register("search")}
+                      className={inputClass}
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                   </div>
-                  <button
+                </div>
+                <div className="flex gap-2 ml-auto">
+                  <ButtonElement
                     type="submit"
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
-                      bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-150"
-                  >
-                    <Filter size={14} />
-                    Apply
-                  </button>
-                  <button
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                  />
+                  <ButtonElement
                     type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
                     onClick={handleClearFilters}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
-                      bg-white dark:bg-[#2a2a2e] text-gray-600 dark:text-gray-300
-                      border border-gray-200 dark:border-gray-600/50
-                      hover:border-gray-400 transition-all duration-150"
-                  >
-                    <RotateCcw size={14} />
-                    Clear
-                  </button>
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                  />
                 </div>
               </form>
             </div>
@@ -297,15 +287,13 @@ const AllUniversityForm = () => {
                   Try adjusting your filters or add a new university to get started.
                 </p>
                 {canAdd && (
-                  <button
+                  <ButtonElement
                     type="button"
+                    text="Add First University"
+                    icon={<Plus size={24} />}
                     onClick={() => setIsAddModalOpen(true)}
-                    className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                      bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-150"
-                  >
-                    <Plus size={15} />
-                    Add First University
-                  </button>
+                    className="!mt-5 !text-md !font-bold"
+                  />
                 )}
               </div>
             )}
@@ -324,7 +312,7 @@ const AllUniversityForm = () => {
                 nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
               }}
-              handleSearch={(params) => setCurrentPage(params.pageIndex)}
+              handleSearch={handleSearch}
             />
           </div>
         )}

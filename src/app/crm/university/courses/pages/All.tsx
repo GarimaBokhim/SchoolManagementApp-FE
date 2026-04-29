@@ -25,6 +25,8 @@ import DateRangeFilter, {
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
+import CourseCard from "../components/CourseCard";
+
 
 interface Course {
   id: string;
@@ -122,6 +124,24 @@ const AllCourseForm = () => {
     universities.find((u: IUniversity) => u.id === universityId)?.name ??
     "University";
 
+  const getStudyLevelLabel = (studyLevel: number) =>
+    STUDY_LEVEL_LABELS[studyLevel] || `Level ${studyLevel}`;
+
+  const formatCurrency = (amount: number, currency: string) => {
+    const currencyMap: Record<string, string> = {
+      sg: "SGD",
+      usd: "USD",
+      eur: "EUR",
+      gbp: "GBP",
+    };
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyMap[currency.toLowerCase()] || "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const onFilterSubmit = async (formData: FilterFormData) => {
     clearError();
     try {
@@ -170,38 +190,49 @@ const AllCourseForm = () => {
   const handleApplyNow = (_courseId: string) =>
     Toast.success("Application started!");
 
-  const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#1f1f22] border border-gray-300 
-    dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A53C3] 
-    dark:text-white text-sm appearance-none`;
-
-  const formatCurrency = (amount: number, currency: string) => {
-    const currencyMap: Record<string, string> = {
-      sg: "SGD",
-      usd: "USD",
-      eur: "EUR",
-      gbp: "GBP",
-    };
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currencyMap[currency.toLowerCase()] || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const inputClass = `w-full px-4 py-2.5 pl-10 bg-white dark:bg-[#2a2a2e] border border-gray-200
+    dark:border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40
+    focus:border-emerald-500 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500
+    transition-all duration-150`;
 
   const loading = loadingCourses || loadingUniversities;
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 flex justify-center items-center min-h-[400px]">
-        <div className="text-center">
-          <div
-            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"
-            style={{ borderColor: "#0A53C3" }}
-          ></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading courses...
-          </p>
+      <div className="p-4 sm:p-6">
+        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+          {/* Skeleton header */}
+          <div className="flex justify-between items-center p-3 px-4 pt-4 border-b border-gray-100 dark:border-gray-700">
+            <div className="h-6 w-32 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-9 w-20 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="h-9 w-24 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
+            </div>
+          </div>
+          {/* Skeleton cards */}
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-gray-100 dark:border-gray-700 p-5 space-y-3 animate-pulse">
+                <div className="flex gap-3 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/2" />
+                  </div>
+                </div>
+                <div className="h-8 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                <div className="space-y-1.5">
+                  <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-4/5" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-14 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-14 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                </div>
+                <div className="h-8 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -222,17 +253,15 @@ const AllCourseForm = () => {
                 text="Filter"
                 icon={<Filter size={14} />}
                 onClick={() => setOpenFilter(!openFilter)}
-                className="!text-white !border-0"
-                style={{ backgroundColor: "#0A53C3" }}
+                className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {canAdd && (
                 <ButtonElement
-                  icon={<Plus size={18} />}
+                  icon={<Plus size={24} />}
                   type="button"
-                  text="Add New"
+                  text="Add New Course"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="!font-semibold !text-white !border-0"
-                  style={{ backgroundColor: "#0A53C3" }}
+                  className="!text-md !font-bold"
                 />
               )}
             </div>
@@ -240,7 +269,7 @@ const AllCourseForm = () => {
 
           {/* Filter Panel */}
           {openFilter && (
-            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="mb-6 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -252,30 +281,27 @@ const AllCourseForm = () => {
                   setParams={setParams}
                 />
 
-                <div className="flex flex-1 items-end gap-2 min-w-[200px]">
-                  <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Search Courses
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search by course or university..."
-                        {...form.register("search")}
-                        className={inputClass}
-                      />
-                      <Search
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        size={16}
-                      />
-                    </div>
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by course or university..."
+                      {...form.register("search")}
+                      className={inputClass}
+                    />
+                    <Search
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={15}
+                    />
                   </div>
+                </div>
+
+                <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!text-white !border-0 transition-all duration-150"
-                    style={{ backgroundColor: "#0A53C3" }}
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
                   />
                   <ButtonElement
                     type="button"
@@ -294,118 +320,38 @@ const AllCourseForm = () => {
             {courses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {courses.map((course) => (
-                  <div
+                  <CourseCard
                     key={course.id}
-                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
-                  >
-                    {/* Card top accent bar */}
-                    <div
-                      className="h-1 w-full"
-                      style={{ backgroundColor: "#0A53C3" }}
-                    />
-
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2 flex-1">
-                          <GraduationCap
-                            size={18}
-                            className="flex-shrink-0"
-                            style={{ color: "#0A53C3" }}
-                          />
-                          <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
-                            {course.title}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <div
-                          className="flex items-center gap-2 p-2 rounded-lg border"
-                          style={{
-                            backgroundColor: "#EBF1FB",
-                            borderColor: "#C2D5F5",
-                          }}
-                        >
-                          <Building2
-                            size={16}
-                            className="flex-shrink-0"
-                            style={{ color: "#0A53C3" }}
-                          />
-                          <p
-                            className="text-sm font-semibold line-clamp-1"
-                            style={{ color: "#0A53C3" }}
-                          >
-                            {getUniversityName(course.universityId)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mb-4">
-                        <div
-                          className="text-sm font-semibold"
-                          style={{ color: "#0A53C3" }}
-                        >
-                          {formatCurrency(course.tuationFee, course.currency)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {STUDY_LEVEL_LABELS[course.studyLevel] ||
-                            `Level ${course.studyLevel}`}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 mt-4">
-                        <ButtonElement
-                          icon={<Eye size={14} />}
-                          text="View Details"
-                          onClick={() => handleViewDetails(course.id)}
-                          className="flex-1 !text-white !text-xs !py-2 !border-0"
-                          style={{ backgroundColor: "#3B82F6" }}
-                        />
-                        <ButtonElement
-                          icon={<Send size={14} />}
-                          text="Apply Now"
-                          onClick={() => handleApplyNow(course.id)}
-                          className="flex-1 !text-white !text-xs !py-2 !border-0"
-                          style={{ backgroundColor: "#0A53C3" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                    course={course}
+                    universityName={getUniversityName(course.universityId)}
+                    studyLevelLabel={getStudyLevelLabel(course.studyLevel)}
+                    formattedFee={formatCurrency(course.tuationFee, course.currency)}
+                    onViewDetails={handleViewDetails}
+                    onApplyNow={handleApplyNow}
+                  />
                 ))}
               </div>
             ) : (
-              <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr
-                      className="uppercase font-semibold border-b text-white"
-                      style={{ backgroundColor: "#0A53C3" }}
-                    >
-                      <th className="px-4 py-3 text-left">S.N</th>
-                      <th className="px-4 py-3 text-left">Course Title</th>
-                      <th className="px-4 py-3 text-left hidden md:table-cell">
-                        University
-                      </th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">
-                        Study Level
-                      </th>
-                      <th className="px-4 py-3 text-left hidden lg:table-cell">
-                        Tuition Fee
-                      </th>
-                      <th className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="p-4 text-center italic text-gray-500 dark:text-gray-400"
-                      >
-                        No courses found.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-700/30 flex items-center justify-center mb-4">
+                  <GraduationCap size={28} className="text-gray-300 dark:text-gray-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">
+                  No courses found
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 max-w-xs">
+                  Try adjusting your filters or add a new course to get started.
+                </p>
+                {canAdd && (
+                  <ButtonElement
+                    type="button"
+                    text="Add First Course"
+                    icon={<Plus size={24} />}
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="!mt-5 !text-md !font-bold"
+                  />
+                )}
               </div>
             )}
           </div>
