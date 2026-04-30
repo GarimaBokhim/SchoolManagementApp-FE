@@ -80,6 +80,7 @@ export const useLeads = () => {
         const formattedLeads: Lead[] = items.map(
           (
             item: {
+              id?: string;
               userId: string;
               fullName?: string;
               email?: string;
@@ -90,7 +91,7 @@ export const useLeads = () => {
             },
             index: number
           ) => ({
-            id: item.userId || Math.random().toString(),
+            id: item.id || item.userId || Math.random().toString(),
             userId: item.userId,
             name: item.fullName || 'N/A',
             email: item.email || 'N/A',

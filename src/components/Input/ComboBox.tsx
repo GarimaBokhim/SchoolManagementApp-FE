@@ -52,7 +52,7 @@ function InnerCombobox<T>(
     getValue,
     disabled,
     renderOptionExtra,
-    readOnly,
+    readOnly = false,
   }: AppComboboxProps<T>,
   ref: React.Ref<HTMLInputElement>
 ) {
@@ -66,7 +66,7 @@ function InnerCombobox<T>(
           getLabel(option).toLowerCase().includes(query.toLowerCase())
         );
 
-  // ✅ THE FIX: sync display text whenever `selected` changes (including on load)
+  // Sync display text whenever `selected` changes (including on load)
   useEffect(() => {
     if (selected) {
       setQuery(getLabel(selected));
@@ -80,6 +80,7 @@ function InnerCombobox<T>(
       <Combobox
         value={selected ?? null}
         onChange={(option) => {
+          if (readOnly) return; // Prevent changes in readOnly mode
           onSelect(option);
           setIsActive(false);
           setQuery(option ? getLabel(option) : "");
@@ -98,7 +99,6 @@ function InnerCombobox<T>(
           <div className="relative mt-1">
             <div className="relative items-center flex">
               <ComboboxInput
-                // ✅ THE FIX: always controlled via query, not just when isFiler is true
                 value={query}
                 className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white ${
                   form?.formState?.errors?.[name]
@@ -112,8 +112,9 @@ function InnerCombobox<T>(
                 displayValue={(option: T | null) =>
                   option ? String(getLabel(option) || "") : ""
                 }
-                disabled={disabled}
+                disabled={disabled || readOnly}
                 onFocus={() => {
+                  if (readOnly) return; // Don't open dropdown in readOnly mode
                   onFocus?.();
                   if (!open) {
                     setIsActive(true);
@@ -121,12 +122,12 @@ function InnerCombobox<T>(
                 }}
                 onBlur={() => {
                   setIsActive(false);
-                  // ✅ restore label if user blurs without selecting
                   if (selected) {
                     setQuery(getLabel(selected));
                   }
                 }}
                 onChange={(e) => {
+                  if (readOnly) return; // Prevent typing in readOnly mode
                   setQuery(e.target.value);
                 }}
                 ref={ref}
@@ -146,40 +147,42 @@ function InnerCombobox<T>(
                 {`${label}`}
               </label>
             </div>
-            <Transition show={(open || isActive) && !readOnly}>
-              <div className="z-[50]">
-                {filteredOptions && filteredOptions.length > 0 && (
-                  <ComboboxOptions
-                    className={`bg-[#ffffff] border rounded shadow z-50 max-h-40 overflow-y-auto dark:text-white dark:bg-[#353535] ${
-                      dropdownPositionClass || "top-full left-0 right-0 mt-1"
-                    } ${dropDownWidth}`}
-                  >
-                    {filteredOptions.map((option, index) => (
-                      <ComboboxOption
-                        key={`${getValue(option)}-${index}`}
-                        value={option}
-                        className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
-                      >
-                        {({ active }) => (
-                          <div
-                            className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${
-                              active ? "bg-gray-100 dark:bg-[#585858]" : ""
-                            }`}
-                          >
-                            <span>{getLabel(option)}</span>
-                            {renderOptionExtra && (
-                              <span className="dark:text-gray-100">
-                                {renderOptionExtra(option)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </ComboboxOption>
-                    ))}
-                  </ComboboxOptions>
-                )}
-              </div>
-            </Transition>
+            {!readOnly && (
+              <Transition show={(open || isActive) && !readOnly}>
+                <div className="z-[50]">
+                  {filteredOptions && filteredOptions.length > 0 && (
+                    <ComboboxOptions
+                      className={`bg-[#ffffff] border rounded shadow z-50 max-h-40 overflow-y-auto dark:text-white dark:bg-[#353535] ${
+                        dropdownPositionClass || "top-full left-0 right-0 mt-1"
+                      } ${dropDownWidth}`}
+                    >
+                      {filteredOptions.map((option, index) => (
+                        <ComboboxOption
+                          key={`${getValue(option)}-${index}`}
+                          value={option}
+                          className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
+                        >
+                          {({ active }) => (
+                            <div
+                              className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${
+                                active ? "bg-gray-100 dark:bg-[#585858]" : ""
+                              }`}
+                            >
+                              <span>{getLabel(option)}</span>
+                              {renderOptionExtra && (
+                                <span className="dark:text-gray-100">
+                                  {renderOptionExtra(option)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </ComboboxOption>
+                      ))}
+                    </ComboboxOptions>
+                  )}
+                </div>
+              </Transition>
+            )}
             {form
               ? form.formState.errors[name]?.message && (
                   <span className="text-red-500 text-sm mt-1">

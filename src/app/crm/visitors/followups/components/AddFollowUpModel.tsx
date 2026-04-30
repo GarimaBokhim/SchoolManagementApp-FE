@@ -71,7 +71,7 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
     formState: { errors },
   } = useForm<AddFollowUpPayload>({
     defaultValues: {
-      leadId: '',
+      userId: '',
       startTime: '',
       endTime: '',
       followUpDate: '',
@@ -98,15 +98,20 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
       return
     }
 
-    const success = await handleAdd({
+    // Format the date properly - send as YYYY-MM-DD format
+    // The date input gives "YYYY-MM-DD", keep it as is for the API
+    const formattedPayload = {
       ...data,
-      followUpDate: new Date(data.followUpDate).toISOString(),
-    })
+      followUpDate: data.followUpDate, // Send as YYYY-MM-DD (no time conversion)
+    }
+
+    const success = await handleAdd(formattedPayload)
     if (success) {
       reset()
       setSelectedLead(null)
       setError(null)
       onSuccess()
+      onClose() // Close modal after successful addition
     }
   }
 
@@ -168,12 +173,12 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
                   Select Lead <span className="text-red-500">*</span>
                 </label>
                 <Controller
-                  name="leadId"
+                  name="userId"
                   control={control}
                   rules={{ required: 'Lead is required' }}
                   render={({ field }) => (
                     <AppCombobox<LeadOption>
-                      name="leadId"
+                      name="userId"
                       label=""
                       required
                       options={leadsLoading ? [] : leadOptions}
@@ -188,8 +193,8 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
                     />
                   )}
                 />
-                {errors.leadId && (
-                  <p className="text-xs text-red-500 mt-1">{errors.leadId.message}</p>
+                {errors.userId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.userId.message}</p>
                 )}
               </div>
             </div>
@@ -322,6 +327,6 @@ const AddFollowUpModal = ({ isOpen, onClose, onSuccess, fetchFollowUps }: Props)
       </div>
     </div>
   )
-}
+} 
 
 export default AddFollowUpModal

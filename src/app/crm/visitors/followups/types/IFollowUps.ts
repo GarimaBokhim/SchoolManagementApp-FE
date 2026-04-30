@@ -17,7 +17,7 @@ export interface FollowUp {
 }
 
 export interface AddFollowUpPayload {
-  leadId: string
+  userId: string
   startTime: string
   endTime: string
   followUpDate: string

@@ -1,7 +1,7 @@
 'use client'
 import { X, Building } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
-import { useGetAllSubjects } from '../../Subject/hooks'
+import { useGetSubjectById } from '../../Subject/hooks' // Changed import
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useRef, useEffect, useState } from 'react'
@@ -10,6 +10,7 @@ import { useGetAllClass, useGetClassById } from '../../Class/hooks'
 import { IClass } from '../../Class/types/IClass'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
+import { ISubjectMark } from '../types/IExamResults' // Import the type
 
 interface Props {
   studentId: string
@@ -17,9 +18,19 @@ interface Props {
   onClose: () => void
 }
 
+// Component to fetch and display subject name by ID
+const SubjectNameCell = ({ subjectId }: { subjectId: string }) => {
+  const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
+  
+  if (isLoading) return <span className="text-gray-400">Loading...</span>
+  if (error) return <span className="text-red-500">-</span>
+  if (!subject) return <span>-</span>
+  
+  return <span>{subject.name}</span>
+}
+
 const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const { data } = useGenerateMarkSheet(studentId, examId)
-  const { data: allSubject } = useGetAllSubjects()
   const { data: StudentData } = useGetStudentById(studentId)
   const { data: allExam } = useGetAllExams()
   const { data: allclass } = useGetClassById(StudentData?.classId || '')
@@ -173,18 +184,19 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
               <p className="flex">
-                <strong>Name:</strong> {StudentData?.firstName}{' '}
-                {StudentData?.lastName}
+                <strong>Name:</strong> 
+                {[StudentData?.firstName, StudentData?.middleName, StudentData?.lastName]
+                  .filter(Boolean)
+                  .join(' ') || '-'}
               </p>
               <p>
-                <strong>Section:</strong> {StudentData?.classSectionId}
+                <strong>Section:</strong> {StudentData?.classSectionId || '-'}
               </p>
               <p className="flex">
-                <strong>Class:</strong>
-                {allclass?.name}
+                <strong>Class:</strong> {allclass?.name || '-'}
               </p>
               <p>
-                <strong>Roll No:</strong>
+                <strong>Roll No:</strong> {StudentData?.registrationNumber || '-'}
               </p>
             </div>
 
@@ -201,26 +213,37 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                  </tr>
               </thead>
               <tbody>
-                {data?.MarksWithGrades?.map((m, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="border border-sky-500 p-1">{index + 1}</td>
-                    <td className="border border-sky-500 p-1 text-left px-2">
-                      {
-                        allSubject?.Items.find((i) => i.Id === m.subjectId)
-                          ?.name
-                      }
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.grade || '-'}
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.GPA || '-'}
-                    </td>
-                    <td className="border border-sky-500 p-1">
-                      {m.marksObtained}
-                    </td>
-                  </tr>
-                ))}
+                {data?.MarksWithGrades && data.MarksWithGrades.length > 0
+                  ? data.MarksWithGrades.map((m: ISubjectMark, index: number) => (
+                      <tr key={index} className="text-center">
+                        <td className="border border-sky-500 p-1">{index + 1}</td>
+                        <td className="border border-sky-500 p-1 text-left px-2">
+                          {/* Using the new SubjectNameCell component with useGetSubjectById */}
+                          <SubjectNameCell subjectId={m.subjectId} />
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.grade || '-'}
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.GPA || '-'}
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.marksObtained}
+                        </td>
+                      </tr>
+                    ))
+                  : // Fallback empty state
+                    Array(5).fill(null).map((_, index) => (
+                      <tr key={index} className="text-center">
+                        <td className="border border-sky-500 p-1">{index + 1}</td>
+                        <td className="border border-sky-500 p-1 text-left px-2">
+                          -
+                        </td>
+                        <td className="border border-sky-500 p-1">-</td>
+                        <td className="border border-sky-500 p-1">-</td>
+                        <td className="border border-sky-500 p-1">-</td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
 
@@ -239,7 +262,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                     <th className="border-b border-x p-1 border-sky-500">C</th>
                     <th className="border-b border-x p-1 border-sky-500">D</th>
                     <th className="border-b border-x p-1 border-sky-500">NG</th>
-                  </tr>
+                   </tr>
                 </thead>
                 <tbody>
                   <tr className="text-center">
@@ -266,24 +289,24 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                       1.6
                     </td>
                     <td className="border-t border-x p-1 border-sky-500">-</td>
-                  </tr>
+                   </tr>
                 </tbody>
               </table>
 
               <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
                 <p className=" inline-block px-2">OBT.MARKS :</p>
-                <strong>{data?.totalObtainedMarks}</strong>
+                <strong>{data?.totalObtainedMarks || 0}</strong>
                 <div>
                   <p className=" inline-block px-2">GPA :</p>
-                  <strong>{data?.GPA}</strong>
-                  <strong>({data?.grade})</strong>
+                  <strong>{data?.GPA || '-'}</strong>
+                  <strong>({data?.grade || '-'})</strong>
                 </div>
               </div>
             </div>
 
             <div className="mt-5 text-sm">
               <p className="flex">
-                <strong>Remarks:</strong> {data?.remarks}
+                <strong>Remarks:</strong> {data?.remarks || '-'}
               </p>
               <p className="flex">
                 <strong>DATE OF ISSUE:</strong>
@@ -292,13 +315,13 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
               </p>
               <p className="flex justify-end gap-4">
                 <strong>
-                  Total Running Days: {allattendencecount?.totalRunningDays}
+                  Total Running Days: {allattendencecount?.totalRunningDays || 0}
                 </strong>
                 <strong>
-                  Total Absent Days {allattendencecount?.totalAbsentDays}
+                  Total Absent Days {allattendencecount?.totalAbsentDays || 0}
                 </strong>
                 <strong>
-                  Total Present Days {allattendencecount?.totalPresentDays}
+                  Total Present Days {allattendencecount?.totalPresentDays || 0}
                 </strong>
               </p>
             </div>

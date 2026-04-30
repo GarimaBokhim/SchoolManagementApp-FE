@@ -14,12 +14,13 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { useGetAllFeeTypes } from "../../_FeeType/hooks";
+import { useGetAllFeeTypes, useGetFeeTypeById } from "../../_FeeType/hooks";
 import {
   useGetFeeStructureById,
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
 import { feeStructureIdToString } from "../utils/studentFeeForm";
+import { useGetFeeStructureByStudent } from "../hooks/uae_feestructure_by_id";
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -59,6 +60,23 @@ const createEmptyRow = (): IStudentFeeDetails => ({
   totalAmount: 0,
 });
 
+// Component to fetch and display fee type name using useGetFeeTypeById
+const FeeTypeName = ({ feeTypeId }: { feeTypeId: string }) => {
+  const { data: feeType, isLoading, error } = useGetFeeTypeById(feeTypeId);
+
+  if (!feeTypeId) return <span className="text-gray-400">—</span>;
+
+  if (isLoading) {
+    return <span className="text-gray-400 animate-pulse">Loading...</span>;
+  }
+
+  if (error || !feeType) {
+    return <span className="text-red-500">{feeTypeId || "Error"}</span>;
+  }
+
+  return <span className="text-gray-800 dark:text-gray-100">{feeType.name}</span>;
+};
+
 type Props = {
   form: UseFormReturn<IStudentFee>;
   onClose: () => void;
@@ -79,11 +97,16 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [rows, setRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
 
+  // Track if we're using the edit record's rows or if user selected a new fee structure
+  const isUsingEditRecordRows = useRef(true);
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
   const { data: feeStructuresByClass } = useGetFeeStructureByClassId(selectedClassId);
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
     useGetFeeStructureById(selectedFeeStructureId);
+  const { data: feeStructureByStudent } = useGetFeeStructureByStudent(
+    selectedStudentId || undefined
+  );
 
   // ── Hydrate from editRecord once per record id ────────────────────────────
   useLayoutEffect(() => {
@@ -96,17 +119,73 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     setSelectedClassId(editRecord.classId);
     setSelectedFeeStructureId(fsId);
     setDiscountPercentage(editRecord.discountPercentage ?? 0);
-    setRows(
-      (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }))
+    form.setValue("discountPercentage", editRecord.discountPercentage ?? 0);
+    form.setValue("studentId", editRecord.studentId);
+    form.setValue("classId", editRecord.classId);
+
+    const hydratedRows = (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }));
+    setRows(hydratedRows);
+    // Mark that we're currently showing the edit record's rows
+    isUsingEditRecordRows.current = true;
+  }, [editRecord, form]);
+
+  // ── Handle Student Change ────────────────────────────────────────────────
+  const handleStudentChange = (student: any) => {
+    const studentId = student?.id || "";
+    setSelectedStudentId(studentId);
+    form.setValue("studentId", studentId, { shouldValidate: true });
+
+    // Optionally update class based on selected student's class
+    if (student && allStudents?.Items) {
+      const selectedStudent = allStudents.Items.find(s => s.id === studentId);
+      if (selectedStudent && selectedStudent.classId) {
+        setSelectedClassId(selectedStudent.classId);
+        form.setValue("classId", selectedStudent.classId, { shouldValidate: true });
+        // Reset fee structure and rows when class changes due to student selection
+        setSelectedFeeStructureId("");
+        setRows([]);
+        isUsingEditRecordRows.current = false;
+      }
+    }
+  };
+
+  // ── Handle Class Change ──────────────────────────────────────────────────
+  const handleClassChange = (classItem: any) => {
+    const classId = classItem?.id || "";
+    setSelectedClassId(classId);
+    form.setValue("classId", classId, { shouldValidate: true });
+    // Reset fee structure and rows when class changes
+    setSelectedFeeStructureId("");
+    setRows([]);
+    isUsingEditRecordRows.current = false;
+  };
+
+  // ── Repopulate rows from fee structure detail when user selects a new fee structure ──
+  useEffect(() => {
+    // Only populate if:
+    // 1. We have fee structure details
+    // 2. We're NOT using the edit record's rows (i.e., user selected a new fee structure)
+    // 3. OR we're populating for the first time and don't have rows yet
+    if (!feeStructureDetail?.feeStructureDTOs?.length) return;
+
+    // Don't overwrite if we're still using edit record rows AND we already have rows
+    if (isUsingEditRecordRows.current && rows.length > 0) return;
+
+    const populated = mapFeeStructureDTOsToDetails(
+      feeStructureDetail.feeStructureDTOs,
+      discountPercentage
     );
-  }, [editRecord]);
+    setRows(populated);
+    // After populating from fee structure, we're no longer using edit record rows
+    isUsingEditRecordRows.current = false;
+  }, [feeStructureDetail, discountPercentage, rows.length]);
 
   // ── Keep form in sync with rows ───────────────────────────────────────────
   useEffect(() => {
     form.setValue("studentFeeDetailsDTOs", rows);
   }, [rows, form]);
 
-  // ── Recalculate all row totals when discount changes ─────────────────────
+  // ── Recalculate all row totals when discount changes ──────────────────────
   useEffect(() => {
     setRows((prev) =>
       prev.map((row) => {
@@ -117,7 +196,10 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   }, [discountPercentage]);
 
   // ── Row management ────────────────────────────────────────────────────────
-  const addRow = () => setRows((prev) => [...prev, createEmptyRow()]);
+  const addRow = () => {
+    setRows((prev) => [...prev, createEmptyRow()]);
+    isUsingEditRecordRows.current = false; // User added custom row, so we're no longer using edit record rows
+  };
 
   const updateRow = (index: number, updates: Partial<IStudentFeeDetails>) => {
     setRows((prev) => {
@@ -131,10 +213,13 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
       updated[index].totalAmount = totalAmount;
       return updated;
     });
+    isUsingEditRecordRows.current = false; // User modified row
   };
 
-  const removeRow = (index: number) =>
+  const removeRow = (index: number) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
+    isUsingEditRecordRows.current = false; // User removed row
+  };
 
   // ── Discount change ───────────────────────────────────────────────────────
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,6 +236,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     setRows([]);
     setDiscountPercentage(0);
     lastHydratedEditIdRef.current = null;
+    isUsingEditRecordRows.current = true;
     onClose();
   };
 
@@ -194,16 +280,41 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const grandTotal = rows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
 
-  // Resolve display names for the locked student/class fields
-  const studentLabel = (() => {
-    const s = allStudents?.Items?.find((s) => s.id === selectedStudentId);
-    if (!s) return "—";
-    const cls = allClasses?.Items?.find((c) => c.id === s.classId)?.name ?? "";
-    return `${s.firstName ?? ""} ${s.lastName ?? ""} - (${cls})`;
-  })();
+  // ── Get selected student object ─────────────────────────────────────────
+  const getSelectedStudent = () => {
+    if (!selectedStudentId || !allStudents?.Items) return null;
+    return allStudents.Items.find((s) => s.id === selectedStudentId) || null;
+  };
 
-  const classLabel =
-    allClasses?.Items?.find((c) => c.id === selectedClassId)?.name ?? "—";
+  // ── Get selected class object ──────────────────────────────────────────
+  const getSelectedClass = () => {
+    if (!selectedClassId || !allClasses?.Items) return null;
+    return allClasses.Items.find((c) => c.id === selectedClassId) || null;
+  };
+
+  // ── Resolve selected fee structure for combobox ───────────────────────────
+  const getSelectedFeeStructure = () => {
+    const fromList = feeStructuresByClass?.Items?.find((f) => {
+      const fid = f.id ?? (f as { Id?: string }).Id ?? "";
+      return String(fid) === String(selectedFeeStructureId);
+    });
+    if (fromList) return fromList;
+
+    // Fallback: synthesize from student fee structure API or feeStructureDetail
+    const categoryName =
+      feeStructureByStudent?.categoryName?.trim() ||
+      feeStructureDetail?.feeCategoryName?.trim() ||
+      (feeStructureDetail as unknown as { categoryName?: string })?.categoryName?.trim();
+
+    if (selectedFeeStructureId && categoryName) {
+      return {
+        id: selectedFeeStructureId,
+        feeCategoryName: categoryName,
+      } as unknown as NonNullable<typeof feeStructuresByClass>["Items"][number];
+    }
+
+    return null;
+  };
 
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
@@ -226,65 +337,92 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-            {/* Top Fields */}
+            {/* Top Fields - Now all with AppCombobox */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
-              {/* Student — locked in edit mode, display only */}
+              {/* Student - Now editable with AppCombobox */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                  Student
-                </label>
-                <div className="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 min-h-[38px]">
-                  {studentLabel}
-                </div>
+                <AppCombobox
+                  value={selectedStudentId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Student"
+                  name="studentId"
+                  form={form}
+                  options={allStudents?.Items ?? []}
+                  selected={getSelectedStudent()}
+                  onSelect={handleStudentChange}
+                  getLabel={(s) => {
+                    if (!s) return "";
+                    const cls = allClasses?.Items?.find((c) => c.id === s.classId)?.name ?? "";
+                    return `${s.firstName ?? ""} ${s.lastName ?? ""} - (${cls})`;
+                  }}
+                  getValue={(s) => s?.id ?? ""}
+                />
               </div>
 
-              {/* Class — locked in edit mode, display only */}
+              {/* Class - Now editable with AppCombobox */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                  Class
-                </label>
-                <div className="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 min-h-[38px]">
-                  {classLabel}
-                </div>
+                <AppCombobox
+                  value={selectedClassId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Class"
+                  name="classId"
+                  form={form}
+                  options={allClasses?.Items ?? []}
+                  selected={getSelectedClass()}
+                  onSelect={handleClassChange}
+                  getLabel={(c) => c?.name ?? ""}
+                  getValue={(c) => c?.id ?? ""}
+                />
               </div>
 
               {/* Fee Structure */}
-              <AppCombobox
-                value={selectedFeeStructureId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Fee Structure (Optional)"
-                name="feeStructureId"
-                form={form}
-                options={feeStructuresByClass?.Items ?? []}
-                selected={
-                  feeStructuresByClass?.Items?.find((f) => {
-                    const fid = f.id ?? (f as { Id?: string }).Id ?? "";
-                    return String(fid) === String(selectedFeeStructureId);
-                  }) ?? null
-                }
-                onSelect={(f) => {
-                  const id = f?.id ?? (f as { Id?: string }).Id ?? "";
-                  setSelectedFeeStructureId(id);
-                  form.setValue("feeStructureId", id, { shouldValidate: true });
-                }}
-                getLabel={(f) => {
-                  if (!f) return "";
-                  return f.feeCategoryName?.trim() ? f.feeCategoryName : "Empty Fee Structure";
-                }}
-                getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
-              />
+              <div className="flex flex-col gap-1">
+                <AppCombobox
+                  value={selectedFeeStructureId}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  label="Fee Structure (Optional)"
+                  name="feeStructureId"
+                  form={form}
+                  options={feeStructuresByClass?.Items ?? []}
+                  selected={getSelectedFeeStructure()}
+                  onSelect={(f) => {
+                    const id = f?.id ?? (f as { Id?: string }).Id ?? "";
+                    setSelectedFeeStructureId(id);
+                    form.setValue("feeStructureId", id, { shouldValidate: true });
+                    // KEY: User selected a new fee structure, so we should NOT use edit record rows
+                    isUsingEditRecordRows.current = false;
+                    // Clear existing rows to show loading state or new data
+                    setRows([]);
+                  }}
+                  getLabel={(f) => {
+                    if (!f) return "";
+                    return (
+                      f.feeCategoryName?.trim() ||
+                      (f as unknown as { categoryName?: string }).categoryName?.trim() ||
+                      "Empty Fee Structure"
+                    );
+                  }}
+                  getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ""}
+                />
+              </div>
+            </div>
 
-              {/* Discount */}
-              <InputElement
-                label="Discount (%)"
-                form={form}
-                name="discountPercentage"
-                placeholder="Enter Discount Percentage"
-                inputType="number"
-                onChange={handleDiscountChange}
-              />
+            {/* Discount Field */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+              <div className="flex flex-col gap-1">
+                <InputElement
+                  label="Discount (%)"
+                  form={form}
+                  name="discountPercentage"
+                  placeholder="Enter Discount Percentage"
+                  inputType="number"
+                  onChange={handleDiscountChange}
+                />
+              </div>
             </div>
 
             {/* Fee Details Table */}
@@ -293,14 +431,21 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                   Fee Details
                 </h3>
-                <button
-                  type="button"
-                  onClick={addRow}
-                  className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow transition-all"
-                >
-                  <Plus size={15} />
-                  Add Row
-                </button>
+                <div className="flex gap-2 items-center">
+                  {isFeeStructureLoading && (
+                    <span className="text-sm text-gray-400 animate-pulse">
+                      Loading fee structure...
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow transition-all"
+                  >
+                    <Plus size={15} />
+                    Add Row
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
@@ -319,10 +464,20 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.length === 0 ? (
+                    {isFeeStructureLoading ? (
+                      [1, 2, 3].map((i) => (
+                        <tr key={i} className="border-t border-gray-100 dark:border-gray-600">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((j) => (
+                            <td key={j} className="px-3 py-3">
+                              <div className="h-3 rounded bg-gray-200 dark:bg-gray-600 animate-pulse" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : rows.length === 0 ? (
                       <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
                         <td colSpan={9} className="px-3 py-8 text-center">
-                          No fee details. Click "Add Row" to add entries.
+                          No fee details. Select a fee structure or click "Add Row".
                         </td>
                       </tr>
                     ) : (
@@ -334,24 +489,28 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                           <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
                             {index + 1}
                           </td>
-
-                          {/* Fee Type */}
                           <td className="px-3 py-3">
-                            <select
-                              className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                              value={detail.feeTypeId}
-                              onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
-                            >
-                              <option value="">— Select —</option>
-                              {allFeeTypes?.Items?.map((ft) => (
-                                <option key={ft.id} value={ft.id}>
-                                  {ft.name}
-                                </option>
-                              ))}
-                            </select>
+                            {detail.feeTypeId ? (
+                              <div className="w-full">
+                                <div className="px-2 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                                  <FeeTypeName feeTypeId={detail.feeTypeId} />
+                                </div>
+                              </div>
+                            ) : (
+                              <select
+                                className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                value={detail.feeTypeId}
+                                onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
+                              >
+                                <option value="">— Select —</option>
+                                {allFeeTypes?.Items?.map((ft) => (
+                                  <option key={ft.id} value={ft.id}>
+                                    {ft.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                           </td>
-
-                          {/* Paid Type */}
                           <td className="px-3 py-3">
                             <select
                               className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"

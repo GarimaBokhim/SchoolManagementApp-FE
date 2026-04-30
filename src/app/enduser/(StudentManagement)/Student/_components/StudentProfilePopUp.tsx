@@ -189,7 +189,7 @@ const StudentProfilePopup = ({ student, onClose, schoolDetail }: StudentProfileP
                     )},
                     { label: 'Registration No', value: student.registrationNumber || '-' },
                     { label: 'Admission No',    value: student.admissionNumber    || '-' },
-                    { label: 'Gender',          value: GENDER_STATUS_MAP[student.genderStatus] || '-' },
+                    { label: 'Gender',          value: student.genderStatus || '-' },
                     { label: 'Date of Birth',   value: formatDate(student.dateOfBirth) },
                     { label: 'Phone Number',    value: student.phoneNumber || '-' },
                     { label: 'Address',         value: student.address     || '-' },

@@ -12,7 +12,7 @@ import { Edit, Filter, Plus, RotateCcw, Pencil } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterStudentFeeByDate } from "../hooks";
+import { useFilterStudentFeeByDate, useGetStudentFeeById } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -59,6 +59,16 @@ const AllStudentFeeForm = () => {
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+
+const { data: fullEditRecord, isLoading: isEditRecordLoading } = 
+  useGetStudentFeeById(pendingEditId ?? undefined);
+useEffect(() => {
+  if (fullEditRecord && pendingEditId) {
+    setEditRecord({ ...fullEditRecord, id: pendingEditId });
+    setEditModal(true);
+  }
+}, [fullEditRecord, pendingEditId]);
 
   const fullQuery = query + (params || "");
 
@@ -269,7 +279,7 @@ const AllStudentFeeForm = () => {
                         key={index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        {/* ✅ Fixed: SN now accounts for pagination offset */}
+                        {/*  Fixed: SN now accounts for pagination offset */}
                         <td className="py-3 px-4">{getSerialNumber(index)}</td>
 
                         {/* Full student name */}
@@ -287,14 +297,10 @@ const AllStudentFeeForm = () => {
                               <ButtonElement
                                 text=""
                                 icon={<Pencil className="text-white" size={15} />}
-                                onClick={() => {
-                                  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-                                  setEditRecord({
-                                    ...StudentFee,
-                                    id: rowId,
-                                  });
-                                  setEditModal(true);
-                                }}
+                              onClick={() => {
+  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+  setPendingEditId(rowId);
+}}
                                 className="!bg-blue-500 hover:!bg-blue-600"
                               />
                             )}

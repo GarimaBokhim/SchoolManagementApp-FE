@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
 import { IExamResult, IMarkSheet } from '../types/IExamResults'
+
 const ExamResultEndPoints = {
   getAllExamResults: '/api/Academics/all-examResult',
   createExamResults: '/api/Academics/AddExamResult',
@@ -15,14 +16,14 @@ const ExamResultEndPoints = {
 
 const queryKey = 'ExamResults'
 const filteredExamResultQuery = 'FilteredExamResults'
+
 type ExamResultRequest = {
-  id?: string
   examId: string
   studentId: string
   remarks?: string
   marksObtained: {
     subjectId: string
-    marksObtained: number
+    marksObtaineds: number
     fullMarks: number
   }[]
 }
@@ -31,10 +32,21 @@ export const useAddExamResult = () => {
   const queryClient = useQueryClient()
   return useMutation<IExamResult, Error, ExamResultRequest>({
     mutationFn: async (data: ExamResultRequest): Promise<IExamResult> => {
-      console.log('Add ExamResult', data)
+      const transformedData = {
+        examId: data.examId,
+        studentId: data.studentId,
+        remarks: data.remarks,
+        marksObtained: data.marksObtained.map(item => ({
+          subjectId: item.subjectId,
+          marksObtaineds: item.marksObtaineds,
+          fullMarks: item.fullMarks
+        }))
+      }
+      
+      console.log('Add ExamResult', transformedData)
       const response = await api.post(
         ExamResultEndPoints.createExamResults,
-        data
+        transformedData
       )
 
       return response.data
@@ -77,11 +89,23 @@ export const useEditExamResult = () => {
   >({
     mutationFn: async ({ id, data }): Promise<IExamResult> => {
       if (!id) {
-        throw new Error('Ïd is required to edit ExamResult')
+        throw new Error('Id is required to edit ExamResult')
       }
+      
+      const transformedData = {
+        examId: data.examId,
+        studentId: data.studentId,
+        remarks: data.remarks,
+        marksObtained: data.marksObtained.map(item => ({
+          subjectId: item.subjectId,
+          marksObtaineds: item.marksObtaineds,
+          fullMarks: item.fullMarks
+        }))
+      }
+      
       const response = await api.patch(
         `${ExamResultEndPoints.updateExamResults}/${id}`,
-        data
+        transformedData
       )
       return response.data
     },
@@ -103,7 +127,6 @@ export const useGetExamResultById = (ExamResultId: string) => {
         `${ExamResultEndPoints.getExamResultsById}/${ExamResultId}`
       )
 
-      // Normalize API field name: "marksObtaineds" → "marksObtained"
       const raw = response.data
       return {
         ...raw,
