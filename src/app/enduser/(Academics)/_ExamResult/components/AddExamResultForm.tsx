@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { SubmitHandler, UseFormReturn, useFieldArray } from 'react-hook-form'
@@ -64,7 +65,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
           fullMarks: item.fullMarks
         }))
       }
-      
+
       await toast.promise(addExamResult.mutateAsync(transformedData as any), {
         loading: 'Adding ExamResult...',
         success: 'Successfully added ExamResult',
