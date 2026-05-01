@@ -37,10 +37,9 @@ const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
         border border-gray-200 dark:border-[#1E2A3E]
         p-5 flex items-center gap-4
         transition-all duration-200
-        ${
-          stat.route
-            ? 'cursor-pointer hover:shadow-md hover:border-[#0A53C3]/40 dark:hover:border-[#0A53C3]/50 hover:-translate-y-0.5'
-            : 'cursor-default hover:shadow-sm'
+        ${stat.route
+          ? 'cursor-pointer hover:shadow-md hover:border-[#0A53C3]/40 dark:hover:border-[#0A53C3]/50 hover:-translate-y-0.5'
+          : 'cursor-default hover:shadow-sm'
         }
       `}
     >

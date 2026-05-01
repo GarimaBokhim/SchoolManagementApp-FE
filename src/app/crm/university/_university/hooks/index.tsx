@@ -4,18 +4,19 @@ import { api } from "@/utils/instance";
 import { IPaginationResponse } from "@/types/IPaginationResponse";
 import { IUniversity } from "../types/IUniversity";
 import { ICountry } from "../types/ICountry";
+import { IIntake, IVisaStatusResponse } from "../../intake/types/IIntakes";
 
 
 export const UniversityEndPoints = {
   getAllUniversities: "/api/AcademicPrograms/FilterUniversity",
   createUniversity: "/api/University/AddUniversity",
   getAllCountries: "/api/AcademicPrograms/GetAllCountry",
-  getUniversities: "/api/AcademicPrograms/University",  
+  getUniversities: "/api/AcademicPrograms/University",
 };
 
 export const queryKey = "Universities";
 const countryQueryKey = "Countries";
-const universityQueryKey = "UniversityList";  
+const universityQueryKey = "UniversityList";
 
 export const useAddUniversity = () => {
   const queryClient = useQueryClient();
@@ -106,3 +107,24 @@ export const useGetAllCourses = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+export const UseFilterIntakes = () => {
+  return useQuery<IIntake[]>({
+    queryKey: ['AllIntakes'],
+    queryFn: async () => {
+      const response = await api.get('/api/AcademicPrograms/FilterIntake')
+      return response.data?.Items ?? []   // flatten pagination
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+export const Usefiltervisastatus = () => {
+  return useQuery<IVisaStatusResponse[]>({
+    queryKey: ['AllVisaStatuses'],
+
+    queryFn: async () => {
+      const response = await api.get('/api/VisaApplication/FilterVisaStatus')
+      return response.data?.Items ?? []   // flatten pagination
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}

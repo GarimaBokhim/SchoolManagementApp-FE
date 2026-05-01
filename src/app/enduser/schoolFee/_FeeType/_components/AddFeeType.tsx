@@ -68,7 +68,7 @@ const AddFeeTypeForm = ({ form, onClose }: Props) => {
                 name="description"
                 placeholder="Enter Description"
               />
-            
+
             </div>
             <div className="flex justify-center mt-8">
               <ButtonElement
