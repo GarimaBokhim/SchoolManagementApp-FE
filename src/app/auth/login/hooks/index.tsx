@@ -13,19 +13,19 @@ type LoginRequest = {
 export const useLogin = () => {
   const queryClient = useQueryClient();
   return useMutation<ILoginType, Error, LoginRequest>({
-   mutationFn: async (data: LoginRequest) => {
-  if (!data.email || !data.password) {
-    throw new Error("Email and Password are required");
-  }
-const response = await api.post(loginEndPoint.login, data);
+    mutationFn: async (data: LoginRequest) => {
+      if (!data.email || !data.password) {
+        throw new Error("Email and Password are required");
+      }
+      const response = await api.post(loginEndPoint.login, data);
 
-return {
-  email: response.data.email ?? null,
-  password: response.data.password ?? null, 
-  token: response.data.token ?? null,
-  refreshToken: response.data.refreshToken ?? null,
-};
-},
+      return {
+        email: response.data.email ?? null,
+        password: response.data.password ?? null,
+        token: response.data.token ?? null,
+        refreshToken: response.data.refreshToken ?? null,
+      };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
       queryClient.refetchQueries({ queryKey: ["user"] });

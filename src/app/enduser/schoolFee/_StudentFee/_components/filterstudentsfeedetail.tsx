@@ -18,9 +18,7 @@ import {
 import { useGetStudentFeesummary } from '../hooks'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
-import {
-  useGetAllClass,
-} from '@/app/enduser/(Academics)/Class/hooks'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import PaymentReceiptPrint from './printpaymentrecordindividually'
 import { useReactToPrint } from 'react-to-print'
 
@@ -36,18 +34,33 @@ const ViewStudentFeeForm = ({
   const { handleError, clearError } = useErrorHandler()
 
   const { data: allClasses } = useGetAllClass()
-  const [selectedStudentId, setSelectedStudentId] = useState('')
-  const [selectedClassId, setSelectedClassId] = useState('')
+
+  // ✅ Initialize state directly from props so comboboxes preload on mount
+  const [selectedStudentId, setSelectedStudentId] = useState(studentId ?? '')
+  const [selectedClassId, setSelectedClassId] = useState(classId ?? '')
+
   const { data: allStudents } = useGetStudentByClass(selectedClassId)
   const { data: allclasses } = useGetAllClass()
-  const [params, setParams] = useState('')
+  const [params, setParams] = useState(() => {
+    // ✅ Also initialize params from props on first render
+    if (studentId && classId) {
+      return `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`
+    } else if (classId) {
+      return `?classId=${encodeURIComponent(classId)}`
+    } else if (studentId) {
+      return `?studentId=${encodeURIComponent(studentId)}`
+    }
+    return ''
+  })
+
   const componentRef = useRef<HTMLDivElement>(null)
   const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
   const [shouldPrint, setShouldPrint] = useState(false)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
-      studentId: '',
+      studentId: studentId ?? '',
+      classId: classId ?? '',
       startDate: '',
       endDate: '',
     },
@@ -80,12 +93,19 @@ const ViewStudentFeeForm = ({
     }
   }, [printData, shouldPrint])
 
+  // ✅ Sync props into state and form when props change
   useEffect(() => {
     if (!studentId || !classId) return
 
     queueMicrotask(() => {
+      // Sync student
       setSelectedStudentId(studentId)
       setValue('studentId', studentId)
+
+      // ✅ Sync class — this was missing before
+      setSelectedClassId(classId)
+      setValue('classId', classId)
+
       const query = `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`
       setParams(query)
     })
@@ -100,7 +120,11 @@ const ViewStudentFeeForm = ({
         formData.studentId && `studentId=${formData.studentId}`,
         formData.startDate && `startDate=${formData.startDate}`,
         formData.endDate && `endDate=${formData.endDate}`,
-        classId && `classId=${classId}`,
+        formData.classId
+          ? `classId=${formData.classId}`
+          : classId
+            ? `classId=${classId}`
+            : '',
       ]
         .filter(Boolean)
         .join('&')
@@ -123,8 +147,15 @@ const ViewStudentFeeForm = ({
   }
 
   const onClear = () => {
-    form.reset()
+    form.reset({
+      studentId: '',
+      classId: classId ?? '',  // ✅ restore class prop on clear
+      startDate: '',
+      endDate: '',
+    })
     setSelectedStudentId('')
+    setSelectedClassId(classId ?? '')  // ✅ restore class combobox on clear
+
     if (classId) {
       setParams(`?classId=${encodeURIComponent(classId)}`)
     } else {
@@ -155,7 +186,6 @@ const ViewStudentFeeForm = ({
       reference: fee.reference || '-',
     }
 
-    // ✅ Set data first, then trigger print via useEffect
     setPrintData(data)
     setShouldPrint(true)
   }
@@ -180,26 +210,27 @@ const ViewStudentFeeForm = ({
               form={form}
               options={allStudents?.Items ?? []}
               selected={
-                allStudents?.Items?.find((s) => s.id === selectedStudentId) ??
-                null
+                allStudents?.Items?.find((s) => s.id === selectedStudentId) ?? null
               }
               onSelect={(student) => {
                 const id = student?.id ?? ''
                 setSelectedStudentId(id)
                 form.setValue('studentId', id)
                 const query = id
-                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(classId || '')}`
-                  : classId
-                    ? `?classId=${encodeURIComponent(classId)}`
-                    : ''
+                  ? `?studentId=${encodeURIComponent(id)}&classId=${encodeURIComponent(selectedClassId || classId || '')}`
+                  : selectedClassId
+                    ? `?classId=${encodeURIComponent(selectedClassId)}`
+                    : classId
+                      ? `?classId=${encodeURIComponent(classId)}`
+                      : ''
                 setParams(query)
                 refetch()
               }}
               getLabel={(s) =>
                 s
                   ? [s.firstName, s.middleName, s.lastName]
-                      .filter(Boolean)
-                      .join(' ')
+                    .filter(Boolean)
+                    .join(' ')
                   : '-'
               }
               getValue={(s) => s?.id ?? ''}
