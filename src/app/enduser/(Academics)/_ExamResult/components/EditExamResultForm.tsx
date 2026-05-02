@@ -31,15 +31,15 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
   const { data: ExamResultData, isLoading: isLoadingExamResult } = useGetExamResultById(ExamResultId)
   const { data: allExam, isLoading: isLoadingExams } = useGetAllExams()
-  
+
   // Fetch student individually by ID
   const { data: studentData, isLoading: isLoadingStudent } = useGetStudentById(
     ExamResultData?.studentId || ''
   )
-  
+
   const [selectedExam, setSelectedExam] = useState<IExam | undefined>(undefined)
   const [selectedStudent, setSelectedStudent] = useState<IStudent | undefined>(undefined)
-  
+
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'marksObtained',
@@ -104,7 +104,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
           fullMarks: item.fullMarks
         }))
       }
-      
+
       await toast.promise(
         editExamResult.mutateAsync({ id: ExamResultId, data: transformedData as any }),
         {
@@ -177,38 +177,38 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 options={allExam?.Items ?? []}
                 onSelect={(exam: IExam | null) => {
                   setSelectedExam(exam || undefined)
-                  setValue('examId', exam?.id ?? '', { 
-                    shouldValidate: true, 
-                    shouldDirty: true 
+                  setValue('examId', exam?.id ?? '', {
+                    shouldValidate: true,
+                    shouldDirty: true
                   })
                 }}
                 getLabel={(e: IExam) => e?.name ?? ''}
                 getValue={(e: IExam) => e?.id ?? ''}
                 placeholder="Select an exam"
               />
-              
+
               <div className="w-full">
-<AppCombobox<IStudent>
-  label="Student Name"
-  name="studentId"
-  form={form}
-  selected={selectedStudent}
-  options={[]} // Empty array since we don't need options in readOnly mode
-  onSelect={() => {}} // No-op since it's readOnly
-  getLabel={(s: IStudent) => {
-    if (!s) return ''
-    return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
-  }}
-  getValue={(s: IStudent) => s?.id ?? ''}
-  placeholder="Loading student..."
-  readOnly={true} // This makes it read-only
-/>
+                <AppCombobox<IStudent>
+                  label="Student Name"
+                  name="studentId"
+                  form={form}
+                  selected={selectedStudent}
+                  options={[]} // Empty array since we don't need options in readOnly mode
+                  onSelect={() => { }} // No-op since it's readOnly
+                  getLabel={(s: IStudent) => {
+                    if (!s) return ''
+                    return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
+                  }}
+                  getValue={(s: IStudent) => s?.id ?? ''}
+                  placeholder="Loading student..."
+                  readOnly={true} // This makes it read-only
+                />
                 <input
                   type="hidden"
                   {...form.register('studentId')}
                 />
               </div>
-              
+
               <InputElement
                 label="Remark"
                 form={form}
@@ -224,7 +224,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
               {fields.map((field, index: number) => {
                 const currentSubjectId = watch(`marksObtained.${index}.subjectId`)
                 const currentFullMarks = watch(`marksObtained.${index}.fullMarks`)
-                
+
                 return (
                   <div
                     key={field.id}
@@ -300,9 +300,9 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
             </div>
 
             <div className="flex justify-center mt-6 gap-4">
-              <ButtonElement 
-                type="button" 
-                text="Cancel" 
+              <ButtonElement
+                type="button"
+                text="Cancel"
                 onClick={handleClose}
                 className="bg-gray-500 hover:bg-gray-600"
               />
@@ -318,11 +318,11 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 // Component to display subject name by ID
 const SubjectNameDisplay = ({ subjectId }: { subjectId: string }) => {
   const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
-  
+
   if (isLoading) return <span className="text-gray-500">Loading subject...</span>
   if (error) return <span className="text-red-500">Error loading subject</span>
   if (!subject) return <span className="text-gray-500">Subject not found</span>
-  
+
   return <span className="font-medium">{subject.name}</span>
 }
 

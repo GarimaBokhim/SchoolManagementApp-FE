@@ -61,14 +61,14 @@ const AllStudentFeeForm = () => {
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
   const [pendingEditId, setPendingEditId] = useState<string | null>(null);
 
-const { data: fullEditRecord, isLoading: isEditRecordLoading } = 
-  useGetStudentFeeById(pendingEditId ?? undefined);
-useEffect(() => {
-  if (fullEditRecord && pendingEditId) {
-    setEditRecord({ ...fullEditRecord, id: pendingEditId });
-    setEditModal(true);
-  }
-}, [fullEditRecord, pendingEditId]);
+  const { data: fullEditRecord, isLoading: isEditRecordLoading } =
+    useGetStudentFeeById(pendingEditId ?? undefined);
+  useEffect(() => {
+    if (fullEditRecord && pendingEditId) {
+      setEditRecord({ ...fullEditRecord, id: pendingEditId });
+      setEditModal(true);
+    }
+  }, [fullEditRecord, pendingEditId]);
 
   const fullQuery = query + (params || "");
 
@@ -225,8 +225,8 @@ useEffect(() => {
                     getLabel={(g) =>
                       g
                         ? [g.firstName, g.middleName, g.lastName]
-                            .filter(Boolean)
-                            .join(' ')
+                          .filter(Boolean)
+                          .join(' ')
                         : '-'
                     }
                     getValue={(g) => g?.id ?? ""}
@@ -297,10 +297,10 @@ useEffect(() => {
                               <ButtonElement
                                 text=""
                                 icon={<Pencil className="text-white" size={15} />}
-                              onClick={() => {
-  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-  setPendingEditId(rowId);
-}}
+                                onClick={() => {
+                                  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+                                  setPendingEditId(rowId);
+                                }}
                                 className="!bg-blue-500 hover:!bg-blue-600"
                               />
                             )}

@@ -10,19 +10,13 @@ import { useGetAllVisaApplications } from '../hooks'
 import { IVisaApplication } from '../types/Ivisaapplication'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import DateRangeFilter, {
-    DateRangeFilterRef,
-} from '@/components/DateFilter/FilterComponent'
+import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import toast, { Toaster } from 'react-hot-toast'
-
-import {
-    useGetAllCountries,
-    useGetAllCourses,
-    useGetUniversities,
-} from '@/app/crm/university/_university/hooks'
+import { UseFilterIntakes, useGetAllCountries, useGetAllCourses, useGetUniversities } from '@/app/crm/university/_university/hooks'
 import { useGetAllLeads } from '@/app/crm/appointment/appointment/hooks'
 import AddVisaApplicationForm from './AddvisaApplication'
-import { add } from 'date-fns'
+import { VisaApplicationActionMenu } from './ActionMenue'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
     startDate: string
@@ -44,6 +38,8 @@ const AllVisaApplicationsForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [showDetailModal, setShowDetailModal] = useState(false)
+    const [selectedVisaApplication, setSelectedVisaApplication] = useState<IVisaApplication | null>(null)
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
@@ -64,6 +60,7 @@ const AllVisaApplicationsForm = () => {
     const { data: countries = [] } = useGetAllCountries()
     const { data: universities = [] } = useGetUniversities()
     const { data: courses = [] } = useGetAllCourses()
+    const { data: intakes = [] } = UseFilterIntakes()
 
     const visaForm = useForm<IVisaApplication>({
         defaultValues: {
@@ -82,47 +79,41 @@ const AllVisaApplicationsForm = () => {
 
     const applicantMap = useMemo(() => {
         const map: Record<string, string> = {}
-        leads.forEach((l: any) => {
-            map[l.id] = l.fullName
-        })
+        leads.forEach((l: any) => { map[l.id] = l.fullName })
         return map
     }, [leads])
 
     const countryMap = useMemo(() => {
         const map: Record<string, string> = {}
-        countries.forEach((c: any) => {
-            map[c.id] = c.name
-        })
+        countries.forEach((c: any) => { map[c.id] = c.name })
         return map
     }, [countries])
 
     const universityMap = useMemo(() => {
         const map: Record<string, string> = {}
-        universities.forEach((u: any) => {
-            map[u.id] = u.name
-        })
+        universities.forEach((u: any) => { map[u.id] = u.name })
         return map
     }, [universities])
 
     const courseMap = useMemo(() => {
         const map: Record<string, string> = {}
-        courses.forEach((c: any) => {
-            map[c.id] = c.title
-        })
+        courses.forEach((c: any) => { map[c.id] = c.title })
         return map
     }, [courses])
+
+    const intakeMap = useMemo(() => {
+        const map: Record<string, string> = {}
+        intakes.forEach((i: any) => { map[i.id] = i.name })
+        return map
+    }, [intakes])
 
     const applications: IVisaApplication[] = data?.Items ?? []
     const totalPages = data?.TotalPages ?? 1
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            formData.startDate
-                ? `startDate=${encodeURIComponent(formData.startDate)}`
-                : null,
-            formData.endDate
-                ? `endDate=${encodeURIComponent(formData.endDate)}`
-                : null,
+            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
             .filter(Boolean)
             .join('&')
@@ -132,23 +123,33 @@ const AllVisaApplicationsForm = () => {
         await toast.promise(
             (async () => {
                 setParams(fullQuery)
+                setCurrentPage(1)
                 await refetch()
             })(),
-            {
-                loading: 'Fetching data...',
-                success: 'Data fetched successfully!',
-            }
+            { loading: 'Fetching data...', success: 'Data fetched successfully!' }
         )
     }
 
     const handleClearFilters = () => {
         form.reset({ startDate: '', endDate: '' })
         setParams('')
+        setCurrentPage(1)
         formRef.current?.handleClear()
         refetch()
     }
 
+    const handleView = (visaApplication: IVisaApplication) => {
+        setSelectedVisaApplication(visaApplication)
+        setShowDetailModal(true)
+    }
 
+    const handleEdit = (visaApplication: IVisaApplication) => {
+        Toast.info('Edit coming soon!')
+    }
+
+    const handleDelete = async (_id: string) => {
+        Toast.info('Delete coming soon!')
+    }
 
     const resolve = (map: Record<string, string>, id: string) =>
         map[id] ?? <span className="text-gray-400 italic text-xs">N/A</span>
@@ -158,11 +159,10 @@ const AllVisaApplicationsForm = () => {
             <Toaster position="top-right" />
             <div className="p-4 sm:p-6">
                 <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">
-                            All Visa Applications
-                        </h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Visa Applications</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -225,21 +225,11 @@ const AllVisaApplicationsForm = () => {
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
                                         <th className="px-4 py-3 text-left">Applicant</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">
-                                            Country
-                                        </th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">
-                                            University
-                                        </th>
-                                        <th className="px-4 py-3 text-left hidden lg:table-cell">
-                                            Course
-                                        </th>
-                                        <th className="px-4 py-3 text-left hidden lg:table-cell">
-                                            Intake
-                                        </th>
-                                        <th className="px-4 py-3 text-left hidden lg:table-cell">
-                                            Applied Date
-                                        </th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">Country</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">University</th>
+                                        <th className="px-4 py-3 text-left hidden lg:table-cell">Course</th>
+                                        <th className="px-4 py-3 text-left hidden lg:table-cell">Intake</th>
+                                        <th className="px-4 py-3 text-left hidden lg:table-cell">Applied Date</th>
                                         <th className="px-4 py-3 text-center">Visa Status</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
@@ -247,10 +237,7 @@ const AllVisaApplicationsForm = () => {
                                 <tbody>
                                     {applications.length === 0 ? (
                                         <tr>
-                                            <td
-                                                colSpan={9}
-                                                className="p-4 text-center italic text-gray-500 dark:text-gray-400"
-                                            >
+                                            <td colSpan={9} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
                                                 No visa applications found.
                                             </td>
                                         </tr>
@@ -263,60 +250,36 @@ const AllVisaApplicationsForm = () => {
                                                 <td className="px-4 py-3 text-gray-500">
                                                     {(currentPage - 1) * pageSize + index + 1}
                                                 </td>
-
-                                                {/* ✅ Resolved from applicantMap */}
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {resolve(applicantMap, app.applicantId)}
                                                 </td>
-
-                                                {/* ✅ Resolved from countryMap */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
                                                     {resolve(countryMap, app.countryId)}
                                                 </td>
-
-                                                {/* ✅ Resolved from universityMap */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
                                                     {resolve(universityMap, app.universityId)}
                                                 </td>
-
-                                                {/* ✅ Resolved from courseMap */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
                                                     {resolve(courseMap, app.courseId)}
                                                 </td>
-
-                                                {/* ✅ Resolved from intakeMap */}
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
-                                                    {app.intakeId}
+                                                    {resolve(intakeMap, app.intakeId)}
                                                 </td>
-
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
-                                                    {app.appliedDate}
+                                                    {formatDate(app.appliedDate)}
                                                 </td>
-
-                                                {/* ✅ Resolved from visaStatusMap */}
-                                                <td className="px-4 py-3 text-center">
+                                                <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
                                                     {app.visaStatusId}
                                                 </td>
-
-                                                <td className="px-4 py-3">
-                                                    <div className="flex justify-center gap-3">
-                                                        {canEdit && (
-                                                            <button
-                                                                // onClick={() => handleEdit(app.id)}
-                                                                className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        {canDelete && (
-                                                            <button
-                                                                // onClick={() => handleDelete(app.id)}
-                                                                className="text-xs text-red-500 hover:text-red-600 font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                <td className="py-1 px-4">
+                                                    <VisaApplicationActionMenu
+                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
+                                                        onView={handleView}
+                                                        onEdit={handleEdit}
+                                                        onDelete={handleDelete}
+                                                        canEdit={canEdit}
+                                                        canDelete={canDelete}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -336,8 +299,7 @@ const AllVisaApplicationsForm = () => {
                                 currentPage,
                                 firstPage: 1,
                                 lastPage: totalPages,
-                                nextPage:
-                                    currentPage < totalPages ? currentPage + 1 : currentPage,
+                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
                                 previousPage: currentPage > 1 ? currentPage - 1 : 1,
                             }}
                             handleSearch={(p) => setCurrentPage(p.pageIndex)}
@@ -345,12 +307,29 @@ const AllVisaApplicationsForm = () => {
                     </div>
                 )}
             </div>
+
+            {/* Add Modal */}
             {isAddModalOpen && (
                 <AddVisaApplicationForm
                     form={visaForm}
                     onClose={() => setIsAddModalOpen(false)}
                 />
             )}
+
+            {/* View Detail Modal */}
+            {/* {showDetailModal && selectedVisaApplication && (
+                <VisaApplicationDetailModal
+                    visaApplication={selectedVisaApplication}
+                    applicantMap={applicantMap}
+                    countryMap={countryMap}
+                    universityMap={universityMap}
+                    courseMap={courseMap}
+                    onClose={() => {
+                        setShowDetailModal(false)
+                        setSelectedVisaApplication(null)
+                    }}
+                />
+            )} */}
         </>
     )
 }

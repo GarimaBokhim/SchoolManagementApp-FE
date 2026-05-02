@@ -95,9 +95,9 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState("");
   const [rows, setRows] = useState<IStudentFeeDetails[]>([]);
+  const [rowsSource, setRowsSource] = useState<"edit" | "structure" | "manual">("edit");
   const [discountPercentage, setDiscountPercentage] = useState(0);
 
-  // Track if we're using the edit record's rows or if user selected a new fee structure
   const isUsingEditRecordRows = useRef(true);
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
@@ -108,40 +108,42 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     selectedStudentId || undefined
   );
 
-  // ── Hydrate from editRecord once per record id ────────────────────────────
   useLayoutEffect(() => {
     if (!editRecord?.id) return;
+
+    // Only hydrate once per unique record id — prevents infinite loop
+    // caused by editRecord being a new object reference on every render.
     if (lastHydratedEditIdRef.current === editRecord.id) return;
     lastHydratedEditIdRef.current = editRecord.id;
 
     const fsId = feeStructureIdToString(editRecord.feeStructureId);
+
     setSelectedStudentId(editRecord.studentId);
     setSelectedClassId(editRecord.classId);
     setSelectedFeeStructureId(fsId);
+
     setDiscountPercentage(editRecord.discountPercentage ?? 0);
+
     form.setValue("discountPercentage", editRecord.discountPercentage ?? 0);
     form.setValue("studentId", editRecord.studentId);
     form.setValue("classId", editRecord.classId);
 
     const hydratedRows = (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }));
     setRows(hydratedRows);
-    // Mark that we're currently showing the edit record's rows
-    isUsingEditRecordRows.current = true;
-  }, [editRecord, form]);
 
-  // ── Handle Student Change ────────────────────────────────────────────────
+    setRowsSource("edit");
+  }, [editRecord?.id]); // depend only on the stable id, not the whole object
+
   const handleStudentChange = (student: any) => {
     const studentId = student?.id || "";
     setSelectedStudentId(studentId);
     form.setValue("studentId", studentId, { shouldValidate: true });
 
-    // Optionally update class based on selected student's class
     if (student && allStudents?.Items) {
       const selectedStudent = allStudents.Items.find(s => s.id === studentId);
       if (selectedStudent && selectedStudent.classId) {
         setSelectedClassId(selectedStudent.classId);
         form.setValue("classId", selectedStudent.classId, { shouldValidate: true });
-        // Reset fee structure and rows when class changes due to student selection
         setSelectedFeeStructureId("");
         setRows([]);
         isUsingEditRecordRows.current = false;
@@ -149,79 +151,64 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     }
   };
 
-  // ── Handle Class Change ──────────────────────────────────────────────────
   const handleClassChange = (classItem: any) => {
     const classId = classItem?.id || "";
+
     setSelectedClassId(classId);
     form.setValue("classId", classId, { shouldValidate: true });
-    // Reset fee structure and rows when class changes
+
     setSelectedFeeStructureId("");
     setRows([]);
-    isUsingEditRecordRows.current = false;
+
+    setRowsSource("manual");
   };
 
-  // ── Repopulate rows from fee structure detail when user selects a new fee structure ──
   useEffect(() => {
-    // Only populate if:
-    // 1. We have fee structure details
-    // 2. We're NOT using the edit record's rows (i.e., user selected a new fee structure)
-    // 3. OR we're populating for the first time and don't have rows yet
     if (!feeStructureDetail?.feeStructureDTOs?.length) return;
 
-    // Don't overwrite if we're still using edit record rows AND we already have rows
-    if (isUsingEditRecordRows.current && rows.length > 0) return;
+    if (rowsSource !== "structure") return;
 
     const populated = mapFeeStructureDTOsToDetails(
       feeStructureDetail.feeStructureDTOs,
       discountPercentage
     );
+
     setRows(populated);
-    // After populating from fee structure, we're no longer using edit record rows
-    isUsingEditRecordRows.current = false;
-  }, [feeStructureDetail, discountPercentage, rows.length]);
+  }, [feeStructureDetail, discountPercentage, rowsSource]);
 
-  // ── Keep form in sync with rows ───────────────────────────────────────────
-  useEffect(() => {
-    form.setValue("studentFeeDetailsDTOs", rows);
-  }, [rows, form]);
-
-  // ── Recalculate all row totals when discount changes ──────────────────────
-  useEffect(() => {
-    setRows((prev) =>
-      prev.map((row) => {
-        const { discountAmount, totalAmount } = calculateRowTotals(row, discountPercentage);
-        return { ...row, discountAmount, totalAmount };
-      })
-    );
-  }, [discountPercentage]);
-
-  // ── Row management ────────────────────────────────────────────────────────
   const addRow = () => {
     setRows((prev) => [...prev, createEmptyRow()]);
-    isUsingEditRecordRows.current = false; // User added custom row, so we're no longer using edit record rows
+    setRowsSource("manual");
   };
 
   const updateRow = (index: number, updates: Partial<IStudentFeeDetails>) => {
     setRows((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], ...updates };
+
       if (updates.feePaidType !== undefined) {
         updated[index].times = getDefaultTimes(updates.feePaidType);
       }
-      const { discountAmount, totalAmount } = calculateRowTotals(updated[index], discountPercentage);
+
+      const { discountAmount, totalAmount } = calculateRowTotals(
+        updated[index],
+        discountPercentage
+      );
+
       updated[index].discountAmount = discountAmount;
       updated[index].totalAmount = totalAmount;
+
       return updated;
     });
-    isUsingEditRecordRows.current = false; // User modified row
+
+    setRowsSource("manual");
   };
 
   const removeRow = (index: number) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
-    isUsingEditRecordRows.current = false; // User removed row
+    setRowsSource("manual");
   };
 
-  // ── Discount change ───────────────────────────────────────────────────────
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     setDiscountPercentage(value);
@@ -240,7 +227,6 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     onClose();
   };
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
 
@@ -278,21 +264,21 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     }
   };
 
-  const grandTotal = rows.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
+  const grandTotal = rows.reduce((sum, d) => {
+    const { totalAmount } = calculateRowTotals(d, discountPercentage);
+    return sum + totalAmount;
+  }, 0);
 
-  // ── Get selected student object ─────────────────────────────────────────
   const getSelectedStudent = () => {
     if (!selectedStudentId || !allStudents?.Items) return null;
     return allStudents.Items.find((s) => s.id === selectedStudentId) || null;
   };
 
-  // ── Get selected class object ──────────────────────────────────────────
   const getSelectedClass = () => {
     if (!selectedClassId || !allClasses?.Items) return null;
     return allClasses.Items.find((c) => c.id === selectedClassId) || null;
   };
 
-  // ── Resolve selected fee structure for combobox ───────────────────────────
   const getSelectedFeeStructure = () => {
     const fromList = feeStructuresByClass?.Items?.find((f) => {
       const fid = f.id ?? (f as { Id?: string }).Id ?? "";
@@ -300,7 +286,6 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     });
     if (fromList) return fromList;
 
-    // Fallback: synthesize from student fee structure API or feeStructureDetail
     const categoryName =
       feeStructureByStudent?.categoryName?.trim() ||
       feeStructureDetail?.feeCategoryName?.trim() ||
@@ -337,10 +322,10 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-            {/* Top Fields - Now all with AppCombobox */}
+            {/* Top Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
-              {/* Student - Now editable with AppCombobox */}
+              {/* Student */}
               <div className="flex flex-col gap-1">
                 <AppCombobox
                   value={selectedStudentId}
@@ -361,7 +346,7 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 />
               </div>
 
-              {/* Class - Now editable with AppCombobox */}
+              {/* Class */}
               <div className="flex flex-col gap-1">
                 <AppCombobox
                   value={selectedClassId}
@@ -393,10 +378,8 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     const id = f?.id ?? (f as { Id?: string }).Id ?? "";
                     setSelectedFeeStructureId(id);
                     form.setValue("feeStructureId", id, { shouldValidate: true });
-                    // KEY: User selected a new fee structure, so we should NOT use edit record rows
-                    isUsingEditRecordRows.current = false;
-                    // Clear existing rows to show loading state or new data
                     setRows([]);
+                    setRowsSource("structure");
                   }}
                   getLabel={(f) => {
                     if (!f) return "";
@@ -477,105 +460,110 @@ const EditStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     ) : rows.length === 0 ? (
                       <tr className="border-t border-gray-100 dark:border-gray-600 text-gray-400 dark:text-gray-500">
                         <td colSpan={9} className="px-3 py-8 text-center">
-                          No fee details. Select a fee structure or click "Add Row".
+                          No fee details. Select a fee structure or click Add Row.
                         </td>
                       </tr>
                     ) : (
-                      rows.map((detail, index) => (
-                        <tr
-                          key={index}
-                          className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
-                        >
-                          <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
-                            {index + 1}
-                          </td>
-                          <td className="px-3 py-3">
-                            {detail.feeTypeId ? (
-                              <div className="w-full">
-                                <div className="px-2 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
-                                  <FeeTypeName feeTypeId={detail.feeTypeId} />
+                      rows.map((detail, index) => {
+                        // ✅ `detail` is correctly scoped inside the map callback
+                        const { discountAmount, totalAmount } = calculateRowTotals(detail, discountPercentage);
+
+                        return (
+                          <tr
+                            key={index}
+                            className="border-t border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors"
+                          >
+                            <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
+                              {index + 1}
+                            </td>
+                            <td className="px-3 py-3">
+                              {detail.feeTypeId ? (
+                                <div className="w-full">
+                                  <div className="px-2 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                                    <FeeTypeName feeTypeId={detail.feeTypeId} />
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
+                              ) : (
+                                <select
+                                  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                  value={detail.feeTypeId}
+                                  onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
+                                >
+                                  <option value="">— Select —</option>
+                                  {allFeeTypes?.Items?.map((ft) => (
+                                    <option key={ft.id} value={ft.id}>
+                                      {ft.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </td>
+                            <td className="px-3 py-3">
                               <select
                                 className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                                value={detail.feeTypeId}
-                                onChange={(e) => updateRow(index, { feeTypeId: e.target.value })}
+                                value={detail.feePaidType}
+                                onChange={(e) => updateRow(index, { feePaidType: Number(e.target.value) })}
                               >
-                                <option value="">— Select —</option>
-                                {allFeeTypes?.Items?.map((ft) => (
-                                  <option key={ft.id} value={ft.id}>
-                                    {ft.name}
+                                {FEE_PAID_TYPE_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
                                   </option>
                                 ))}
                               </select>
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            <select
-                              className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                              value={detail.feePaidType}
-                              onChange={(e) => updateRow(index, { feePaidType: Number(e.target.value) })}
-                            >
-                              {FEE_PAID_TYPE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
+                            </td>
 
-                          {/* Amount */}
-                          <td className="px-3 py-3">
-                            <input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
-                              value={detail.amount}
-                              onChange={(e) => updateRow(index, { amount: Number(e.target.value) })}
-                            />
-                          </td>
+                            {/* Amount */}
+                            <td className="px-3 py-3">
+                              <input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                className="w-24 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                                value={detail.amount}
+                                onChange={(e) => updateRow(index, { amount: Number(e.target.value) })}
+                              />
+                            </td>
 
-                          {/* Times */}
-                          <td className="px-3 py-3">
-                            <input
-                              type="number"
-                              min={1}
-                              className="w-16 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
-                              value={detail.times}
-                              onChange={(e) => updateRow(index, { times: Number(e.target.value) })}
-                            />
-                          </td>
+                            {/* Times */}
+                            <td className="px-3 py-3">
+                              <input
+                                type="number"
+                                min={1}
+                                className="w-16 border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm text-right bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400 ml-auto block"
+                                value={detail.times}
+                                onChange={(e) => updateRow(index, { times: Number(e.target.value) })}
+                              />
+                            </td>
 
-                          {/* Discount % */}
-                          <td className="px-3 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">
-                            {discountPercentage}%
-                          </td>
+                            {/* Discount % */}
+                            <td className="px-3 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">
+                              {discountPercentage}%
+                            </td>
 
-                          {/* Discount Rs. */}
-                          <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
-                            {detail.discountAmount?.toFixed(2) || "0.00"}
-                          </td>
+                            {/* Discount Rs. */}
+                            <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
+                              {discountAmount.toFixed(2)}
+                            </td>
 
-                          {/* Total */}
-                          <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
-                            {detail.totalAmount?.toFixed(2) || "0.00"}
-                          </td>
+                            {/* Total */}
+                            <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                              {totalAmount.toFixed(2)}
+                            </td>
 
-                          {/* Delete */}
-                          <td className="px-3 py-3 text-center">
-                            <button
-                              type="button"
-                              onClick={() => removeRow(index)}
-                              className="text-red-400 hover:text-red-600 transition-colors"
-                              title="Remove row"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                            {/* Delete */}
+                            <td className="px-3 py-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removeRow(index)}
+                                className="text-red-400 hover:text-red-600 transition-colors"
+                                title="Remove row"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
 
