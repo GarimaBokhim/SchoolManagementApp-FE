@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useForm } from "react-hook-form";
 import { IStudent } from "../types/IStudents";

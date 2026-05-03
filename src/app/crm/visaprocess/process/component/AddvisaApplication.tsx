@@ -2,6 +2,7 @@
 'use client'
 
 import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { useEffect } from 'react'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { X } from 'lucide-react'
@@ -40,19 +41,39 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
     const emailSent = form.watch('emailSent')
 
+    useEffect(() => {
+        form.register('emailContent')
+        form.register('visaDetails')
+    }, [form])
+
     const handleClose = () => {
         form.reset()
         onClose()
     }
+    useEffect(() => {
+        if (intakes?.length && !form.getValues('intakeId')) {
+            const firstIntake = intakes[0]
+
+            if (firstIntake) {
+                form.setValue('intakeId', firstIntake.id, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+        }
+    }, [intakes])
 
     const onSubmit: SubmitHandler<IVisaApplication> = async (data) => {
         clearError()
+
+        console.log('FINAL DATA:', data)
 
         try {
             await toast.promise(
                 addVisaApplication.mutateAsync({
                     ...data,
                     emailContent: data.emailSent ? data.emailContent : '',
+                    visaDetails: data.visaDetails,
                 }),
                 {
                     loading: 'Adding Visa Application...',
@@ -69,7 +90,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 ml-[17%] bg-white dark:bg-[#27272a] overflow-y-auto overflow-visible">
+        <div className="fixed inset-0 z-50 ml-[17%] bg-white dark:bg-[#27272a] overflow-y-auto">
 
             {/* HEADER */}
             <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b bg-white dark:bg-[#27272a] dark:border-gray-700">
@@ -91,7 +112,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
                     {/* ROW 1 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                         <AppCombobox
                             label="Applicant"
                             name="applicantId"
@@ -145,10 +165,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                             getLabel={(u: any) => u?.name ?? ''}
                             getValue={(u: any) => u?.id ?? ''}
                         />
-                    </div>
-
-                    {/* ROW 2 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
 
                         <AppCombobox
                             label="Course"
@@ -167,7 +183,10 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                             getLabel={(c: any) => c?.title ?? ''}
                             getValue={(c: any) => c?.id ?? ''}
                         />
+                    </div>
 
+                    {/* ROW 2 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <AppCombobox
                             label="Intake"
                             name="intakeId"
@@ -186,58 +205,63 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                             getValue={(i: any) => i?.id ?? ''}
                         />
 
-                        <div className="z-[1]">
-                            <AppCombobox
-                                label="Visa Status"
-                                name="visaStatusId"
-                                form={form}
-                                options={visaStatuses ?? []}
-                                dropdownPositionClass="absolute"
-                                selected={
-                                    visaStatuses?.find(
-                                        (v: any) => v.id === form.watch('visaStatusId')
-                                    ) || null
-                                }
-                                onSelect={(v: any) =>
-                                    form.setValue('visaStatusId', v?.id ?? '')
-                                }
-                                getLabel={(v: any) => v?.name ?? ''}
-                                getValue={(v: any) => v?.id ?? ''}
-                            />
-                        </div>
-                    </div>
-
-                    {/* ROW 3 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <AppCombobox
+                            label="Visa Status"
+                            name="visaStatusId"
+                            form={form}
+                            options={visaStatuses ?? []}
+                            dropdownPositionClass="absolute"
+                            selected={
+                                visaStatuses?.find(
+                                    (v: any) => v.id === form.watch('visaStatusId')
+                                ) || null
+                            }
+                            onSelect={(v: any) =>
+                                form.setValue('visaStatusId', v?.id ?? '')
+                            }
+                            getLabel={(v: any) => v?.name ?? ''}
+                            getValue={(v: any) => v?.id ?? ''}
+                        />
 
                         <InputElement
                             label="Applied Date"
-                            form={form}
                             name="appliedDate"
-                            type="datetype"
-                        />
-
-                        <InputElement
-                            label="Visa Details"
+                            inputType="date"
                             form={form}
-                            name="visaDetails"
-                            type="text"
                         />
-
-                        <div className="flex items-center gap-3 mt-6">
+                        <div className="flex items-center gap-3 mt-[-4%]">
                             <input
                                 type="checkbox"
                                 {...form.register('emailSent')}
+                                onChange={(e) => {
+                                    const checked = e.target.checked
+                                    form.setValue('emailSent', checked)
+
+                                    if (!checked) {
+                                        form.setValue('emailContent', '')
+                                    }
+                                }}
                             />
                             <label className="text-sm">
-                                Email Sent to Applicant
+                                Send Email to Applicant
                             </label>
                         </div>
                     </div>
 
-                    {/* EMAIL EDITOR */}
+                    {/* VISA DETAILS EDITOR */}
+                    <div className="mt-6">
+                        <h2 className="text-sm font-medium mb-2">Visa Details</h2>
+                        <TextEditor
+                            content={form.watch('visaDetails') || ''}
+                            onChange={(content) =>
+                                form.setValue('visaDetails', content)
+                            }
+                        />
+                    </div>
+
                     {emailSent && (
-                        <div className="mt-4">
+                        <div className="mt-6">
+                            <h2 className="text-sm font-medium mb-2">Email Content</h2>
                             <TextEditor
                                 content={form.watch('emailContent') || ''}
                                 onChange={(content) =>

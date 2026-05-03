@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
@@ -103,7 +104,7 @@ const useExcelPreview = () => {
   const handleExcelPreview = async (file: File) => {
     setSelectedFile(file)
     setUploadLoading(true)
-    
+
     try {
       // Parse Excel file and preview data
       setShowPreviewModal(true)
@@ -159,20 +160,20 @@ const AllStudentForm = () => {
     pageIndex: 1,
     isPagination: true,
   })
-  
+
   type SearchParam = {
     pageSize: number
     pageIndex: number
     isPagination: boolean
   }
-  
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize
     setPaginationParams(params)
   }
-  
+
   const {
-    previewData,  
+    previewData,
     showPreviewModal,
     setShowPreviewModal,
     uploadLoading,
@@ -182,7 +183,7 @@ const AllStudentForm = () => {
     setSelectedFile,
     handleSaveExcel,
   } = useExcelPreview()
-  
+
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
@@ -306,7 +307,7 @@ const AllStudentForm = () => {
     setSelectedStudentForProfile(student)
     setShowProfilePopup(true)
   }
-  
+
   const getClassName = (classId: string) => {
     if (!classId) return 'N/A'
     return allclass?.name || 'N/A'
@@ -318,9 +319,9 @@ const AllStudentForm = () => {
       const customEvent = event as CustomEvent
       handleNameClick(customEvent.detail)
     }
-    
+
     window.addEventListener('studentNameClick', handleStudentClick)
-    
+
     return () => {
       window.removeEventListener('studentNameClick', handleStudentClick)
     }
@@ -331,7 +332,7 @@ const AllStudentForm = () => {
   const maleCount = items.filter((s) => s.genderStatus === 1).length
   const femaleCount = items.filter((s) => s.genderStatus === 2).length
   const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
-  
+
   return (
     <>
       <div className="p-4 sm:p-6">
@@ -375,7 +376,7 @@ const AllStudentForm = () => {
               <ImportButtonForm handleExcelImport={handleExcelPreview} />
 
               {showPreviewModal && (
-                <ExcelPreviewModal             
+                <ExcelPreviewModal
                   previewData={previewData}
                   show={showPreviewModal}
                   onClose={() => setShowPreviewModal(false)}
@@ -604,7 +605,7 @@ const AllStudentForm = () => {
             />
           </div>
         )}
-        
+
         {showStudents && selectedId && (
           <EditStudent
             StudentId={selectedId}
