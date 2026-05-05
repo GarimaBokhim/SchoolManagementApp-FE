@@ -8,15 +8,22 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterSchoolItemByDate, useGetAllSchoolItems } from "../hooks";
+import {
+  useFilterSchoolItemByDate,
+  useGetAllSchoolItems,
+  useRemoveSchoolItem,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddSchoolItem from "../pages/Add";
+import EditSchoolItem from "../pages/Edit";
+import DeleteButton from "@/components/Buttons/DeleteButton";
+import { EditButton } from "@/components/Buttons/EditButton";
 import { useGetAllContributors } from "../../_Contributor/hooks";
 const AllSchoolItemForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -35,6 +42,8 @@ const AllSchoolItemForm = () => {
   };
   const { data: allContributor } = useGetAllContributors();
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -131,16 +140,30 @@ const AllSchoolItemForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  // const deleteSchoolItem = useRemoveSchoolItem();
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteSchoolItem.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+  const deleteSchoolItem = useRemoveSchoolItem();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteSchoolItem.mutateAsync(id);
+      toast.success("School Item deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting School Item.");
+    }
+  };
+
+  const editButtonElement = (id: string) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => {
+        setEditModal(true);
+        setSelectedId(id);
+      }}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  );
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -297,17 +320,16 @@ const AllSchoolItemForm = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                            {/* {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    SchoolItem.id ? SchoolItem.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this SchoolItem?"
-                              />
-                            )} */}
+                            <EditButton
+                              button={editButtonElement(SchoolItem.id ?? "")}
+                            />
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(SchoolItem.id ? SchoolItem.id : "")
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this School Item?"
+                            />
                           </div>
                         </td>
                       </tr>
@@ -341,6 +363,17 @@ const AllSchoolItemForm = () => {
               handleSearch={handleSearch}
             />
           </div>
+        )}
+        {editModal && selectedId && (
+          <EditSchoolItem
+            schoolItemId={selectedId}
+            visible={editModal}
+            onClose={() => {
+              setEditModal(false);
+              setSelectedId("");
+              refetch();
+            }}
+          />
         )}
         <AddSchoolItem visible={addModal} onClose={() => setAddModal(false)} />
       </div>

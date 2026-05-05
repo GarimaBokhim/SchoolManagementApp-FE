@@ -34,8 +34,8 @@ export interface IPaymentRecord {
   paymentDate: string;
   paymentMethod: number;
   reference: string;
-  receiptNumber?: string;  //  mapped for future backend support
-  dueAmount?: number;      
+  receiptNumber: string;  //  mapped for future backend support
+  dueAmount?: number;
 }
 
 export interface Istudentfeesummary {
@@ -46,6 +46,7 @@ export interface Istudentfeesummary {
   paidAmount: number;
   dueAmount: number;
   reference: string;
+  receiptNumber: string;
   paymentMethod: number;
 }
 

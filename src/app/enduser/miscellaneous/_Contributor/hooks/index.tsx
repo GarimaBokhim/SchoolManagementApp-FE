@@ -7,7 +7,7 @@ const ContributorEndPoints = {
   createContributors: "/api/SchoolAssetsControllers/AddContributors",
   removeContributors: "/api/SchoolAssetsControllers/DeleteContributors",
   updateContributors: "/api/SchoolAssetsControllers/UpdateContributors",
-  getContributorsById: "/api/SchoolAssetsControllers/ContributorsBy",
+  getContributorsById: "/api/SchoolAssetsControllers/Contributors",
   filterContributorByDate: "/api/SchoolAssetsControllers/FilterContributors",
   getContributorsByClass: "/api/SchoolAssetsControllers/GetContributorByClass",
 };

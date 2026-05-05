@@ -184,6 +184,8 @@ const ViewStudentFeeForm = ({
       paymentDate: fee.paymentDate || new Date().toISOString(),
       paymentMethod: fee.paymentMethod,
       reference: fee.reference || '-',
+      receiptNumber: fee.receiptNumber || '-',
+
     }
 
     setPrintData(data)
