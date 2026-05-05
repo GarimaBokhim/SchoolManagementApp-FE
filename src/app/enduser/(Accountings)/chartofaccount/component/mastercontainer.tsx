@@ -1,5 +1,5 @@
+"use client"
 import { useRef, useState } from 'react'
-import Addition from '@/assets/square-plus-solid.svg'
 import { useGetChartOfAccount } from '../hooks'
 import {
   Folder as FolderIcon,
@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Circle as Dot,
   FolderClosed,
+  PlusSquare,
 } from 'lucide-react'
 import AddL from '@/app/enduser/(Accountings)/Ledger/pages/Add'
 import { IChart, ISubLedgerGroupResponse } from '../types/Ichartofaccount'
@@ -109,20 +110,17 @@ const MasterContainer = () => {
             className="border-t border-gray-300 dark:border-gray-700 py-4 pl-4"
           >
             <div
-              className={`font-semibold text-md flex items-center gap-2 ${
-                hasMasterContent
+              className={`font-semibold text-md flex items-center gap-2 ${hasMasterContent
                   ? 'cursor-pointer'
                   : 'cursor-default opacity-50'
-              }`}
+                }`}
               onClick={() => toggleMaster(master.id, hasMasterContent)}
             >
               <FolderClosed size={14} />
               {master.name}
               <div
                 className={` font-normal text-sm
-                ${
-                  master.balanceType === 'Dr' ? 'text-teal-500' : 'text-red-500'
-                }
+                ${master.balanceType === 'Dr' ? 'text-teal-500' : 'text-red-500'}
                 `}
               >
                 &nbsp; ({master.balance} &nbsp;
@@ -131,13 +129,9 @@ const MasterContainer = () => {
               <button
                 type="button"
                 onClick={(e) => handleOpenAddLedgerGroupForm(e, master.id)}
-                className="text-red-500 hover:text-red-700 sm:p-0 flex"
+                className="text-red-500 hover:text-red-700 sm:p-0 flex items-center"
               >
-                <img
-                  src={Addition}
-                  alt="Add Item"
-                  className="ml-3 w-4 h-4 mt-1  sm:w-4 sm:h-4"
-                />
+                <PlusSquare size={16} className="ml-3" />
               </button>
             </div>
 
@@ -156,12 +150,10 @@ const MasterContainer = () => {
                     >
                       <button
                         onClick={() => toggleGroup(groupId, hasGroupContent)}
-                        className={`w-full flex items-center justify-between text-left px-2 py-1 rounded ${
-                          hasGroupContent
+                        className={`w-full flex items-center justify-between text-left px-2 py-1 rounded ${hasGroupContent
                             ? 'hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer'
                             : 'cursor-default'
-                        }`}
-                        // disabled={!hasGroupContent}
+                          }`}
                       >
                         <div className="flex items-center gap-2 text-sm font-medium pl-6">
                           <FolderIcon size={12} />
@@ -179,13 +171,9 @@ const MasterContainer = () => {
                             onClick={(e) =>
                               handleOpenAddSubLedgerGroupForm(e, group.id)
                             }
-                            className="text-red-500 hover:text-red-700 sm:p-0 flex"
+                            className="text-red-500 hover:text-red-700 sm:p-0 flex items-center"
                           >
-                            <img
-                              src={Addition}
-                              alt="Add Item"
-                              className="ml-3 w-4 h-4 mt-1  sm:w-4 sm:h-4"
-                            />
+                            <PlusSquare size={16} className="ml-3" />
                           </button>
                         </div>
                         {hasGroupContent && (
@@ -206,15 +194,14 @@ const MasterContainer = () => {
                               key={subGroup.id}
                               className="mt-2 px-4 border-l border-gray-300 dark:border-gray-700"
                             >
-                              <div className="font-medium text-sm pl-6 py-1 flex text-center">
+                              <div className="font-medium text-sm pl-6 py-1 flex text-center items-center">
                                 {subGroup.name}
                                 <div
                                   className={` font-normal text-sm
-                ${
-                  subGroup.balanceType === 'Dr'
-                    ? 'text-teal-500'
-                    : 'text-red-500'
-                }
+                ${subGroup.balanceType === 'Dr'
+                                      ? 'text-teal-500'
+                                      : 'text-red-500'
+                                    }
                 `}
                                 >
                                   &nbsp; ({Math.abs(subGroup.balance)}{' '}
@@ -225,13 +212,9 @@ const MasterContainer = () => {
                                   onClick={(e) =>
                                     handleOpenAddLedgerForm(e, subGroup.id)
                                   }
-                                  className="text-red-500 hover:text-red-700 sm:p-0 flex"
+                                  className="text-red-500 hover:text-red-700 sm:p-0 flex items-center"
                                 >
-                                  <img
-                                    src={Addition}
-                                    alt="Add Item"
-                                    className="ml-3 w-4 h-4 mt-1  sm:w-4 sm:h-4"
-                                  />
+                                  <PlusSquare size={16} className="ml-3" />
                                 </button>
                               </div>
                               <div className="mt-1 space-y-1">
@@ -246,9 +229,10 @@ const MasterContainer = () => {
                                     </span>
                                     <div
                                       className={` font-normal text-sm
-                ${
-                  ledger.balanceType === 'Dr' ? 'text-teal-500' : 'text-red-500'
-                }
+                ${ledger.balanceType === 'Dr'
+                                          ? 'text-teal-500'
+                                          : 'text-red-500'
+                                        }
                 `}
                                     >
                                       &nbsp; ({Math.abs(ledger.balance)}{' '}

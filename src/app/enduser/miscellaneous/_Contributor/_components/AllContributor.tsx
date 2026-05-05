@@ -8,15 +8,22 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterContributorByDate, useGetAllContributors } from "../hooks";
+import {
+  useFilterContributorByDate,
+  useGetAllContributors,
+  useRemoveContributor,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddContributor from "../pages/Add";
+import EditContributor from "../pages/Edit";
+import DeleteButton from "@/components/Buttons/DeleteButton";
+import { EditButton } from "@/components/Buttons/EditButton";
 const AllContributorForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -34,6 +41,8 @@ const AllContributorForm = () => {
   };
   // const [showContributors, setShowContributors] = useState(false);
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
   const { menuStatus } = usePermissions();
   const { canAdd } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
@@ -98,16 +107,30 @@ const AllContributorForm = () => {
     refForInput.current?.focus();
   }, []);
   const formRef = useRef<DateRangeFilterRef>(null);
-  // const deleteContributor = useRemoveContributor();
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteContributor.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+  const deleteContributor = useRemoveContributor();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteContributor.mutateAsync(id);
+      toast.success("Contributor deleted successfully!");
+      refetch();
+    } catch {
+      toast.error("Error deleting Contributor.");
+    }
+  };
+
+  const editButtonElement = (id: string) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => {
+        setEditModal(true);
+        setSelectedId(id);
+      }}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  );
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -233,17 +256,16 @@ const AllContributorForm = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                            {/* {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    Contributor.id ? Contributor.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this Contributor?"
-                              />
-                            )} */}
+                            <EditButton
+                              button={editButtonElement(Contributor.id ?? "")}
+                            />
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(Contributor.id ? Contributor.id : "")
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this Contributor?"
+                            />
                           </div>
                         </td>
                       </tr>
@@ -277,6 +299,17 @@ const AllContributorForm = () => {
               handleSearch={handleSearch}
             />
           </div>
+        )}
+        {editModal && selectedId && (
+          <EditContributor
+            contributorId={selectedId}
+            visible={editModal}
+            onClose={() => {
+              setEditModal(false);
+              setSelectedId("");
+              refetch();
+            }}
+          />
         )}
         <AddContributor visible={addModal} onClose={() => setAddModal(false)} />
       </div>

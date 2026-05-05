@@ -8,7 +8,7 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import toast, { Toaster } from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
-import { Filter, Plus, RotateCcw } from 'lucide-react'
+import { Edit, Filter, Plus, RotateCcw, Trash } from 'lucide-react'
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from '@/components/DateFilter/FilterComponent'
@@ -18,6 +18,8 @@ import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddHistory from '../pages/Add'
 import { useGetAllSchoolItems } from '../../_SchoolItem/hooks'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+import { EditButton } from '@/components/Buttons/EditButton'
 const AllHistoryForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -106,16 +108,29 @@ const AllHistoryForm = () => {
     refForInput.current?.focus()
   }, [])
   const formRef = useRef<DateRangeFilterRef>(null)
-  // const deleteHistory = useRemoveHistory();
-  // const handleDelete = async (id: string) => {
-  //   try {
-  //     await deleteHistory.mutateAsync(id);
-  //     toast.success("User deleted successfully!");
-  //     refetch();
-  //   } catch {
-  //     toast.error("Error deleting user.");
-  //   }
-  // };
+
+  const handleDelete = async (id: string) => {
+    try {
+      toast.error('Delete not yet configured for History.')
+      console.log('Delete History id:', id)
+    } catch {
+      toast.error('Error deleting History.')
+    }
+  }
+
+  const editButtonElement = (id: string) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => {
+        toast('Edit History coming soon.')
+        console.log('Edit History id:', id)
+      }}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  )
+
   const onClearClick = () => {
     refetch()
     setParams('')
@@ -255,17 +270,16 @@ const AllHistoryForm = () => {
                         <td className="py-3 px-4">{History.remarks}</td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
-                            {/* {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
-                                    History.id ? History.id : ""
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this History?"
-                              />
-                            )} */}
+                            <EditButton
+                              button={editButtonElement(History.id ?? '')}
+                            />
+                            <DeleteButton
+                              onConfirm={() =>
+                                handleDelete(History.id ? History.id : '')
+                              }
+                              headerText={<Trash />}
+                              content="Are you sure you want to delete this History?"
+                            />
                           </div>
                         </td>
                       </tr>
