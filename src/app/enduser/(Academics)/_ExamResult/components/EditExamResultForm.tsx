@@ -156,7 +156,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 setValue('examId', exam?.id ?? '')
               }}
               getLabel={(e) => e.name}
-              getValue={(e) => e.id}
+              getValue={(e) => e.id ?? ''}
             />
 
             {/* STUDENT (RESTORED) */}
@@ -171,7 +171,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 getLabel={(s) =>
                   [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
                 }
-                getValue={(s) => s.id}
+                getValue={(s) => s.id ?? ''}
                 readOnly
               />
               <input type="hidden" {...form.register('studentId')} />
@@ -196,7 +196,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
             {fields.map((field, index) => {
               const currentSubjectId = watch(`marksObtained.${index}.subjectId`)
               const currentFullMarks = watch(`marksObtained.${index}.fullMarks`)
-              const isNew = watch(`marksObtained.${index}.isNew`)
+              const isNew = (fields[index] as any).isNew ?? false
 
               const allSelectedIds =
                 watch('marksObtained')?.map((i: any) => i.subjectId)?.filter(Boolean) || []
@@ -275,7 +275,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                   marksObtained: 0,
                   fullMarks: 0,
                   isNew: true,
-                })
+                } as any)
               }
             />
           </div>
