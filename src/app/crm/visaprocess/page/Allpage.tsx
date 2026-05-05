@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import AllVisaApplicationsForm from '../process/component/AllvisaApplicationForm'
-import AllRegistration from '@/app/enduser/(StudentManagement)/_Registration/pages/All'
+import AllVisaStatusForm from '../visastatus/component/Allvisastatus'
 
 const AllProcesses = () => {
   const classesTabs = [
@@ -17,7 +17,7 @@ const AllProcesses = () => {
       case 'VisaApplication':
         return <AllVisaApplicationsForm />
       case 'Visastatus':
-        return <AllRegistration />
+        return <AllVisaStatusForm />
       default:
         return <AllVisaApplicationsForm />
     }
