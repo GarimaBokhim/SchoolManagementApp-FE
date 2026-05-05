@@ -187,7 +187,7 @@ const AllVisaStatusForm = () => {
                                         <th className="px-4 py-3 text-left">Status Name</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">Type</th>
                                         <th className="px-4 py-3 text-center hidden md:table-cell">Active</th>
-                                        <th className="px-4 py-3 text-left hidden lg:table-cell">Created At</th>
+
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -224,9 +224,7 @@ const AllVisaStatusForm = () => {
                                                         {status.isActive ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
-                                                    {formatDate(status.createdAt ?? '')}
-                                                </td>
+
                                                 <td className="py-1 px-4">
                                                     <VisaStatusActionMenu
                                                         visaStatus={status}

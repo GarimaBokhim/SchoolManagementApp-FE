@@ -169,6 +169,28 @@ const ProfileSkeleton = () => (
 // Visa Timeline Component - Horizontally aligned with wrapping
 const VisaTimeline = () => {
   const [hoveredStep, setHoveredStep] = useState<number | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  const handleUpdate = () => {
+    setIsUpdating(true)
+    // Simulate API call
+    setTimeout(() => {
+      setIsUpdating(false)
+      alert('Application updated successfully!')
+    }, 1500)
+  }
+
+  const handleCancel = () => {
+    if (confirm('Are you sure you want to cancel this application? This action cannot be undone.')) {
+      setIsCancelling(true)
+      // Simulate API call
+      setTimeout(() => {
+        setIsCancelling(false)
+        alert('Application cancelled successfully!')
+      }, 1500)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -306,35 +328,71 @@ const VisaTimeline = () => {
         </div>
       </div>
 
-      {/* Summary Card */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* Update and Cancel Buttons - Replacing Summary Card */}
+      <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center">
-              <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
+              <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-white">Application Summary</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white">Visa Application Status</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 {visaTimelineSteps.filter(s => s.completed).length} of {visaTimelineSteps.length} steps completed
               </p>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              {visaTimelineSteps.filter(s => s.completed).length} Done
-            </span>
-            <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {visaTimelineSteps.filter(s => !s.completed && !s.isRejected).length} Pending
-            </span>
-            {visaTimelineSteps.some(s => s.isRejected) && (
-              <span className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full flex items-center gap-1">
-                <XCircle className="w-3 h-3" />
-                Rejected
-              </span>
-            )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleUpdate}
+              disabled={isUpdating || isCancelling}
+              className={`
+                px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                flex items-center gap-2
+                ${isUpdating || isCancelling
+                  ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                }
+              `}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <FileSignature className="w-4 h-4" />
+                  Update Application
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleCancel}
+              disabled={isUpdating || isCancelling}
+              className={`
+                px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                flex items-center gap-2
+                ${isUpdating || isCancelling
+                  ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400'
+                  : 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg'
+                }
+              `}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-4 h-4" />
+                  Cancel Application
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

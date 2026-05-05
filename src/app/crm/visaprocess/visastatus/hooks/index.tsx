@@ -9,6 +9,7 @@ export const VisaStatusEndPoints = {
 }
 
 export const visaStatusQueryKey = 'VisaStatuses'
+export const visaStatusFlatQueryKey = 'VisaStatusesFlat'
 
 export const useAddVisaStatus = () => {
     const queryClient = useQueryClient()
@@ -29,10 +30,10 @@ export const useAddVisaStatus = () => {
     })
 }
 
+// Paginated fetch — used in the Allvisastatus list table
 export const useGetAllVisaStatuses = (queryParams?: string) => {
     return useQuery({
         queryKey: [visaStatusQueryKey, queryParams],
-
         queryFn: async () => {
             const paramObj: Record<string, string> = {}
             if (queryParams) {
@@ -57,5 +58,20 @@ export const useGetAllVisaStatuses = (queryParams?: string) => {
                 }
             )
         },
+    })
+}
+
+// Flat (no-pagination) fetch — used for id→name lookup maps in other components
+export const useGetAllVisaStatusesFlat = () => {
+    return useQuery({
+        queryKey: [visaStatusFlatQueryKey],
+        queryFn: async () => {
+            const response = await api.get<IPaginationResponse<IVisaStatus>>(
+                VisaStatusEndPoints.filterVisaStatuses,
+                { params: { IsPagination: false } }
+            )
+            return response.data?.Items ?? []
+        },
+        staleTime: 5 * 60 * 1000,
     })
 }

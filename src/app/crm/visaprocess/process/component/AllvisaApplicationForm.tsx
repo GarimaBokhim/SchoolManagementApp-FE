@@ -13,7 +13,8 @@ import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import toast, { Toaster } from 'react-hot-toast'
 import { UseFilterIntakes, useGetAllCountries, useGetAllCourses, useGetUniversities } from '@/app/crm/university/_university/hooks'
-import { useGetAllLeads } from '@/app/crm/appointment/appointment/hooks'
+import { useGetAllApplicants } from '@/app/crm/documents/hooks'
+import { useGetAllVisaStatusesFlat } from '@/app/crm/visaprocess/visastatus/hooks'
 import AddVisaApplicationForm from './AddvisaApplication'
 import { VisaApplicationActionMenu } from './ActionMenue'
 import { Toast } from '@/components/Toast/toast'
@@ -56,11 +57,12 @@ const AllVisaApplicationsForm = () => {
 
     const { data, refetch } = useGetAllVisaApplications(params)
 
-    const { data: leads = [] } = useGetAllLeads()
+    const { data: applicants = [] } = useGetAllApplicants()
     const { data: countries = [] } = useGetAllCountries()
     const { data: universities = [] } = useGetUniversities()
     const { data: courses = [] } = useGetAllCourses()
     const { data: intakes = [] } = UseFilterIntakes()
+    const { data: visaStatusList = [] } = useGetAllVisaStatusesFlat()
 
     const visaForm = useForm<IVisaApplication>({
         defaultValues: {
@@ -79,9 +81,9 @@ const AllVisaApplicationsForm = () => {
 
     const applicantMap = useMemo(() => {
         const map: Record<string, string> = {}
-        leads.forEach((l: any) => { map[l.id] = l.fullName })
+        applicants.forEach((a: any) => { map[a.id] = a.name ?? a.fullName ?? a.email ?? a.id })
         return map
-    }, [leads])
+    }, [applicants])
 
     const countryMap = useMemo(() => {
         const map: Record<string, string> = {}
@@ -106,6 +108,12 @@ const AllVisaApplicationsForm = () => {
         intakes.forEach((i: any) => { map[i.id] = i.name })
         return map
     }, [intakes])
+
+    const visaStatusMap = useMemo(() => {
+        const map: Record<string, string> = {}
+        visaStatusList.forEach((v: any) => { map[v.id] = v.name })
+        return map
+    }, [visaStatusList])
 
     const applications: IVisaApplication[] = data?.Items ?? []
     const totalPages = data?.TotalPages ?? 1
@@ -268,8 +276,11 @@ const AllVisaApplicationsForm = () => {
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell">
                                                     {formatDate(app.appliedDate)}
                                                 </td>
-                                                <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
-                                                    {app.visaStatusId}
+                                                <td className="px-4 py-3 text-center">
+                                                    {visaStatusMap[app.visaStatusId]
+                                                        ? <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">{visaStatusMap[app.visaStatusId]}</span>
+                                                        : <span className="text-gray-400 italic text-xs">N/A</span>
+                                                    }
                                                 </td>
                                                 <td className="py-1 px-4">
                                                     <VisaApplicationActionMenu
