@@ -15,6 +15,9 @@ export const useExcelPreview = () => {
 
   const parseExcel = async (file: File): Promise<ExcelRow[]> => {
   const data = await file.arrayBuffer()
+
+  
+  console.log("nnnsssss",file)
   const workbook = XLSX.read(data)
   const sheet = workbook.SheetNames[0]
   const worksheet = workbook.Sheets[sheet]
@@ -24,7 +27,7 @@ export const useExcelPreview = () => {
   const handleExcelPreview = async (file: File) => {
     try {
       setSelectedFile(file)
-
+     
      
 
       const data = await file.arrayBuffer()

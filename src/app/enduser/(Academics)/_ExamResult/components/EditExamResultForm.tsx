@@ -156,7 +156,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                 setValue('examId', exam?.id ?? '')
               }}
               getLabel={(e) => e.name}
-              getValue={(e) => e.id}
+              getValue={(e) => e.id as string}
             />
 
             {/* STUDENT (RESTORED) */}
