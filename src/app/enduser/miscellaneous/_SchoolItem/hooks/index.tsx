@@ -7,7 +7,7 @@ const SchoolItemEndPoints = {
   createSchoolItems: "/api/SchoolAssetsControllers/AddSchoolItems",
   removeSchoolItems: "/api/SchoolAssetsControllers/DeleteSchoolItems",
   updateSchoolItems: "/api/SchoolAssetsControllers/UpdateSchoolItems",
-  getSchoolItemsById: "/api/SchoolAssetsControllers/SchoolItemsBy",
+  getSchoolItemsById: "/api/SchoolAssetsControllers/SchoolItems",
   filterSchoolItemByDate: "/api/SchoolAssetsControllers/FilterSchoolItems",
   getSchoolItemsByClass: "/api/SchoolAssetsControllers/GetSchoolItemByClass",
 };
