@@ -25,28 +25,12 @@ const ApplicantEndPoints = {
   convertToStudents: '/api/Enrolments/ConvertToStudents',
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
-
-export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  try {
-    const response = await api.get<UserProfile>(`${ApplicantEndPoints.userProfile}/${userId}`)
-    return response.data
-  } catch {
-    return null
-  }
-}
-
 // ── useApplicants ─────────────────────────────────────────────────
 
 export const useApplicants = (allSchools?: { Items: School[] }) => {
   const [applicants, setApplicants] = useState<Applicant[]>([])
-
-  // `loading` = true only on the very first fetch (no data yet)
   const [loading, setLoading] = useState(true)
-
-  // `isFetching` = true on every subsequent fetch (old data stays visible underneath)
   const [isFetching, setIsFetching] = useState(false)
-
   const [error, setError] = useState<string | null>(null)
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -80,13 +64,11 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
 
   const fetchApplicants = useCallback(
     async (customParams?: string) => {
-      // Cancel any previous in-flight request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
       abortControllerRef.current = new AbortController()
 
-      // First load → full loading state; subsequent → subtle isFetching only
       if (!hasLoadedOnce.current) {
         setLoading(true)
       } else {
@@ -99,35 +81,32 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
         const queryString = customParams || buildQueryString()
         const url = `${ApplicantEndPoints.filterApplicants}${queryString}`
 
-        const response = await api.get<ApiResponse>(url, {
+        // ✅ Unwrap the new { Data: { Items, TotalItems, ... } } envelope
+        const response = await api.get<{ Data: ApiResponse }>(url, {
           signal: abortControllerRef.current.signal,
         })
-        const data = response.data
+
+        const data = response.data.Data
         const items = data.Items || []
 
-        const profiles = await Promise.all(
-          items.map((item) => fetchUserProfile(item.userId))
-        )
-
-        const formattedApplicants: Applicant[] = items.map((item, index) => {
-          const profile = profiles[index]
-          return {
-            id: item.id,
-            userId: item.userId,
-            passportNo: item.passportNo || '-',
-            targetCountry: item.targetCountry || '-',
-            isActive: item.isActive,
-            schoolId: item.schoolId,
-            schoolName: getSchoolName(item.schoolId),
-            createdBy: item.createdBy,
-            createdAt: item.createdAt,
-            modifiedBy: item.modifiedBy,
-            modifiedAt: item.modifiedAt,
-            fullName: profile?.fullName ?? '-',
-            email: profile?.email ?? '-',
-            enrolmentType: profile?.enrolmentType,
-          }
-        })
+        // ✅ fullName, email, enrolmentType now come directly in each item —
+        //    no fetchUserProfile Promise.all needed anymore
+        const formattedApplicants: Applicant[] = items.map((item) => ({
+          id: item.id,
+          userId: item.userId,
+          passportNo: item.passportNo || '-',
+          targetCountry: item.targetCountry || '-',
+          isActive: item.isActive,
+          schoolId: item.schoolId,
+          schoolName: getSchoolName(item.schoolId),
+          createdBy: item.createdBy,
+          createdAt: item.createdAt,
+          modifiedBy: item.modifiedBy,
+          modifiedAt: item.modifiedAt,
+          fullName: item.fullName ?? '-',
+          email: item.email ?? '-',
+          enrolmentType: item.enrolmentType ?? 0,
+        }))
 
         setApplicants(formattedApplicants)
         setTotalItems(data.TotalItems ?? 0)
@@ -136,7 +115,6 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
 
         hasLoadedOnce.current = true
       } catch (err: unknown) {
-        // Ignore intentional cancellations
         if (
           (err as { name?: string })?.name === 'AbortError' ||
           (err as { code?: string })?.code === 'ERR_CANCELED'
@@ -158,14 +136,13 @@ export const useApplicants = (allSchools?: { Items: School[] }) => {
     if (allSchools) {
       fetchApplicants()
     }
-    // fetchApplicants intentionally omitted — raw deps below are the real triggers
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationParams.pageIndex, paginationParams.pageSize, params, allSchools])
 
   return {
     applicants,
-    loading,          // true only on initial load — use for full skeleton/spinner
-    isFetching,       // true on filter/page changes — use for subtle overlay
+    loading,
+    isFetching,
     error,
     paginationParams,
     setPaginationParams,
@@ -307,5 +284,14 @@ export const useApplicantMutations = (refetchApplicants: () => void) => {
     handleConvert,
     handleViewDetails,
     handleEdit,
+  }
+}
+// Re-add this to applicants/hooks/index.ts
+export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  try {
+    const response = await api.get<UserProfile>(`${ApplicantEndPoints.userProfile}/${userId}`)
+    return response.data
+  } catch {
+    return null
   }
 }

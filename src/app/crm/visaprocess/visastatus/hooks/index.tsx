@@ -13,7 +13,6 @@ export const visaStatusFlatQueryKey = 'VisaStatusesFlat'
 
 export const useAddVisaStatus = () => {
     const queryClient = useQueryClient()
-
     return useMutation<IVisaStatus, Error, IAddVisaStatus>({
         mutationFn: async (payload) => {
             const response = await api.post(
@@ -30,7 +29,7 @@ export const useAddVisaStatus = () => {
     })
 }
 
-// Paginated fetch — used in the Allvisastatus list table
+// Paginated fetch — used in the AllVisaStatus list table
 export const useGetAllVisaStatuses = (queryParams?: string) => {
     return useQuery({
         queryKey: [visaStatusQueryKey, queryParams],
@@ -42,12 +41,12 @@ export const useGetAllVisaStatuses = (queryParams?: string) => {
                     paramObj[key] = value
                 })
             }
-            const response = await api.get<IPaginationResponse<IVisaStatus>>(
+            const response = await api.get<{ Data: IPaginationResponse<IVisaStatus> }>(
                 VisaStatusEndPoints.filterVisaStatuses,
                 { params: paramObj }
             )
             return (
-                response.data ?? {
+                response.data.Data ?? {
                     Items: [],
                     TotalItems: 0,
                     PageIndex: 1,
@@ -66,11 +65,11 @@ export const useGetAllVisaStatusesFlat = () => {
     return useQuery({
         queryKey: [visaStatusFlatQueryKey],
         queryFn: async () => {
-            const response = await api.get<IPaginationResponse<IVisaStatus>>(
+            const response = await api.get<{ Data: IPaginationResponse<IVisaStatus> }>(
                 VisaStatusEndPoints.filterVisaStatuses,
                 { params: { IsPagination: false } }
             )
-            return response.data?.Items ?? []
+            return response.data?.Data?.Items ?? []
         },
         staleTime: 5 * 60 * 1000,
     })
