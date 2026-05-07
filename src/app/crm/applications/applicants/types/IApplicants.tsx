@@ -31,6 +31,9 @@ export interface ApiResponse {
   Items: Array<{
     id: string;
     userId: string;
+    fullName: string;        // ✅ added
+    email: string;           // ✅ added
+    enrolmentType: number;   // ✅ added
     passportNo: string;
     targetCountry: string;
     isActive: boolean;
@@ -57,17 +60,18 @@ export interface SchoolResponse {
 }
 
 export interface UserProfile {
-  id: string
-  fullName: string
-  email: string
-  enrolmentType: number
-  genderStatus: number
-  dob: string
-  admissionDate: string
-  intrestedCountry: string
-  contactNumber?: string
-  source?: string
+  id: string;
+  fullName: string;
+  email: string;
+  enrolmentType: number;
+  genderStatus: number;
+  dob: string;
+  admissionDate: string;
+  intrestedCountry: string;
+  contactNumber?: string;
+  source?: string;
 }
+
 export interface UserProfileResponse {
   Items: UserProfile[];
   TotalItems: number;

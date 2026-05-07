@@ -32,28 +32,12 @@ const LeadEndPoints = {
   coursesByUniversity: '/api/AcademicPrograms/CourseByUniversity',
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
-
-const fetchEnrolmentType = async (userId: string): Promise<number> => {
-  try {
-    const response = await api.get(`${LeadEndPoints.userProfile}/${userId}`)
-    return response.data?.enrolmentType ?? 0
-  } catch {
-    return 0
-  }
-}
-
 // ── useLeads ──────────────────────────────────────────────────────
 
 export const useLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([])
-
-  // `loading` is only true on the very first load (no data yet → show skeleton/spinner)
   const [loading, setLoading] = useState(true)
-
-  // `isFetching` is true on every subsequent fetch (data exists → don't blank the table)
   const [isFetching, setIsFetching] = useState(false)
-
   const [error, setError] = useState<string | null>(null)
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -65,10 +49,7 @@ export const useLeads = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [params, setParams] = useState('')
 
-  // Track whether the first fetch has completed
   const hasLoadedOnce = useRef(false)
-
-  // Ref to cancel stale in-flight requests when params change rapidly
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const { handleError } = useErrorHandler()
@@ -80,13 +61,11 @@ export const useLeads = () => {
 
   const fetchLeads = useCallback(
     async (customParams?: string) => {
-      // Cancel any previous in-flight request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
       abortControllerRef.current = new AbortController()
 
-      // First load → show full loading state; subsequent loads → just mark as fetching
       if (!hasLoadedOnce.current) {
         setLoading(true)
       } else {
@@ -99,16 +78,15 @@ export const useLeads = () => {
         const queryString = customParams || buildQueryString()
         const url = `${LeadEndPoints.filterInquiry}${queryString}`
 
-        const response = await api.get<ApiResponse>(url, {
+        // ✅ Unwrap the new { Data: { Items, TotalItems, ... } } envelope
+        const response = await api.get<{ Data: ApiResponse }>(url, {
           signal: abortControllerRef.current.signal,
         })
-        const data = response.data
+
+        const data = response.data.Data
         const items = data.Items || []
 
-        const enrolmentTypes = await Promise.all(
-          items.map((item: { userId: string }) => fetchEnrolmentType(item.userId))
-        )
-
+        // ✅ enrolmentType now comes directly from the API — no extra per-item fetch needed
         const formattedLeads: Lead[] = items.map(
           (
             item: {
@@ -120,8 +98,8 @@ export const useLeads = () => {
               source?: string
               educationLevel?: number
               completionYear?: string
-            },
-            index: number
+              enrolmentType?: number
+            }
           ) => ({
             id: item.id || item.userId || Math.random().toString(),
             userId: item.userId,
@@ -131,7 +109,7 @@ export const useLeads = () => {
             source: item.source || 'website',
             educationLevel: item.educationLevel || 0,
             completionYear: item.completionYear || 'N/A',
-            enrolmentType: enrolmentTypes[index],
+            enrolmentType: item.enrolmentType ?? 0, // ✅ directly from item
           })
         )
 
@@ -142,7 +120,6 @@ export const useLeads = () => {
 
         hasLoadedOnce.current = true
       } catch (err: unknown) {
-        // Ignore abort errors — they're intentional cancellations, not real errors
         if (
           (err as { name?: string })?.name === 'AbortError' ||
           (err as { code?: string })?.code === 'ERR_CANCELED'
@@ -167,8 +144,8 @@ export const useLeads = () => {
 
   return {
     leads,
-    loading,      // true only on initial load
-    isFetching,   // true on filter/pagination changes — use for subtle overlay
+    loading,
+    isFetching,
     error,
     paginationParams,
     setPaginationParams,
