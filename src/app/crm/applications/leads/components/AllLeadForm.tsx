@@ -13,9 +13,6 @@ import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { useLeads } from '@/app/crm/applications/leads/hooks/useLeads'
-import { useLeadFilters } from '@/app/crm/applications/leads/hooks/useLeadFilters'
-import { useLeadMutations } from '@/app/crm/applications/leads/hooks/useLeadsMutations'
 import { LeadDetailModal } from '@/app/crm/applications/leads/components/LeadDetailModel'
 import ConvertToApplicantModal from '@/app/crm/applications/leads/pages/Convert'
 import AddLeadModal from '@/app/crm/applications/leads/pages/Add'
@@ -25,6 +22,7 @@ import {
   ConvertToApplicantPayload,
   SearchParam,
 } from '@/app/crm/applications/leads/types/ILeads'
+import { useLeadFilters, useLeadMutations, useLeads } from '../hooks'
 
 // ─── Action Menu ─────────────────────────────────────────────────────────────
 interface ActionMenuProps {
@@ -248,11 +246,11 @@ const AllLeadsForm = () => {
     setConversionData((prev) => ({ ...prev, [name]: value }))
   }
 
-const handleConvertSubmit = async (data: ConvertToApplicantPayload) => {
-  if (!selectedLead) return
-  const success = await handleConvert(selectedLead, data)
-  if (success) setShowConvertModal(false)
-}
+  const handleConvertSubmit = async (data: ConvertToApplicantPayload) => {
+    if (!selectedLead) return
+    const success = await handleConvert(selectedLead, data)
+    if (success) setShowConvertModal(false)
+  }
 
   const handleSearch = (searchParams: SearchParam) => {
     searchParams.pageSize = paginationParams.pageSize
