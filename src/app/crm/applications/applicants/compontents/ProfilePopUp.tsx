@@ -3,8 +3,7 @@
 import React, { useState } from 'react'
 import { X, User, FileText, GraduationCap, Calendar, DollarSign, Mail, MessageSquare, CreditCard, Award, BookOpen, Clock, FileCheck, FileSignature, Send, CheckCircle, FileWarning, Banknote, Plane, Stamp, XCircle, Loader2 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchUserProfile } from '../hooks/useUserProfile'
-
+import { fetchUserProfile } from '../hooks'
 const ENROLMENT_TYPE_MAP: Record<number, { label: string; color: string }> = {
   1: { label: 'New Student', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   2: { label: 'Transfer', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },

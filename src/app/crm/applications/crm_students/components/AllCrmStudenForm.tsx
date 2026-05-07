@@ -13,11 +13,9 @@ import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import { Toast } from "@/components/Toast/toast";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import { SearchParam, Student } from '../type/IStudents';
-import { useStudents } from '../hooks/useStudent';
-import { useStudentFilters } from '../hooks/useStudentFilter';
-import { useStudentMutations } from '../hooks/useStudentMutations';
 import { ActionMenu } from '../components/ActionMenu';
 import { StudentDetailModal } from '../model/StudentDetailModel';
+import { useStudentFilters, useStudentMutations, useStudents } from '../hooks';
 
 const ENROLMENT_TYPE_LABELS: Record<number, string> = {
   1: 'Lead',
@@ -178,8 +176,8 @@ const AllCrmStudentsForm = () => {
                         {profile.enrolmentType === 3
                           ? 'Student'
                           : profile.enrolmentType === 2
-                          ? 'Applicant'
-                          : 'Lead'}
+                            ? 'Applicant'
+                            : 'Lead'}
                       </div>
                     )}
                   />
@@ -210,9 +208,8 @@ const AllCrmStudentsForm = () => {
               </div>
             )}
             <table
-              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
-                isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
-              }`}
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+                }`}
             >
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">

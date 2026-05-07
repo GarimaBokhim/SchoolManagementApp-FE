@@ -15,8 +15,6 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
-import { useApplicants } from "../hooks/useApplicants";
-import { useApplicantMutations } from "../hooks/useApplicantMutations";
 import { ApplicantDetailModal } from "../model/ApplicantDetailModel";
 import ConvertToStudentModal from "../pages/convert";
 
@@ -31,6 +29,7 @@ import {
 } from "../types/IApplicants";
 import { ActionMenu } from "./applicant_ui_components/ActionMenu";
 import UserProfilePopup from "./ProfilePopUp";
+import { useApplicantMutations, useApplicants } from "../hooks";
 
 const AllApplicantsForm = () => {
   const { menuStatus } = usePermissions();
@@ -135,8 +134,8 @@ const AllApplicantsForm = () => {
 
   const handleConvertClick = (applicant: Applicant) => {
     setConversionData({ universityName: "", visaId: "" });
-    setSelectedApplicant({ 
-      ...applicant, 
+    setSelectedApplicant({
+      ...applicant,
       name: applicant.fullName ?? "",
       userId: applicant.userId ?? applicant.id // Ensure userId is set
     });
@@ -293,9 +292,8 @@ const AllApplicantsForm = () => {
               </div>
             )}
             <table
-              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
-                isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
-              }`}
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+                }`}
             >
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
@@ -339,11 +337,10 @@ const AllApplicantsForm = () => {
                       <td className="py-1 px-4">{applicant.schoolName ?? "-"}</td>
                       <td className="py-1 px-4">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            applicant.isActive
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${applicant.isActive
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-600"
-                          }`}
+                            }`}
                         >
                           {applicant.isActive ? "Active" : "Inactive"}
                         </span>
