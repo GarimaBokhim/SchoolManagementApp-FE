@@ -3,7 +3,7 @@
 
 import { MapPin, Building2, BookOpen, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useLeadEnquiryDetails } from '../hooks/useLeadInquiryDetail';
+import { useLeadEnquiryDetails } from '../hooks';
 
 interface LeadEnquiryCardProps {
   leadId: string;

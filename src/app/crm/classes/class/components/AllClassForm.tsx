@@ -11,8 +11,7 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { ConsultancyClass, AddConsultancyClassPayload } from '../types/IClass'
-import { useGetAllConsultancyClasses } from '../hooks'
-import { useClassMutations } from '../hooks/useClassMutation'
+import { useClassMutations, useGetAllConsultancyClasses } from '../hooks'
 import { AddConsultancyClassModal } from './AddConsultenctClassModel'
 
 const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
@@ -211,11 +210,10 @@ const AllClassesForm = () => {
                           {ENGLISH_PROFICIENCY_LABELS[cls.englishProficiency] ?? cls.englishProficiency}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            cls.isActive
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${cls.isActive
                               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                          }`}>
+                            }`}>
                             {cls.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </td>

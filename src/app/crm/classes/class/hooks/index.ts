@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
 import { AddConsultancyClassPayload, AddTrainingRegistrationPayload, ConsultancyClass, TrainingRegistration } from '../types/IClass'
+import { Toast } from '@/components/Toast/toast'
 
 
 export const ClassEndPoints = {
@@ -110,4 +111,31 @@ export const useGetAllApplicants = () => {
     },
     staleTime: 5 * 60 * 1000,
   })
+}
+export const useClassMutations = (refetch: () => void) => {
+  const handleAdd = async (payload: AddConsultancyClassPayload) => {
+    try {
+      await api.post('/api/Enrolments/AddConsultancyClass', payload)
+      Toast.success('Class added successfully!')
+      refetch()
+    } catch {
+      Toast.error('Error adding class.')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/api/Enrolments/ConsultancyClass/${id}`)
+      Toast.success('Class deleted successfully!')
+      refetch()
+    } catch {
+      Toast.error('Error deleting class.')
+    }
+  }
+
+  const handleEdit = () => {
+    Toast.info('Edit class coming soon!')
+  }
+
+  return { handleAdd, handleDelete, handleEdit }
 }

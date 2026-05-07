@@ -1,18 +1,13 @@
 'use client';
 
 import { UserPlus, X } from 'lucide-react';
-import { ConvertToApplicantFormProps, ConvertToApplicantPayload } from '../types/ILeads';
+import { ConvertToApplicantFormProps, ConvertToApplicantPayload, ICourseByUniversity, IUniversityByCountry } from '../types/ILeads';
 import { useGetAllCountries } from '@/app/crm/university/_university/hooks';
-import {
-  useGetCoursesByUniversity,
-  useGetUniversitiesByCountry,
-  IUniversityByCountry,
-  ICourseByUniversity,
-} from '../hooks/cascadingHooks';
 import LeadEnquiryCard from './LeadInquiryCard';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import { ICountry } from '@/app/crm/university/_university/types/ICountry';
 import { useForm } from 'react-hook-form';
+import { useGetCoursesByUniversity, useGetUniversitiesByCountry } from '../hooks';
 
 interface ConversionFormData {
   passportNo: string;

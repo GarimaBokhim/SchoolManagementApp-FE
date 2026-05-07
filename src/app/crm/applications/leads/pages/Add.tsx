@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { AppCombobox } from '@/components/Input/ComboBox';
 import { useGetAllCountries } from '@/app/crm/university/_university/hooks';
-import { useGetCoursesByUniversity, useGetUniversitiesByCountry } from '../hooks/cascadingHooks';
+import { useGetCoursesByUniversity } from '../hooks';
+
 
 interface EnumOption {
   id: number;
@@ -181,7 +182,7 @@ const CountrySection: React.FC<CountrySectionProps> = ({
       >
         <X size={18} />
       </button>
-      
+
       <div className="flex flex-col gap-5">
         {/* Country Header */}
         <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
@@ -256,7 +257,7 @@ const UniversityCourses: React.FC<UniversityCoursesProps> = ({
   if (isLoading) {
     return <p className="text-sm text-gray-400 dark:text-gray-500">Loading courses for {universityName}...</p>;
   }
-  
+
   if (courses.length === 0) {
     return <p className="text-sm text-gray-400 dark:text-gray-500">No courses available for {universityName}</p>;
   }
@@ -322,7 +323,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
   // Fetch universities for a specific country when needed
   const fetchUniversitiesForCountry = async (countryId: string) => {
     if (universitiesData[countryId]) return;
-    
+
     try {
       const response = await api.get(`/api/AcademicPrograms/UniversityByCountry/${countryId}`);
       const universities = response.data?.Items ?? [];
@@ -335,7 +336,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
   // Handle country selection/deselection
   const handleCountryToggle = (country: IdNameOption) => {
     const isSelected = selectedCountries.some(c => c.id === country.id);
-    
+
     if (isSelected) {
       // Remove country
       setSelectedCountries(prev => prev.filter(c => c.id !== country.id));
@@ -364,11 +365,11 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setCountrySelections(prev => {
       const index = prev.findIndex(s => s.country.id === countryId);
       if (index === -1) return prev;
-      
+
       const updated = [...prev];
       const selection = updated[index];
       const exists = selection.universities.some(u => u.id === university.id);
-      
+
       if (exists) {
         // Remove university and its courses
         const updatedUniversities = selection.universities.filter(u => u.id !== university.id);
@@ -394,12 +395,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
     setCountrySelections(prev => {
       const index = prev.findIndex(s => s.country.id === countryId);
       if (index === -1) return prev;
-      
+
       const updated = [...prev];
       const selection = updated[index];
       const currentCourses = selection.coursesMap[universityId] ?? [];
       const exists = currentCourses.some(c => c.id === course.id);
-      
+
       updated[index] = {
         ...selection,
         coursesMap: {
@@ -715,7 +716,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Interested Program
             </p>
-            
+
             {/* Countries as checkboxes (matching original styling) */}
             <div className="flex flex-col gap-2 mb-6">
               <label className={labelClass}>
@@ -735,7 +736,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSuccess 
                 emptyText="No countries available"
               />
             </div>
-            
+
             {/* Display each selected country's universities and courses */}
             {countrySelections.map((selection) => (
               <CountrySection

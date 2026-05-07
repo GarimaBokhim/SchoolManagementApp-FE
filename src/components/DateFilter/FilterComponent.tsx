@@ -61,12 +61,11 @@ function DateRangeFilterInner<T extends FieldValues>(
     await form.handleSubmit(onSubmit)();
   };
 
-  // ✅ FIXED button style (no jump, scaling preserved)
+
   const getButtonClass = (value: number) =>
-    `sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border rounded-md transition-all duration-200 transform ${
-      activeRange === value
-        ? "bg-teal-800 text-white border-teal-500 scale-105"
-        : "bg-teal-600 text-white border border-transparent hover:bg-teal-700"
+    `sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border rounded-md transition-all duration-200 transform ${activeRange === value
+      ? "bg-teal-800 text-white border-teal-500 scale-105"
+      : "bg-teal-600 text-white border border-transparent hover:bg-teal-700"
     }`;
 
   return (

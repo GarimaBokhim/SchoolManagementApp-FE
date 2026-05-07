@@ -2,10 +2,11 @@
 
 import { MapPin, Building2, BookOpen, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useLeadEnquiryDetails } from '../hooks/useLeadInquiryDetail';
+
 import { useGetUniversities, useGetAllCourses, useGetAllCountries } from '@/app/crm/university/_university/hooks';
 import { ICountry } from '@/app/crm/university/_university/types/ICountry';
 import { Course } from '@/app/crm/university/courses/types/ICourses';
+import { useLeadEnquiryDetails } from '../hooks';
 
 interface LeadEnquiryCardProps {
   leadId: string;
@@ -181,9 +182,9 @@ const LeadEnquiryCard = ({ leadId, leadName }: LeadEnquiryCardProps) => {
                                 className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 py-0.5"
                               >
                                 <BookOpen size={11} className="text-emerald-500 shrink-0" />
-                               <span className="truncate">
-  {String(resolveCourseName(courseId))}
-</span>
+                                <span className="truncate">
+                                  {String(resolveCourseName(courseId))}
+                                </span>
                               </div>
                             ))}
                           </div>
