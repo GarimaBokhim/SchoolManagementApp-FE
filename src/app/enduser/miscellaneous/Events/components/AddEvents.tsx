@@ -13,36 +13,35 @@ import { IEvents } from "../types/IEvents";
 import { useAddEvents } from "../hooks";
 
 enum EventType {
-  Academic    = 1,
-  Sports      = 2,
-  Culture     = 3,
-  Seminar     = 4,
-  Workshop    = 5,
+  Academic = 1,
+  Sports = 2,
+  Culture = 3,
+  Seminar = 4,
+  Workshop = 5,
   Competition = 6,
-  Meeting     = 7,
+  Meeting = 7,
   Celebration = 8,
-  Holiday     = 9,
+  Holiday = 9,
   Examination = 10,
-  Other       = 99,
+  Other = 99,
 }
 
 const EVENT_TYPES = [
-  { value: EventType.Academic,    label: "Academic"    },
-  { value: EventType.Sports,      label: "Sports"      },
-  { value: EventType.Culture,     label: "Culture"     },
-  { value: EventType.Seminar,     label: "Seminar"     },
-  { value: EventType.Workshop,    label: "Workshop"    },
+  { value: EventType.Academic, label: "Academic" },
+  { value: EventType.Sports, label: "Sports" },
+  { value: EventType.Culture, label: "Culture" },
+  { value: EventType.Seminar, label: "Seminar" },
+  { value: EventType.Workshop, label: "Workshop" },
   { value: EventType.Competition, label: "Competition" },
-  { value: EventType.Meeting,     label: "Meeting"     },
+  { value: EventType.Meeting, label: "Meeting" },
   { value: EventType.Celebration, label: "Celebration" },
-  { value: EventType.Holiday,     label: "Holiday"     },
+  { value: EventType.Holiday, label: "Holiday" },
   { value: EventType.Examination, label: "Examination" },
-  { value: EventType.Other,       label: "Other"       },
+  { value: EventType.Other, label: "Other" },
 ];
 
 type EventTypeOption = (typeof EVENT_TYPES)[number];
 
-// Reusable consistent field wrapper
 const Field = ({
   label,
   required,
@@ -63,7 +62,6 @@ const Field = ({
   </div>
 );
 
-// Consistent input class
 const inputClass =
   "w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500";
 
@@ -91,7 +89,8 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
         addEvent.mutateAsync({
           ...data,
           eventsType: Number(data.eventsType),
-          eventsDate: new Date(data.eventsDate).toISOString(),
+          fromDate: new Date(data.fromDate).toISOString(),
+          toDate: new Date(data.toDate).toISOString(),
           eventTime: data.eventTime.length === 5 ? data.eventTime + ":00" : data.eventTime,
         }),
         {
@@ -110,6 +109,9 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
 
   const errors = form.formState.errors;
 
+  // Watch fromDate to enforce toDate >= fromDate
+  const fromDateValue = form.watch("fromDate");
+
   return (
     <div className="fixed inset-0 z-50 ml-12 md:ml-64 sm:ml-16 bg-black/40 flex items-center justify-center">
       <div className="bg-white dark:bg-[#27272a] w-full max-w-5xl rounded-xl shadow-lg p-6 overflow-auto max-h-[90vh]">
@@ -124,7 +126,7 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
-          {/* Row 1 — Title | Event Type | Event Date */}
+          {/* Row 1 — Title | Event Type | Event Time */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             <Field label="Title" required error={errors.title?.message}>
@@ -156,7 +158,7 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
                         shouldValidate: true,
                       });
                     }}
-                    onFocus={() => {}}
+                    onFocus={() => { }}
                     getLabel={(opt) => opt.label}
                     getValue={(opt) => opt.value}
                     placeholder="Search event type..."
@@ -165,23 +167,36 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
               />
             </Field>
 
-            <Field label="Event Date" required error={errors.eventsDate?.message}>
+            <Field label="Event Time" required error={errors.eventTime?.message}>
               <input
-                type="date"
-                {...form.register("eventsDate", { required: "Event date is required" })}
+                type="time"
+                {...form.register("eventTime", { required: "Event time is required" })}
                 className={inputClass}
               />
             </Field>
 
           </div>
 
-          {/* Row 2 — Event Time | Venue | Participants */}
+          {/* Row 2 — From Date | To Date | Venue */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            <Field label="Event Time" required error={errors.eventTime?.message}>
+            <Field label="From Date" required error={errors.fromDate?.message}>
               <input
-                type="time"
-                {...form.register("eventTime", { required: "Event time is required" })}
+                type="date"
+                {...form.register("fromDate", { required: "From date is required" })}
+                className={inputClass}
+              />
+            </Field>
+
+            <Field label="To Date" required error={errors.toDate?.message}>
+              <input
+                type="date"
+                {...form.register("toDate", {
+                  required: "To date is required",
+                  validate: (val) =>
+                    !fromDateValue || val >= fromDateValue || "To date must be on or after From date",
+                })}
+                min={fromDateValue}
                 className={inputClass}
               />
             </Field>
@@ -195,6 +210,11 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
               />
             </Field>
 
+          </div>
+
+          {/* Row 3 — Participants | Chief Guest | Organizer */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
             <Field label="Participants" required error={errors.participants?.message}>
               <input
                 type="text"
@@ -203,11 +223,6 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
                 className={inputClass}
               />
             </Field>
-
-          </div>
-
-          {/* Row 3 — Chief Guest | Organizer | Mentor */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             <Field label="Chief Guest" error={errors.chiefGuest?.message}>
               <input
@@ -227,6 +242,11 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
               />
             </Field>
 
+          </div>
+
+          {/* Row 4 — Mentor | Description */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
             <Field label="Mentor" error={errors.mentor?.message}>
               <input
                 type="text"
@@ -236,18 +256,17 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
               />
             </Field>
 
-          </div>
+            <div className="md:col-span-2">
+              <Field label="Description" error={errors.descriptions?.message}>
+                <textarea
+                  {...form.register("descriptions")}
+                  placeholder="Event description"
+                  rows={3}
+                  className={`${inputClass} resize-none`}
+                />
+              </Field>
+            </div>
 
-          {/* Row 4 — Description */}
-          <div className="grid grid-cols-1">
-            <Field label="Description" error={errors.descriptions?.message}>
-              <textarea
-                {...form.register("descriptions")}
-                placeholder="Event description"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-            </Field>
           </div>
 
           {/* Actions */}

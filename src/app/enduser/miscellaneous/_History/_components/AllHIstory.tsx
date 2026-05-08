@@ -17,33 +17,40 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddHistory from '../pages/Add'
+import EditItemHistory from '../pages/Edit'
 import { useGetAllSchoolItems } from '../../_SchoolItem/hooks'
 import DeleteButton from '@/components/Buttons/DeleteButton'
 import { EditButton } from '@/components/Buttons/EditButton'
+
 const AllHistoryForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   })
+
   type SearchParam = {
     pageSize: number
     pageIndex: number
     isPagination: boolean
   }
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize
     setPaginationParams(params)
   }
+
   const [addModal, setAddModal] = useState(false)
+  const [editModal, setEditModal] = useState(false)
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string>('')
+
   const { menuStatus } = usePermissions()
   const { canAdd } = useMenuPermissionData(menuStatus)
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allSchoolItem } = useGetAllSchoolItems()
-  const [selectedSchoolItem, setSelectedSchoolItem] = useState<string | null>(
-    ''
-  )
+  const [selectedSchoolItem, setSelectedSchoolItem] = useState<string | null>('')
   const fullQuery = query + (params || '')
 
   const {
@@ -51,16 +58,19 @@ const AllHistoryForm = () => {
     refetch,
     isLoading,
   } = useFilterHistoryByDate(fullQuery)
+
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
-  const form = useForm<IFilterHistory>({
+
+  const filterForm = useForm<IFilterHistory>({
     defaultValues: {
       schoolItemId: '',
       startDate: '',
       endDate: '',
     },
   })
+
   const itemStatus = [
     { id: 1, name: 'Available' },
     { id: 2, name: 'Damaged' },
@@ -68,8 +78,10 @@ const AllHistoryForm = () => {
     { id: 4, name: 'Lost' },
     { id: 5, name: 'Disposed' },
   ]
+
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
+
   const onSubmit: SubmitHandler<IFilterHistory> = async (formData) => {
     clearError()
     try {
@@ -103,10 +115,12 @@ const AllHistoryForm = () => {
       console.error('Error during form submission:', error)
     }
   }
+
   const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
     refForInput.current?.focus()
   }, [])
+
   const formRef = useRef<DateRangeFilterRef>(null)
 
   const handleDelete = async (id: string) => {
@@ -118,15 +132,17 @@ const AllHistoryForm = () => {
     }
   }
 
+  const handleEditClick = (id: string) => {
+    setSelectedHistoryId(id)
+    setEditModal(true)
+  }
+
   const editButtonElement = (id: string) => (
     <ButtonElement
       icon={<Edit size={14} />}
       type="button"
       text=""
-      onClick={() => {
-        toast('Edit History coming soon.')
-        console.log('Edit History id:', id)
-      }}
+      onClick={() => handleEditClick(id)}
       className="!text-xs font-bold !bg-teal-500"
     />
   )
@@ -136,15 +152,27 @@ const AllHistoryForm = () => {
     setParams('')
     setSelectedSchoolItem('')
     formRef.current?.handleClear()
-    form.reset()
+    filterForm.reset()
   }
+
+  const handleAddModalClose = () => {
+    setAddModal(false)
+    refetch()
+  }
+
+  const handleEditModalClose = () => {
+    setEditModal(false)
+    setSelectedHistoryId('')
+    refetch()
+  }
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-            <h1 className=" text-xl font-semibold ">All History</h1>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-xl font-semibold">All History</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -164,15 +192,16 @@ const AllHistoryForm = () => {
               )}
             </div>
           </div>
+
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={filterForm.handleSubmit(onSubmit)}
                 className="flex flex-col lg:flex-row lg:flex-wrap gap-4"
               >
                 <DateRangeFilter
                   ref={formRef}
-                  form={form}
+                  form={filterForm}
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
@@ -183,7 +212,7 @@ const AllHistoryForm = () => {
                     dropdownPositionClass="absolute"
                     label="School Item"
                     name="schoolItemId"
-                    form={form}
+                    form={filterForm}
                     options={allSchoolItem?.Items}
                     selected={
                       allSchoolItem?.Items?.find(
@@ -192,6 +221,7 @@ const AllHistoryForm = () => {
                     }
                     onSelect={(group) => {
                       setSelectedSchoolItem(group?.id ?? null)
+                      filterForm.setValue('schoolItemId', group?.id ?? '')
                     }}
                     getLabel={(g) => g?.name ?? ''}
                     getValue={(g) => g?.id ?? ''}
@@ -216,81 +246,70 @@ const AllHistoryForm = () => {
               </form>
             </div>
           )}
+
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 ">S.N</th>
-                  <th className="px-4 py-3 ">School Item</th>
-                  <th className="px-4 py-3 ">Prev Status</th>
-                  <th className="px-4 py-3 ">Current Status</th>
-                  <th className="px-4 py-3 ">Remarks</th>
+                  <th className="px-4 py-3">S.N</th>
+                  <th className="px-4 py-3">School Item</th>
+                  <th className="px-4 py-3">Prev Status</th>
+                  <th className="px-4 py-3">Current Status</th>
+                  <th className="px-4 py-3">Remarks</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 dark:text-gray-300"
-                    >
+                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
                       Loading History...
                     </td>
                   </tr>
                 ) : filteredHistory?.Items?.length ? (
-                  filteredHistory.Items.map(
-                    (History: IHistory, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                      >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">
-                          {
-                            allSchoolItem?.Items?.find(
-                              (i) => i.id === History.schoolItemId
-                            )?.name
-                          }
-                        </td>
-                        <td className="py-3 px-4">
-                          {
-                            itemStatus.find(
-                              (i) => i.id === History.previousStatus
-                            )?.name
-                          }
-                        </td>
-                        <td className="py-3 px-4">
-                          {
-                            itemStatus.find(
-                              (i) => i.id === History.currentStatus
-                            )?.name
-                          }
-                        </td>
-                        <td className="py-3 px-4">{History.remarks}</td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex justify-center gap-2 flex-wrap">
-                            <EditButton
-                              button={editButtonElement(History.id ?? '')}
-                            />
-                            <DeleteButton
-                              onConfirm={() =>
-                                handleDelete(History.id ? History.id : '')
-                              }
-                              headerText={<Trash />}
-                              content="Are you sure you want to delete this History?"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  )
+                  filteredHistory.Items.map((History: IHistory, index: number) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                    >
+                      <td className="py-3 px-4">{index + 1}</td>
+                      <td className="py-3 px-4">
+                        {
+                          allSchoolItem?.Items?.find(
+                            (i) => i.id === History.schoolItemId
+                          )?.name
+                        }
+                      </td>
+                      <td className="py-3 px-4">
+                        {
+                          itemStatus.find(
+                            (i) => i.id === History.previousStatus
+                          )?.name
+                        }
+                      </td>
+                      <td className="py-3 px-4">
+                        {
+                          itemStatus.find(
+                            (i) => i.id === History.currentStatus
+                          )?.name
+                        }
+                      </td>
+                      <td className="py-3 px-4">{History.remarks}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          <EditButton button={editButtonElement(History.id ?? '')} />
+                          <DeleteButton
+                            onConfirm={() => handleDelete(History.id ? History.id : '')}
+                            headerText={<Trash />}
+                            content="Are you sure you want to delete this History?"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
+                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
                       No History found.
                     </td>
                   </tr>
@@ -299,10 +318,11 @@ const AllHistoryForm = () => {
             </table>
           </div>
         </div>
+
         {filteredHistory && filteredHistory?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
-              form={form}
+              form={filterForm}
               pagination={{
                 currentPage: filteredHistory?.PageIndex ?? 1,
                 firstPage: filteredHistory?.FirstPage ?? 1,
@@ -314,7 +334,16 @@ const AllHistoryForm = () => {
             />
           </div>
         )}
-        <AddHistory visible={addModal} onClose={() => setAddModal(false)} />
+
+        <AddHistory visible={addModal} onClose={handleAddModalClose} />
+
+        {editModal && selectedHistoryId && (
+          <EditItemHistory
+            visible={editModal}
+            historyId={selectedHistoryId}
+            onClose={handleEditModalClose}
+          />
+        )}
       </div>
     </>
   )

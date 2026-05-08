@@ -1,9 +1,10 @@
 export interface EventScheduleItem {
-  id: string; 
+  id: string;
   title: string;
   descriptions: string;
   eventsType: number;
-  eventsDate: string;
+  fromDate: string;   // ← replaced eventsDate
+  toDate: string;     // ← new
   participants: string;
   eventTime: string;
   venue: string;
@@ -19,13 +20,14 @@ export interface EventScheduleResponse {
 }
 
 export interface FlatEventSchedule {
-  id: string;       // synthetic composite key for React
-  eventsId: string; // real event id from API — used for ActivityByEvents call
-  date: Date;
+  id: string;        // synthetic composite key for React
+  eventsId: string;  // real event id from API — used for ActivityByEvents call
+  date: Date;        // the specific calendar day this copy represents
   title: string;
   descriptions: string;
   eventsType: number;
-  eventsDate: string;
+  fromDate: string;  // ← replaced eventsDate
+  toDate: string;    // ← new
   participants: string;
   eventTime: string;
   venue: string;
@@ -35,12 +37,12 @@ export interface FlatEventSchedule {
 }
 
 // ── Activity by Event ─────────────────────────────────────────────
-
 export interface ActivityByEvent {
   title: string;
   descriptions: string;
   eventsType: number;
-  eventsDate: string;
+  fromDate: string;  // ← replaced eventsDate
+  toDate: string;    // ← new
   eventTime: string;
   venue: string;
   chiefGuest: string;
