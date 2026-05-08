@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { BriefcaseBusiness, User } from "lucide-react";
+import { BriefcaseBusiness, CreditCard, User } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import SchoolInfoCard from "./SchoolCard";
@@ -71,6 +71,20 @@ const Dashboard: React.FC = () => {
       cardStats: String(school?.TotalItems ?? 0),
       cardStyle: "!bg-blue-500/30",
       cardIcon: <BriefcaseBusiness className="text-blue-400 text-4xl" />,
+    },
+    {
+      cardHead: "Fee Collected",
+      cardStats: "0",
+      cardStyle: "!bg-emerald-500/30",
+      cardStatUnit: "Rs.",
+      cardIcon: <CreditCard className="text-emerald-400 text-4xl" />,
+    },
+    {
+      cardHead: "Due Amount",
+      cardStats: "0",
+      cardStyle: "!bg-red-500/30",
+      cardStatUnit: "Rs.",
+      cardIcon: <CreditCard className="text-red-400 text-4xl" />,
     },
   ];
 

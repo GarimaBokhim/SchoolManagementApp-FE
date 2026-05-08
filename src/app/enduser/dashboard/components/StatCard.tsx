@@ -27,7 +27,8 @@ export default function StatCard({ cards }: Props) {
       <div className="relative z-10 flex flex-col sm:flex-row flex-wrap gap-6 ">
         {cards.map((card, index) => (
           <div
-            className={`flex flex-row border justify-between items-center text-text bg-green-500/30 backdrop-blur-md rounded-2xl p-6 flex-1 min-w-[250px] shadow-lg hover:scale-105 transition-transform duration-300 ${card.cardStyle}`}
+            // Change min-w-[250px] → min-w-[180px]
+            className={`flex flex-row border justify-between items-center text-text bg-green-500/30 backdrop-blur-md rounded-2xl p-6 flex-1 min-w-[180px] shadow-lg hover:scale-105 transition-transform duration-300 ${card.cardStyle}`}
             key={index}
           >
             <div>
