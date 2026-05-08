@@ -4,7 +4,6 @@
 import { BriefcaseBusiness, User } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
-import PieChartSection from "./PieChart";
 import SchoolInfoCard from "./SchoolCard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +12,7 @@ import { useGetAllStudents } from "../../(StudentManagement)/Student/hooks";
 import { useGetAllAcademicTeams } from "../../(Staff)/AcademicStaff/hooks";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import QuickActions from "./quickActions";
+import NepaliCalendar from "./NepaliCalender";
 
 const Dashboard: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
 
     const token = localStorage.getItem("token");
     if (!token) navigate.push("/");
-    
+
     setIsLoading(false);
   }, [navigate]);
 
@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
       <div className="p-6 flex flex-col gap-6">
         {/* Top header section - with logo and school info centered */}
         {schoolId && <SchoolInfoCard schoolId={schoolId} />}
-        
+
         {/* Show message if no school is selected */}
         {!schoolId && (
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
@@ -93,104 +93,72 @@ const Dashboard: React.FC = () => {
         <StatCard cards={cards} />
 
         {/* Charts */}
-        <div className="flex gap-6 h-[22rem]">
+        <div className="flex gap-6 h-[18rem]">
           <div className="w-[70%]">
             <BarChartSection />
           </div>
-          <div className="w-[30%]">
-            <PieChartSection />
+
+          {/* Latest Notices */}
+          <div className="w-[30%] bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1] overflow-auto">
+            <h3 className="text-lg font-bold text-[#4e97f1] mb-4 sticky top-0 bg-white dark:bg-[#171717] pb-2">
+              LATEST NOTICES
+            </h3>
+
+            <div className="space-y-3">
+              {allNotice && allNotice.length > 0 ? (
+                allNotice.slice(0, 5).map((n, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a] hover:shadow-md transition-shadow cursor-pointer"
+                  >
+                    <h4 className="text-sm font-semibold line-clamp-1">
+                      {n.title}
+                    </h4>
+                    <p className="text-xs mt-1 line-clamp-2 text-gray-600 dark:text-gray-400">
+                      {n.shortDescription}
+                    </p>
+                    <span className="text-[10px] text-gray-400 mt-2 block">
+                      {n.createdAt}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                  No notices available
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Package + Notices + Activities */}
+        {/* Calendar + Activities */}
         <div className="flex gap-6">
-          {/* Package Type */}
-          <div className="w-[40%] h-[20rem]">
-            <div className="h-full bg-white dark:bg-[#171717] p-8 rounded-2xl border border-[#4e97f1]">
-              <h3 className="text-lg font-bold text-[#227ded] tracking-wider mb-6">
-                PACKAGE TYPE
+          {/* Nepali Calendar */}
+          <div className="w-[70%] h-[24rem]">
+            <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1] overflow-auto">
+              <NepaliCalendar />
+            </div>
+          </div>
+
+          {/* Activities */}
+          <div className="w-[30%] h-[24rem]">
+            <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
+              <h3 className="text-lg font-bold text-[#4e97f1] mb-4">
+                RECENT ACTIVITIES
               </h3>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center space-y-2">
-                  <div className="border border-[#4e97f1] rounded-xl p-4">
-                    <p className="text-xs uppercase">Premium</p>
-                    <p className="text-2xl font-bold text-[#4e97f1]">5</p>
-                  </div>
-                  <div className="border border-[#4e97f1] rounded-xl p-4">
-                    <p className="text-xs uppercase">Basic</p>
-                    <p className="text-2xl font-bold text-emerald-400">10</p>
-                  </div>
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
+                  Purchased New Feature by Reliance School
                 </div>
-
-                <div className="text-center space-y-2">
-                  <div className="border border-[#4e97f1] rounded-xl p-4">
-                    <p className="text-xs uppercase">Gold</p>
-                    <p className="text-2xl font-bold text-yellow-400">4</p>
-                  </div>
-                  <div className="border border-[#4e97f1] rounded-xl p-4">
-                    <p className="text-xs uppercase">Silver</p>
-                    <p className="text-2xl font-bold text-red-400">20</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side */}
-          <div className="w-[60%] flex flex-col gap-6">
-            {/* Notices + Activities row */}
-            <div className="flex gap-6 h-[20rem]">
-              {/* Notices */}
-              <div className="w-1/2 bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
-                <h3 className="text-lg font-bold text-[#4e97f1] mb-4">
-                  LATEST NOTICES
-                </h3>
-
-                <div className="space-y-3 overflow-y-auto max-h-[13rem] pr-2">
-                  {allNotice && allNotice.length > 0 ? (
-                    allNotice.slice(0, 5).map((n, i) => (
-                      <div
-                        key={i}
-                        className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]"
-                      >
-                        <h4 className="text-sm font-semibold line-clamp-1">
-                          {n.title}
-                        </h4>
-                        <p className="text-xs mt-1 line-clamp-2">
-                          {n.shortDescription}
-                        </p>
-                        <span className="text-[10px] text-gray-400">
-                          {n.createdAt}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                      No notices available
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Activities */}
-              <div className="w-1/2 bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
-                <h3 className="text-lg font-bold text-[#4e97f1] mb-4">
-                  RECENT ACTIVITIES
-                </h3>
-
-                <div className="space-y-3">
-                  <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
-                    Purchased New Feature by Reliance School
-                  </div>
-                  <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
-                    Subscription about to expire of Mother School
-                  </div>
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
+                  Subscription about to expire of Mother School
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
