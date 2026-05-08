@@ -1,8 +1,34 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
-import { ActivityByEventResponse, EventScheduleResponse, FlatEventSchedule } from "../types/Ievent";
+import {
+  ActivityByEventResponse,
+  EventScheduleResponse,
+  FlatEventSchedule,
+} from "../types/Ievent";
 
 export const eventScheduleQueryKey = "EventSchedule";
+
+/** Returns every date in [start, end] inclusive as an array of Date objects */
+const expandDateRange = (fromDate: string, toDate: string): Date[] => {
+  const start = new Date(fromDate);
+  const end   = new Date(toDate);
+
+  // Guard: if either date is invalid, return just the start
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return [start];
+
+  // Normalise times so we count whole days only
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  const dates: Date[] = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    dates.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+};
 
 export const useScheduleEvents = () => {
   return useQuery({
@@ -14,48 +40,40 @@ export const useScheduleEvents = () => {
 
       const eventsList = response.data?.eventsList ?? [];
       const flat: FlatEventSchedule[] = [];
-      const today = new Date();
 
       eventsList.forEach((listItem, listIndex) => {
-        const details = listItem.eventsDetails;
-        Object.entries(details).forEach(([dateStr, item], entryIndex) => {
-          let eventDate: Date;
-          if (!dateStr || dateStr === "string") {
-            eventDate = today;
-          } else {
-            const [year, month, day] = dateStr.split("-").map(Number);
-            if (!year || !month || !day) {
-              eventDate = today;
-            } else {
-              eventDate = new Date(year, month - 1, day);
-            }
+        Object.entries(listItem.eventsDetails).forEach(([key, item], entryIndex) => {
+          // ONLY use fromDate, not the entire range
+          const eventDate = new Date(item.fromDate);
+          
+          // Only add if the date is valid
+          if (!isNaN(eventDate.getTime())) {
+            flat.push({
+              id:           `${listIndex}-${entryIndex}-${key}`,
+              eventsId:     item.id,
+              date:         eventDate,
+              title:        item.title,
+              descriptions: item.descriptions,
+              eventsType:   item.eventsType,
+              fromDate:     item.fromDate,
+              toDate:       item.toDate,
+              participants: item.participants,
+              eventTime:    item.eventTime,
+              venue:        item.venue,
+              chiefGuest:   item.chiefGuest,
+              organizer:    item.organizer,
+              mentor:       item.mentor,
+            });
           }
-
-          flat.push({
-            id: `${listIndex}-${entryIndex}-${dateStr}`,
-            eventsId: item.id, // real event id for ActivityByEvents API
-            date: eventDate,
-            title: item.title,
-            descriptions: item.descriptions,
-            eventsType: item.eventsType,
-            eventsDate: item.eventsDate,
-            participants: item.participants,
-            eventTime: item.eventTime,
-            venue: item.venue,
-            chiefGuest: item.chiefGuest,
-            organizer: item.organizer,
-            mentor: item.mentor,
-          });
         });
       });
 
       return flat;
     },
   });
-};
+};        
 
 // ── Activity by Event hook ────────────────────────────────────────
-
 export const useActivitiesByEvent = (eventsId: string | null) => {
   return useQuery({
     queryKey: ["ActivitiesByEvent", eventsId],
@@ -65,7 +83,7 @@ export const useActivitiesByEvent = (eventsId: string | null) => {
       );
       return response.data?.Items ?? [];
     },
-    enabled: !!eventsId, // only fetch when we have an id
+    enabled: !!eventsId,
     staleTime: 2 * 60 * 1000,
   });
 };
