@@ -19,28 +19,30 @@ const Edit = ({ onClose }: Props) => {
 
   const { data, isLoading } = useGetEventsById(id);
 
-const form = useForm<IEvents>({
-  defaultValues: {
-    id: "",
-    title: "",
-    descriptions: "",
-    eventsType: 0,
-    eventsDate: "",
-    participants: "",
-    eventTime: "",
-    venue: "",
-    chiefGuest: "",
-    organizer: "",
-    mentor: "",
-    schoolId: "",
-  },
-});
+  const form = useForm<IEvents>({
+    defaultValues: {
+      id: "",
+      title: "",
+      descriptions: "",
+      eventsType: 0,
+      fromDate: "",
+      toDate: "",
+      participants: "",
+      eventTime: "",
+      venue: "",
+      chiefGuest: "",
+      organizer: "",
+      mentor: "",
+      schoolId: "",
+    },
+  });
 
   useEffect(() => {
     if (data) {
       form.reset({
         ...data,
-        eventsDate: data.eventsDate?.split("T")[0],
+        fromDate: data.fromDate?.split("T")[0],
+        toDate: data.toDate?.split("T")[0],
       });
     }
   }, [data, form]);

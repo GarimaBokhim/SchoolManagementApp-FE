@@ -9,14 +9,15 @@ import AddEventForm from "../components/AddEvents";
 interface props {
   onClose?: () => void;
 }
-const Add = ({  onClose }: props) => {
+const Add = ({ onClose }: props) => {
   const form = useForm<IEvents>({
     defaultValues: {
       id: "",
       title: "",
       descriptions: "",
       eventsType: 0,
-      eventsDate: new Date().toISOString().split("T")[0],
+      fromDate: new Date().toISOString().split("T")[0],  // ✅ was eventsDate
+      toDate: new Date().toISOString().split("T")[0],    // ✅ add this
       participants: "",
       eventTime: "",
       venue: "",
@@ -25,7 +26,7 @@ const Add = ({  onClose }: props) => {
       mentor: "",
     },
   });
-   const handleOnClose = () => {
+  const handleOnClose = () => {
     if (onClose) onClose();
   };
 
