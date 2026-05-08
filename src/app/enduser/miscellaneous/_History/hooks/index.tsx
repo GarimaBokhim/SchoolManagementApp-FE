@@ -5,8 +5,8 @@ import { IHistory } from "../types/IHistory";
 const HistoryEndPoints = {
   getAllHistory: "/api/SchoolAssetsControllers/all-History",
   createHistory: "/api/SchoolAssetsControllers/AddSchoolItemHistory",
-  removeHistory: "/api/SchoolAssetsControllers/DeleteHistory",
-  updateHistory: "/api/SchoolAssetsControllers/UpdateHistory",
+  removeHistory: "/api/SchoolAssetsControllers/DeleteSchoolItemHistory",
+  updateHistory: "/api/SchoolAssetsControllers/UpdateSchoolItemHistory",
   getHistoryById: "/api/SchoolAssetsControllers/HistoryBy",
   filterHistoryByDate: "/api/SchoolAssetsControllers/FilterSchoolItemsHistory",
   getHistoryByClass: "/api/SchoolAssetsControllers/GetHistoryByClass",

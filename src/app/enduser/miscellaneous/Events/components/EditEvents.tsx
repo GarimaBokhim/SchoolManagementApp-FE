@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
-import {useApiHandler} from "@/hooks/useApiHandler"
+import { useApiHandler } from "@/hooks/useApiHandler"
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { InputElement } from "@/components/Input/InputElement";
 import { Toast } from "@/components/Toast/toast";
@@ -20,20 +20,16 @@ type Props = {
   selectedEvent: IEvents | null;
 };
 
-const EditEventForm = ({
-  form,
-  visible,
-  onClose,
-  selectedEvent,
-}: Props) => {
+const EditEventForm = ({ form, visible, onClose, selectedEvent }: Props) => {
   const updateEvent = useEditEvents();
   const { handleError, clearError } = useErrorHandler();
 
   useEffect(() => {
-    if (visible && selectedEvent) { 
+    if (visible && selectedEvent) {
       form.reset({
         ...selectedEvent,
-        eventsDate: selectedEvent.eventsDate?.split("T")[0], 
+        fromDate: selectedEvent.fromDate?.split("T")[0],
+        toDate: selectedEvent.toDate?.split("T")[0],
       });
     }
   }, [visible, selectedEvent, form]);
@@ -45,28 +41,35 @@ const EditEventForm = ({
     onClose();
   };
 
-    const { execute } = useApiHandler();
+  const { execute } = useApiHandler();
 
   const onSubmit: SubmitHandler<IEvents> = async (data) => {
     clearError();
     try {
-    await execute(
-      (payload) => updateEvent.mutateAsync(payload), 
-      {
-        Id: selectedEvent.id as string,
-        data: data,
-      },
-      {
-        loadingMessage: "Updating event...",
-        onSuccess: () => {
-          handleClose();
-        },
-      }
-    );
-  } catch (error) {
-    Toast.error(handleError(error));
-  }
+      await toast.promise(
+        updateEvent.mutateAsync({
+          Id: selectedEvent.id as string,
+          data: {
+            ...data,
+            eventsType: Number(data.eventsType),
+            fromDate: new Date(data.fromDate).toISOString(),
+            toDate: new Date(data.toDate).toISOString(),
+            eventTime: data.eventTime.length === 5 ? data.eventTime + ":00" : data.eventTime,
+          },
+        }),
+        {
+          loading: "Updating event...",
+          success: "Event updated successfully!",
+        }
+      );
+      handleClose();
+    } catch (error) {
+      Toast.error(handleError(error));
+    }
   };
+
+  // Watch fromDate to enforce toDate >= fromDate
+  const fromDateValue = form.watch("fromDate");
 
   return (
     <div className="fixed inset-0 z-50 ml-12 md:ml-64 sm:ml-16 bg-black/40 flex items-center justify-center">
@@ -75,50 +78,61 @@ const EditEventForm = ({
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-semibold">Edit Event</h1>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="text-red-500 text-2xl"
-          >
+          <button type="button" onClick={handleClose} className="text-red-500 text-2xl">
             <X strokeWidth={3} />
           </button>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
+          {/* Row 1 — Title | Event Type | Event Time */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <InputElement label="Title" form={form} name="title"   />
-            <InputElement label="Event Type" form={form} name="eventsType"   />
+            <InputElement label="Title" form={form} name="title" />
+            <InputElement label="Event Type" form={form} name="eventsType" />
+            <InputElement label="Event Time" form={form} name="eventTime" />
+          </div>
+
+          {/* Row 2 — From Date | To Date | Venue */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InputElement
-              label="Event Date"
+              label="From Date"
               form={form}
-              name="eventsDate"
+              name="fromDate"
               inputType="date"
-               
             />
+            <InputElement
+              label="To Date"
+              form={form}
+              name="toDate"
+              inputType="date"
+              min={fromDateValue}
+              rules={{
+                validate: (val: string) =>
+                  !fromDateValue || val >= fromDateValue || "To date must be on or after From date",
+              }}
+            />
+            <InputElement label="Venue" form={form} name="venue" />
           </div>
 
-          {/* Time & Venue */}
+          {/* Row 3 — Participants | Chief Guest | Organizer */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <InputElement label="Event Time" form={form} name="eventTime"   />
-            <InputElement label="Venue" form={form} name="venue"   />
-            <InputElement label="Participants" form={form} name="participants"   />
-          </div>
-
-          {/* People */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InputElement label="Participants" form={form} name="participants" />
             <InputElement label="Chief Guest" form={form} name="chiefGuest" />
             <InputElement label="Organizer" form={form} name="organizer" />
-            <InputElement label="Mentor" form={form} name="mentor" />
           </div>
 
-          {/* Description */}
-          <InputElement
-            label="Description"
-            form={form}
-            name="descriptions"
-            type="textarea"
-          />
+          {/* Row 4 — Mentor | Description */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InputElement label="Mentor" form={form} name="mentor" />
+            <div className="md:col-span-2">
+              <InputElement
+                label="Description"
+                form={form}
+                name="descriptions"
+                type="textarea"
+              />
+            </div>
+          </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3">

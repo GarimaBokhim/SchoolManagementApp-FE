@@ -3,7 +3,8 @@ export interface IEvents {
   title: string;
   descriptions: string;
   eventsType: number;
-  eventsDate: string;
+  fromDate: string;
+  toDate: string;
   participants: string;
   eventTime: string;
   venue: string;

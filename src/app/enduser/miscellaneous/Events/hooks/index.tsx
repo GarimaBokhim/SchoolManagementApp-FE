@@ -19,7 +19,8 @@ type IEventRequest = {
   title: string;
   descriptions: string;
   eventsType: number;
-  eventsDate: string;
+  fromDate: string;   // ← replaced eventsDate
+  toDate: string;   // ← new field
   participants: string;
   eventTime: string;
   venue: string;
@@ -31,7 +32,6 @@ type IEventRequest = {
 
 export const useAddEvents = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IEvents, Error, IEventRequest>({
     mutationFn: async (formData: IEventRequest): Promise<IEvents> => {
       const response = await api.post(EventsEndPoints.addEvent, formData);
@@ -64,7 +64,6 @@ export const useRemoveEvent = () => {
 
 export const useEditEvents = () => {
   const queryClient = useQueryClient();
-
   return useMutation<IEvents, Error, { Id: string; data: IEventRequest }>({
     mutationFn: async ({ Id, data }) => {
       if (!Id) throw new Error("Id is required to edit event");
@@ -96,7 +95,9 @@ export const useGetAllEvents = (params?: string) => {
   return useQuery({
     queryKey: [queryKey, params],
     queryFn: async () => {
-      const url = params ? `${EventsEndPoints.getAllEvents}${params}` : EventsEndPoints.getAllEvents;
+      const url = params
+        ? `${EventsEndPoints.getAllEvents}${params}`
+        : EventsEndPoints.getAllEvents;
       const response = await api.get<IPaginationResponse<IEvents>>(url);
       return response.data ?? { data: [], PageIndex: 0, isPagination: 1, pageSize: 10 };
     },
@@ -107,7 +108,9 @@ export const useFilterEventsByDate = (params?: string) => {
   return useQuery({
     queryKey: [filteredEventQuery, params, queryKey],
     queryFn: async () => {
-      const url = params ? `${EventsEndPoints.filterEventsByDate}${params}` : EventsEndPoints.filterEventsByDate;
+      const url = params
+        ? `${EventsEndPoints.filterEventsByDate}${params}`
+        : EventsEndPoints.filterEventsByDate;
       const response = await api.get<IPaginationResponse<IEvents>>(url);
       return response.data;
     },

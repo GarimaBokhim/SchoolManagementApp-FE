@@ -43,13 +43,11 @@ const AllEventsForm = () => {
   const fullQuery = query + (params || "");
 
   const { data, refetch, isLoading } = useFilterEventsByDate(fullQuery);
-
-  // fetch all events without pagination for combobox options
   const { data: allEvents } = useFilterEventsByDate("?IsPagination=false");
 
   const [editModal, setEditModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<IEvents | null>(null);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(""); //title filter state
+  const [selectedTitle, setSelectedTitle] = useState<string | null>("");
 
   const editForm = useForm<IEvents>();
 
@@ -78,15 +76,9 @@ const AllEventsForm = () => {
     clearError();
     try {
       const queryParams = [
-        selectedTitle
-          ? `title=${encodeURIComponent(selectedTitle)}`
-          : null, //title param
-        formData.startDate
-          ? `startDate=${encodeURIComponent(formData.startDate)}`
-          : null,
-        formData.endDate
-          ? `endDate=${encodeURIComponent(formData.endDate)}`
-          : null,
+        selectedTitle ? `title=${encodeURIComponent(selectedTitle)}` : null,
+        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
+        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
       ]
         .filter(Boolean)
         .join("&");
@@ -104,8 +96,7 @@ const AllEventsForm = () => {
         }
       );
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      Toast.error(handleError(error));
     }
   };
 
@@ -113,7 +104,7 @@ const AllEventsForm = () => {
     refetch();
     setParams("");
     formRef.current?.handleClear();
-    setSelectedTitle(""); //reset title
+    setSelectedTitle("");
     form.reset();
   };
 
@@ -134,7 +125,6 @@ const AllEventsForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
-              {/* Add button - always visible */}
               <ButtonElement
                 icon={<Plus size={18} />}
                 type="button"
@@ -144,7 +134,7 @@ const AllEventsForm = () => {
             </div>
           </div>
 
-          {/* Filter panel matching exam result style */}
+          {/* Filter panel */}
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -169,13 +159,9 @@ const AllEventsForm = () => {
                     value={selectedTitle}
                     options={allEvents?.Items ?? []}
                     selected={
-                      allEvents?.Items?.find(
-                        (e) => e.title === selectedTitle
-                      ) ?? null
+                      allEvents?.Items?.find((e) => e.title === selectedTitle) ?? null
                     }
-                    onSelect={(event) =>
-                      setSelectedTitle(event?.title ?? "")
-                    }
+                    onSelect={(event) => setSelectedTitle(event?.title ?? "")}
                     getLabel={(e) => e?.title ?? ""}
                     getValue={(e) => e?.title ?? ""}
                   />
@@ -208,7 +194,8 @@ const AllEventsForm = () => {
                   <th className="px-4 py-3 text-center">Title</th>
                   <th className="px-4 py-3 text-center">Description</th>
                   <th className="px-4 py-3 text-center">Events Type</th>
-                  <th className="px-4 py-3 text-center">Events Date</th>
+                  <th className="px-4 py-3 text-center">From Date</th>   {/* ← renamed */}
+                  <th className="px-4 py-3 text-center">To Date</th>     {/* ← new     */}
                   <th className="px-4 py-3 text-center">Participants</th>
                   <th className="px-4 py-3 text-center">Event Time</th>
                   <th className="px-4 py-3 text-center">Venue</th>
@@ -221,7 +208,7 @@ const AllEventsForm = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={12} className="p-4 text-center text-gray-500">
+                    <td colSpan={13} className="p-4 text-center text-gray-500">
                       Loading...
                     </td>
                   </tr>
@@ -236,7 +223,10 @@ const AllEventsForm = () => {
                       <td className="px-4 py-2 text-center">{event.descriptions}</td>
                       <td className="px-4 py-2 text-center">{event.eventsType}</td>
                       <td className="px-4 py-2 text-center">
-                        {new Date(event.eventsDate).toLocaleDateString()}
+                        {new Date(event.fromDate).toLocaleDateString()}  {/* ← was eventsDate */}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {new Date(event.toDate).toLocaleDateString()}    {/* ← new */}
                       </td>
                       <td className="px-4 py-2 text-center">{event.participants}</td>
                       <td className="px-4 py-2 text-center">{event.eventTime}</td>
@@ -246,7 +236,6 @@ const AllEventsForm = () => {
                       <td className="px-4 py-2 text-center">{event.mentor}</td>
                       <td className="px-4 py-2 text-center">
                         <div className="flex gap-2 items-center justify-center">
-                          {/* Delete Button - always visible */}
                           {event.id && (
                             <DeleteButton
                               onConfirm={async () => {
@@ -257,8 +246,6 @@ const AllEventsForm = () => {
                               content="Are you sure you want to delete this Event?"
                             />
                           )}
-                          
-                          {/* Edit Button - always visible */}
                           <ButtonElement
                             icon={<Edit size={14} />}
                             text=""
@@ -274,10 +261,7 @@ const AllEventsForm = () => {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={12}
-                      className="p-4 text-center italic text-gray-500"
-                    >
+                    <td colSpan={13} className="p-4 text-center italic text-gray-500">
                       No Events found.
                     </td>
                   </tr>

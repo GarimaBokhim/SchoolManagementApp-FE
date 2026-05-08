@@ -19,13 +19,13 @@ type ExamRequest = {
   examDate: Date;
   isfinalExam: boolean;
   classId: string;
-  examSubjects?:IExamSubjects[];
+  examSubjects?: IExamSubjects[];
 }
-type IExamSubjects={
+type IExamSubjects = {
 
-  subjectId:string;
-  passMarks:number;
-  fullMarks:number;
+  subjectId: string;
+  passMarks: number;
+  fullMarks: number;
 };
 
 export const useAddExam = () => {
