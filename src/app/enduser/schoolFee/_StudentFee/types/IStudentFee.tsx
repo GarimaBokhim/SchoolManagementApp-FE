@@ -7,6 +7,8 @@ export interface IStudentFee {
   classId: string;
   discountPercentage: number;
   studentFeeDetailsDTOs: IStudentFeeDetails[];
+  totalAmount?: number;
+  dueAmount?: number;
 }
 
 export interface IStudentFeeDetails {

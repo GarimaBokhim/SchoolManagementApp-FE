@@ -156,7 +156,7 @@ export const useUpdateActivity = () => {
       const { id, ...body } = payload
       const response = await api.patch(
         `/api/CocurricularActivities/UpdateActivity/${id}`,
-        { ...body, id }                       
+        { ...body, id }
       )
       return response.data
     },

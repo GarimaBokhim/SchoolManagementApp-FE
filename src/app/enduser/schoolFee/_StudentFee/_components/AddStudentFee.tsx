@@ -4,10 +4,7 @@ import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { X, Plus, Trash2, AlertCircle, Info } from "lucide-react";
 import { IStudentFee, IStudentFeeDetails } from "../types/IStudentFee";
-import {
-  useAddStudentFee,
-  useEditStudentFee,
-} from "../hooks";
+import { useAddStudentFee, useEditStudentFee, useGetFeeStructureByClass } from "../hooks";
 import { useGetAllFeeStructure } from "../../_FeeStructure/hooks";
 import { IFeeStructure } from "../../_FeeStructure/types/IFeeStructure";
 import toast from "react-hot-toast";
@@ -22,7 +19,6 @@ import {
   mapFeeStructureDTOsToDetails,
 } from "../hooks/useGetFeeStructureById";
 import { feeStructureIdToString } from "../utils/studentFeeForm";
-import { useGetFeeStructureByStudent } from "../hooks/uae_feestructure_by_id";
 
 const FEE_PAID_TYPE_OPTIONS = [
   { label: "One Time", value: 1 },
@@ -62,20 +58,11 @@ const createEmptyManualRow = (): IStudentFeeDetails => ({
   totalAmount: 0,
 });
 
-// Component to fetch and display fee type name using useGetFeeTypeById
 const FeeTypeName = ({ feeTypeId }: { feeTypeId: string }) => {
   const { data: feeType, isLoading, error } = useGetFeeTypeById(feeTypeId);
-  
   if (!feeTypeId) return <span className="text-gray-400">—</span>;
-  
-  if (isLoading) {
-    return <span className="text-gray-400 animate-pulse">Loading...</span>;
-  }
-  
-  if (error || !feeType) {
-    return <span className="text-red-500">{feeTypeId || "Error"}</span>;
-  }
-  
+  if (isLoading) return <span className="text-gray-400 animate-pulse">Loading...</span>;
+  if (error || !feeType) return <span className="text-red-500">{feeTypeId || "Error"}</span>;
   return <span className="text-gray-800 dark:text-gray-100">{feeType.name}</span>;
 };
 
@@ -93,6 +80,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const { data: allStudents } = useGetAllStudentsV2();
   const { data: allClasses } = useGetAllClass();
+  const { data: allFeeTypes } = useGetAllFeeTypes();
+  const { data: allFeeStructures } = useGetAllFeeStructure();
 
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -100,31 +89,29 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [autoRows, setAutoRows] = useState<IStudentFeeDetails[]>([]);
   const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
-const { data: allFeeTypes } = useGetAllFeeTypes();
+
   const prevStudentIdRef = useRef<string | null>(null);
   const lastHydratedEditIdRef = useRef<string | null>(null);
 
-  const { data: allFeeStructures } = useGetAllFeeStructure();
-
+  // ─── Fetch fee structure by class ────────────────────────────────────────
   const {
-    data: feeStructureByStudent,
-    isLoading: isFeeStructureByStudentLoading,
-  } = useGetFeeStructureByStudent(
-    !isEditMode && selectedStudentId ? selectedStudentId : undefined
+    data: feeStructureByClass,
+    isLoading: isFeeStructureByClassLoading,
+  } = useGetFeeStructureByClass(
+    !isEditMode && selectedClassId ? selectedClassId : undefined
   );
 
-  const studentHasNoFeeStructure =
+  const classHasNoFeeStructure =
     !isEditMode &&
-    !!selectedStudentId &&
-    !isFeeStructureByStudentLoading &&
-    feeStructureByStudent &&
-    !feeStructureByStudent.feeStructureId?.trim();
+    !!selectedClassId &&
+    !isFeeStructureByClassLoading &&
+    feeStructureByClass &&
+    (!feeStructureByClass.Items || feeStructureByClass.Items.length === 0);
 
-  const studentFeeStructureCategoryName =
-    feeStructureByStudent?.categoryName?.trim() || "";
+  // ─── This already has feeCategoryName — use it directly ─────────────────
+  const classFeeStructureItem = feeStructureByClass?.Items?.[0] ?? null;
 
   const watchedDiscount = form.watch("discountPercentage");
-
   useEffect(() => {
     if (watchedDiscount !== undefined && watchedDiscount !== discountPercentage) {
       setDiscountPercentage(watchedDiscount || 0);
@@ -134,6 +121,7 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
     useGetFeeStructureById(selectedFeeStructureId);
 
+  // Auto-populate rows from fee structure detail (add mode only)
   useEffect(() => {
     if (isEditMode) return;
     if (!feeStructureDetail?.feeStructureDTOs?.length) {
@@ -147,11 +135,14 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
     setAutoRows(autoPopulated);
   }, [feeStructureDetail, isEditMode]);
 
+  // Auto-set feeStructureId from class fee structure
   useEffect(() => {
     if (isEditMode) return;
-    if (!feeStructureByStudent) return;
+    if (!feeStructureByClass) return;
 
-    const fsId = feeStructureByStudent.feeStructureId?.trim();
+    const item = feeStructureByClass.Items?.[0];
+    const fsId = item?.id?.trim() ?? "";
+
     if (fsId) {
       setSelectedFeeStructureId(fsId);
       form.setValue("feeStructureId", fsId, { shouldValidate: true });
@@ -159,8 +150,9 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
       setSelectedFeeStructureId("");
       form.setValue("feeStructureId", "");
     }
-  }, [feeStructureByStudent, isEditMode, form]);
+  }, [feeStructureByClass, isEditMode, form]);
 
+  // Recalculate manual rows when discount changes
   useEffect(() => {
     setManualRows((prev) =>
       prev.map((row) => {
@@ -182,6 +174,7 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
     onClose();
   };
 
+  // Hydrate form in edit mode
   useLayoutEffect(() => {
     if (!editRecord?.id) {
       lastHydratedEditIdRef.current = null;
@@ -202,6 +195,7 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
     );
   }, [editRecord]);
 
+  // When student changes (add mode), auto-set classId and reset fee fields
   useEffect(() => {
     if (isEditMode) return;
     if (!selectedStudentId) {
@@ -213,7 +207,8 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
     );
     if (!student) return;
 
-    setSelectedClassId(student.classId ?? "");
+    const newClassId = student.classId ?? "";
+    setSelectedClassId(newClassId);
 
     if (prevStudentIdRef.current === selectedStudentId) return;
     prevStudentIdRef.current = selectedStudentId;
@@ -274,14 +269,12 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
 
   const onSubmit: SubmitHandler<IStudentFee> = async (data) => {
     clearError();
-
     const allDetails = [...autoRows, ...manualRows];
 
     if (allDetails.length === 0) {
       toast.error("Please add at least one fee detail.");
       return;
     }
-
     const hasEmptyFeeType = manualRows.some((d) => !d.feeTypeId);
     if (hasEmptyFeeType) {
       toast.error("Please select a fee type for all custom rows.");
@@ -327,27 +320,31 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
     if (!f) return "";
     return (
       f.feeCategoryName?.trim() ||
-      (f as unknown as { categoryName?: string }).categoryName?.trim() ||
+      (f as any).categoryName?.trim() ||
+      (f as any).name?.trim() ||
       "Empty Name"
     );
   };
 
-  const getSelectedFeeStructure = () => {
+  // ─── KEY FIX: Use classFeeStructureItem directly, skip allFeeStructures lookup ──
+  const getSelectedFeeStructure = (): IFeeStructure | null => {
+    if (!selectedFeeStructureId) return null;
+
+    // Use the name directly from the class API — no lookup needed
+    if (classFeeStructureItem) {
+      return {
+        id: classFeeStructureItem.id,
+        feeCategoryName: classFeeStructureItem.feeCategoryName,
+      } as unknown as IFeeStructure;
+    }
+
+    // Edit mode fallback — look up in allFeeStructures
     const found = allFeeStructures?.Items?.find((f) => {
       const fid = f.id ?? (f as { Id?: string }).Id ?? "";
       return String(fid) === String(selectedFeeStructureId);
     });
 
-    if (found) return found;
-
-    if (selectedFeeStructureId && studentFeeStructureCategoryName) {
-      return {
-        id: selectedFeeStructureId,
-        feeCategoryName: studentFeeStructureCategoryName,
-      } as unknown as IFeeStructure;
-    }
-
-    return null;
+    return found ?? null;
   };
 
   return (
@@ -407,10 +404,9 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                 value={allClasses?.Items?.find((c) => c.id === selectedClassId)?.name ?? ""}
                 disabled
               />
-
               <input type="hidden" {...form.register("classId")} value={selectedClassId} />
 
-              {/* Fee Structure */}
+              {/* Fee Structure combobox */}
               <div className="space-y-1">
                 <AppCombobox
                   value={selectedFeeStructureId}
@@ -434,19 +430,19 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                 />
 
                 {/* Loading indicator */}
-                {!isEditMode && selectedStudentId && isFeeStructureByStudentLoading && (
+                {!isEditMode && selectedClassId && isFeeStructureByClassLoading && (
                   <p className="flex items-center gap-1.5 text-xs text-gray-400 animate-pulse px-1">
                     <Info size={12} />
-                    Fetching fee structure for student...
+                    Fetching fee structure for class...
                   </p>
                 )}
 
-                {/* No fee structure assigned warning */}
-                {studentHasNoFeeStructure && (
+                {/* No fee structure warning */}
+                {classHasNoFeeStructure && (
                   <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2 mt-1">
                     <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
                     <p className="text-xs text-amber-700 dark:text-amber-300 leading-tight">
-                      No fee structure is assigned to this student. You can still add custom fee rows below.
+                      No fee structure is assigned to this class. You can still add custom fee rows below.
                     </p>
                   </div>
                 )}
@@ -514,11 +510,10 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                       ))
                     ) : (
                       <>
-                        {/* Auto-populated Rows (Read-only) - Now using useGetFeeTypeById */}
+                        {/* Auto-populated Rows (Read-only) */}
                         {autoRows.map((detail, index) => {
                           const paidTypeLabel =
                             FEE_PAID_TYPE_OPTIONS.find((o) => o.value === detail.feePaidType)?.label ?? "—";
-
                           return (
                             <tr
                               key={`auto-${index}`}
@@ -560,22 +555,20 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                               <td className="px-3 py-3 text-center text-gray-500 dark:text-gray-400">
                                 {actualIndex + 1}
                               </td>
-
                               <td className="px-3 py-3">
-                              <select
-  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-  value={detail.feeTypeId}
-  onChange={(e) => updateManualRow(index, { feeTypeId: e.target.value })}
->
-  <option value="">— Select —</option>
-  {allFeeTypes?.Items?.map((ft) => (
-    <option key={ft.id} value={ft.id}>
-      {ft.name}
-    </option>
-  ))}
-</select>
+                                <select
+                                  className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                  value={detail.feeTypeId}
+                                  onChange={(e) => updateManualRow(index, { feeTypeId: e.target.value })}
+                                >
+                                  <option value="">— Select —</option>
+                                  {allFeeTypes?.Items?.map((ft) => (
+                                    <option key={ft.id} value={ft.id}>
+                                      {ft.name}
+                                    </option>
+                                  ))}
+                                </select>
                               </td>
-
                               <td className="px-3 py-3">
                                 <select
                                   className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
@@ -589,7 +582,6 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                                   ))}
                                 </select>
                               </td>
-
                               <td className="px-3 py-3">
                                 <input
                                   type="number"
@@ -600,7 +592,6 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                                   onChange={(e) => updateManualRow(index, { amount: Number(e.target.value) })}
                                 />
                               </td>
-
                               <td className="px-3 py-3">
                                 <input
                                   type="number"
@@ -610,19 +601,15 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                                   onChange={(e) => updateManualRow(index, { times: Number(e.target.value) })}
                                 />
                               </td>
-
                               <td className="px-3 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">
                                 {discountPercentage}%
                               </td>
-
                               <td className="px-3 py-3 text-right text-yellow-600 dark:text-yellow-400">
                                 {detail.discountAmount?.toFixed(2) || "0.00"}
                               </td>
-
                               <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
                                 {detail.totalAmount?.toFixed(2) || "0.00"}
                               </td>
-
                               <td className="px-3 py-3 text-center">
                                 <button
                                   type="button"
@@ -641,9 +628,9 @@ const { data: allFeeTypes } = useGetAllFeeTypes();
                         {autoRows.length === 0 && manualRows.length === 0 && (
                           <tr className="border-t border-gray-100 dark:border-gray-600">
                             <td colSpan={9} className="px-3 py-8 text-center text-gray-400 dark:text-gray-500">
-                              {studentHasNoFeeStructure
-                                ? "This student has no fee structure assigned. Add custom rows using the button above."
-                                : "No fee details added. Please select a fee structure or add custom rows."}
+                              {classHasNoFeeStructure
+                                ? "This class has no fee structure assigned. Add custom rows using the button above."
+                                : "No fee details added. Please select a student to load fee structure or add custom rows."}
                             </td>
                           </tr>
                         )}
