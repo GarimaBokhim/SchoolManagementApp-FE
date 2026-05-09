@@ -115,7 +115,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
 
           {/* Student — Combobox */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <label className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Student <span className="text-red-500">*</span>
             </label>
             {studentsLoading ? (
@@ -141,7 +141,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                       setSelectedStudent(student)
                       setValue('studentId', student?.id ?? '', { shouldValidate: true })
                     }}
-                    onFocus={() => {}}
+                    onFocus={() => { }}
                     getLabel={getStudentLabel}
                     getValue={(s) => s?.id ?? ''}
                     renderOptionExtra={() => <></>} // Return empty fragment instead of null
@@ -156,7 +156,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
 
           {/* Activity — Combobox */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <label className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Activity <span className="text-red-500">*</span>
             </label>
             {activitiesLoading ? (
@@ -182,7 +182,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                       setSelectedActivity(activity)
                       setValue('activityId', activity?.id ?? '', { shouldValidate: true })
                     }}
-                    onFocus={() => {}}
+                    onFocus={() => { }}
                     getLabel={(a) => a?.name ?? ''}
                     getValue={(a) => a?.id ?? ''}
                     renderOptionExtra={() => <></>} // Return empty fragment instead of null
@@ -197,7 +197,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
 
           {/* Award Position — Combobox with enum names */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <label className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Award Position <span className="text-red-500">*</span>
             </label>
             <Controller
@@ -218,7 +218,7 @@ const AddParticipationModal = ({ visible, onClose, onSuccess }: Props) => {
                     setSelectedAwardPosition(position)
                     setValue('awardPosition', position?.value ?? 1, { shouldValidate: true })
                   }}
-                  onFocus={() => {}}
+                  onFocus={() => { }}
                   getLabel={(p) => p?.label ?? ''}
                   getValue={(p) => p?.value ?? ''}
                   renderOptionExtra={() => <></>} // Return empty fragment instead of null

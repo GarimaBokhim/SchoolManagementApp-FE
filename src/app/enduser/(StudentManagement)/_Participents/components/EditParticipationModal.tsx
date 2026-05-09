@@ -102,7 +102,7 @@ const EditParticipationModal = ({
 
               {/* Student */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Student <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -123,7 +123,7 @@ const EditParticipationModal = ({
 
               {/* Activity */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Activity <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -144,7 +144,7 @@ const EditParticipationModal = ({
 
               {/* Award Position */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Award Position <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -168,7 +168,7 @@ const EditParticipationModal = ({
 
               {/* Certificate Title */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Certificate Title
                 </label>
                 <input
@@ -180,7 +180,7 @@ const EditParticipationModal = ({
 
               {/* Certificate Content */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Certificate Content
                 </label>
                 <textarea

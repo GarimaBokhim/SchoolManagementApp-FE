@@ -213,3 +213,38 @@ export const useGetFeeStructureByClass = (classId?: string) => {
     retry: false,
   });
 };
+
+
+export interface IDueSlipItem {
+  studentName: string;
+  address: string;
+  schoolId: string;
+  classId: string;
+  className: string;
+  discount: number;
+  totalAmount: number;
+  paidAmount: number;
+  feeStructures: {
+    feeTypeId: string;
+    feeTypeName: string;
+    amount: number;
+    discountAmount: number;
+    times: number;
+    totalAmount: number;
+    feePaidType: number;
+  }[];
+}
+
+export const useGetDueSlip = (classId?: string) => {
+  return useQuery({
+    queryKey: ["dueSlip", classId],
+    queryFn: async () => {
+      const response = await api.get<IPaginationResponse<IDueSlipItem>>(
+        `/api/Finance/DueSlip?classId=${classId}`
+      );
+      return response.data;
+    },
+    enabled: !!classId,
+    staleTime: 0,
+  });
+};
