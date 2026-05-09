@@ -24,7 +24,7 @@ type StudentFeeRequest = {
   studentId: string;
   feeStructureId: string;
   classId: string;
-  discountPercentage: number;
+  discountPercentage: number;  
   studentFeeDetailsDTOs: IStudentFeeDetails[];
 };
 
@@ -175,5 +175,41 @@ export const useGetStudentFeeById = (id?: string) => {
     },
     enabled: !!id,
     staleTime: 0,
+  });
+};
+
+
+// this is for fetching the class name .. testing .. might remove it letter after integrating in the class hook
+
+export interface IClass {
+  Id: string;
+  name: string;
+}
+
+export const useGetClassById = (classId?: string) => {
+  return useQuery({
+    queryKey: ["class", classId],
+    queryFn: async () => {
+      if (!classId) return null;
+      const response = await api.get<IClass>(`/api/Academics/SchoolClass/${classId}`);
+      return response.data;
+    },
+    enabled: !!classId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+export const useGetFeeStructureByClass = (classId?: string) => {
+  return useQuery({
+    queryKey: ["FeeStructureByClass", classId],
+    queryFn: async () => {
+      const response = await api.get<{ Items: IFeeStructureByClass[] }>(
+        `${StudentFeeEndPoints.feeStructureByClass}?classId=${classId}`
+      );
+      return response.data;
+    },
+    enabled: !!classId?.trim(),
+    staleTime: 0,
+    retry: false,
   });
 };

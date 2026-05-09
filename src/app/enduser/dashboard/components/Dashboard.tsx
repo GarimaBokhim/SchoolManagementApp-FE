@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { BriefcaseBusiness, User } from "lucide-react";
+import { BriefcaseBusiness, CreditCard, User } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import SchoolInfoCard from "./SchoolCard";
@@ -12,7 +12,7 @@ import { useGetAllStudents } from "../../(StudentManagement)/Student/hooks";
 import { useGetAllAcademicTeams } from "../../(Staff)/AcademicStaff/hooks";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
 import QuickActions from "./quickActions";
-import NepaliCalendar from "./NepaliCalender";
+import EventSchedule from "../../(StudentManagement)/curricularActivities/pages/schedulePage/EventSchedule";
 
 const Dashboard: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
@@ -72,6 +72,20 @@ const Dashboard: React.FC = () => {
       cardStyle: "!bg-blue-500/30",
       cardIcon: <BriefcaseBusiness className="text-blue-400 text-4xl" />,
     },
+    {
+      cardHead: "Fee Collected",
+      cardStats: "0",
+      cardStyle: "!bg-emerald-500/30",
+      cardStatUnit: "Rs.",
+      cardIcon: <CreditCard className="text-emerald-400 text-4xl" />,
+    },
+    {
+      cardHead: "Due Amount",
+      cardStats: "0",
+      cardStyle: "!bg-red-500/30",
+      cardStatUnit: "Rs.",
+      cardIcon: <CreditCard className="text-red-400 text-4xl" />,
+    },
   ];
 
   return (
@@ -93,7 +107,7 @@ const Dashboard: React.FC = () => {
         <StatCard cards={cards} />
 
         {/* Charts */}
-        <div className="flex gap-6 h-[18rem]">
+        <div className="flex gap-6">
           <div className="w-[70%]">
             <BarChartSection />
           </div>
@@ -131,30 +145,14 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Calendar + Activities */}
-        <div className="flex gap-6">
-          {/* Nepali Calendar */}
-          <div className="w-[70%] h-[24rem]">
-            <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1] overflow-auto">
-              <NepaliCalendar />
-            </div>
-          </div>
-
-          {/* Activities */}
-          <div className="w-[30%] h-[24rem]">
-            <div className="h-full bg-white dark:bg-[#171717] p-6 rounded-2xl border border-[#4e97f1]">
-              <h3 className="text-lg font-bold text-[#4e97f1] mb-4">
-                RECENT ACTIVITIES
-              </h3>
-
-              <div className="space-y-3">
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
-                  Purchased New Feature by Reliance School
-                </div>
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#2a2a2a]">
-                  Subscription about to expire of Mother School
-                </div>
-              </div>
+        {/* Event Schedule */}
+        <div className="w-full">
+          <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#4e97f1] p-4">
+            <h3 className="text-lg font-bold text-[#4e97f1] mb-4">
+              EVENT SCHEDULE
+            </h3>
+            <div className="h-[500px] overflow-auto">
+              <EventSchedule />
             </div>
           </div>
         </div>

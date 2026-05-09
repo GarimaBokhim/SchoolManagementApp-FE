@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarDays,
   Users,
+  CreditCard
 } from "lucide-react";
 import AddStudentForm from "../../(StudentManagement)/Student/_components/AddStudentForm";
 import { IStudent } from "../../(StudentManagement)/Student/types/IStudents";
@@ -27,41 +28,41 @@ const QuickActions = () => {
       route: null, // Modal opens instead of navigation
       onClick: () => setIsAddModalOpen(true),
     },
-    { 
-      icon: Bell, 
-      label: "Notices", 
-      color: "from-green-600 to-emerald-500", 
-      route: "/enduser/notice",
-      onClick: () => router.push("/enduser/notice"),
-    }, 
-    { 
-      icon: FileText, 
-      label: "Attendance Report", 
-      color: "from-purple-600 to-pink-500", 
+    {
+      icon: CreditCard,
+      label: "School Fee",
+      color: "from-teal-600 to-green-500",
+      route: "/enduser/schoolFee",
+      onClick: () => router.push("/enduser/schoolFee"),
+    },
+    {
+      icon: FileText,
+      label: "Attendance Report",
+      color: "from-purple-600 to-pink-500",
       route: "/enduser/attendanceReport",
       onClick: () => router.push("/enduser/attendanceReport"),
-    }, 
-    {   
-      icon: Calendar, 
-      label: "Exams", 
-      color: "from-orange-600 to-amber-500", 
+    },
+    {
+      icon: Calendar,
+      label: "Exams",
+      color: "from-orange-600 to-amber-500",
       route: "/enduser/Exam",
       onClick: () => router.push("/enduser/Exam"),
-    }, 
-    {   
-      icon: CalendarDays, 
-      label: "Events", 
-      color: "from-indigo-600 to-blue-500", 
+    },
+    {
+      icon: CalendarDays,
+      label: "Events",
+      color: "from-indigo-600 to-blue-500",
       route: "/enduser/miscellaneous/Events",
       onClick: () => router.push("/enduser/miscellaneous/Events"),
-    }, 
-    {   
-      icon: Users, 
-      label: "Students List", 
-      color: "from-red-600 to-orange-500", 
+    },
+    {
+      icon: Users,
+      label: "Students List",
+      color: "from-red-600 to-orange-500",
       route: "/enduser/Student",
       onClick: () => router.push("/enduser/Student"),
-    }, 
+    },
   ];
 
   return (
