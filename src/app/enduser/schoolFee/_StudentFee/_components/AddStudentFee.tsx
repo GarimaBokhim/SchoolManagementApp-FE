@@ -104,8 +104,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const classHasNoFeeStructure =
     !isEditMode &&
     !!selectedClassId &&
-    !isFeeStructureByClassLoading &&
-    feeStructureByClass &&
+    !isFeeStructureByClassLoading && ``
+  feeStructureByClass &&
     (!feeStructureByClass.Items || feeStructureByClass.Items.length === 0);
 
   // ─── This already has feeCategoryName — use it directly ─────────────────
@@ -113,6 +113,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const watchedDiscount = form.watch("discountPercentage");
   useEffect(() => {
+    ``
     if (watchedDiscount !== undefined && watchedDiscount !== discountPercentage) {
       setDiscountPercentage(watchedDiscount || 0);
     }
