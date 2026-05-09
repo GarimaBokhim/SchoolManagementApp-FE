@@ -85,201 +85,196 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
                  bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
       onClick={handleClose}
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[540px]
-                   max-h-[95vh] rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
+        className="bg-[#FBFBFB] dark:bg-[#27272a] 
+                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
+                   max-h-[95vh] md:max-h-[92vh] h-full 
+                   rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Add Activity
-          </h2>
-          <button
-            onClick={handleClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <X size={18} className="text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4">
-
-          {/* Activity Name */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Activity Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...register('name', { required: 'Activity name is required' })}
-              placeholder="e.g. Football Tournament"
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            {errors.name && (
-              <p className="text-xs text-red-500">{errors.name.message}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Description
-            </label>
-            <textarea
-              {...register('descriptions')}
-              placeholder="Brief description of the activity..."
-              rows={3}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-            />
-          </div>
-
-          {/* Activity Category */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...register('activityCategory', { valueAsNumber: true })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {ACTIVITY_CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Event */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Event <span className="text-red-500">*</span>
-            </label>
-            <Controller
-              name="eventId"
-              control={control}
-              rules={{ required: 'Event is required' }}
-              render={({ field }) => (
-                <AppCombobox<EventOption>
-                  name="eventId"
-                  label="Select Event"
-                  required
-                  options={eventsLoading ? [] : (events as EventOption[] ?? [])}
-                  selected={selectedEvent ?? undefined}
-                  getLabel={(opt) => opt.title}
-                  getValue={(opt) => opt.id}
-                  placeholder={eventsLoading ? 'Loading events...' : 'Search event...'}
-                  onSelect={(opt) => {
-                    setSelectedEvent(opt)
-                    field.onChange(opt ? opt.id : '')
-                  }}
-                />
-              )}
-            />
-            {errors.eventId && (
-              <p className="text-xs text-red-500">{errors.eventId.message}</p>
-            )}
-          </div>
-
-          {/* Classes Multi-Select */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Classes
-            </label>
-            <ClassMultiSelect
-              classes={classes ?? []}
-              selected={selectedClasses}
-              onChange={setSelectedClasses}
-              isLoading={classesLoading}
-            />
-            {selectedClasses.length > 0 && (
-              <p className="text-xs text-gray-400">
-                {selectedClasses.length} class{selectedClasses.length > 1 ? 'es' : ''} selected
-              </p>
-            )}
-          </div>
-
-          {/* Activity Date */}
-          <div className="flex flex-col gap-1 items-start">
-            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Activity Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              {...register('activityDate', { required: 'Activity date is required' })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                         bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            {errors.activityDate && (
-              <p className="text-xs text-red-500">{errors.activityDate.message}</p>
-            )}
-          </div>
-
-          {/* Start Time & End Time */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1 items-start">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Start Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                {...register('startTime', { required: 'Start time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                           bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              {errors.startTime && (
-                <p className="text-xs text-red-500">{errors.startTime.message}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1 items-start">
-              <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                End Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                {...register('endTime', { required: 'End time is required' })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600
-                           bg-white dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              {errors.endTime && (
-                <p className="text-xs text-red-500">{errors.endTime.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-end gap-3 pt-2">
+        <fieldset>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+              Add Activity
+            </h1>
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-colors"
+              className="text-red-400 text-2xl hover:text-red-500"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700
-                         disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-            >
-              {isSubmitting ? 'Saving...' : 'Save Activity'}
+              <X strokeWidth={3} />
             </button>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit(onFormSubmit)}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
+              {/* Activity Name */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Activity Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register('name', { required: 'Activity name is required' })}
+                  placeholder="e.g. Football Tournament"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                )}
+              </div>
+
+              {/* Activity Category */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  {...register('activityCategory', { valueAsNumber: true })}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#353535] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {ACTIVITY_CATEGORY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Event */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Event <span className="text-red-500">*</span>
+                </label>
+                <Controller
+                  name="eventId"
+                  control={control}
+                  rules={{ required: 'Event is required' }}
+                  render={({ field }) => (
+                    <AppCombobox<EventOption>
+                      name="eventId"
+                      label="Select Event"
+                      required
+                      options={eventsLoading ? [] : (events as EventOption[] ?? [])}
+                      selected={selectedEvent ?? undefined}
+                      getLabel={(opt) => opt.title}
+                      getValue={(opt) => opt.id}
+                      placeholder={eventsLoading ? 'Loading events...' : 'Search event...'}
+                      onSelect={(opt) => {
+                        setSelectedEvent(opt)
+                        field.onChange(opt ? opt.id : '')
+                      }}
+                    />
+                  )}
+                />
+                {errors.eventId && (
+                  <p className="text-red-500 text-xs mt-1">{errors.eventId.message}</p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Description
+                </label>
+                <textarea
+                  {...register('descriptions')}
+                  placeholder="Brief description of the activity..."
+                  rows={3}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                />
+              </div>
+
+              {/* Activity Date */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Activity Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  {...register('activityDate', { required: 'Activity date is required' })}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {errors.activityDate && (
+                  <p className="text-red-500 text-xs mt-1">{errors.activityDate.message}</p>
+                )}
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  Start Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  {...register('startTime', { required: 'Start time is required' })}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {errors.startTime && (
+                  <p className="text-red-500 text-xs mt-1">{errors.startTime.message}</p>
+                )}
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  End Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  {...register('endTime', { required: 'End time is required' })}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {errors.endTime && (
+                  <p className="text-red-500 text-xs mt-1">{errors.endTime.message}</p>
+                )}
+              </div>
+
+              {/* Classes Multi-Select */}
+              {classes && classes.length > 0 && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                    Classes
+                  </label>
+                  <ClassMultiSelect
+                    classes={classes ?? []}
+                    selected={selectedClasses}
+                    onChange={setSelectedClasses}
+                    isLoading={classesLoading}
+                  />
+                  {selectedClasses.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {selectedClasses.length} class{selectedClasses.length > 1 ? 'es' : ''} selected
+                    </p>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-6 mt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors disabled:opacity-60"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Activity'}
+              </button>
+            </div>
+          </form>
+        </fieldset>
       </div>
     </div>
   )
