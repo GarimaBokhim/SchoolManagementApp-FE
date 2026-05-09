@@ -135,7 +135,7 @@ export const useGetAllEvents = () => {
   })
 }
 
-export const useGetAllClasses = (p0: string) => {
+export const useGetAllClasses = () => {
   return useQuery({
     queryKey: ['AllClasses'],
     queryFn: async () => {
