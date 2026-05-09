@@ -135,7 +135,7 @@ export const useGetAllEvents = () => {
   })
 }
 
-export const useGetAllClasses = () => {
+export const useGetAllClasses = (p0: string) => {
   return useQuery({
     queryKey: ['AllClasses'],
     queryFn: async () => {
@@ -156,7 +156,7 @@ export const useUpdateActivity = () => {
       const { id, ...body } = payload
       const response = await api.patch(
         `/api/CocurricularActivities/UpdateActivity/${id}`,
-        { ...body, id }                       
+        { ...body, id }
       )
       return response.data
     },

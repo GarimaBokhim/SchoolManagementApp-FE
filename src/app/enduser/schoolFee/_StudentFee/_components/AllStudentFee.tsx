@@ -8,23 +8,100 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Edit, Filter, Plus, RotateCcw, Pencil } from "lucide-react";
+import { Filter, Plus, RotateCcw, Pencil } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterStudentFeeByDate, useGetStudentFeeById } from "../hooks";
+import { useFilterStudentFeeByDate, useGetStudentFeeById, useGetClassById } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddStudentFee from "../pages/Add";
 import EditStudentFee from "../pages/Edit";
 import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { Eye } from "lucide-react";
-import { CreditCard } from "lucide-react";
-import { X } from "lucide-react";
+import { Eye, CreditCard, X } from "lucide-react";
 import ViewStudentFeeForm from "./filterstudentsfeedetail";
 import PaymentRecordForm from "./paymentrecords";
 
+// ─── Row Component ───────────────────────────────────────────────────────────
+type StudentFeeRowProps = {
+  StudentFee: IStudentFee;
+  index: number;
+  getSerialNumber: (index: number) => number;
+  getStudentName: (studentId: string) => string;
+  canEdit: boolean;
+  setPendingEditId: (id: string) => void;
+  setSelectedStudentFee: (fee: IStudentFee) => void;
+  setViewModal: (val: boolean) => void;
+  setViewpaymentModal: (val: boolean) => void;
+};
+
+const StudentFeeRow = ({
+  StudentFee,
+  index,
+  getSerialNumber,
+  getStudentName,
+  canEdit,
+  setPendingEditId,
+  setSelectedStudentFee,
+  setViewModal,
+  setViewpaymentModal,
+}: StudentFeeRowProps) => {
+  const { data: classData } = useGetClassById(StudentFee.classId);
+
+  return (
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100">
+      <td className="py-3 px-4 text-center">{getSerialNumber(index)}</td>
+      <td className="py-3 px-4">{getStudentName(StudentFee.studentId)}</td>
+      <td className="py-3 px-4">{classData?.name || "-"}</td>
+      <td className="py-3 px-4 text-right">
+        {StudentFee.totalAmount !== undefined && StudentFee.totalAmount !== null
+          ? StudentFee.totalAmount.toLocaleString()
+          : "-"}
+      </td>
+      <td className="py-3 px-4 text-right">
+        {StudentFee.dueAmount !== undefined && StudentFee.dueAmount !== null
+          ? StudentFee.dueAmount.toLocaleString()
+          : "-"}
+      </td>
+      <td className="py-3 px-4 text-center">
+        <div className="flex justify-center gap-2 flex-wrap">
+          {canEdit && (StudentFee.id ?? StudentFee.Id) && (
+            <ButtonElement
+              text=""
+              icon={<Pencil className="text-white" size={15} />}
+              onClick={() => {
+                const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+                setPendingEditId(rowId);
+              }}
+              className="!bg-blue-500 hover:!bg-blue-600"
+            />
+          )}
+          <ButtonElement
+            text=""
+            icon={<Eye className="text-white" size={15} />}
+            onClick={() => {
+              setSelectedStudentFee(StudentFee);
+              setViewModal(true);
+            }}
+            className="!bg-teal-500 hover:!bg-teal-600"
+          />
+          <ButtonElement
+            text=""
+            icon={<CreditCard className="text-white" size={15} />}
+            onClick={() => {
+              setSelectedStudentFee(StudentFee);
+              setViewpaymentModal(true);
+            }}
+            className="!bg-purple-500 hover:!bg-purple-600"
+          />
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 const AllStudentFeeForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
@@ -45,9 +122,7 @@ const AllStudentFeeForm = () => {
 
   const [addModal, setAddModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
-  const [editRecord, setEditRecord] = useState<
-    (IStudentFee & { id: string }) | null
-  >(null);
+  const [editRecord, setEditRecord] = useState<(IStudentFee & { id: string }) | null>(null);
   const [viewModal, setViewModal] = useState(false);
   const [viewpaymentModal, setViewpaymentModal] = useState(false);
   const { menuStatus } = usePermissions();
@@ -61,8 +136,8 @@ const AllStudentFeeForm = () => {
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
   const [pendingEditId, setPendingEditId] = useState<string | null>(null);
 
-  const { data: fullEditRecord, isLoading: isEditRecordLoading } =
-    useGetStudentFeeById(pendingEditId ?? undefined);
+  const { data: fullEditRecord } = useGetStudentFeeById(pendingEditId ?? undefined);
+
   useEffect(() => {
     if (fullEditRecord && pendingEditId) {
       setEditRecord({ ...fullEditRecord, id: pendingEditId });
@@ -142,7 +217,6 @@ const AllStudentFeeForm = () => {
     form.reset();
   };
 
-  // To get full student name
   const getStudentName = (studentId: string): string => {
     const student = allStudent?.Items?.find(
       (i) => i.id != null && String(i.id) === String(studentId)
@@ -153,15 +227,6 @@ const AllStudentFeeForm = () => {
       .join(" ");
   };
 
-  const formatFeeStructureCell = (
-    v: IStudentFee["feeStructureId"] | undefined
-  ): string => {
-    if (v == null) return "-";
-    if (Array.isArray(v)) return v.length ? v.join(", ") : "-";
-    return String(v).trim() || "-";
-  };
-
-  // Calculate the serial number offset based on current page
   const getSerialNumber = (index: number): number => {
     return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
   };
@@ -172,7 +237,7 @@ const AllStudentFeeForm = () => {
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-            <h1 className="text-xl font-semibold">All StudentFees</h1>
+            <h1 className="text-xl font-semibold">All Student Fees</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -226,8 +291,8 @@ const AllStudentFeeForm = () => {
                       g
                         ? [g.firstName, g.middleName, g.lastName]
                           .filter(Boolean)
-                          .join(' ')
-                        : '-'
+                          .join(" ")
+                        : "-"
                     }
                     getValue={(g) => g?.id ?? ""}
                   />
@@ -258,81 +323,40 @@ const AllStudentFeeForm = () => {
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-center">S.N</th>
                   <th className="px-4 py-3 text-center">Student</th>
-                  <th className="px-4 py-3 text-center">Fee Structure</th>
+                  <th className="px-4 py-3 text-center">Class</th>
+                  <th className="px-4 py-3 text-center">Total Amount</th>
+                  <th className="px-4 py-3 text-center">Due Amount</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 dark:text-gray-300"
-                    >
-                      Loading StudentFees...
+                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                      Loading Student Fees...
                     </td>
                   </tr>
                 ) : filteredStudentFee?.Items?.length ? (
                   filteredStudentFee.Items.map(
                     (StudentFee: IStudentFee, index: number) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                      >
-                        {/*  Fixed: SN now accounts for pagination offset */}
-                        <td className="py-3 px-4">{getSerialNumber(index)}</td>
-
-                        {/* Full student name */}
-                        <td className="py-3 px-4">
-                          {getStudentName(StudentFee.studentId)}
-                        </td>
-
-                        <td className="py-3 px-4">
-                          {formatFeeStructureCell(StudentFee.feeStructureId)}
-                        </td>
-
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex justify-center gap-2 flex-wrap">
-                            {canEdit && (StudentFee.id ?? StudentFee.Id) && (
-                              <ButtonElement
-                                text=""
-                                icon={<Pencil className="text-white" size={15} />}
-                                onClick={() => {
-                                  const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-                                  setPendingEditId(rowId);
-                                }}
-                                className="!bg-blue-500 hover:!bg-blue-600"
-                              />
-                            )}
-                            <ButtonElement
-                              text=""
-                              icon={<Eye className="text-white" size={15} />}
-                              onClick={() => {
-                                setSelectedStudentFee(StudentFee);
-                                setViewModal(true);
-                              }}
-                              className="!bg-teal-500 hover:!bg-teal-600"
-                            />
-                            <ButtonElement
-                              text=""
-                              icon={<CreditCard className="text-white" size={15} />}
-                              onClick={() => {
-                                setSelectedStudentFee(StudentFee);
-                                setViewpaymentModal(true);
-                              }}
-                            />
-                          </div>
-                        </td>
-                      </tr>
+                      <StudentFeeRow
+                        key={String(StudentFee.id ?? StudentFee.Id ?? index)}
+                        StudentFee={StudentFee}
+                        index={index}
+                        getSerialNumber={getSerialNumber}
+                        getStudentName={getStudentName}
+                        canEdit={canEdit}
+                        setPendingEditId={setPendingEditId}
+                        setSelectedStudentFee={setSelectedStudentFee}
+                        setViewModal={setViewModal}
+                        setViewpaymentModal={setViewpaymentModal}
+                      />
                     )
                   )
                 ) : (
                   <tr>
-                    <td
-                      colSpan={9}
-                      className="p-4 text-center text-gray-500 italic"
-                    >
-                      No StudentFees found.
+                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                      No Student Fees found.
                     </td>
                   </tr>
                 )}
