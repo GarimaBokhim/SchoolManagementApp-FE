@@ -1,13 +1,3 @@
-type FeeStructureDTO = {
-  feeTypeId?: string
-  feeTypeName?: string
-  amount?: number
-  discountAmount?: number
-  times?: number
-  totalAmount?: number
-  feePaidType?: number
-}
-
 type ReceiptProps = {
   label?: string
   showSeparator?: boolean
@@ -24,7 +14,6 @@ type ReceiptProps = {
   dueAmount?: number | string
   totalAmount?: number | string
   receiptNumber?: string
-  feeStructureDTOs?: FeeStructureDTO[]
 }
 
 const Receipt = ({
@@ -43,8 +32,8 @@ const Receipt = ({
   dueAmount = '',
   totalAmount = '',
   receiptNumber = '',
-  feeStructureDTOs = [],
 }: ReceiptProps) => {
+
   return (
     <div
       style={{
@@ -89,6 +78,7 @@ const Receipt = ({
             position: 'relative',
           }}
         >
+          {/* Logo top-left */}
           {schoolLogoUrl && (
             <img
               src={schoolLogoUrl}
@@ -103,6 +93,7 @@ const Receipt = ({
               }}
             />
           )}
+
           <h3 style={{ margin: 0 }}>{schoolName}</h3>
           {schoolAddress && (
             <div style={{ fontSize: '11px', color: '#444', marginBottom: '1px' }}>
@@ -130,8 +121,12 @@ const Receipt = ({
             marginBottom: '4px',
           }}
         >
-          <span>Date: <b>{paymentDate}</b></span>
-          <span>Method: <b>{paymentMethod}</b></span>
+          <span>
+            Date: <b>{paymentDate}</b>
+          </span>
+          <span>
+            Method: <b>{paymentMethod}</b>
+          </span>
         </div>
 
         {/* Student and Class */}
@@ -142,8 +137,12 @@ const Receipt = ({
             marginBottom: '6px',
           }}
         >
-          <span>Student: <b>{studentName || '-'}</b></span>
-          <span>Class: <b>{className}</b></span>
+          <span>
+            Student: <b>{studentName || '-'}</b>
+          </span>
+          <span>
+            Class: <b>{className}</b>
+          </span>
         </div>
 
         {/* Reference */}
@@ -151,65 +150,29 @@ const Receipt = ({
           Reference: <b>{reference || '-'}</b>
         </div>
 
-        {/* ── Fee Breakdown Table ─────────────────────────────── */}
-        {feeStructureDTOs && feeStructureDTOs.length > 0 && (
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '11px' }}>
-              Fee Breakdown
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f0f0f0' }}>
-                  <th style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'left' }}>Fee Type</th>
-                  <th style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>Amount</th>
-                  <th style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'center' }}>Times</th>
-                  <th style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>Discount</th>
-                  <th style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {feeStructureDTOs.map((fee, idx) => (
-                  <tr key={fee.feeTypeId ?? idx}>
-                    <td style={{ border: '1px solid #000', padding: '3px 5px' }}>
-                      {fee.feeTypeName || '-'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>
-                      {fee.amount !== undefined ? fee.amount.toLocaleString() : '-'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'center' }}>
-                      {fee.times !== undefined ? fee.times : '-'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>
-                      {fee.discountAmount !== undefined ? fee.discountAmount.toLocaleString() : '-'}
-                    </td>
-                    <td style={{ border: '1px solid #000', padding: '3px 5px', textAlign: 'right' }}>
-                      <b>{fee.totalAmount !== undefined ? fee.totalAmount.toLocaleString() : '-'}</b>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {/* ── End Fee Breakdown Table ─────────────────────────── */}
-
-        {/* Amount Summary Table */}
+        {/* Amount Table */}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Total Amount</td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Total Amount
+              </td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
                 <b>{totalAmount !== '' && totalAmount !== undefined ? totalAmount : 'N/A'}</b>
               </td>
             </tr>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Amount Paid</td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Amount Paid
+              </td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
                 <b>{amountPaid}</b>
               </td>
             </tr>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Due Amount</td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Due Amount
+              </td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
                 <b>{dueAmount !== '' && dueAmount !== undefined ? dueAmount : 'N/A'}</b>
               </td>

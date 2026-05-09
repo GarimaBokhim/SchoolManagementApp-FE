@@ -1,21 +1,19 @@
 export interface IStudentFee {
+  /** Present when row comes from API (needed for PATCH). */
   id?: string;
   Id?: string;
   studentId: string;
   feeStructureId: string | string[];
   classId: string;
+  discountPercentage: number;
+  studentFeeDetailsDTOs: IStudentFeeDetails[];
   totalAmount?: number;
-  paidAmount?: number;
   dueAmount?: number;
-  receiptNumber?: string;
-  schoolId?: string;
-  feeStructureDTOs?: IStudentFeeDetails[];
 }
 
 export interface IStudentFeeDetails {
   id?: string;
   feeTypeId: string;
-  feeTypeName?: string;
   discountAmount: number;
   amount: number;
   times: number;
@@ -38,7 +36,7 @@ export interface IPaymentRecord {
   paymentDate: string;
   paymentMethod: number;
   reference: string;
-  receiptNumber: string;
+  receiptNumber: string;  //  mapped for future backend support
   dueAmount?: number;
 }
 
@@ -52,7 +50,6 @@ export interface Istudentfeesummary {
   reference: string;
   receiptNumber: string;
   paymentMethod: number;
-  feeStructureDTOs?: IStudentFeeDetails[]; // ← added
 }
 
 export interface filtersummary {

@@ -25,14 +25,13 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
+  // ✅ Fetch fee summary for totalAmount and dueAmount
   const { data: feeSummary } = useGetStudentFeesummary(
     `?studentId=${data.studentid}&classId=${data.classid}`
   )
 
   const dueAmount = feeSummary?.Items?.[0]?.dueAmount
   const totalAmount = feeSummary?.Items?.[0]?.totalAmount
-  // ── pull feeStructureDTOs from the summary ──
-  const feeStructureDTOs = feeSummary?.Items?.[0]?.feeStructureDTOs ?? []
 
   const schoolId = useMemo(() => {
     try {
@@ -91,7 +90,6 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     totalAmount: totalAmount,
     dueAmount: dueAmount,
     receiptNumber: data.receiptNumber,
-    feeStructureDTOs,   // ← passed to both copies
   }
 
   if (!isReady) return null
