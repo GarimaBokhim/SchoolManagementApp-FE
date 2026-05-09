@@ -199,3 +199,17 @@ export const useGetClassById = (classId?: string) => {
   });
 };
 
+export const useGetFeeStructureByClass = (classId?: string) => {
+  return useQuery({
+    queryKey: ["FeeStructureByClass", classId],
+    queryFn: async () => {
+      const response = await api.get<{ Items: IFeeStructureByClass[] }>(
+        `${StudentFeeEndPoints.feeStructureByClass}?classId=${classId}`
+      );
+      return response.data;
+    },
+    enabled: !!classId?.trim(),
+    staleTime: 0,
+    retry: false,
+  });
+};

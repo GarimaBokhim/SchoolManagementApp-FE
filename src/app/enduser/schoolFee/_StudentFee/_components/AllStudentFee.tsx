@@ -66,17 +66,16 @@ const StudentFeeRow = ({
       </td>
       <td className="py-3 px-4 text-center">
         <div className="flex justify-center gap-2 flex-wrap">
-          {canEdit && (StudentFee.id ?? StudentFee.Id) && (
-            <ButtonElement
-              text=""
-              icon={<Pencil className="text-white" size={15} />}
-              onClick={() => {
-                const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-                setPendingEditId(rowId);
-              }}
-              className="!bg-blue-500 hover:!bg-blue-600"
-            />
-          )}
+          {/* Edit button - now rendered unconditionally */}
+          <ButtonElement
+            text=""
+            icon={<Pencil className="text-white" size={15} />}
+            onClick={() => {
+              const rowId = StudentFee.id ?? StudentFee.Id ?? "";
+              setPendingEditId(rowId);
+            }}
+            className="!bg-blue-500 hover:!bg-blue-600"
+          />
           <ButtonElement
             text=""
             icon={<Eye className="text-white" size={15} />}
