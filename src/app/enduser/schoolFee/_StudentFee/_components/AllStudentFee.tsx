@@ -22,6 +22,7 @@ import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hoo
 import { Eye, CreditCard, X } from "lucide-react";
 import ViewStudentFeeForm from "./filterstudentsfeedetail";
 import PaymentRecordForm from "./paymentrecords";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
 
 // ─── Row Component ───────────────────────────────────────────────────────────
 type StudentFeeRowProps = {
@@ -66,7 +67,6 @@ const StudentFeeRow = ({
       </td>
       <td className="py-3 px-4 text-center">
         <div className="flex justify-center gap-2 flex-wrap">
-          {/* Edit button - now rendered unconditionally */}
           <ButtonElement
             text=""
             icon={<Pencil className="text-white" size={15} />}
@@ -130,7 +130,9 @@ const AllStudentFeeForm = () => {
   const [params, setParams] = useState("");
 
   const { data: allStudent } = useGetAllStudents("?IsPagination=false");
+  const { data: allClasses } = useGetAllClass("?IsPagination=false");
 
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
   const [pendingEditId, setPendingEditId] = useState<string | null>(null);
@@ -152,6 +154,13 @@ const AllStudentFeeForm = () => {
     isLoading,
   } = useFilterStudentFeeByDate(fullQuery);
 
+  // ── CLIENT-SIDE class filter applied on top of API response ──
+  const clientFilteredItems = selectedClassId
+    ? filteredStudentFee?.Items?.filter(
+      (fee) => fee.classId === selectedClassId
+    )
+    : filteredStudentFee?.Items;
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -161,6 +170,7 @@ const AllStudentFeeForm = () => {
       studentId: "",
       startDate: "",
       endDate: "",
+      classId: "",
     },
   });
 
@@ -211,6 +221,7 @@ const AllStudentFeeForm = () => {
   const onClearClick = () => {
     refetch();
     setParams("");
+    setSelectedClassId(null);
     formRef.current?.handleClear();
     setSelectedStudentId("");
     form.reset();
@@ -230,13 +241,56 @@ const AllStudentFeeForm = () => {
     return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
   };
 
+  const handleClassFilter = (classId: string | null) => {
+    setSelectedClassId(classId);
+    setPaginationParams((prev) => ({ ...prev, pageIndex: 1 }));
+  };
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-            <h1 className="text-xl font-semibold">All Student Fees</h1>
+
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-start gap-3 flex-wrap">
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <h1 className="text-xl font-semibold">All Student Fees</h1>
+
+              {/* ── Class filter pill buttons ── */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <button
+                  type="button"
+                  onClick={() => handleClassFilter(null)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors
+                    ${selectedClassId === null
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white dark:bg-[#444] text-gray-600 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                    }`}
+                >
+                  All
+                </button>
+
+                {allClasses?.Items?.map((cls) => {
+                  const id = cls.id ?? (cls as any).Id ?? "";
+                  const isActive = selectedClassId === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => handleClassFilter(id)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors
+                        ${isActive
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white dark:bg-[#444] text-gray-600 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                        }`}
+                    >
+                      {cls.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -335,8 +389,8 @@ const AllStudentFeeForm = () => {
                       Loading Student Fees...
                     </td>
                   </tr>
-                ) : filteredStudentFee?.Items?.length ? (
-                  filteredStudentFee.Items.map(
+                ) : clientFilteredItems?.length ? (
+                  clientFilteredItems.map(
                     (StudentFee: IStudentFee, index: number) => (
                       <StudentFeeRow
                         key={String(StudentFee.id ?? StudentFee.Id ?? index)}
@@ -364,7 +418,8 @@ const AllStudentFeeForm = () => {
           </div>
         </div>
 
-        {filteredStudentFee && filteredStudentFee?.Items?.length > 0 && (
+        {/* ── pagination uses clientFilteredItems so count is accurate ── */}
+        {clientFilteredItems && clientFilteredItems.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={form}
