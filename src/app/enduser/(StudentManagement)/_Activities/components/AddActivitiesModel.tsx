@@ -67,11 +67,13 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
   const onFormSubmit = async (data: AddActivityPayload) => {
     setIsSubmitting(true)
+
     try {
       await addActivity({
         ...data,
         classIds: selectedClasses.map((c) => c.id),
       })
+
       reset()
       setSelectedEvent(null)
       setSelectedClasses([])
@@ -83,24 +85,28 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
   if (!visible) return null
 
+  const labelClass =
+    'block text-left text-sm font-medium mb-1 text-gray-700 dark:text-gray-300'
+
+  const inputClass =
+    'w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500'
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
-                 bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
       onClick={handleClose}
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] 
-                   w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
-                   max-h-[95vh] md:max-h-[92vh] h-full 
-                   rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
+        className="bg-[#FBFBFB] dark:bg-[#27272a] w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw] max-h-[95vh] md:max-h-[92vh] h-full rounded-lg overflow-auto p-6 md:p-8 shadow-lg text-left"
         onClick={(e) => e.stopPropagation()}
       >
         <fieldset>
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add Activity
             </h1>
+
             <button
               type="button"
               onClick={handleClose}
@@ -110,32 +116,42 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
             </button>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit(onFormSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
               {/* Activity Name */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   Activity Name <span className="text-red-500">*</span>
                 </label>
+
                 <input
-                  {...register('name', { required: 'Activity name is required' })}
+                  {...register('name', {
+                    required: 'Activity name is required',
+                  })}
                   placeholder="e.g. Football Tournament"
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className={inputClass}
                 />
+
                 {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
               {/* Activity Category */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   Category <span className="text-red-500">*</span>
                 </label>
+
                 <select
-                  {...register('activityCategory', { valueAsNumber: true })}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#353535] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  {...register('activityCategory', {
+                    valueAsNumber: true,
+                  })}
+                  className={`${inputClass} bg-white dark:bg-[#353535]`}
                 >
                   {ACTIVITY_CATEGORY_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -147,9 +163,10 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
 
               {/* Event */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   Event <span className="text-red-500">*</span>
                 </label>
+
                 <Controller
                   name="eventId"
                   control={control}
@@ -159,11 +176,19 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
                       name="eventId"
                       label="Select Event"
                       required
-                      options={eventsLoading ? [] : (events as EventOption[] ?? [])}
+                      options={
+                        eventsLoading
+                          ? []
+                          : ((events as EventOption[]) ?? [])
+                      }
                       selected={selectedEvent ?? undefined}
                       getLabel={(opt) => opt.title}
                       getValue={(opt) => opt.id}
-                      placeholder={eventsLoading ? 'Loading events...' : 'Search event...'}
+                      placeholder={
+                        eventsLoading
+                          ? 'Loading events...'
+                          : 'Search event...'
+                      }
                       onSelect={(opt) => {
                         setSelectedEvent(opt)
                         field.onChange(opt ? opt.id : '')
@@ -171,89 +196,109 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
                     />
                   )}
                 />
+
                 {errors.eventId && (
-                  <p className="text-red-500 text-xs mt-1">{errors.eventId.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.eventId.message}
+                  </p>
                 )}
               </div>
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                  Description
-                </label>
+                <label className={labelClass}>Description</label>
+
                 <textarea
                   {...register('descriptions')}
                   placeholder="Brief description of the activity..."
                   rows={3}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
               {/* Activity Date */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   Activity Date <span className="text-red-500">*</span>
                 </label>
+
                 <input
                   type="date"
-                  {...register('activityDate', { required: 'Activity date is required' })}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  {...register('activityDate', {
+                    required: 'Activity date is required',
+                  })}
+                  className={inputClass}
                 />
+
                 {errors.activityDate && (
-                  <p className="text-red-500 text-xs mt-1">{errors.activityDate.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.activityDate.message}
+                  </p>
                 )}
               </div>
 
               {/* Start Time */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   Start Time <span className="text-red-500">*</span>
                 </label>
+
                 <input
                   type="time"
-                  {...register('startTime', { required: 'Start time is required' })}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  {...register('startTime', {
+                    required: 'Start time is required',
+                  })}
+                  className={inputClass}
                 />
+
                 {errors.startTime && (
-                  <p className="text-red-500 text-xs mt-1">{errors.startTime.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.startTime.message}
+                  </p>
                 )}
               </div>
 
               {/* End Time */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className={labelClass}>
                   End Time <span className="text-red-500">*</span>
                 </label>
+
                 <input
                   type="time"
-                  {...register('endTime', { required: 'End time is required' })}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  {...register('endTime', {
+                    required: 'End time is required',
+                  })}
+                  className={inputClass}
                 />
+
                 {errors.endTime && (
-                  <p className="text-red-500 text-xs mt-1">{errors.endTime.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.endTime.message}
+                  </p>
                 )}
               </div>
 
               {/* Classes Multi-Select */}
               {classes && classes.length > 0 && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                    Classes
-                  </label>
+                  <label className={labelClass}>Classes</label>
+
                   <ClassMultiSelect
                     classes={classes ?? []}
                     selected={selectedClasses}
                     onChange={setSelectedClasses}
                     isLoading={classesLoading}
                   />
+
                   {selectedClasses.length > 0 && (
                     <p className="text-xs text-gray-400 mt-1">
-                      {selectedClasses.length} class{selectedClasses.length > 1 ? 'es' : ''} selected
+                      {selectedClasses.length} class
+                      {selectedClasses.length > 1 ? 'es' : ''} selected
                     </p>
                   )}
                 </div>
               )}
-
             </div>
 
             {/* Actions */}
@@ -265,6 +310,7 @@ const AddActivityModal = ({ visible, onClose, onSuccess }: Props) => {
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
                 disabled={isSubmitting}

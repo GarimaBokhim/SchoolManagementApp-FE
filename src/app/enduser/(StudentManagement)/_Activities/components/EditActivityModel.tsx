@@ -101,7 +101,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Activity Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -115,7 +115,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -132,7 +132,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Event */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Event <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -153,7 +153,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Description
                 </label>
                 <textarea
@@ -165,7 +165,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Activity Date */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Activity Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -180,7 +180,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* Start Time */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   Start Time <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -195,7 +195,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
               {/* End Time */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                   End Time <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -211,7 +211,7 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
               {/* Classes (multi-select) */}
               {classes.length > 0 && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
                     Classes
                   </label>
                   <select

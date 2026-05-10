@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { IFilterStudentFee, IStudentFee } from "../types/IStudentFee";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Pagination from "@/components/Pagination";
@@ -8,11 +8,15 @@ import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import toast, { Toaster } from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Pencil } from "lucide-react";
+import { Filter, Plus, RotateCcw, Pencil, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useFilterStudentFeeByDate, useGetStudentFeeById, useGetClassById } from "../hooks";
+import {
+  useFilterStudentFeeByDate,
+  useGetStudentFeeById,
+  useGetClassById,
+} from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
@@ -22,6 +26,9 @@ import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hoo
 import { Eye, CreditCard, X } from "lucide-react";
 import ViewStudentFeeForm from "./filterstudentsfeedetail";
 import PaymentRecordForm from "./paymentrecords";
+import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
+import DueSlipModal from "./DueSLipModel";
+
 
 // ─── Row Component ───────────────────────────────────────────────────────────
 type StudentFeeRowProps = {
@@ -66,7 +73,6 @@ const StudentFeeRow = ({
       </td>
       <td className="py-3 px-4 text-center">
         <div className="flex justify-center gap-2 flex-wrap">
-          {/* Edit button - now rendered unconditionally */}
           <ButtonElement
             text=""
             icon={<Pencil className="text-white" size={15} />}
@@ -124,16 +130,25 @@ const AllStudentFeeForm = () => {
   const [editRecord, setEditRecord] = useState<(IStudentFee & { id: string }) | null>(null);
   const [viewModal, setViewModal] = useState(false);
   const [viewpaymentModal, setViewpaymentModal] = useState(false);
+  const [dueSlipModal, setDueSlipModal] = useState(false);
+
   const { menuStatus } = usePermissions();
   const { canAdd, canEdit } = useMenuPermissionData(menuStatus);
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
 
   const { data: allStudent } = useGetAllStudents("?IsPagination=false");
+  const { data: allClasses } = useGetAllClass("?IsPagination=false");
 
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedClassName, setSelectedClassName] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
   const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
   const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+
+  // State for class chips pagination
+  const [classStartIndex, setClassStartIndex] = useState<number>(0);
+  const CLASSES_PER_PAGE = 6;
 
   const { data: fullEditRecord } = useGetStudentFeeById(pendingEditId ?? undefined);
 
@@ -152,6 +167,11 @@ const AllStudentFeeForm = () => {
     isLoading,
   } = useFilterStudentFeeByDate(fullQuery);
 
+  // ── Client-side class filter ──
+  const clientFilteredItems = selectedClassId
+    ? filteredStudentFee?.Items?.filter((fee) => fee.classId === selectedClassId)
+    : filteredStudentFee?.Items;
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
@@ -161,6 +181,7 @@ const AllStudentFeeForm = () => {
       studentId: "",
       startDate: "",
       endDate: "",
+      classId: "",
     },
   });
 
@@ -211,6 +232,8 @@ const AllStudentFeeForm = () => {
   const onClearClick = () => {
     refetch();
     setParams("");
+    setSelectedClassId(null);
+    setSelectedClassName("");
     formRef.current?.handleClear();
     setSelectedStudentId("");
     form.reset();
@@ -230,14 +253,114 @@ const AllStudentFeeForm = () => {
     return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
   };
 
+  const handleClassFilter = (classId: string | null, className: string = "") => {
+    setSelectedClassId(classId);
+    setSelectedClassName(className);
+    setPaginationParams((prev) => ({ ...prev, pageIndex: 1 }));
+    // Reset class start index when selecting a class? No, keep it as is
+  };
+
+  // Get visible classes (6 at a time)
+  const visibleClasses = useMemo(() => {
+    const classes = allClasses?.Items ?? [];
+    return classes.slice(classStartIndex, classStartIndex + CLASSES_PER_PAGE);
+  }, [allClasses?.Items, classStartIndex]);
+
+  const canGoPrev = classStartIndex > 0;
+  const canGoNext = classStartIndex + CLASSES_PER_PAGE < (allClasses?.Items?.length ?? 0);
+
+  const handlePrevClasses = () => {
+    setClassStartIndex((prev) => Math.max(0, prev - CLASSES_PER_PAGE));
+  };
+
+  const handleNextClasses = () => {
+    setClassStartIndex((prev) =>
+      Math.min((allClasses?.Items?.length ?? 0) - CLASSES_PER_PAGE, prev + CLASSES_PER_PAGE)
+    );
+  };
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-            <h1 className="text-xl font-semibold">All Student Fees</h1>
-            <div className="flex flex-wrap gap-2 justify-end">
+
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-start gap-3 flex-wrap">
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              {/* Class Filter Chips with Navigation */}
+              <div className="flex items-center gap-2">
+                {/* Left Navigation Button */}
+                <button
+                  onClick={handlePrevClasses}
+                  disabled={!canGoPrev}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-gray-600 dark:hover:bg-gray-700"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+
+                {/* Class Chips - Shows 6 at a time */}
+                <div className="flex gap-2 flex-1 overflow-x-auto scrollbar-hide">
+                  {visibleClasses.map((cls) => {
+                    const id = cls.id ?? (cls as any).Id ?? "";
+                    const isActive = selectedClassId === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => handleClassFilter(id, cls.name)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
+                          ${isActive
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                            : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                          }`}
+                      >
+                        {cls.name}
+                      </button>
+                    );
+                  })}
+
+                  {/* Show "All" button as the first chip */}
+                  <button
+                    type="button"
+                    onClick={() => handleClassFilter(null, "")}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
+                      ${selectedClassId === null
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                        : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                      }`}
+                  >
+                    All Classes
+                  </button>
+                </div>
+
+                {/* Right Navigation Button */}
+                <button
+                  onClick={handleNextClasses}
+                  disabled={!canGoNext}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-gray-600 dark:hover:bg-gray-700"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 justify-end items-start">
+              {/* Due Slip Button — disabled when no class selected */}
+              <button
+                type="button"
+                disabled={!selectedClassId}
+                onClick={() => setDueSlipModal(true)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors
+                  ${selectedClassId
+                    ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500 cursor-pointer"
+                    : "bg-gray-100 dark:bg-[#444] text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed"
+                  }`}
+                title={!selectedClassId ? "Select a class to view due slip" : `View due slip for ${selectedClassName}`}
+              >
+                <FileText size={14} />
+                Due Slip
+              </button>
+
               <ButtonElement
                 type="button"
                 text="Filter"
@@ -335,8 +458,8 @@ const AllStudentFeeForm = () => {
                       Loading Student Fees...
                     </td>
                   </tr>
-                ) : filteredStudentFee?.Items?.length ? (
-                  filteredStudentFee.Items.map(
+                ) : clientFilteredItems?.length ? (
+                  clientFilteredItems.map(
                     (StudentFee: IStudentFee, index: number) => (
                       <StudentFeeRow
                         key={String(StudentFee.id ?? StudentFee.Id ?? index)}
@@ -364,7 +487,7 @@ const AllStudentFeeForm = () => {
           </div>
         </div>
 
-        {filteredStudentFee && filteredStudentFee?.Items?.length > 0 && (
+        {clientFilteredItems && clientFilteredItems.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={form}
@@ -428,6 +551,15 @@ const AllStudentFeeForm = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* Due Slip Modal */}
+      {dueSlipModal && selectedClassId && (
+        <DueSlipModal
+          classId={selectedClassId}
+          className={selectedClassName}
+          onClose={() => setDueSlipModal(false)}
+        />
       )}
     </>
   );
