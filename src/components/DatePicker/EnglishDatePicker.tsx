@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-// Example placeholder functions for date parsing
 function parseTypedDate(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   if (!y || !m || !d) return null;
@@ -23,16 +22,15 @@ function parseTypedDate(dateStr: string) {
   };
 }
 
-function getFullEnglishDate(dateStr: string) {
-  return dateStr;
-}
-
 interface Props {
   label: string;
   maxDate?: string;
   minDate?: string;
   isExpiryDate?: boolean;
   defaultDate?: string;
+  /** Controlled value — when provided the picker reflects this date.
+   *  Pass this so that async-loaded form values (e.g. edit forms) show correctly. */
+  value?: string;
   name: string;
   onChange: (val: string) => void;
   error?: boolean;
@@ -45,14 +43,40 @@ export default function EnglishDatePicker({
   maxDate = "",
   minDate = "",
   defaultDate,
+  value,
   isExpiryDate,
   error,
 }: Props) {
-  const [selectedDate, setSelectedDate] = useState(defaultDate);
+  // Prefer the controlled `value` prop; fall back to `defaultDate`
+  const [selectedDate, setSelectedDate] = useState(value ?? defaultDate ?? "");
   const [showCalendar, setShowCalendar] = useState(false);
-  const [currentYear, setCurrentYear] = useState(2025);
-  const [currentMonth, setCurrentMonth] = useState(6);
-  const [currentDay, setCurrentDay] = useState(1);
+
+  // Derive calendar month/year/day from selectedDate
+  const parsedInitial = parseTypedDate(selectedDate);
+  const [currentYear, setCurrentYear] = useState(
+    parsedInitial?.year ?? new Date().getFullYear()
+  );
+  const [currentMonth, setCurrentMonth] = useState(
+    parsedInitial ? Number(parsedInitial.month) : new Date().getMonth() + 1
+  );
+  const [currentDay, setCurrentDay] = useState(
+    parsedInitial ? Number(parsedInitial.day) : new Date().getDate()
+  );
+
+  // ── Sync when the controlled `value` changes (e.g. async data arrives) ──
+  useEffect(() => {
+    if (value && value !== selectedDate) {
+      setSelectedDate(value);
+      const parsed = parseTypedDate(value);
+      if (parsed) {
+        setCurrentYear(Number(parsed.year));
+        setCurrentMonth(Number(parsed.month));
+        setCurrentDay(Number(parsed.day));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let raw = e.target.value.replace(/[^\d]/g, "");
     if (raw.length > 8) raw = raw.slice(0, 8);
@@ -63,7 +87,6 @@ export default function EnglishDatePicker({
 
     if (month.length === 1 && parseInt(month) > 1) month = "0" + month;
     if (month && (parseInt(month) < 1 || parseInt(month) > 12)) month = "12";
-
     if (day.length === 1 && parseInt(day) > 3) day = "0" + day;
     if (day && (parseInt(day) < 1 || parseInt(day) > 32)) day = "32";
 
@@ -76,15 +99,11 @@ export default function EnglishDatePicker({
     if (formatted.length === 10) {
       const parsed = parseTypedDate(formatted);
       if (!parsed) return;
-
-      const { year, month, day } = parsed;
-
-      setCurrentYear(Number(year));
-      setCurrentMonth(Number(month));
-      setCurrentDay(Number(day));
+      setCurrentYear(Number(parsed.year));
+      setCurrentMonth(Number(parsed.month));
+      setCurrentDay(Number(parsed.day));
       setShowCalendar(false);
-
-      onChange(getFullEnglishDate(`${year}-${month}-${day}`));
+      onChange(`${parsed.year}-${parsed.month}-${parsed.day}`);
     }
   };
 
@@ -92,7 +111,7 @@ export default function EnglishDatePicker({
     <div className="flex flex-col gap-3 relative">
       <Label
         htmlFor={name}
-        className={`absolute left-1 flex pt-1 bg-[#FBFBFB] items-center scale-90 peer-placeholder-shown:scale-100 -top-[0.8rem] px-2 origin-left text-gray-500 transition-all pointer-events-none`}
+        className="absolute left-1 flex pt-1 bg-[#FBFBFB] items-center scale-90 -top-[0.8rem] px-2 origin-left text-gray-500 transition-all pointer-events-none"
       >
         {label}
       </Label>
@@ -100,7 +119,7 @@ export default function EnglishDatePicker({
         <Input
           id={name}
           value={selectedDate}
-          placeholder="Enter a date"
+          placeholder="YYYY-MM-DD"
           onChange={handleInputChange}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
@@ -108,9 +127,8 @@ export default function EnglishDatePicker({
               setShowCalendar(true);
             }
           }}
-          className={`w-full p-2 py-[1rem] border rounded-md outline-none peer bg-[#FBFBFB] ${
-            error ? "border-red-500" : "border-gray-400"
-          } dark:text-white dark:bg-[#27272a] focus:border-[#14b8a6]`}
+          className={`w-full p-2 py-[1rem] border rounded-md outline-none peer bg-[#FBFBFB] ${error ? "border-red-500" : "border-gray-400"
+            } dark:text-white dark:bg-[#27272a] focus:border-[#14b8a6]`}
         />
         <Popover open={showCalendar} onOpenChange={setShowCalendar}>
           <PopoverTrigger asChild>
@@ -135,12 +153,12 @@ export default function EnglishDatePicker({
               disabled={
                 !isExpiryDate
                   ? (date) => {
-                      const min = minDate
-                        ? new Date(minDate)
-                        : new Date("1900-01-01");
-                      const max = maxDate ? new Date(maxDate) : new Date();
-                      return date < min || date > max;
-                    }
+                    const min = minDate
+                      ? new Date(minDate)
+                      : new Date("1900-01-01");
+                    const max = maxDate ? new Date(maxDate) : new Date();
+                    return date < min || date > max;
+                  }
                   : undefined
               }
               onSelect={(date) => {
@@ -154,7 +172,7 @@ export default function EnglishDatePicker({
                   setCurrentMonth(Number(m));
                   setCurrentDay(Number(d));
                   setShowCalendar(false);
-                  onChange(getFullEnglishDate(val));
+                  onChange(val);
                 }
               }}
             />
