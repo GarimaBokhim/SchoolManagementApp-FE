@@ -9,7 +9,7 @@ import { DateProvider } from "@/context/auth/PrimaryDateContext";
 import { ToasterProvider } from "@/components/Toast/ToasterProvider";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
 });
 

@@ -10,6 +10,7 @@ import { IStudent } from '../types/IStudents'
 import { useAddStudent } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { useDate } from "@/context/auth/PrimaryDateContext";
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
@@ -51,7 +52,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const handleClose = () => {
     form.reset()
   }
-
+  const { isPrimaryBS } = useDate();
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError()
 
@@ -426,6 +427,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
           </form>
         </fieldset>
       </div>
+      ]
     </div>
   )
 }
