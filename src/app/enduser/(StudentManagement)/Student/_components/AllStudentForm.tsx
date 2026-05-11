@@ -224,9 +224,8 @@ const AllStudentForm = () => {
   })
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
-  const { data: allclass } = useGetClassById(
-    allStudent?.Items[0]?.classId || ''
-  )
+  // ✅ Fetches ALL classes from /api/Academics/all-SchoolClass
+  const { data: allClasses } = useGetAllClass()
   const { mutateAsync: uploadstudent } = useUploadStudents()
 
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
@@ -310,9 +309,9 @@ const AllStudentForm = () => {
 
   const getClassName = (classId: string) => {
     if (!classId) return 'N/A'
-    return allclass?.name || 'N/A'
+    const found = allClasses?.Items?.find((c) => c.id === classId)
+    return found?.name || 'N/A'
   }
-
   // Listen for custom event from StudentAvatar
   useEffect(() => {
     const handleStudentClick = (event: Event) => {
