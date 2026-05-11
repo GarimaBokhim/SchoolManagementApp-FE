@@ -96,8 +96,8 @@ function DatePreviewCard({ isPrimaryBS }: { isPrimaryBS: boolean }) {
             <div className="flex gap-6">
                 <div
                     className={`flex-1 rounded-lg px-4 py-3 transition-all duration-200 ${isPrimaryBS
-                            ? "bg-white dark:bg-[#1f1f1f] shadow ring-2 ring-teal-500"
-                            : "bg-transparent opacity-50"
+                        ? "bg-white dark:bg-[#1f1f1f] shadow ring-2 ring-teal-500"
+                        : "bg-transparent opacity-50"
                         }`}
                 >
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
@@ -115,8 +115,8 @@ function DatePreviewCard({ isPrimaryBS }: { isPrimaryBS: boolean }) {
 
                 <div
                     className={`flex-1 rounded-lg px-4 py-3 transition-all duration-200 ${!isPrimaryBS
-                            ? "bg-white dark:bg-[#1f1f1f] shadow ring-2 ring-teal-500"
-                            : "bg-transparent opacity-50"
+                        ? "bg-white dark:bg-[#1f1f1f] shadow ring-2 ring-teal-500"
+                        : "bg-transparent opacity-50"
                         }`}
                 >
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
@@ -161,16 +161,6 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#18181b] font-poppins">
-            {/* ── page header ── */}
-            <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1f1f1f] px-6 py-5 shadow-sm">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50">
-                    Settings
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                    Manage your application preferences
-                </p>
-            </div>
-
             {/* ── content ── */}
             <div className="mx-auto max-w-2xl px-4 py-8 space-y-8">
 
@@ -193,8 +183,8 @@ export default function SettingsPage() {
                                 <div className="flex items-center gap-3">
                                     <span
                                         className={`text-xs font-semibold ${!isPrimaryBS
-                                                ? "text-teal-600 dark:text-teal-400"
-                                                : "text-gray-400"
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-gray-400"
                                             }`}
                                     >
                                         AD
@@ -208,8 +198,8 @@ export default function SettingsPage() {
                                     />
                                     <span
                                         className={`text-xs font-semibold ${isPrimaryBS
-                                                ? "text-teal-600 dark:text-teal-400"
-                                                : "text-gray-400"
+                                            ? "text-teal-600 dark:text-teal-400"
+                                            : "text-gray-400"
                                             }`}
                                     >
                                         BS
@@ -268,8 +258,8 @@ export default function SettingsPage() {
                     <button
                         onClick={handleSave}
                         className={`inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ${saved
-                                ? "bg-green-500 cursor-default"
-                                : "bg-teal-500 hover:bg-teal-600 active:scale-95"
+                            ? "bg-green-500 cursor-default"
+                            : "bg-teal-500 hover:bg-teal-600 active:scale-95"
                             }`}
                     >
                         {saved ? (

@@ -20,7 +20,6 @@ import {
 import { useGetAllParents } from '../../_Parent/hooks'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import { useFilterFeeCategoryByDate } from '@/app/enduser/schoolFee/_FeeCategory/hooks'
-import { DatePickerDebugPanel } from './DatePickerDebug'
 type Props = {
   form: UseFormReturn<IStudent>
   onClose: () => void
@@ -428,19 +427,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
           </form>
         </fieldset>
       </div>
-      <DatePickerDebugPanel
-        formValues={{
-          dateOfBirth: form.watch("dateOfBirth")
-            ? String(form.watch("dateOfBirth"))
-            : undefined,
-          enrollmentDate: form.watch("enrollmentDate")
-            ? String(form.watch("enrollmentDate"))
-            : undefined,
-        }}
-        extraFields={[
-          { label: "isPrimaryBS (context)", value: String(isPrimaryBS) },
-        ]}
-      />
+      ]
     </div>
   )
 }
