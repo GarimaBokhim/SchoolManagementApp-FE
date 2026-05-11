@@ -38,6 +38,10 @@ const bsToAD = (bs: BSDate): Date => {
     return new Date(bsToAd(bsStr))
 }
 
+/** Format a BSDate as "YYYY-MM-DD" BS string */
+const bsDateToString = (bs: BSDate): string =>
+    `${bs.year}-${String(bs.month).padStart(2, '0')}-${String(bs.day).padStart(2, '0')}`
+
 const getDaysInBSMonth = (year: number, month: number): number =>
     bsMonthDays[year]?.[month - 1] ?? 30
 
@@ -59,18 +63,50 @@ interface NepaliDatePickerProps<T extends FieldValues> {
     label?: string
     required?: boolean
     placeholder?: string
+    /** Called after a date is selected, with the BS string "YYYY-MM-DD" */
+    onChangeSelectedDate?: (bsDate: string) => void
+    /** Initial BS date string "YYYY-MM-DD" to pre-fill (for edit forms) */
+    defaultBsDate?: string
 }
 
 export function NepaliDatePicker<T extends FieldValues>({
-    form, name, label, required, placeholder = 'मिति छान्नुहोस्'
+    form, name, label, required,
+    placeholder = 'मिति छान्नुहोस्',
+    onChangeSelectedDate,
+    defaultBsDate,
 }: NepaliDatePickerProps<T>) {
     const today = adToBS(new Date())
+
+    // ── Parse defaultBsDate to pre-fill the picker ───────────────────────────
+    const parseDefaultBS = (): BSDate | null => {
+        if (!defaultBsDate) return null;
+        const parts = defaultBsDate.split('-').map(Number);
+        if (parts.length !== 3 || parts.some(isNaN)) return null;
+        return { year: parts[0], month: parts[1], day: parts[2] };
+    }
+
+    const defaultBS = parseDefaultBS();
+
     const [open, setOpen] = useState(false)
-    const [currentYear, setCurrentYear] = useState(today.year)
-    const [currentMonth, setCurrentMonth] = useState(today.month)
-    const [selectedBS, setSelectedBS] = useState<BSDate | null>(null)
-    const [displayValue, setDisplayValue] = useState('')
+    const [currentYear, setCurrentYear] = useState(defaultBS?.year ?? today.year)
+    const [currentMonth, setCurrentMonth] = useState(defaultBS?.month ?? today.month)
+    const [selectedBS, setSelectedBS] = useState<BSDate | null>(defaultBS)
+    const [displayValue, setDisplayValue] = useState(
+        defaultBS ? `${bsDateToString(defaultBS)} BS` : ''
+    )
     const containerRef = useRef<HTMLDivElement>(null)
+
+    // Sync when defaultBsDate changes (async edit form load)
+    useEffect(() => {
+        if (!defaultBsDate) return;
+        const parts = defaultBsDate.split('-').map(Number);
+        if (parts.length !== 3 || parts.some(isNaN)) return;
+        const bs = { year: parts[0], month: parts[1], day: parts[2] };
+        setSelectedBS(bs);
+        setCurrentYear(bs.year);
+        setCurrentMonth(bs.month);
+        setDisplayValue(`${bsDateToString(bs)} BS`);
+    }, [defaultBsDate]);
 
     // Close on outside click
     useEffect(() => {
@@ -108,16 +144,15 @@ export function NepaliDatePicker<T extends FieldValues>({
         const bs: BSDate = { year: dayObj.year, month: dayObj.month, day: dayObj.day }
         setSelectedBS(bs)
 
-        // Convert to AD ISO string to store in form (backend expects AD)
-        const adDate = bsToAD(bs)
-        const isoString = adDate.toISOString()
-        form.setValue(name, isoString as never)
+        // ✅ Store BS string to form — backend wants BS, not AD ISO
+        const bsString = bsDateToString(bs)
+        form.setValue(name, bsString as never)
+        onChangeSelectedDate?.(bsString)
 
-        // Display label: BS date string
-        setDisplayValue(`${bs.year}-${String(bs.month).padStart(2, '0')}-${String(bs.day).padStart(2, '0')} BS`)
+        // Display label
+        setDisplayValue(`${bsString} BS`)
         setOpen(false)
 
-        // Also update current view to selected month
         setCurrentYear(dayObj.year)
         setCurrentMonth(dayObj.month)
     }
@@ -131,10 +166,11 @@ export function NepaliDatePicker<T extends FieldValues>({
     const days = buildDays()
 
     return (
-        <div className="flex flex-col gap-1" ref={containerRef}>
+        <div className="flex flex-col gap-1 relative" ref={containerRef}>
             {label && (
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {label} {required && <span className="text-red-500">*</span>}
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-300">
+                    {required && <span className="text-red-500 text-xl mr-1">*</span>}
+                    {label}
                 </label>
             )}
 
@@ -142,29 +178,36 @@ export function NepaliDatePicker<T extends FieldValues>({
             <button
                 type="button"
                 onClick={() => setOpen(prev => !prev)}
-                className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-left text-gray-800 dark:text-gray-100 hover:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                className={`flex items-center justify-between w-full px-3 py-2 border ${form.formState.errors[name] ? 'border-red-500' : 'border-[#035BBA]'
+                    } rounded-md bg-[#ffffff] dark:bg-[#353535] text-sm text-left text-gray-800 dark:text-gray-100 hover:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition`}
             >
-                <span className={displayValue ? '' : 'text-gray-400 dark:text-gray-500'}>
+                <span className={displayValue ? 'dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
                     {displayValue || placeholder}
                 </span>
                 <Calendar size={16} className="text-gray-400 flex-shrink-0" />
             </button>
 
-            {/* Dropdown calendar */}
+            {/* Dropdown calendar — absolute so it doesn't shift layout */}
             {open && (
-                <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 w-72">
+                <div className="absolute top-full left-0 z-50 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 w-72">
 
                     {/* Month/Year nav */}
                     <div className="flex items-center justify-between mb-3">
-                        <button type="button" onClick={() => { const s = shiftMonth(currentYear, currentMonth, -1); setCurrentYear(s.year); setCurrentMonth(s.month) }}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                        <button
+                            type="button"
+                            onClick={() => { const s = shiftMonth(currentYear, currentMonth, -1); setCurrentYear(s.year); setCurrentMonth(s.month) }}
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                        >
                             <ChevronLeft size={18} />
                         </button>
                         <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
                             {nepaliMonths[currentMonth - 1]} {currentYear}
                         </span>
-                        <button type="button" onClick={() => { const s = shiftMonth(currentYear, currentMonth, 1); setCurrentYear(s.year); setCurrentMonth(s.month) }}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                        <button
+                            type="button"
+                            onClick={() => { const s = shiftMonth(currentYear, currentMonth, 1); setCurrentYear(s.year); setCurrentMonth(s.month) }}
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                        >
                             <ChevronRight size={18} />
                         </button>
                     </div>
@@ -199,8 +242,18 @@ export function NepaliDatePicker<T extends FieldValues>({
                     {selectedBS && (
                         <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center">
                             <span>{nepaliMonths[selectedBS.month - 1]} {selectedBS.day}, {selectedBS.year}</span>
-                            <button type="button" onClick={() => { setSelectedBS(null); setDisplayValue(''); form.setValue(name, '' as never) }}
-                                className="text-red-400 hover:text-red-500 text-[10px]">Clear</button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedBS(null)
+                                    setDisplayValue('')
+                                    form.setValue(name, '' as never)
+                                    onChangeSelectedDate?.('')
+                                }}
+                                className="text-red-400 hover:text-red-500 text-[10px]"
+                            >
+                                Clear
+                            </button>
                         </div>
                     )}
                 </div>
