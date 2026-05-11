@@ -248,3 +248,29 @@ export const useGetDueSlip = (classId?: string) => {
     staleTime: 0,
   });
 };
+// this hook is for the stats card in the dashboard 
+type IFeeDetails = {
+  totalFeeCollected: number;
+  totalDueAmount: number;
+  totalFeeAmount: number;
+};
+
+const FeeDetailsEndPoints = {
+  getTotalFeeDetails: "/api/Finance/TotalFeeDetails",
+};
+
+const feeDetailsQueryKey = "TotalFeeDetails";
+
+export const useGetTotalFeeDetails = () => {
+  return useQuery({
+    queryKey: [feeDetailsQueryKey],
+    queryFn: async (): Promise<IFeeDetails> => {
+      const response = await api.get<IFeeDetails>(
+        FeeDetailsEndPoints.getTotalFeeDetails
+      );
+      return response.data;
+    },
+    staleTime: 0,
+    retry: false,
+  });
+};
