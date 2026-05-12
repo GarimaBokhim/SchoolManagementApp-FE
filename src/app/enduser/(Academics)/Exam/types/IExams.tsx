@@ -4,17 +4,20 @@ export interface IExam {
   examDate: Date;
   isfinalExam: boolean;
   classId: string;
-  schoolId: string;  
+  schoolId: string;
   examSubjects?: IExamSubjects[];
-  totalMarks?: number; 
+  totalMarks?: number;
   passingMarks?: number;
 }
 
-export interface IExamSubjects{
+// IExams.ts
+export interface IExamSubjects {
   examSubjectId?: string;
-  subjectId:string;
-  passMarks:number;
-  fullMarks:number;
+  subjectId: string;
+  passMarksPr: number;
+  fullMarksPr: number;
+  passMarksTh: number;
+  fullMarksTh: number;
 }
 
 export interface IFilterExamByDate {

@@ -20,45 +20,51 @@ import { usePermissions } from "@/context/auth/PermissionContext";
 import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
 import AddExam from "../pages/Add";
 import DeleteButton from "@/components/Buttons/DeleteButton";
+
 const AllExamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+
   const [showExams, setShowExams] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
   const [selectedId, setSelectedId] = useState<string>("");
-  const buttonElement = (id: string) => {
-    return (
-      <ButtonElement
-        icon={<Edit size={14} />}
-        type="button"
-        text=""
-        onClick={() => {
-          setShowExams(true);
-          setSelectedId(id);
-        }}
-        className="!text-xs font-bold !bg-teal-500"
-      />
-    );
-  };
+
+  const buttonElement = (id: string) => (
+    <ButtonElement
+      icon={<Edit size={14} />}
+      type="button"
+      text=""
+      onClick={() => {
+        setShowExams(true);
+        setSelectedId(id);
+      }}
+      className="!text-xs font-bold !bg-teal-500"
+    />
+  );
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
+
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
+
   const form = useForm<IFilterExamByDate>({
     defaultValues: {
       name: "",
@@ -66,6 +72,7 @@ const AllExamForm = () => {
       endDate: "",
     },
   });
+
   const fullQuery = query + (params || "");
 
   const {
@@ -73,13 +80,17 @@ const AllExamForm = () => {
     refetch,
     isLoading,
   } = useFilterExamByDate(fullQuery);
+
   const { data: allExams } = useGetAllExams();
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
+
   const onSubmit: SubmitHandler<IFilterExamByDate> = async (formData) => {
     clearError();
     try {
@@ -94,6 +105,7 @@ const AllExamForm = () => {
       ]
         .filter(Boolean)
         .join("&");
+
       const fullQuery = queryParams ? `&${queryParams}` : "";
       await toast.promise(
         (async () => {
@@ -111,21 +123,25 @@ const AllExamForm = () => {
       console.error("Error during form submission:", error);
     }
   };
+
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
+
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteExam = useRemoveExam();
+
   const handleDelete = async (id: string) => {
     try {
       await deleteExam.mutateAsync(id);
-      toast.success("User deleted successfully!");
+      toast.success("Exam deleted successfully!");
       refetch();
     } catch {
-      toast.error("Error deleting user.");
+      toast.error("Error deleting exam.");
     }
   };
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -133,11 +149,13 @@ const AllExamForm = () => {
     setSelectedExamName("");
     form.reset();
   };
+
   return (
     <>
       <Toaster position="top-right" />
       <div className="px-2 md:px-4">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
+
           {/* Header and Filter buttons */}
           <div className="flex flex-col md:flex-row w-full justify-between p-3 px-4 pt-4 items-start md:items-center gap-3">
             <h1 className="text-lg md:text-xl font-semibold">All Exams</h1>
@@ -160,6 +178,8 @@ const AllExamForm = () => {
               )}
             </div>
           </div>
+
+          {/* Filter Panel */}
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -184,8 +204,8 @@ const AllExamForm = () => {
                     selected={
                       allExams
                         ? allExams?.Items?.find(
-                            (g) => g.name === selectedExamName
-                          ) ?? null
+                          (g) => g.name === selectedExamName
+                        ) ?? null
                         : null
                     }
                     onSelect={(user) => setSelectedExamName(user?.name ?? "")}
@@ -212,7 +232,7 @@ const AllExamForm = () => {
             </div>
           )}
 
-          {/* Table Section */}
+          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm md:text-base">
               <thead>
@@ -221,8 +241,8 @@ const AllExamForm = () => {
                     S.N
                   </th>
                   <th className="px-2 md:px-4 py-3 text-left">Exam Name</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Total Mark</th>
-                  <th className="px-2 md:px-4 py-3 text-left">Passing Mark</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Class ID</th>
+                  <th className="px-2 md:px-4 py-3 text-left">Subjects</th>
                   <th className="px-2 md:px-4 py-3 text-left">Is Final Exam</th>
                   <th className="px-2 md:px-4 py-3 text-left">Exam Date</th>
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
@@ -238,34 +258,38 @@ const AllExamForm = () => {
                     </td>
                   </tr>
                 ) : filteredExam?.Items?.length ? (
-                  filteredExam?.Items.map((Exam: IExam, index: number) => (
+                  filteredExam.Items.map((exam: IExam, index: number) => (
                     <tr
-                      key={index}
+                      key={exam.id ?? index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
                       <td className="py-3 px-2 md:px-4">{index + 1}</td>
                       <td className="py-3 px-2 md:px-4 break-words max-w-[120px] sm:max-w-none">
-                        {Exam.name}
+                        {exam.name}
                       </td>
-                      <td className="py-3 px-2 md:px-4">{Exam.totalMarks}</td>
-                      <td className="py-3 px-2 md:px-4">{Exam.passingMarks}</td>
+                      <td className="py-3 px-2 md:px-4">{exam.classId}</td>
                       <td className="py-3 px-2 md:px-4">
-                        {Exam.isfinalExam ? "Yes" : "No"}
+                        {exam.examSubjects?.length ?? 0} subject(s)
                       </td>
-                      <td className="py-3 px-2 md:px-4">{`${Exam.examDate}`}</td>
+                      <td className="py-3 px-2 md:px-4">
+                        {exam.isfinalExam ? "Yes" : "No"}
+                      </td>
+                      <td className="py-3 px-2 md:px-4">
+                        {exam.examDate
+                          ? new Date(exam.examDate).toLocaleDateString()
+                          : "-"}
+                      </td>
                       <td className="py-3 px-2 md:px-4">
                         <div className="flex justify-center flex-wrap gap-1 md:gap-2">
                           {canDelete && (
                             <DeleteButton
-                              onConfirm={() =>
-                                handleDelete(Exam.id ? Exam.id : "")
-                              }
+                              onConfirm={() => handleDelete(exam.id ?? "")}
                               headerText={<Trash />}
                               content="Are you sure you want to delete this Exam?"
                             />
                           )}
                           {canEdit && (
-                            <EditButton button={buttonElement(Exam.id ?? "")} />
+                            <EditButton button={buttonElement(exam.id ?? "")} />
                           )}
                         </div>
                       </td>
@@ -285,6 +309,7 @@ const AllExamForm = () => {
             </table>
           </div>
 
+          {/* Edit Modal */}
           {showExams && selectedId && (
             <EditExam
               ExamId={selectedId}
@@ -292,11 +317,13 @@ const AllExamForm = () => {
               onClose={() => setShowExams(false)}
             />
           )}
+
+          {/* Add Modal */}
           <AddExam visible={addModal} onClose={() => setAddModal(false)} />
         </div>
 
         {/* Pagination */}
-        {filteredExam?.Items && filteredExam?.Items.length > 0 && (
+        {filteredExam?.Items && filteredExam.Items.length > 0 && (
           <div className="mt-4">
             <Pagination
               form={handleSubmit}
