@@ -32,24 +32,24 @@ const AllSubjectForm = () => {
     pageIndex: 1,
     isPagination: true,
   });
-  
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
-  
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  
+
   const [showSubjects, setShowSubjects] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const { menuStatus } = usePermissions();
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
   const [selectedId, setSelectedId] = useState<string>("");
-  
+
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -64,13 +64,13 @@ const AllSubjectForm = () => {
       />
     );
   };
-  
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
   const [params, setParams] = useState("");
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
-  
+
   const form = useForm<IFilterSubjectByDate>({
     defaultValues: {
       name: "",
@@ -78,7 +78,7 @@ const AllSubjectForm = () => {
       endDate: "",
     },
   });
-  
+
   const fullQuery = query + (params || "");
 
   const {
@@ -86,17 +86,17 @@ const AllSubjectForm = () => {
     refetch,
     isLoading,
   } = useFilterSubjectByDate(fullQuery);
-  
+
   const { data: allSubjects } = useGetAllSubjects();
   const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(null);
-  
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
-  
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
-  
+
   const onSubmit: SubmitHandler<IFilterSubjectByDate> = async (formData) => {
     clearError();
     try {
@@ -128,15 +128,15 @@ const AllSubjectForm = () => {
       console.error("Error during form submission:", error);
     }
   };
-  
+
   const refForInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
-  
+
   const formRef = useRef<DateRangeFilterRef>(null);
   const deleteSubject = useDeleteSubject();
-  
+
   const handleDelete = async (id: string) => {
     try {
       await deleteSubject.mutateAsync(id);
@@ -146,9 +146,9 @@ const AllSubjectForm = () => {
       toast.error("Error deleting subject.");
     }
   };
-  
+
   const { data: allClass } = useGetAllClass();
-  
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -171,7 +171,7 @@ const AllSubjectForm = () => {
     // Refresh the list after add modal closes
     refetch();
   };
-  
+
   return (
     <>
       <Toaster position="top-right" />
@@ -199,7 +199,7 @@ const AllSubjectForm = () => {
               )}
             </div>
           </div>
-          
+
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -224,8 +224,8 @@ const AllSubjectForm = () => {
                     selected={
                       allSubjects
                         ? allSubjects?.Items?.find(
-                            (g) => g.name === selectedSubjectName
-                          ) ?? null
+                          (g) => g.name === selectedSubjectName
+                        ) ?? null
                         : null
                     }
                     onSelect={(user) =>
@@ -269,9 +269,9 @@ const AllSubjectForm = () => {
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
-                  </tr>
+                </tr>
               </thead>
-              
+
               <tbody>
                 {isLoading ? (
                   <tr>
@@ -342,10 +342,10 @@ const AllSubjectForm = () => {
               onClose={handleEditModalClose} // Use the new handler
             />
           )}
-          
+
           {/* Add Modal */}
-          <AddSubject 
-            visible={addModal} 
+          <AddSubject
+            visible={addModal}
             onClose={handleAddModalClose} // Use the new handler
           />
         </div>

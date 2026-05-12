@@ -1,28 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import AllLeads from '../../applications/leads/pages/All'
-import ScheduleAppointment from '../schedule_appointment/ScheduleAppointmetnForm'
-import AllFollowUpsForm from '../followups/pages/FollowUpForm'
-const Allvisitors = () => {
+import AllPayments from './All'
+const AllPaymentsDetails = () => {
     const tabs = [
-        { id: 'lead', label: 'Lead' },
-        { id: 'schedule', label: 'Schedule Appointment' },
-        { id: 'followup', label: 'Follow Up' },
+        { id: 'payments', label: 'Payments' },
+        // { id: 'schedule', label: 'Schedule Appointment' },
+        // { id: 'followup', label: 'Follow Up' },
     ]
 
     const [activeTab, setActiveTab] = useState<string>('lead')
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'lead':
-                return <AllLeads />
-            case 'schedule':
-                return <ScheduleAppointment />
-            case 'followup':
-                return <AllFollowUpsForm />
+            case 'payments':
+                return <AllPayments />
+            // case 'schedule':
+            //     return <ScheduleAppointment />
+            // case 'followup':
+            //     return <AllFollowUpsForm />
             default:
-                return <AllLeads />
+                return <AllPayments />
         }
     }
 
@@ -57,4 +55,4 @@ const Allvisitors = () => {
     )
 }
 
-export default Allvisitors
+export default AllPaymentsDetails

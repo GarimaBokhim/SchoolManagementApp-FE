@@ -1,6 +1,7 @@
 export interface InstallmentPlan {
   id: string
-  invoiceName: string
+  invoiceNumber: string
+  applicantName: string
   numberOfInstallments: number
   totalAmount: number
   modifiedAt: string
@@ -21,6 +22,5 @@ export interface InstallmentPlanResponse {
 
 export interface AddInstallmentPlanPayload {
   applicantId: string
-  numberOfInstallments: number,
-  totalAmount: number
+  numberOfInstallments: number
 }

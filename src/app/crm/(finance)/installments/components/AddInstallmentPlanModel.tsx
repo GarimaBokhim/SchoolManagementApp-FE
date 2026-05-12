@@ -3,9 +3,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { AddInstallmentPlanPayload } from '../types/IInstallments'
-
-
-
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
@@ -24,30 +21,30 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
   const addInstallmentPlan = useAddInstallmentsPlan();
   const { handleError, clearError } = useErrorHandler();
   const { data: allapplicant } = useGetAllApplicantDropdown();
+  console.log(allapplicant);
   const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
   const handleClose = () => {
     form.reset({
       applicantId: "",
-      numberOfInstallments: 0,
-      totalAmount: 0
+      numberOfInstallments: 0
 
     });
     setSelectedApplicantId(null);
+    onClose();
   };
 
   const onSubmit: SubmitHandler<AddInstallmentPlanPayload> = async (data) => {
     clearError();
     const applicantId = String(data.applicantId ?? "").trim();
     if (!applicantId) {
-      Toast.error("Please select both applicant");
+      Toast.error("Please select applicant");
       return;
     }
     try {
       await toast.promise(
         addInstallmentPlan.mutateAsync({
-          applicantId: data.applicantId,
-          numberOfInstallments: data.numberOfInstallments,
-          totalAmount: data.totalAmount
+          applicantId,
+          numberOfInstallments: data.numberOfInstallments
         }),
         {
           loading: "Adding InstallmentPlan...",
@@ -67,15 +64,12 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
         <fieldset className="">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add Subject
+              Add InstallmentPlan
             </h1>
             <button
               type="button"
-              onClick={() => {
-                handleClose();
-                onClose();
-              }}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              onClick={handleClose}
+              className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
             </button>
@@ -90,38 +84,39 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
                 placeholder="Enter numberOfInstallments"
                 required
               />
-              <InputElement
-                label="TotalAmounts"
-                form={form}
-                name="totalAmount"
-                inputType="number"
-                placeholder="Enter Total Amounts"
-                required
-              />
 
               <AppCombobox
                 value={sellectedApplicantId}
                 dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
+                dropdownPositionClass="absolute z-20"
                 label="Applicant"
                 name="applicantId"
                 form={form}
                 required
-                options={allapplicant}
+                options={allapplicant || []}
                 selected={
-                  allapplicant?.find((g) => g.id === sellectedApplicantId) || null
+                  allapplicant?.find(
+                    (g) => g.id === sellectedApplicantId
+                  ) || null
                 }
                 onSelect={(group) => {
                   if (group) {
                     const id = group.id ?? "";
+
                     setSelectedApplicantId(id || null);
-                    form.setValue("applicantId", id, { shouldValidate: true });
+
+                    form.setValue("applicantId", id, {
+                      shouldValidate: true,
+                    });
                   } else {
                     setSelectedApplicantId(null);
-                    form.setValue("applicantId", "", { shouldValidate: true });
+
+                    form.setValue("applicantId", "", {
+                      shouldValidate: true,
+                    });
                   }
                 }}
-                getLabel={(g) => g?.name ?? ""}
+                getLabel={(g) => g?.fullName ?? ""}
                 getValue={(g) => g?.id ?? ""}
               />
 

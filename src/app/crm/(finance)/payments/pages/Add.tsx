@@ -1,18 +1,20 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddInstallmentPlanPayload } from "../types/IInstallments";
+import { AddPaymentsPayload } from "../types/IPayments";
 //import { SubjectValidator } from "../validators/index";
-import AddInstallmentPlanForm from "../components/AddInstallmentPlanModel";
+import AddPaymentsForms from "../components/AddPaymentsForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
 }
-const AddInstallmentPlan = ({ visible, onClose }: Props) => {
-    const form = useForm<AddInstallmentPlanPayload>({
+const AddPayments = ({ visible, onClose }: Props) => {
+    const form = useForm<AddPaymentsPayload>({
         defaultValues: {
             applicantId: "",
-            numberOfInstallments: 0
+            amount: 0,
+            paymentDate: "",
+            paymentMethod: 0
 
         },
 
@@ -35,9 +37,9 @@ const AddInstallmentPlan = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddInstallmentPlanForm form={form} onClose={handleOnClose} />
+                <AddPaymentsForms form={form} onClose={handleOnClose} />
             </div>
         </div>
     );
 };
-export default AddInstallmentPlan;
+export default AddPayments;

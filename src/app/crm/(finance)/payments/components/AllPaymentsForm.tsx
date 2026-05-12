@@ -11,12 +11,10 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 
-import { InstallmentPlan, AddInstallmentPlanPayload } from '../types/IInstallments'
+import { AddPaymentsPayload } from '../types/IPayments'
 
-import { useGetAllInstallments } from '../hooks'
-import { AddConsultancyClassPayload } from '@/app/crm/classes/class/types/IClass'
-import AddInstallmentPlan from '../pages/Add'
-// import { AddConsultancyClassModal } from './AddConsultenctClassModel'
+import { useGetAllPayments } from '../hooks'
+import AddPayments from '../pages/Add'
 
 const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
     1: 'IELTS', 2: 'TOEFL', 3: 'PTE', 4: 'Other',
@@ -46,10 +44,10 @@ const AllInstallmentPlanForm = () => {
         defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
     })
 
-    const { data, isLoading, error, refetch } = useGetAllInstallments(params)
+    const { data, isLoading, error, refetch } = useGetAllPayments(params)
     // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
 
-    const installmentPlan = data?.Data?.Items ?? [];
+    const payments = data?.Data?.Items ?? [];
     const totalPages = data?.Data?.TotalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
@@ -82,7 +80,7 @@ const AllInstallmentPlanForm = () => {
         refetch()
     }
 
-    const handleAddSubmit = async (payload: AddInstallmentPlanPayload) => {
+    const handleAddSubmit = async (payload: AddPaymentsPayload) => {
         // await handleAdd(payload)
         setAddModal(false);
         refetch();
@@ -125,7 +123,7 @@ const AllInstallmentPlanForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All InstallmentsPlan</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Payments</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -138,7 +136,7 @@ const AllInstallmentPlanForm = () => {
                                 <ButtonElement
                                     icon={<Plus size={18} />}
                                     type="button"
-                                    text="Add New Installments"
+                                    text="Add Payments"
                                     onClick={() => setAddModal(true)}
                                     className="!font-semibold"
                                 />
@@ -175,25 +173,26 @@ const AllInstallmentPlanForm = () => {
                                         <th className="px-4 py-3 text-left">Applicant</th>
                                         <th className="px-4 py-3 text-left">Invoice</th>
 
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">No Of Installments</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Total Amount</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">Amount</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">PaymentMethod</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">PaymentStatus</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {installmentPlan.length === 0 ? (
+                                    {payments.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={8}
                                                 className="p-4 text-center italic text-gray-500 dark:text-gray-400"
                                             >
-                                                No InstalmentPlan found.
+                                                No Payments found.
                                             </td>
                                         </tr>
                                     ) : (
-                                        installmentPlan.map((installment, index) => (
+                                        payments.map((payment, index) => (
                                             <tr
-                                                key={installment.id}
+                                                key={payment.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
                                                 <td className="px-4 py-3 text-gray-500">
@@ -201,18 +200,22 @@ const AllInstallmentPlanForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {installment.applicantName}
+                                                    {payment.applicantName}
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {installment.invoiceNumber}
+                                                    {payment.invoiceNumber}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {installment.numberOfInstallments}
+                                                    {payment.amount}
                                                 </td>
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {installment.totalAmount}
+                                                    {payment.paymentMethod}
+                                                </td>
+
+                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                                                    {payment.paymentDate}
                                                 </td>
 
                                                 <td className="px-4 py-3">
@@ -245,7 +248,7 @@ const AllInstallmentPlanForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {installmentPlan.length > 0 && totalPages > 1 && (
+                {payments.length > 0 && totalPages > 1 && (
                     <div className="mt-4">
                         <Pagination
                             form={paginationForm}
@@ -262,7 +265,7 @@ const AllInstallmentPlanForm = () => {
                 )}
             </div>
 
-            <AddInstallmentPlan
+            <AddPayments
                 visible={addModal}
 
                 onClose={() => handleAddSubmit}

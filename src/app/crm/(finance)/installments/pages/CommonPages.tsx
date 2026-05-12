@@ -5,8 +5,8 @@ import AllInstallmentPlan from './All'
 const AllInstallmentDetails = () => {
     const tabs = [
         { id: 'installmentPlan', label: 'InstallmentPlan' },
-        { id: 'schedule', label: 'Schedule Appointment' },
-        { id: 'followup', label: 'Follow Up' },
+        // { id: 'schedule', label: 'Schedule Appointment' },
+        // { id: 'followup', label: 'Follow Up' },
     ]
 
     const [activeTab, setActiveTab] = useState<string>('lead')

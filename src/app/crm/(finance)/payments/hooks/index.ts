@@ -1,32 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationCrmResponse, IPaginationResponse } from '@/types/IPaginationResponse'
-import { AddInstallmentPlanPayload, InstallmentPlan, InstallmentPlanResponse } from '../types/IInstallments'
+
+import { AddPaymentsPayload, FilterPaymentsResponse,AddPaymentsResponse } from '../types/IPayments'
+
+
+
 import { Toast } from '@/components/Toast/toast'
 
 
-export const InstallmentEndPoints = {
-  filterInstallmentPlan: '/api/CrmFinance/FilterInstallmentPlan',
-  addInstallmentPlan: '/api/CrmFinance/AddInstallmentsPlan',
+export const paymentsEndPoints = {
+  filterPayments: '/api/CrmFinance/FilterPayments',
+  addPayments: '/api/CrmFinance/AddPayments',
   allApplicant: '/api/Enrolments/AllApplicant',
 //   filterRegistrations: '/api/Enrolments/FilterTrainingRegistration',
 //   addRegistration: '/api/Enrolments/AddTrainingRegistration',
 }
 
-export const installmentQueryKey = 'InstallmentPlan'
+export const paymentsQueryKey = 'Payments'
 
 
-export const useGetAllInstallments = (queryParams?: string) => {
+export const useGetAllPayments = (queryParams?: string) => {
   return useQuery({
-    queryKey: [installmentQueryKey, queryParams],
+    queryKey: [paymentsQueryKey, queryParams],
     queryFn: async () => {
       const paramObj: Record<string, string> = {}
       if (queryParams) {
         const parsed = new URLSearchParams(queryParams.replace(/^&/, ''))
         parsed.forEach((value, key) => { paramObj[key] = value })
       }
-      const response = await api.get<IPaginationCrmResponse<InstallmentPlan>>(
-        InstallmentEndPoints.filterInstallmentPlan,
+      const response = await api.get<IPaginationCrmResponse<FilterPaymentsResponse>>(
+        paymentsEndPoints.filterPayments,
         { params: paramObj }
       )
       return response.data ?? {
@@ -37,15 +41,15 @@ export const useGetAllInstallments = (queryParams?: string) => {
   })
 }
 
-export const useAddInstallmentsPlan = () => {
+export const useAddPayments = () => {
   const queryClient = useQueryClient()
-  return useMutation<InstallmentPlanResponse, Error, AddInstallmentPlanPayload>({
+  return useMutation<AddPaymentsResponse, Error, AddPaymentsPayload>({
     mutationFn: async (payload) => {
-      const response = await api.post(InstallmentEndPoints.addInstallmentPlan, payload)
+      const response = await api.post(paymentsEndPoints.addPayments, payload)
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [installmentQueryKey] })
+      queryClient.invalidateQueries({ queryKey: [paymentsQueryKey] })
     },
   })
 }
@@ -73,7 +77,7 @@ export const useGetAllApplicantDropdown = () => {
     queryKey: ['AllApplicantDropdown'],
     queryFn: async () => {
       const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
-        InstallmentEndPoints.allApplicant
+        paymentsEndPoints.allApplicant
       )
       return response.data?.Items ?? []
     },
@@ -97,34 +101,34 @@ export const useGetAllApplicants = () => {
   })
 }
 
-export const useInstallmentPlanMutations = (refetch: () => void) => {
-  const handleAdd = async (payload: AddInstallmentPlanPayload) => {
+export const usePaymentsMutations = (refetch: () => void) => {
+  const handleAdd = async (payload: AddPaymentsResponse) => {
     try {
-      await api.post('/api/CrmFinance/AddInstallmentsPlan', payload)
-      Toast.success('InstallmentPlan added successfully!')
+      await api.post('/api/CrmFinance/AddPayments', payload)
+      Toast.success('Payments added successfully!')
       refetch()
     } catch {
-      Toast.error('Error InstallmentPlan class.')
+      Toast.error('Error Payments.')
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/api/CrmFinance/DeleteInstallmentsPlan/${id}`)
+      await api.delete(`/api/CrmFinance/DeletePayments/${id}`)
       Toast.success('InstallmetPlan deleted successfully!')
       refetch()
     } catch {
-      Toast.error('Error deleting class.')
+      Toast.error('Error deleting.')
     }
   }
 
   const handleEdit = async (id: string) => {
     try {
-      await api.patch(`/api/CrmFinance/UpdateInstallmentsPlan/${id}`)
-      Toast.success('Update installmentPlan successfully!')
+      await api.patch(`/api/CrmFinance/UpdatePayments/${id}`)
+      Toast.success('Update Payments successfully!')
       refetch()
     } catch {
-      Toast.error('Error updateing installmentPlan.')
+      Toast.error('Error updateing payments.')
     }
   }
 
