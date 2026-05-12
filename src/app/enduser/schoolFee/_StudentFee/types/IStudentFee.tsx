@@ -1,5 +1,4 @@
 export interface IStudentFee {
-  /** Present when row comes from API (needed for PATCH). */
   id?: string;
   Id?: string;
   studentId: string;
@@ -18,7 +17,7 @@ export interface IStudentFeeDetails {
   amount: number;
   times: number;
   totalAmount: number;
-  feePaidType: number; // 1 = One Time, 2 = Monthly, etc.
+  feePaidType: number;
 }
 
 export interface IFilterStudentFee {
@@ -36,10 +35,22 @@ export interface IPaymentRecord {
   paymentDate: string;
   paymentMethod: number;
   reference: string;
-  receiptNumber: string;  //  mapped for future backend support
+  receiptNumber: string;
   dueAmount?: number;
 }
 
+// ✅ New: matches FeeStructureForFeeSummaryDTOs from API
+export interface IFeeStructureItem {
+  feeTypeId: string;
+  feeTypeName: string;
+  amount: number;
+  discountAmount: number;
+  times: number;
+  totalAmount: number;
+  feePaidType: number;
+}
+
+// ✅ Updated: added FeeStructureForFeeSummaryDTOs
 export interface Istudentfeesummary {
   studentId: string;
   paymentDate: string;
@@ -50,6 +61,7 @@ export interface Istudentfeesummary {
   reference: string;
   receiptNumber: string;
   paymentMethod: number;
+  FeeStructureForFeeSummaryDTOs: IFeeStructureItem[];
 }
 
 export interface filtersummary {
