@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
   const { data: students, isLoading: studentsLoading } = useGetAllStudents();
   const { data: staffs, isLoading: staffsLoading } = useGetAllAcademicTeams();
   const { data: school, isLoading: schoolLoading } = useGetAllSchool();
-  const { data: feeDetails, isLoading: feeDetailsLoading } = useGetTotalFeeDetails(); // 👈 new
+  const { data: feeDetails, isLoading: feeDetailsLoading } = useGetTotalFeeDetails();
 
   useEffect(() => {
     const userDetailsString = localStorage.getItem("userDetails");
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
     staffsLoading ||
     schoolLoading ||
     noticesLoading ||
-    feeDetailsLoading // 👈 new
+    feeDetailsLoading
   ) {
     return (
       <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A] min-h-screen flex items-center justify-center">
@@ -65,21 +65,21 @@ const Dashboard: React.FC = () => {
   const cards = [
     {
       cardHead: "Total Fee Amount",
-      cardStats: String(feeDetails?.totalFeeAmount ?? 0), // 👈 dynamic
+      cardStats: String(feeDetails?.totalFeeAmount ?? 0),
       cardStyle: "!bg-blue-500/30",
       cardStatUnit: "Rs.",
       cardIcon: <BriefcaseBusiness className="text-blue-400 text-4xl" />,
     },
     {
       cardHead: "Fee Collected",
-      cardStats: String(feeDetails?.totalFeeCollected ?? 0), // 👈 dynamic
+      cardStats: String(feeDetails?.totalFeeCollected ?? 0),
       cardStyle: "!bg-emerald-500/30",
       cardStatUnit: "Rs.",
       cardIcon: <CreditCard className="text-emerald-400 text-4xl" />,
     },
     {
       cardHead: "Due Amount",
-      cardStats: String(feeDetails?.totalDueAmount ?? 0), // 👈 dynamic
+      cardStats: String(feeDetails?.totalDueAmount ?? 0),
       cardStyle: "!bg-red-500/30",
       cardStatUnit: "Rs.",
       cardIcon: <CreditCard className="text-red-400 text-4xl" />,
