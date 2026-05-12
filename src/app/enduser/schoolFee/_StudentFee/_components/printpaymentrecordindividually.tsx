@@ -25,20 +25,24 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
 
-  // ✅ Fetch fee summary for totalAmount and dueAmount
   const { data: feeSummary } = useGetStudentFeesummary(
     `?studentId=${data.studentid}&classId=${data.classid}`
   )
 
-  const dueAmount = feeSummary?.Items?.[0]?.dueAmount
-  const totalAmount = feeSummary?.Items?.[0]?.totalAmount
+  // ✅ Find the matching receipt item by receiptNumber
+  const matchedSummary = feeSummary?.Items?.find(
+    (item) => item.receiptNumber === data.receiptNumber
+  ) ?? feeSummary?.Items?.[0]
+
+  const dueAmount = matchedSummary?.dueAmount
+  const totalAmount = matchedSummary?.totalAmount
+  const feeStructure = matchedSummary?.FeeStructureForFeeSummaryDTOs ?? []  // ✅ new
 
   const schoolId = useMemo(() => {
     try {
       const storedUser = localStorage.getItem('userDetails')
       if (!storedUser) return ''
-      const parsedUser = JSON.parse(storedUser)
-      return parsedUser.schoolId ?? ''
+      return JSON.parse(storedUser)?.schoolId ?? ''
     } catch {
       return ''
     }
@@ -53,9 +57,7 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     schools?.Items?.length && students?.Items?.length && classData && feeSummary
 
   useEffect(() => {
-    if (isReady) {
-      onReady?.()
-    }
+    if (isReady) onReady?.()
   }, [isReady, onReady])
 
   const studentName = useMemo(() => {
@@ -87,9 +89,10 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     className: classData?.name ?? '-',
     reference: data.reference ?? '-',
     amountPaid: data.amountPaid,
-    totalAmount: totalAmount,
-    dueAmount: dueAmount,
+    totalAmount,
+    dueAmount,
     receiptNumber: data.receiptNumber,
+    feeStructure,  // ✅ new
   }
 
   if (!isReady) return null
