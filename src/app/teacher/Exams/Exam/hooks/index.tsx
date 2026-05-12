@@ -13,13 +13,20 @@ const ExamEndPoints = {
 
 const queryKey = "Exams";
 const filteredExamQuery = "FilteredExams";
+
 type ExamRequest = {
   id?: string;
   name: string;
   examDate: Date;
-  totalMarks: number;
-  passingMarks: number;
   isfinalExam: boolean;
+  classId: string;
+  examSubjects: {
+    subjectId: string;
+    passMarksPr: number;
+    fullMarksPr: number;
+    passMarksTh: number;
+    fullMarksTh: number;
+  }[];
 };
 
 export const useAddExam = () => {
