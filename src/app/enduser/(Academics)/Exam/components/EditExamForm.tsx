@@ -42,7 +42,6 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
   // Populate form from API
   useEffect(() => {
     if (!examData) return
-    console.log("ExamData structure from API:", examData)
 
     reset({
       name: examData.name,
@@ -50,19 +49,22 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
       classId: examData.classId,
       schoolId: examData.schoolId,
       isfinalExam: examData.isfinalExam,
-      examSubjects: (examData.examSubjects ?? (examData as any).ExamSubjectDTOs ?? []).map((s: any) => ({
-        examSubjectId: s.id ?? s.examSubjectId ?? "",
+      examSubjects: (
+        examData.examSubjects ??
+        (examData as any).ExamSubjectDTOs ??
+        []
+      ).map((s: any) => ({
+        examSubjectId: s.id ?? s.examSubjectId ?? '',
         subjectId: s.subjectId,
-        passMarks: s.passMarks,
-        fullMarks: s.fullMarks
+        passMarksPr: s.passMarksPr ?? 0,
+        fullMarksPr: s.fullMarksPr ?? 0,
+        passMarksTh: s.passMarksTh ?? 0,
+        fullMarksTh: s.fullMarksTh ?? 0,
       })),
     })
 
     isInitialLoad.current = false
   }, [examData, reset])
-
-  // ❌ DO NOT clear subjects automatically on classId change
-  // handled manually in onSelect
 
   const handleClose = () => {
     reset()
@@ -79,11 +81,14 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
         examDate: data.examDate,
         isfinalExam: data.isfinalExam,
         classId: data.classId,
+        schoolId: data.schoolId,
         updateExamSubjectDTOs: (data.examSubjects ?? []).map((s) => {
           const dto: any = {
             subjectId: s.subjectId,
-            passMarks: Number(s.passMarks),
-            fullMarks: Number(s.fullMarks),
+            passMarksPr: Number(s.passMarksPr),
+            fullMarksPr: Number(s.fullMarksPr),
+            passMarksTh: Number(s.passMarksTh),
+            fullMarksTh: Number(s.fullMarksTh),
           }
           if (s.examSubjectId) {
             dto.examSubjectId = s.examSubjectId
@@ -139,7 +144,6 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 inputType="date"
               />
 
-              {/* Class */}
               <AppCombobox
                 dropDownWidth="w-[20rem]"
                 label="Class"
@@ -155,10 +159,7 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 }
                 onSelect={(cls) => {
                   const id = String(cls?.id ?? '')
-
                   setValue('classId', id, { shouldValidate: true })
-
-                  // ✅ clear subjects ONLY when user changes class
                   setValue('examSubjects', [])
                   replace([])
                 }}
@@ -175,12 +176,15 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 <p className="text-sm text-gray-500">
                   Please select a class first
                 </p>
+              ) : fields.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">
+                  No subjects added yet. Click "Add Subject" to begin.
+                </p>
               ) : (
                 fields.map((field, index) => {
                   const currentSubjectId = watch(
                     `examSubjects.${index}.subjectId`
                   )
-
                   const selectedIds =
                     watch('examSubjects')?.map((s) =>
                       String(s.subjectId)
@@ -189,66 +193,92 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                   return (
                     <div
                       key={field.id}
-                      className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 items-start mb-3"
+                      className="border border-gray-200 dark:border-zinc-600 rounded-lg p-4 mb-3"
                     >
-                      {/* Subject */}
-                      <AppCombobox
-                        dropDownWidth="w-[20rem]"
-                        label="Subject"
-                        name={`examSubjects.${index}.subjectId`}
-                        form={form}
-                        dropdownPositionClass="absolute"
-                        value={currentSubjectId}
-                        options={(allSubjects ?? []).filter((subj) => {
-                          const subjId = String(subj.id)
-                          return (
-                            subjId === String(currentSubjectId) ||
-                            !selectedIds.includes(subjId)
-                          )
-                        })}
-                        selected={
-                          allSubjects?.find(
-                            (subj) =>
-                              String(subj.id) ===
-                              String(currentSubjectId)
-                          ) || null
-                        }
-                        onSelect={(subject) => {
-                          setValue(
-                            `examSubjects.${index}.subjectId`,
-                            String(subject?.id ?? ''),
-                            { shouldValidate: true }
-                          )
-                        }}
-                        getLabel={(s) => s?.subjectName ?? ''}
-                        getValue={(s) => String(s?.id)}
-                      />
+                      {/* Subject row header */}
+                      <div className="flex justify-between items-center mb-3">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Subject {index + 1}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
 
-                      {/* Full Marks */}
-                      <InputElement
-                        label="Full Marks"
-                        form={form}
-                        name={`examSubjects.${index}.fullMarks`}
-                        type="number"
-                        required
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+                        {/* Subject Combobox */}
+                        <AppCombobox
+                          dropDownWidth="w-[20rem]"
+                          label="Subject"
+                          name={`examSubjects.${index}.subjectId`}
+                          form={form}
+                          dropdownPositionClass="absolute"
+                          value={currentSubjectId}
+                          options={(allSubjects ?? []).filter((subj) => {
+                            const subjId = String(subj.id)
+                            return (
+                              subjId === String(currentSubjectId) ||
+                              !selectedIds.includes(subjId)
+                            )
+                          })}
+                          selected={
+                            allSubjects?.find(
+                              (subj) =>
+                                String(subj.id) === String(currentSubjectId)
+                            ) || null
+                          }
+                          onSelect={(subject) => {
+                            setValue(
+                              `examSubjects.${index}.subjectId`,
+                              String(subject?.id ?? ''),
+                              { shouldValidate: true }
+                            )
+                          }}
+                          getLabel={(s) => s?.subjectName ?? ''}
+                          getValue={(s) => String(s?.id)}
+                        />
 
-                      {/* Pass Marks */}
-                      <InputElement
-                        label="Pass Marks"
-                        form={form}
-                        name={`examSubjects.${index}.passMarks`}
-                        type="number"
-                        required
-                      />
+                        {/* 4 Mark Fields */}
+                        <InputElement
+                          label="Full Marks (Practical)"
+                          form={form}
+                          name={`examSubjects.${index}.fullMarksPr`}
+                          type="number"
+                          placeholder="0"
+                          required
+                        />
 
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="text-red-500 h-10 self-end"
-                      >
-                        Remove
-                      </button>
+                        <InputElement
+                          label="Pass Marks (Practical)"
+                          form={form}
+                          name={`examSubjects.${index}.passMarksPr`}
+                          type="number"
+                          placeholder="0"
+                          required
+                        />
+
+                        <InputElement
+                          label="Full Marks (Theory)"
+                          form={form}
+                          name={`examSubjects.${index}.fullMarksTh`}
+                          type="number"
+                          placeholder="0"
+                          required
+                        />
+
+                        <InputElement
+                          label="Pass Marks (Theory)"
+                          form={form}
+                          name={`examSubjects.${index}.passMarksTh`}
+                          type="number"
+                          placeholder="0"
+                          required
+                        />
+                      </div>
                     </div>
                   )
                 })
@@ -259,14 +289,16 @@ const EditExamForm = ({ form, onClose, ExamId }: Props) => {
                 onClick={() =>
                   append({
                     subjectId: '',
-                    fullMarks: 0,
-                    passMarks: 0,
+                    fullMarksPr: 0,
+                    passMarksPr: 0,
+                    fullMarksTh: 0,
+                    passMarksTh: 0,
                   })
                 }
-                className="mt-2 px-3 py-1 bg-teal-500 text-white rounded"
+                className="mt-2 px-3 py-1 bg-teal-500 text-white rounded hover:bg-teal-600"
                 disabled={!classId}
               >
-                Add Subject
+                + Add Subject
               </button>
             </div>
 

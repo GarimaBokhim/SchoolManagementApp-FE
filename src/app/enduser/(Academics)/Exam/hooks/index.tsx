@@ -21,11 +21,14 @@ type ExamRequest = {
   classId: string;
   examSubjects?: IExamSubjects[];
 }
+// hooks.ts
 type IExamSubjects = {
-
+  examSubjectId?: string;
   subjectId: string;
-  passMarks: number;
-  fullMarks: number;
+  passMarksPr: number;
+  fullMarksPr: number;
+  passMarksTh: number;
+  fullMarksTh: number;
 };
 
 export const useAddExam = () => {
