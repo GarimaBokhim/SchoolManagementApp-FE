@@ -105,7 +105,11 @@ const AddSubModuleForm = ({ form, onClose }: Props) => {
                       setModuleId("");
                     }
                   }}
-                  getLabel={(g) => g?.Name || ""}
+                  getLabel={(g) =>
+                    g?.Description
+                      ? `${g?.Name} (${g?.Description})`
+                      : g?.Name || ""
+                  }
                   getValue={(g) => g?.Id ?? ""}
                 />
               </div>

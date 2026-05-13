@@ -4,6 +4,8 @@ import { SubmitHandler, UseFormReturn, Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 
+import { useApiHandler } from "@/hooks/useApiHandler"
+
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { Toast } from "@/components/Toast/toast";
@@ -82,208 +84,209 @@ const AddEventForm = ({ form, visible, onClose }: Props) => {
     onClose();
   };
 
+  const { execute } = useApiHandler();
+
   const onSubmit: SubmitHandler<IEvents> = async (data) => {
     clearError();
-    try {
-      await toast.promise(
-        addEvent.mutateAsync({
-          ...data,
-          eventsType: Number(data.eventsType),
-          fromDate: new Date(data.fromDate).toISOString(),
-          toDate: new Date(data.toDate).toISOString(),
-          eventTime: data.eventTime.length === 5 ? data.eventTime + ":00" : data.eventTime,
-        }),
-        {
-          loading: "Adding event...",
-          success: "Event added successfully!",
-        }
-      );
-      handleClose();
-    } catch (error) {
-      Toast.error(handleError(error));
+
+    await execute(
+      addEvent.mutateAsync,
+      {
+        ...data,
+        eventsType: Number(data.eventsType),
+        fromDate: new Date(data.fromDate).toISOString(),
+        toDate: new Date(data.toDate).toISOString(),
+        eventTime: data.eventTime.length === 5 ? data.eventTime + ":00" : data.eventTime,
+      }),
+    {
+      loadingMessage: "Adding event...",
+      onSuccess: () => {
+        handleClose();
+      },
     }
-  };
+      );
+    };
 
-  const selectedEventType =
-    EVENT_TYPES.find((et) => et.value === Number(form.watch("eventsType"))) ?? null;
+const selectedEventType =
+  EVENT_TYPES.find((et) => et.value === Number(form.watch("eventsType"))) ?? null;
 
-  const errors = form.formState.errors;
+const errors = form.formState.errors;
 
-  // Watch fromDate to enforce toDate >= fromDate
-  const fromDateValue = form.watch("fromDate");
+// Watch fromDate to enforce toDate >= fromDate
+const fromDateValue = form.watch("fromDate");
 
-  return (
-    <div className="fixed inset-0 z-50 ml-12 md:ml-64 sm:ml-16 bg-black/40 flex items-center justify-center">
-      <div className="bg-white dark:bg-[#27272a] w-full max-w-5xl rounded-xl shadow-lg p-6 overflow-auto max-h-[90vh]">
+return (
+  <div className="fixed inset-0 z-50 ml-12 md:ml-64 sm:ml-16 bg-black/40 flex items-center justify-center">
+    <div className="bg-white dark:bg-[#27272a] w-full max-w-5xl rounded-xl shadow-lg p-6 overflow-auto max-h-[90vh]">
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-semibold">Add Event</h1>
-          <button type="button" onClick={handleClose} className="text-red-500 text-2xl">
-            <X strokeWidth={3} />
-          </button>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-semibold">Add Event</h1>
+        <button type="button" onClick={handleClose} className="text-red-500 text-2xl">
+          <X strokeWidth={3} />
+        </button>
+      </div>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+        {/* Row 1 — Title | Event Type | Event Time */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <Field label="Title" required error={errors.title?.message}>
+            <input
+              type="text"
+              {...form.register("title", { required: "Title is required" })}
+              placeholder="Event title"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Event Type" required error={errors.eventsType?.message}>
+            <Controller
+              name="eventsType"
+              control={form.control}
+              rules={{ required: "Event type is required" }}
+              render={() => (
+                <AppCombobox<EventTypeOption>
+                  label=""
+                  name="eventsType"
+                  form={form}
+                  options={EVENT_TYPES}
+                  selected={selectedEventType ?? undefined}
+                  value={selectedEventType?.label ?? ""}
+                  dropDownWidth="w-full"
+                  dropdownPositionClass="absolute"
+                  onSelect={(option) => {
+                    form.setValue("eventsType", option ? option.value : 0, {
+                      shouldValidate: true,
+                    });
+                  }}
+                  onFocus={() => { }}
+                  getLabel={(opt) => opt.label}
+                  getValue={(opt) => opt.value}
+                  placeholder="Search event type..."
+                />
+              )}
+            />
+          </Field>
+
+          <Field label="Event Time" required error={errors.eventTime?.message}>
+            <input
+              type="time"
+              {...form.register("eventTime", { required: "Event time is required" })}
+              className={inputClass}
+            />
+          </Field>
+
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Row 2 — From Date | To Date | Venue */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          {/* Row 1 — Title | Event Type | Event Time */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <Field label="Title" required error={errors.title?.message}>
-              <input
-                type="text"
-                {...form.register("title", { required: "Title is required" })}
-                placeholder="Event title"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Event Type" required error={errors.eventsType?.message}>
-              <Controller
-                name="eventsType"
-                control={form.control}
-                rules={{ required: "Event type is required" }}
-                render={() => (
-                  <AppCombobox<EventTypeOption>
-                    label=""
-                    name="eventsType"
-                    form={form}
-                    options={EVENT_TYPES}
-                    selected={selectedEventType ?? undefined}
-                    value={selectedEventType?.label ?? ""}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    onSelect={(option) => {
-                      form.setValue("eventsType", option ? option.value : 0, {
-                        shouldValidate: true,
-                      });
-                    }}
-                    onFocus={() => { }}
-                    getLabel={(opt) => opt.label}
-                    getValue={(opt) => opt.value}
-                    placeholder="Search event type..."
-                  />
-                )}
-              />
-            </Field>
-
-            <Field label="Event Time" required error={errors.eventTime?.message}>
-              <input
-                type="time"
-                {...form.register("eventTime", { required: "Event time is required" })}
-                className={inputClass}
-              />
-            </Field>
-
-          </div>
-
-          {/* Row 2 — From Date | To Date | Venue */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <Field label="From Date" required error={errors.fromDate?.message}>
-              <input
-                type="date"
-                {...form.register("fromDate", { required: "From date is required" })}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="To Date" required error={errors.toDate?.message}>
-              <input
-                type="date"
-                {...form.register("toDate", {
-                  required: "To date is required",
-                  validate: (val) =>
-                    !fromDateValue || val >= fromDateValue || "To date must be on or after From date",
-                })}
-                min={fromDateValue}
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Venue" required error={errors.venue?.message}>
-              <input
-                type="text"
-                {...form.register("venue", { required: "Venue is required" })}
-                placeholder="School Ground / Hall"
-                className={inputClass}
-              />
-            </Field>
-
-          </div>
-
-          {/* Row 3 — Participants | Chief Guest | Organizer */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <Field label="Participants" required error={errors.participants?.message}>
-              <input
-                type="text"
-                {...form.register("participants", { required: "Participants is required" })}
-                placeholder="Students / Teachers"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Chief Guest" error={errors.chiefGuest?.message}>
-              <input
-                type="text"
-                {...form.register("chiefGuest")}
-                placeholder="Chief Guest Name"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Organizer" error={errors.organizer?.message}>
-              <input
-                type="text"
-                {...form.register("organizer")}
-                placeholder="Organizer Name"
-                className={inputClass}
-              />
-            </Field>
-
-          </div>
-
-          {/* Row 4 — Mentor | Description */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <Field label="Mentor" error={errors.mentor?.message}>
-              <input
-                type="text"
-                {...form.register("mentor")}
-                placeholder="Mentor Name"
-                className={inputClass}
-              />
-            </Field>
-
-            <div className="md:col-span-2">
-              <Field label="Description" error={errors.descriptions?.message}>
-                <textarea
-                  {...form.register("descriptions")}
-                  placeholder="Event description"
-                  rows={3}
-                  className={`${inputClass} resize-none`}
-                />
-              </Field>
-            </div>
-
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <ButtonElement
-              type="button"
-              text="Cancel"
-              className="!bg-gray-500"
-              onClick={handleClose}
+          <Field label="From Date" required error={errors.fromDate?.message}>
+            <input
+              type="date"
+              {...form.register("fromDate", { required: "From date is required" })}
+              className={inputClass}
             />
-            <ButtonElement type="submit" text="Save Event" />
+          </Field>
+
+          <Field label="To Date" required error={errors.toDate?.message}>
+            <input
+              type="date"
+              {...form.register("toDate", {
+                required: "To date is required",
+                validate: (val) =>
+                  !fromDateValue || val >= fromDateValue || "To date must be on or after From date",
+              })}
+              min={fromDateValue}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Venue" required error={errors.venue?.message}>
+            <input
+              type="text"
+              {...form.register("venue", { required: "Venue is required" })}
+              placeholder="School Ground / Hall"
+              className={inputClass}
+            />
+          </Field>
+
+        </div>
+
+        {/* Row 3 — Participants | Chief Guest | Organizer */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <Field label="Participants" required error={errors.participants?.message}>
+            <input
+              type="text"
+              {...form.register("participants", { required: "Participants is required" })}
+              placeholder="Students / Teachers"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Chief Guest" error={errors.chiefGuest?.message}>
+            <input
+              type="text"
+              {...form.register("chiefGuest")}
+              placeholder="Chief Guest Name"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Organizer" error={errors.organizer?.message}>
+            <input
+              type="text"
+              {...form.register("organizer")}
+              placeholder="Organizer Name"
+              className={inputClass}
+            />
+          </Field>
+
+        </div>
+
+        {/* Row 4 — Mentor | Description */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <Field label="Mentor" error={errors.mentor?.message}>
+            <input
+              type="text"
+              {...form.register("mentor")}
+              placeholder="Mentor Name"
+              className={inputClass}
+            />
+          </Field>
+
+          <div className="md:col-span-2">
+            <Field label="Description" error={errors.descriptions?.message}>
+              <textarea
+                {...form.register("descriptions")}
+                placeholder="Event description"
+                rows={3}
+                className={`${inputClass} resize-none`}
+              />
+            </Field>
           </div>
 
-        </form>
-      </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3">
+          <ButtonElement
+            type="button"
+            text="Cancel"
+            className="!bg-gray-500"
+            onClick={handleClose}
+          />
+          <ButtonElement type="submit" text="Save Event" />
+        </div>
+
+      </form>
     </div>
-  );
+  </div>
+);
 };
 
 export default AddEventForm;

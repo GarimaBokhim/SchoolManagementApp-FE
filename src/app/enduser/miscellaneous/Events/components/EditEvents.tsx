@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
-
+import { useApiHandler } from "@/hooks/useApiHandler"
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { InputElement } from "@/components/Input/InputElement";
 import { Toast } from "@/components/Toast/toast";
@@ -40,6 +40,8 @@ const EditEventForm = ({ form, visible, onClose, selectedEvent }: Props) => {
     form.reset();
     onClose();
   };
+
+  const { execute } = useApiHandler();
 
   const onSubmit: SubmitHandler<IEvents> = async (data) => {
     clearError();

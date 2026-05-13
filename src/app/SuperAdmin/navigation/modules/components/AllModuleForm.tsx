@@ -30,7 +30,7 @@ const AllModuleForm = () => {
       />
     );
   };
-  
+
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -38,13 +38,13 @@ const AllModuleForm = () => {
   });
 
   const [addModal, setAddModal] = useState(false);
-  
+
   // Build query string with pagination params
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&isPagination=${paginationParams.isPagination}`;
-  
+
   // Pass query as a dependency to ensure refetch when pagination changes
   const { data: allModules, refetch, isLoading, error } = useGetAllModules(query);
-  
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
@@ -97,26 +97,27 @@ const AllModuleForm = () => {
             className="!text-md !font-bold"
           />
         </div>
-        
+
         {isLoading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             <p className="mt-2 text-gray-500">Loading modules...</p>
           </div>
         )}
-        
+
         {error && (
           <div className="text-center py-8 text-red-500">
             Error loading modules: {error.message}
           </div>
         )}
-        
+
         {!isLoading && !error && (
           <table className="min-w-full table-auto text-left border border-gray-200 rounded-xl">
             <thead>
               <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                 <th className="py-3 px-4">SN</th>
                 <th className="py-3 px-4">Name</th>
+                <th className="py-3 px-4">Descriptions</th>
                 <th className="py-3 px-4">Target URL</th>
                 <th className="py-3 px-4">Icon URL</th>
                 <th className="py-3 px-4">Rank</th>
@@ -134,6 +135,7 @@ const AllModuleForm = () => {
                       {(paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1}
                     </td>
                     <td className="py-3 px-4 font-medium">{module.Name || "N/A"}</td>
+                    <td className="py-3 px-4 font-medium">{module.Description || "N/A"}</td>
                     <td className="py-3 px-4">{module.TargetUrl || "-"}</td>
                     <td className="py-3 px-4">{module.IconUrl || "-"}</td>
                     <td className="py-3 px-4">{module.Rank || "-"}</td>
@@ -174,7 +176,7 @@ const AllModuleForm = () => {
           handleSearch={handleSearch}
         />
       )}
-      
+
       {selectedId && (
         <EditModule
           visible={modal}
@@ -186,13 +188,13 @@ const AllModuleForm = () => {
           modulesId={selectedId}
         />
       )}
-      
-      <Add 
-        visible={addModal} 
+
+      <Add
+        visible={addModal}
         onClose={() => {
           setAddModal(false);
           refetch(); // Refetch after adding new module
-        }} 
+        }}
       />
     </div>
   );

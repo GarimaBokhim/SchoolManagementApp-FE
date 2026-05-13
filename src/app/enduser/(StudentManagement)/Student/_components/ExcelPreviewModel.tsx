@@ -15,6 +15,8 @@ const ExcelPreviewModal = ({
 
   const headers = previewData.length > 0 ? Object.keys(previewData[0]) : []
 
+
+
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-xl w-[95%] max-h-[85%] overflow-auto">

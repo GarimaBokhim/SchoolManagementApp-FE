@@ -117,7 +117,7 @@ export const AddTrainingRegistrationModal = ({ isOpen, onClose, onSubmit }: Prop
                         setSelectedClass(cls)
                         setValue('consultancyClassId', cls?.id ?? '', { shouldValidate: true })
                       }}
-                      onFocus={() => {}}
+                      onFocus={() => { }}
                       getLabel={(cls) => cls?.name ?? ''}
                       getValue={(cls) => cls?.id ?? ''}
                       renderOptionExtra={(cls) => (

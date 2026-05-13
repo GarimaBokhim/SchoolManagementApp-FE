@@ -14,3 +14,20 @@ export interface IPaginationResponse<T> {
   NextPage: number;
   PreviousPage: number;
 }
+
+
+export interface IPaginationCrmResponse<T> {
+  Data: {
+    Items: T[];
+    TotalItems: number;
+    PageIndex: number;
+    pageSize: number;
+    TotalPages: number;
+    FirstPage: number;
+    LastPage: number;
+    PreviousPage: number | null;
+    NextPage: number | null;
+  };
+  Message: string;
+  StatusCode: number;
+}

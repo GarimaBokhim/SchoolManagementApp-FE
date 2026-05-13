@@ -6,9 +6,9 @@ import ScheduleAppointment from '../schedule_appointment/ScheduleAppointmetnForm
 import AllFollowUpsForm from '../followups/pages/FollowUpForm'
 const Allvisitors = () => {
   const tabs = [
-    { id: 'lead',      label: 'Lead' },
-    { id: 'schedule',  label: 'Schedule Appointment' },
-    { id: 'followup',  label: 'Follow Up' },
+    { id: 'lead', label: 'Lead' },
+    { id: 'schedule', label: 'Schedule Appointment' },
+    { id: 'followup', label: 'Follow Up' },
   ]
 
   const [activeTab, setActiveTab] = useState<string>('lead')
