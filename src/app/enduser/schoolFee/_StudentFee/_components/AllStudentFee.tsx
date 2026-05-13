@@ -286,8 +286,8 @@ const AllStudentFeeForm = () => {
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-start gap-3 flex-wrap">
+            {/* Class Filter Section - Grouped together */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
-              {/* Class Filter Chips with Navigation */}
               <div className="flex items-center gap-2">
                 {/* Left Navigation Button */}
                 <button
@@ -298,8 +298,22 @@ const AllStudentFeeForm = () => {
                   <ChevronLeft size={15} />
                 </button>
 
-                {/* Class Chips - Shows 6 at a time */}
+                {/* Class Chips Container */}
                 <div className="flex gap-2 flex-1 overflow-x-auto scrollbar-hide">
+                  {/* "All Classes" button as the first chip */}
+                  <button
+                    type="button"
+                    onClick={() => handleClassFilter(null, "")}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
+                      ${selectedClassId === null
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                        : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                      }`}
+                  >
+                    All Classes
+                  </button>
+
+                  {/* Class chips - Shows 6 at a time */}
                   {visibleClasses.map((cls) => {
                     const id = cls.id ?? (cls as any).Id ?? "";
                     const isActive = selectedClassId === id;
@@ -318,22 +332,9 @@ const AllStudentFeeForm = () => {
                       </button>
                     );
                   })}
-
-                  {/* Show "All" button as the first chip */}
-                  <button
-                    type="button"
-                    onClick={() => handleClassFilter(null, "")}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
-                      ${selectedClassId === null
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
-                      }`}
-                  >
-                    All Classes
-                  </button>
                 </div>
 
-                {/* Right Navigation Button */}
+                {/* Right Navigation Button - Now positioned right next to chips */}
                 <button
                   onClick={handleNextClasses}
                   disabled={!canGoNext}
@@ -344,6 +345,7 @@ const AllStudentFeeForm = () => {
               </div>
             </div>
 
+            {/* Action Buttons Section - Filter, Add New, Due Slip */}
             <div className="flex flex-wrap gap-2 justify-end items-start">
               {/* Due Slip Button — disabled when no class selected */}
               <button

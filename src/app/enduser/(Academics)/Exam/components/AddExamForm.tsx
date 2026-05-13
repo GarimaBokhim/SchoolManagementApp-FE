@@ -9,7 +9,7 @@ import { useAddExam } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFilterClassByDate } from "../../Class/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
 
@@ -24,16 +24,29 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const { data: allClass } = useFilterClassByDate("?IsPagination=false");
 
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<{
-    [key: number]: string;
-  }>({});
 
-  const { data: allSubjects } = useGetSubjectByClassId(selectedClass);
+  const { data: allSubjects, isLoading: subjectsLoading } =
+    useGetSubjectByClassId(selectedClass);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, replace } = useFieldArray({
     name: "examSubjects",
     control: form.control,
   });
+
+  // Auto-populate subjects when class changes
+  useEffect(() => {
+    if (!allSubjects) return;
+
+    replace(
+      allSubjects.map((subject) => ({
+        subjectId: subject.id,
+        fullMarksPr: 0,
+        passMarksPr: 0,
+        fullMarksTh: 0,
+        passMarksTh: 0,
+      }))
+    );
+  }, [allSubjects]);
 
   const handleClose = () => {
     form.reset({
@@ -44,6 +57,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
       schoolId: "",
       examSubjects: [],
     });
+    setSelectedClass("");
     onClose();
   };
 
@@ -127,8 +141,8 @@ const AddExamForm = ({ form, onClose }: Props) => {
                   const id = cls?.id ?? "";
                   setSelectedClass(id);
                   form.setValue("classId", id);
-                  form.setValue("examSubjects", []);
-                  setSelectedSubjectIds({});
+                  // Clear subjects immediately on class change
+                  replace([]);
                 }}
                 getLabel={(e) => e?.name ?? ""}
                 getValue={(e) => e?.id ?? ""}
@@ -139,11 +153,24 @@ const AddExamForm = ({ form, onClose }: Props) => {
 
           {/* Subjects Section */}
           <div className="relative mt-6 z-0">
-            <h2 className="font-semibold mb-2">Exam Subjects</h2>
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="font-semibold">Exam Subjects</h2>
+              {subjectsLoading && selectedClass && (
+                <span className="text-sm text-blue-400 animate-pulse">
+                  Loading subjects...
+                </span>
+              )}
+            </div>
 
-            {fields.length === 0 && (
+            {!selectedClass && (
               <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">
-                No subjects added yet. Click "+ Add Subject" to begin.
+                Select a class above to load its subjects automatically.
+              </p>
+            )}
+
+            {selectedClass && !subjectsLoading && fields.length === 0 && (
+              <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">
+                No subjects found for this class.
               </p>
             )}
 
@@ -152,69 +179,11 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 key={field.id}
                 className="border border-gray-200 dark:border-zinc-600 rounded-lg p-4 mb-3"
               >
-                {/* Subject header + remove */}
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Subject {index + 1}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      remove(index);
-                      setSelectedSubjectIds((prev) => {
-                        const updated: { [key: number]: string } = {};
-                        Object.entries(prev).forEach(([k, v]) => {
-                          const ki = Number(k);
-                          if (ki < index) updated[ki] = v;
-                          else if (ki > index) updated[ki - 1] = v;
-                        });
-                        return updated;
-                      });
-                    }}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
+                <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">
+                  {allSubjects?.[index]?.subjectName ?? `Subject ${index + 1}`}
+                </p>
 
-                {/* Subject combobox + 4 mark fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                  <div className="relative z-0">
-                    <AppCombobox
-                      label="Subject"
-                      name={`examSubjects.${index}.subjectId`}
-                      form={form}
-                      value={selectedSubjectIds[index] ?? ""}
-                      options={(allSubjects ?? []).filter((subj) => {
-                        const selectedIds = Object.values(selectedSubjectIds);
-                        return (
-                          subj.id === selectedSubjectIds[index] ||
-                          !selectedIds.includes(subj.id)
-                        );
-                      })}
-                      selected={
-                        allSubjects?.find(
-                          (s) => s.id === selectedSubjectIds[index]
-                        ) || null
-                      }
-                      onSelect={(subject) => {
-                        const id = subject?.id ?? "";
-                        form.setValue(
-                          `examSubjects.${index}.subjectId`,
-                          id,
-                          { shouldValidate: true }
-                        );
-                        setSelectedSubjectIds((prev) => ({
-                          ...prev,
-                          [index]: id,
-                        }));
-                      }}
-                      getLabel={(s) => s?.subjectName ?? ""}
-                      getValue={(s) => s?.id ?? ""}
-                      dropdownPositionClass="absolute top-full left-0 right-0 mt-1 z-50"
-                    />
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
                   <InputElement
                     label="Full Marks (Practical)"
                     form={form}
@@ -223,7 +192,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
                     placeholder="0"
                     required
                   />
-
                   <InputElement
                     label="Pass Marks (Practical)"
                     form={form}
@@ -232,7 +200,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
                     placeholder="0"
                     required
                   />
-
                   <InputElement
                     label="Full Marks (Theory)"
                     form={form}
@@ -241,7 +208,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
                     placeholder="0"
                     required
                   />
-
                   <InputElement
                     label="Pass Marks (Theory)"
                     form={form}
@@ -253,22 +219,6 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 </div>
               </div>
             ))}
-
-            <button
-              type="button"
-              onClick={() =>
-                append({
-                  subjectId: "",
-                  fullMarksPr: 0,
-                  passMarksPr: 0,
-                  fullMarksTh: 0,
-                  passMarksTh: 0,
-                })
-              }
-              className="mt-2 px-3 py-1 bg-teal-500 text-white rounded hover:bg-teal-600"
-            >
-              + Add Subject
-            </button>
           </div>
 
           {/* Submit */}
