@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { SubmitHandler, UseFormReturn, useFieldArray } from 'react-hook-form'
@@ -13,10 +14,12 @@ import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetAllExams } from '../../Exam/hooks'
-import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { useGetStudentByClass, useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSubjectByClassId, useGetSubjectById } from '../../Subject/hooks'
+import { useGetAllClass } from '../../Class/hooks'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
 import { IExam } from '../../Exam/types/IExams'
+import { Underdog } from 'next/font/google'
 
 type Props = {
   form: UseFormReturn<IExamResult>
@@ -33,6 +36,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   const [selectedExam, setSelectedExam] = useState<IExam | undefined>()
   const [selectedStudent, setSelectedStudent] = useState<IStudent | undefined>()
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>('')
 
   const { data: ExamResultData, isLoading: isLoadingExamResult } =
@@ -45,6 +49,10 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     selectedExamId ?? undefined
   )
 
+  const { data: allStudents } = useGetStudentByClass(selectedClassId || '')
+
+  const { data: allClass } = useGetAllClass()
+
   const { data: studentData, isLoading: isLoadingStudent } =
     useGetStudentById(ExamResultData?.studentId || '')
 
@@ -53,7 +61,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     name: 'marksObtained',
   })
 
-  // INIT
+  // INIT — populate form from existing ExamResult
   useEffect(() => {
     if (!ExamResultData || !allExam?.Items) return
 
@@ -61,6 +69,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     setSelectedExam(exam)
     setSelectedExamId(exam?.id ?? null)
     setSelectedClassId(exam?.classId)
+    setSelectedStudentId(ExamResultData.studentId)
 
     const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item: any) => ({
       subjectId: item.subjectId,
@@ -77,6 +86,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     })
   }, [ExamResultData, allExam, reset])
 
+  // Set selectedStudent from studentData for initial display fallback
   useEffect(() => {
     if (studentData) setSelectedStudent(studentData)
   }, [studentData])
@@ -87,6 +97,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   }
 
   const onSubmit: SubmitHandler<IExamResult> = async (data) => {
+    clearError()
     try {
       const transformedData = {
         examId: data.examId,
@@ -117,7 +128,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     (index: number, currentFullMarks: number | undefined) =>
       (e: ChangeEvent<HTMLInputElement>) => {
         const value = Number(e.target.value)
-        if (currentFullMarks && value > currentFullMarks) {
+        if (currentFullMarks !== undefined && value > currentFullMarks) {
           alert(`Obtained marks cannot exceed full marks (${currentFullMarks})`)
           setValue(`marksObtained.${index}.marksObtained`, currentFullMarks)
         }
@@ -141,52 +152,67 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
         <form onSubmit={form.handleSubmit(onSubmit)}>
 
-          {/* EXAM */}
+          {/* TOP FIELDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+
+            {/* EXAM */}
             <AppCombobox<IExam>
               label="Exam"
               name="examId"
               form={form}
-              selected={selectedExam}
+              selected={selectedExam ?? undefined}
               options={allExam?.Items ?? []}
               onSelect={(exam) => {
                 setSelectedExam(exam || undefined)
                 setSelectedExamId(exam?.id ?? null)
                 setSelectedClassId(exam?.classId)
                 setValue('examId', exam?.id ?? '')
+
+                // Reset student when exam changes
+                setSelectedStudentId(null)
+                setSelectedStudent(undefined)
+                setValue('studentId', '')
               }}
               getLabel={(e) => e.name}
               getValue={(e) => e.id ?? ''}
             />
 
-            {/* STUDENT (RESTORED) */}
-            <div className="mt-4">
-              <AppCombobox<IStudent>
-                label="Student Name"
-                name="studentId"
-                form={form}
-                selected={selectedStudent}
-                options={[]}
-                onSelect={() => { }}
-                getLabel={(s) =>
-                  [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
-                }
-                getValue={(s) => s.id ?? ''}
-                readOnly
-              />
-              <input type="hidden" {...form.register('studentId')} />
-            </div>
+            {/* STUDENT */}
+            <AppCombobox<IStudent>
+              label="Student Name"
+              name="studentId"
+              form={form}
+              selected={
+                allStudents?.Items.find((s) => s.id === selectedStudentId) ||
+                selectedStudent ||
+                undefined
+              }
+              options={allStudents?.Items ?? []}
+              onSelect={(student) => {
+                const id = student?.id ?? ''
+                setSelectedStudentId(id)
+                setSelectedStudent(student || undefined)
+                setValue('studentId', id)
+              }}
+              getLabel={(s) =>
+                [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')
+              }
+              getValue={(s) => s.id ?? ''}
+              renderOptionExtra={(s) => (
+                <div>
+                  {allClass?.Items.find((i) => i.id === s?.classId)?.name}
+                </div>
+              )}
+            />
 
-            {/* REMARKS (RESTORED) */}
-            <div className="mt-4">
-              <InputElement
-                label="Remark"
-                form={form}
-                name="remarks"
-                inputType="text"
-                placeholder="Enter remark"
-              />
-            </div>
+            {/* REMARKS */}
+            <InputElement
+              label="Remark"
+              form={form}
+              name="remarks"
+              inputType="text"
+              placeholder="Enter remark"
+            />
           </div>
 
           {/* SUBJECT MARKS */}
@@ -223,10 +249,11 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                         name={`marksObtained.${index}.subjectId`}
                         form={form}
                         options={filteredSubjects}
-                        selected={filteredSubjects.find((s: any) => s.id === currentSubjectId)}
+                        selected={filteredSubjects.find((s: any) => s.id === currentSubjectId) ?? null}
                         onSelect={(subject: any) => {
-                          setValue(`marksObtained.${index}.subjectId`, subject?.id)
-                          setValue(`marksObtained.${index}.fullMarks`, subject?.fullMarks || 0)
+                          setValue(`marksObtained.${index}.subjectId`, subject?.id ?? '')
+                          setValue(`marksObtained.${index}.fullMarks`, subject?.fullMarks ?? 0)
+                          setValue(`marksObtained.${index}.marksObtained`, 0)
                         }}
                         getLabel={(s: any) => s.subjectName}
                         getValue={(s: any) => s.id}
@@ -234,7 +261,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                     )}
                   </div>
 
-                  {/* MARKS */}
+                  {/* MARKS OBTAINED */}
                   <div className="col-span-12 md:col-span-3">
                     <InputElement
                       label="Marks Obtained"
