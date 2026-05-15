@@ -2,14 +2,10 @@
 
 import { SubmitHandler, UseFormReturn, Controller } from "react-hook-form";
 import { X } from "lucide-react";
-
 import { useApiHandler } from "@/hooks/useApiHandler";
-
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import { Toast } from "@/components/Toast/toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-
 import { IEvents } from "../types/IEvents";
 import { useAddEvents } from "../hooks";
 
