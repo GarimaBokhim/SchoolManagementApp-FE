@@ -15,6 +15,7 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
     const { data: dueSlipData, isLoading } = useGetDueSlip(classId);
     const printRef = useRef<HTMLDivElement>(null);
     const [imageError, setImageError] = useState(false);
+    const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
     const schoolId = typeof window !== "undefined"
         ? (() => {
@@ -30,7 +31,6 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
 
     const { data: schoolDetail } = useGetSchoolById(schoolId || undefined);
 
-    // Same logo logic as SchoolMarkSheetSecond
     const getLogoUrl = () => {
         const imageUrl = schoolDetail?.imageUrl;
         if (!imageUrl || imageUrl === "-" || imageUrl === "string" || imageUrl === "") return null;
@@ -38,7 +38,25 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
     };
     const schoolLogoUrl = getLogoUrl();
 
+    // Checkbox logic
+    const allStudentIds = dueSlipData?.Items?.map((_, idx) => String(idx)) ?? [];
+    const isAllSelected = selectedStudents.length === allStudentIds.length && allStudentIds.length > 0;
+
+    const toggleStudent = (id: string) => {
+        setSelectedStudents((prev) =>
+            prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        setSelectedStudents(isAllSelected ? [] : allStudentIds);
+    };
+
     const handlePrint = () => {
+        if (selectedStudents.length === 0) {
+            alert("Please select at least one student.");
+            return;
+        }
         const printContents = printRef.current?.innerHTML;
         if (!printContents) return;
         const win = window.open("", "_blank");
@@ -66,8 +84,12 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
         win.close();
     };
 
-    const totalAmount = dueSlipData?.Items?.reduce((s, i) => s + (i.totalAmount ?? 0), 0) ?? 0;
-    const totalPaid = dueSlipData?.Items?.reduce((s, i) => s + (i.paidAmount ?? 0), 0) ?? 0;
+    const selectedItems = dueSlipData?.Items?.filter((_, idx) =>
+        selectedStudents.includes(String(idx))
+    ) ?? [];
+
+    const totalAmount = selectedItems.reduce((s, i) => s + (i.totalAmount ?? 0), 0);
+    const totalPaid = selectedItems.reduce((s, i) => s + (i.paidAmount ?? 0), 0);
     const totalDue = totalAmount - totalPaid;
 
     return (
@@ -86,7 +108,7 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                         >
                             <Printer size={16} />
-                            Print
+                            Print Selected
                         </button>
                         <button onClick={onClose} className="px-3 py-2 text-red-500 hover:text-red-700">
                             <X size={22} strokeWidth={2.5} />
@@ -101,111 +123,130 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                     ) : !dueSlipData?.Items?.length ? (
                         <div className="text-center py-12 text-gray-500 italic">No due slip data found.</div>
                     ) : (
-                        <div ref={printRef} className="flex flex-col gap-6">
-                            {dueSlipData.Items.map((item: IDueSlipItem, idx: number) => {
-                                const due = item.totalAmount - item.paidAmount;
-                                return (
-                                    <div
-                                        key={idx}
-                                        className="border border-gray-300 rounded-md overflow-hidden break-inside-avoid"
-                                    >
-                                        {/* ── Slip Header ── */}
-                                        <div className="flex items-center gap-4 px-5 py-4 border-b-2 border-gray-800">
-                                            {/* Logo */}
-                                            <div className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center overflow-hidden shrink-0 bg-gray-50">
-                                                {schoolLogoUrl && !imageError ? (
-                                                    <img
-                                                        src={schoolLogoUrl}
-                                                        alt="School Logo"
-                                                        className="w-full h-full object-contain p-1"
-                                                        onError={() => setImageError(true)}
-                                                    />
-                                                ) : (
-                                                    <Building className="w-7 h-7 text-gray-400" />
-                                                )}
-                                            </div>
+                        <>
+                            {/* Select All */}
+                            <div className="flex items-center gap-2 mb-2 border-b pb-3">
+                                <input
+                                    type="checkbox"
+                                    className="w-5 h-5 cursor-pointer"
+                                    checked={isAllSelected}
+                                    onChange={toggleSelectAll}
+                                />
+                                <label className="font-medium cursor-pointer" onClick={toggleSelectAll}>
+                                    Select All
+                                </label>
+                            </div>
 
-                                            {/* School Info */}
-                                            <div className="flex-1 text-center">
-                                                <h1 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                                                    {schoolDetail?.name ?? "School Name"}
-                                                </h1>
-                                                <p className="text-xs text-gray-500">{schoolDetail?.address ?? "-"}</p>
-                                                <p className="text-xs text-gray-500">{schoolDetail?.contactNumber ?? ""}</p>
-                                            </div>
+                            {/* Student Slip List */}
+                            <div className="flex flex-col gap-6">
+                                {dueSlipData.Items.map((item: IDueSlipItem, idx: number) => {
+                                    const id = String(idx);
+                                    const due = item.totalAmount - item.paidAmount;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="flex items-start gap-4 border p-3 rounded-md bg-gray-50"
+                                        >
+                                            {/* Checkbox */}
+                                            <input
+                                                type="checkbox"
+                                                className="mt-4 w-5 h-5 cursor-pointer shrink-0"
+                                                checked={selectedStudents.includes(id)}
+                                                onChange={() => toggleStudent(id)}
+                                            />
 
-                                            {/* Slip label */}
-                                            <div className="text-right shrink-0">
-                                                <span className="text-xs font-bold text-white bg-gray-800 px-3 py-1 rounded uppercase tracking-wider">
-                                                    Due Slip
-                                                </span>
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {new Date().toLocaleDateString()}
-                                                </p>
+                                            {/* Slip Card */}
+                                            <div className="border border-gray-300 rounded-md overflow-hidden break-inside-avoid flex-1">
+                                                {/* Slip Header */}
+                                                <div className="flex items-center gap-4 px-5 py-4 border-b-2 border-gray-800">
+                                                    <div className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center overflow-hidden shrink-0 bg-gray-50">
+                                                        {schoolLogoUrl && !imageError ? (
+                                                            <img
+                                                                src={schoolLogoUrl}
+                                                                alt="School Logo"
+                                                                className="w-full h-full object-contain p-1"
+                                                                onError={() => setImageError(true)}
+                                                            />
+                                                        ) : (
+                                                            <Building className="w-7 h-7 text-gray-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 text-center">
+                                                        <h1 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                                                            {schoolDetail?.name ?? "School Name"}
+                                                        </h1>
+                                                        <p className="text-xs text-gray-500">{schoolDetail?.address ?? "-"}</p>
+                                                        <p className="text-xs text-gray-500">{schoolDetail?.contactNumber ?? ""}</p>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <span className="text-xs font-bold text-white bg-gray-800 px-3 py-1 rounded uppercase tracking-wider">
+                                                            Due Slip
+                                                        </span>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            {new Date().toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Student Info */}
+                                                <div className="grid grid-cols-2 gap-x-6 gap-y-1 px-5 py-3 bg-gray-50 border-b border-gray-200 text-sm">
+                                                    <p>
+                                                        <span className="text-gray-500 font-medium">Student Name: </span>
+                                                        <span className="font-semibold text-gray-800">{item.studentName || "-"}</span>
+                                                    </p>
+                                                    <p>
+                                                        <span className="text-gray-500 font-medium">Class: </span>
+                                                        <span className="text-gray-800">{className}</span>
+                                                    </p>
+                                                    <p>
+                                                        <span className="text-gray-500 font-medium">Address: </span>
+                                                        <span className="text-gray-800">{item.address || "-"}</span>
+                                                    </p>
+                                                </div>
+
+                                                {/* Fee Table */}
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-gray-800 text-white text-xs uppercase tracking-wide">
+                                                            <th className="px-4 py-2 text-left">Description</th>
+                                                            <th className="px-4 py-2 text-right">Amount (Rs.)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr className="border-b border-gray-100">
+                                                            <td className="px-4 py-2 text-gray-700">Total Fee Charged</td>
+                                                            <td className="px-4 py-2 text-right font-medium text-gray-800">
+                                                                {item.totalAmount.toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="border-b border-gray-100">
+                                                            <td className="px-4 py-2 text-gray-700">Discount</td>
+                                                            <td className="px-4 py-2 text-right text-green-600 font-medium">
+                                                                - {item.discount.toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="border-b border-gray-100">
+                                                            <td className="px-4 py-2 text-gray-700">Amount Paid</td>
+                                                            <td className="px-4 py-2 text-right text-green-600 font-medium">
+                                                                - {item.paidAmount.toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="bg-gray-50">
+                                                            <td className="px-4 py-3 font-bold text-gray-800 text-base">Due Amount</td>
+                                                            <td className={`px-4 py-3 text-right font-bold text-base ${due > 0 ? "text-red-600" : "text-green-600"}`}>
+                                                                Rs. {due.toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
+                                    );
+                                })}
+                            </div>
 
-                                        {/* ── Student Info Row ── */}
-                                        <div className="grid grid-cols-2 gap-x-6 gap-y-1 px-5 py-3 bg-gray-50 border-b border-gray-200 text-sm">
-                                            <p>
-                                                <span className="text-gray-500 font-medium">Student Name: </span>
-                                                <span className="font-semibold text-gray-800">{item.studentName || "-"}</span>
-                                            </p>
-                                            <p>
-                                                <span className="text-gray-500 font-medium">Class: </span>
-                                                <span className="text-gray-800">{className}</span>
-                                            </p>
-                                            <p>
-                                                <span className="text-gray-500 font-medium">Address: </span>
-                                                <span className="text-gray-800">{item.address || "-"}</span>
-                                            </p>
-                                        </div>
-
-                                        {/* ── Fee Breakdown Table ── */}
-                                        <table className="w-full text-sm border-collapse">
-                                            <thead>
-                                                <tr className="bg-gray-800 text-white text-xs uppercase tracking-wide">
-                                                    <th className="px-4 py-2 text-left">Description</th>
-                                                    <th className="px-4 py-2 text-right">Amount (Rs.)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr className="border-b border-gray-100">
-                                                    <td className="px-4 py-2 text-gray-700">Total Fee Charged</td>
-                                                    <td className="px-4 py-2 text-right font-medium text-gray-800">
-                                                        {item.totalAmount.toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                                <tr className="border-b border-gray-100">
-                                                    <td className="px-4 py-2 text-gray-700">Discount</td>
-                                                    <td className="px-4 py-2 text-right text-green-600 font-medium">
-                                                        - {item.discount.toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                                <tr className="border-b border-gray-100">
-                                                    <td className="px-4 py-2 text-gray-700">Amount Paid</td>
-                                                    <td className="px-4 py-2 text-right text-green-600 font-medium">
-                                                        - {item.paidAmount.toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                                <tr className="bg-gray-50">
-                                                    <td className="px-4 py-3 font-bold text-gray-800 text-base">
-                                                        Due Amount
-                                                    </td>
-                                                    <td className={`px-4 py-3 text-right font-bold text-base ${due > 0 ? "text-red-600" : "text-green-600"}`}>
-                                                        Rs. {due.toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-
-
-                                    </div>
-                                );
-                            })}
-
-                            {/* ── Class Summary ── */}
-                            {dueSlipData.Items.length > 1 && (
+                            {/* Class Summary — only for selected items with more than 1 */}
+                            {selectedItems.length > 1 && (
                                 <div className="border border-gray-300 rounded-md overflow-hidden mt-2">
                                     <div className="bg-gray-800 text-white px-5 py-2 text-sm font-semibold uppercase tracking-wide">
                                         Class Summary — {className}
@@ -228,8 +269,74 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                                     </div>
                                 </div>
                             )}
-                        </div>
+                        </>
                     )}
+                </div>
+
+                {/* Hidden Print Area — only selected */}
+                <div className="hidden">
+                    <div ref={printRef}>
+                        {selectedItems.map((item: IDueSlipItem, idx: number) => {
+                            const due = item.totalAmount - item.paidAmount;
+                            return (
+                                <div key={idx} className="p-4 break-inside-avoid">
+                                    <div className="border border-gray-300 rounded-md overflow-hidden">
+                                        <div className="flex items-center gap-4 px-5 py-4 border-b-2 border-gray-800">
+                                            <div className="w-16 h-16 border border-gray-300 rounded flex items-center justify-center overflow-hidden shrink-0 bg-gray-50">
+                                                {schoolLogoUrl && !imageError ? (
+                                                    <img src={schoolLogoUrl} alt="School Logo" className="w-full h-full object-contain p-1" />
+                                                ) : (
+                                                    <Building className="w-7 h-7 text-gray-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 text-center">
+                                                <h1 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                                                    {schoolDetail?.name ?? "School Name"}
+                                                </h1>
+                                                <p className="text-xs text-gray-500">{schoolDetail?.address ?? "-"}</p>
+                                                <p className="text-xs text-gray-500">{schoolDetail?.contactNumber ?? ""}</p>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <span className="text-xs font-bold text-white bg-gray-800 px-3 py-1 rounded uppercase tracking-wider">Due Slip</span>
+                                                <p className="text-xs text-gray-400 mt-1">{new Date().toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-6 gap-y-1 px-5 py-3 bg-gray-50 border-b border-gray-200 text-sm">
+                                            <p><span className="text-gray-500 font-medium">Student Name: </span><span className="font-semibold text-gray-800">{item.studentName || "-"}</span></p>
+                                            <p><span className="text-gray-500 font-medium">Class: </span><span className="text-gray-800">{className}</span></p>
+                                            <p><span className="text-gray-500 font-medium">Address: </span><span className="text-gray-800">{item.address || "-"}</span></p>
+                                        </div>
+                                        <table className="w-full text-sm border-collapse">
+                                            <thead>
+                                                <tr className="bg-gray-800 text-white text-xs uppercase tracking-wide">
+                                                    <th className="px-4 py-2 text-left">Description</th>
+                                                    <th className="px-4 py-2 text-right">Amount (Rs.)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="border-b border-gray-100">
+                                                    <td className="px-4 py-2 text-gray-700">Total Fee Charged</td>
+                                                    <td className="px-4 py-2 text-right font-medium text-gray-800">{item.totalAmount.toLocaleString()}</td>
+                                                </tr>
+                                                <tr className="border-b border-gray-100">
+                                                    <td className="px-4 py-2 text-gray-700">Discount</td>
+                                                    <td className="px-4 py-2 text-right text-green-600 font-medium">- {item.discount.toLocaleString()}</td>
+                                                </tr>
+                                                <tr className="border-b border-gray-100">
+                                                    <td className="px-4 py-2 text-gray-700">Amount Paid</td>
+                                                    <td className="px-4 py-2 text-right text-green-600 font-medium">- {item.paidAmount.toLocaleString()}</td>
+                                                </tr>
+                                                <tr className="bg-gray-50">
+                                                    <td className="px-4 py-3 font-bold text-gray-800 text-base">Due Amount</td>
+                                                    <td className={`px-4 py-3 text-right font-bold text-base ${due > 0 ? "text-red-600" : "text-green-600"}`}>Rs. {due.toLocaleString()}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
