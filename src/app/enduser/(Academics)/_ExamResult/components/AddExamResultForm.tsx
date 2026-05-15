@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-
 import { SubmitHandler, UseFormReturn, useFieldArray } from 'react-hook-form'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
@@ -11,7 +10,7 @@ import { useAddExamResult } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSubjectByClassId } from '../../Subject/hooks'
@@ -27,6 +26,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler()
   const { data: allClass } = useGetAllClass()
   const { control } = form
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'marksObtained',
@@ -36,19 +36,51 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<{ [key: number]: string | null }>({})
   const [selectedFullMarks, setSelectedFullMarks] = useState<{ [key: number]: number | undefined }>({})
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>('')
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined)
 
   const { data: allExam } = useGetAllExams()
   const { data: allStudents } = useGetStudentByClass(selectedClassId || '')
   const { data: allSubject } = useGetSubjectByClassId(selectedClassId, selectedExamId ?? undefined)
 
+  // Auto-populate subject rows when subjects load after exam selection
+  useEffect(() => {
+    if (!allSubject || allSubject.length === 0) {
+      remove()
+      setSelectedSubjectIds({})
+      setSelectedFullMarks({})
+      return
+    }
+
+    remove()
+
+    const newSubjectIds: { [key: number]: string | null } = {}
+    const newFullMarks: { [key: number]: number | undefined } = {}
+
+    allSubject.forEach((subject, index) => {
+      newSubjectIds[index] = subject.id
+      newFullMarks[index] = subject.fullMarks
+    })
+
+    setSelectedSubjectIds(newSubjectIds)
+    setSelectedFullMarks(newFullMarks)
+
+    allSubject.forEach((subject) => {
+      append({
+        subjectId: subject.id,
+        marksObtained: 0,
+        fullMarks: subject.fullMarks,
+      })
+    })
+  }, [allSubject])
+
   const handleClose = () => {
     form.reset()
-    setSelectedClassId('')
+    setSelectedClassId(undefined)
     setSelectedExamId(null)
     setSelectedStudentId(null)
     setSelectedSubjectIds({})
     setSelectedFullMarks({})
+    remove()
     onClose()
   }
 
@@ -65,7 +97,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
           fullMarks: item.fullMarks
         }))
       }
-
       await toast.promise(addExamResult.mutateAsync(transformedData as any), {
         loading: 'Adding ExamResult...',
         success: 'Successfully added ExamResult',
@@ -85,7 +116,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
               Add Exam Result
             </h1>
-
             <button
               type="button"
               onClick={handleClose}
@@ -108,9 +138,15 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 selected={allExam?.Items?.find((e) => e.id === selectedExamId) || null}
                 onSelect={(exam) => {
                   const id = exam?.id ?? ''
+                  const classId = exam?.classId ?? undefined
+
                   setSelectedExamId(id)
-                  setSelectedClassId(exam?.classId)
+                  setSelectedClassId(classId)
                   form.setValue('examId', id)
+
+                  // Reset student when exam changes
+                  setSelectedStudentId(null)
+                  form.setValue('studentId', '')
                 }}
                 getLabel={(e) => e?.name ?? ''}
                 getValue={(e) => e?.id ?? ''}
@@ -172,11 +208,9 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                     onSelect={(subject) => {
                       const id = subject?.id ?? ''
                       const fullMarksValue = subject?.fullMarks ?? 0
-
                       form.setValue(`marksObtained.${index}.subjectId`, id, { shouldValidate: true })
                       form.setValue(`marksObtained.${index}.fullMarks`, fullMarksValue, { shouldValidate: true })
                       form.setValue(`marksObtained.${index}.marksObtained`, 0, { shouldValidate: true })
-
                       setSelectedFullMarks((prev) => ({ ...prev, [index]: fullMarksValue }))
                       setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
                     }}
@@ -194,7 +228,6 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       onBlur={(e: ChangeEvent<HTMLInputElement>) => {
                         const value = Number(e.target.value)
                         const max = selectedFullMarks[index]
-
                         if (max !== undefined && value > max) {
                           alert(`Obtained marks cannot exceed full marks (${max})`)
                           form.setValue(

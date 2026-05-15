@@ -42,7 +42,7 @@ export const useAddExamResult = () => {
           fullMarks: item.fullMarks
         }))
       }
-      
+
       console.log('Add ExamResult', transformedData)
       const response = await api.post(
         ExamResultEndPoints.createExamResults,
@@ -91,7 +91,7 @@ export const useEditExamResult = () => {
       if (!id) {
         throw new Error('Id is required to edit ExamResult')
       }
-      
+
       const transformedData = {
         examId: data.examId,
         studentId: data.studentId,
@@ -102,7 +102,7 @@ export const useEditExamResult = () => {
           fullMarks: item.fullMarks
         }))
       }
-      
+
       const response = await api.patch(
         `${ExamResultEndPoints.updateExamResults}/${id}`,
         transformedData
