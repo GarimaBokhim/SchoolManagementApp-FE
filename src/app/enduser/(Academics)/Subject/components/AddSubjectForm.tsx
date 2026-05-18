@@ -38,6 +38,8 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
     setSelectedExamId("");
   };
 
+  console.log(onclose);
+
   const onSubmit: SubmitHandler<ISubject> = async (data) => {
     clearError();
     const classId = String(data.classId ?? "").trim();

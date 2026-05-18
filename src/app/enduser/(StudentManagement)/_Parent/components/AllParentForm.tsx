@@ -145,7 +145,7 @@ const AllParentForm = () => {
     form.reset();
   };
 
-  
+
   const handleEditSuccess = () => {
     setShowParents(false);
     setSelectedId("");
@@ -286,7 +286,7 @@ const AllParentForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
-              
+
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left align-middle w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left align-middle">Parent Name</th>
@@ -310,7 +310,7 @@ const AllParentForm = () => {
                       key={Parent.id ?? index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
-                  
+
                       <td className="py-3 px-4 align-middle">{getSerialNumber(index)}</td>
                       <td className="py-3 px-4 align-middle">{Parent.fullName}</td>
                       <td className="py-3 px-4 align-middle">{Parent.email}</td>

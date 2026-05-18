@@ -2,43 +2,38 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { AddPaymentsPayload, AddPaymentsResponse } from '../types/IPayments'
+import { AddInvoicePayload } from '../types/IInvoice'
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddPayments, useGetAllApplicants } from "../hooks";
+import { useAddInvoice, useGetAllApplicants } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 
 type Props = {
-    form: UseFormReturn<AddPaymentsPayload>;
+    form: UseFormReturn<AddInvoicePayload>;
     onClose: () => void;
 };
-const AddPaymentsForms = ({ form, onClose }: Props) => {
-    const addPayments = useAddPayments();
+const AddInvoiceForm = ({ form, onClose }: Props) => {
+    const addInvoice = useAddInvoice();
     const { handleError, clearError } = useErrorHandler();
     const { data: allapplicant } = useGetAllApplicants();
-    console.log(allapplicant);
+
     const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
-    const [paymentMethod, setPaymentMethod] = useState<number | null>(null)
-
-
-
     const handleClose = () => {
         form.reset({
             applicantId: "",
-            amount: 0,
-            paymentDate: "",
-            paymentMethod: 0
+            paidAmount: 0,
+            issueDate: "",
+            dueDate: ""
 
         });
         setSelectedApplicantId(null);
-        onClose();
     };
 
-    const onSubmit: SubmitHandler<AddPaymentsPayload> = async (data) => {
+    const onSubmit: SubmitHandler<AddInvoicePayload> = async (data) => {
         clearError();
         const applicantId = String(data.applicantId ?? "").trim();
         if (!applicantId) {
@@ -46,23 +41,17 @@ const AddPaymentsForms = ({ form, onClose }: Props) => {
             return;
         }
         try {
-            await toast.promise(
-                addPayments.mutateAsync({
-                    applicantId,
-                    amount: data.amount,
-                    paymentDate: data.paymentDate,
-                    paymentMethod: data.paymentMethod
-                }),
-                {
-                    loading: "Adding Payments...",
-                    success: "Successfully added Payments",
-                }
-            );
-            handleClose();
-            onClose();
+            await addInvoice.mutateAsync({
+                applicantId,
+                paidAmount: data.paidAmount,
+                issueDate: data.issueDate,
+                dueDate: data.dueDate,
+            })
+
+            handleClose()
+            onClose()
         } catch (error) {
-            const errorMsg = handleError(error);
-            Toast.error(errorMsg);
+            Toast.error(handleError(error))
         }
     };
     return (
@@ -71,11 +60,14 @@ const AddPaymentsForms = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add Payments
+                            Add Invoice
                         </h1>
                         <button
                             type="button"
-                            onClick={handleClose}
+                            onClick={() => {
+                                handleClose();
+                                onClose();
+                            }}
                             className="text-red-400 text-2xl hover:text-red-500"
                         >
                             <X strokeWidth={3} />
@@ -85,55 +77,12 @@ const AddPaymentsForms = ({ form, onClose }: Props) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
                             <InputElement
-                                label="Amounts"
+                                label="Paid Amount"
                                 form={form}
-                                name="amount"
-                                placeholder="Enter amounts"
+                                name="paidAmount"
+                                placeholder="Enter PaidAmount"
                                 required
                             />
-
-                            <InputElement
-                                label="PaymentDate"
-                                form={form}
-                                name="paymentDate"
-                                inputType="date"
-                                placeholder="Enter Date"
-                                required
-                            />
-
-                            <AppCombobox
-                                label="Payment Method"
-                                dropdownPositionClass="absolute"
-                                name="paymentMethod"
-                                form={form}
-                                value={paymentMethod}
-                                options={[
-                                    { id: 0, name: 'Cash' },
-                                    { id: 1, name: 'CreditCard' },
-                                    { id: 2, name: 'DebitCard' },
-                                    { id: 3, name: 'BankTransfer' },
-                                    { id: 4, name: 'MobilePayment' },
-                                    { id: 5, name: 'Check' },
-                                ]}
-                                dropDownWidth="w-full"
-                                selected={
-                                    [
-                                        { id: 0, name: 'Cash' },
-                                        { id: 1, name: 'CreditCard' },
-                                        { id: 2, name: 'DebitCard' },
-                                        { id: 3, name: 'BankTransfer' },
-                                        { id: 4, name: 'MobilePayment' },
-                                        { id: 5, name: 'Check' },
-                                    ].find((g) => g.id === paymentMethod) || null
-                                }
-                                onSelect={(option) => {
-                                    setPaymentMethod(option?.id ?? null)
-                                    form.setValue('paymentMethod', option?.id ?? 0)
-                                }}
-                                getLabel={(o) => o?.name || ''}
-                                getValue={(o) => o?.id ?? ''}
-                            />
-
 
                             <AppCombobox
                                 value={sellectedApplicantId}
@@ -170,6 +119,25 @@ const AddPaymentsForms = ({ form, onClose }: Props) => {
                                 getValue={(g) => g?.id ?? ""}
                             />
 
+
+                            <InputElement
+                                label="IssueDate"
+                                form={form}
+                                name="issueDate"
+                                inputType="date"
+                                placeholder="Enter IssueDate"
+                                required
+                            />
+
+                            <InputElement
+                                label="DueDate"
+                                form={form}
+                                name="dueDate"
+                                inputType="date"
+                                placeholder="Enter DueDate"
+                                required
+                            />
+
                         </div>
                         <div className="flex justify-center mt-6">
                             <ButtonElement type="submit" text={"Submit"} />
@@ -181,4 +149,4 @@ const AddPaymentsForms = ({ form, onClose }: Props) => {
     );
 };
 
-export default AddPaymentsForms;
+export default AddInvoiceForm;

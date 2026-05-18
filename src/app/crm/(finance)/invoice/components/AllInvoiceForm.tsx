@@ -10,9 +10,9 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-
-import { useGetAllInstallments } from '../hooks'
-import AddInstallmentPlan from '../pages/Add'
+import { useGetAllInvoice } from '../hooks'
+import { AddConsultancyClassPayload } from '@/app/crm/classes/class/types/IClass'
+import AddInvoice from '../pages/Add'
 // import { AddConsultancyClassModal } from './AddConsultenctClassModel'
 
 const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
@@ -24,7 +24,7 @@ interface FilterFormData {
     endDate: string
 }
 
-const AllInstallmentPlanForm = () => {
+const AllInvoiceForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
@@ -43,10 +43,10 @@ const AllInstallmentPlanForm = () => {
         defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
     })
 
-    const { data, isLoading, error, refetch } = useGetAllInstallments(params)
+    const { data, isLoading, error, refetch } = useGetAllInvoice(params)
     // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
 
-    const installmentPlan = data?.items ?? [];
+    const invoiceDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
@@ -75,7 +75,6 @@ const AllInstallmentPlanForm = () => {
     const handleAddSubmit = () => {
         setAddModal(false);
         // Refresh the list after add modal closes
-        refetch();
     };
 
     if (error) {
@@ -115,7 +114,7 @@ const AllInstallmentPlanForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All InstallmentsPlan</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Invoice</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -127,7 +126,7 @@ const AllInstallmentPlanForm = () => {
                             <ButtonElement
                                 icon={<Plus size={18} />}
                                 type="button"
-                                text="Add New Installments"
+                                text="Add Invoice"
                                 onClick={() => setAddModal(true)}
                                 className="!font-semibold"
                             />
@@ -173,15 +172,15 @@ const AllInstallmentPlanForm = () => {
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
                                         <th className="px-4 py-3 text-left">Applicant</th>
-                                        <th className="px-4 py-3 text-left">Invoice</th>
+                                        <th className="px-4 py-3 text-left">InvoiceNo</th>
 
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">No Of Installments</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">Total Amount</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {installmentPlan.length === 0 ? (
+                                    {invoiceDetails.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={8}
@@ -191,9 +190,9 @@ const AllInstallmentPlanForm = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                        installmentPlan.map((installment, index) => (
+                                        invoiceDetails.map((invoice, index) => (
                                             <tr
-                                                key={installment.id}
+                                                key={invoice.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
                                                 <td className="px-4 py-3 text-gray-500">
@@ -201,18 +200,18 @@ const AllInstallmentPlanForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {installment.applicantName}
-                                                </td>
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {installment.invoiceNumber}
+                                                    {invoice.applicantName}
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {installment.numberOfInstallments}
+                                                    {invoice.invoiceNumber}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {installment.totalAmount}
+                                                    {invoice.invoiceStatus}
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                                                    {invoice.totalAmount}
                                                 </td>
 
                                                 <td className="px-4 py-3">
@@ -245,7 +244,7 @@ const AllInstallmentPlanForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {installmentPlan.length > 0 && totalPages > 1 && (
+                {invoiceDetails.length > 0 && totalPages > 1 && (
                     <div className="mt-4">
                         <Pagination
                             form={paginationForm}
@@ -262,7 +261,7 @@ const AllInstallmentPlanForm = () => {
                 )}
             </div>
 
-            <AddInstallmentPlan
+            <AddInvoice
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
@@ -270,4 +269,4 @@ const AllInstallmentPlanForm = () => {
     )
 }
 
-export default AllInstallmentPlanForm
+export default AllInvoiceForm

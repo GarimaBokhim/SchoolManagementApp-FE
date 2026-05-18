@@ -7,8 +7,7 @@ import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { InstallmentPlanResponse } from "../types/IInstallments";
-import { useAddInstallmentsPlan, useGetAllApplicantDropdown } from "../hooks";
+import { useAddInstallmentsPlan, useGetAllApplicants } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -20,8 +19,8 @@ type Props = {
 const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
   const addInstallmentPlan = useAddInstallmentsPlan();
   const { handleError, clearError } = useErrorHandler();
-  const { data: allapplicant } = useGetAllApplicantDropdown();
-  console.log(allapplicant);
+  const { data: allapplicant } = useGetAllApplicants();
+
   const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
   const handleClose = () => {
     form.reset({
@@ -30,7 +29,6 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
 
     });
     setSelectedApplicantId(null);
-    onClose();
   };
 
   const onSubmit: SubmitHandler<AddInstallmentPlanPayload> = async (data) => {
@@ -68,7 +66,10 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
             </h1>
             <button
               type="button"
-              onClick={handleClose}
+              onClick={() => {
+                handleClose();
+                onClose();
+              }}
               className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />

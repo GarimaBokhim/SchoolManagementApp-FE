@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import AllPayments from './All'
+import AllInvoice from '../../invoice/pages/All'
 const AllPaymentsDetails = () => {
     const tabs = [
         { id: 'payments', label: 'Payments' },
-        // { id: 'schedule', label: 'Schedule Appointment' },
+        { id: 'invoice', label: 'Invoice' },
         // { id: 'followup', label: 'Follow Up' },
     ]
 
@@ -15,8 +16,8 @@ const AllPaymentsDetails = () => {
         switch (activeTab) {
             case 'payments':
                 return <AllPayments />
-            // case 'schedule':
-            //     return <ScheduleAppointment />
+            case 'invoice':
+                return <AllInvoice />
             // case 'followup':
             //     return <AllFollowUpsForm />
             default:

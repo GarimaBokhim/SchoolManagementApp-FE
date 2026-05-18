@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { BookOpen, Filter, Plus } from 'lucide-react'
+import { BookOpen, Edit, Filter, Plus, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -13,21 +13,28 @@ import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPerm
 
 import { AddPaymentsPayload } from '../types/IPayments'
 
-import { useGetAllPayments } from '../hooks'
+import { useDeletePayments, useGetAllPayments } from '../hooks'
 import AddPayments from '../pages/Add'
-
-const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
-    1: 'IELTS', 2: 'TOEFL', 3: 'PTE', 4: 'Other',
-}
+import { EditButton } from '@/components/Buttons/EditButton'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+import EditPaymentsForm from './EditPaymentsForm'
+import EditStudent from '../pages/Edit'
+import EditPayments from '../pages/Edit'
 
 interface FilterFormData {
     startDate: string
     endDate: string
 }
 
-const AllInstallmentPlanForm = () => {
+const AllPaymentsForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
+
+    const [showPayments, setShowPayments] = useState(false)
+    const [selectedId, setSelectedId] = useState<string>('')
+
+
+
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
@@ -45,10 +52,34 @@ const AllInstallmentPlanForm = () => {
     })
 
     const { data, isLoading, error, refetch } = useGetAllPayments(params)
-    // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
+    const deletePayments = useDeletePayments()
 
-    const payments = data?.Data?.Items ?? [];
-    const totalPages = data?.Data?.TotalPages ?? 1;
+    const payments = data?.items ?? [];
+    const totalPages = data?.pagination?.totalPages ?? 1;
+
+    const paymentsMethodsType = [
+        { id: 0, name: 'Cash' },
+        { id: 1, name: 'CreditCard' },
+        { id: 2, name: 'DebitCard' },
+        { id: 3, name: 'BankTransfer' },
+        { id: 4, name: 'MobilePayment' },
+        { id: 5, name: 'Check' }
+    ];
+
+    const handleEditSuccess = () => {
+        setShowPayments(false);
+        setSelectedId("");
+    };
+
+
+
+    const handleDelete = async (id: string) => {
+        try {
+            await deletePayments.mutateAsync(id)
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
@@ -61,16 +92,9 @@ const AllInstallmentPlanForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
 
-        await toast.promise(
-            (async () => {
-                setParams(fullQuery)
-                await refetch()
-            })(),
-            {
-                loading: 'Fetching data...',
-                success: 'Data fetched successfully!',
-            }
-        )
+        setParams(fullQuery) // 👈 THIS triggers auto refetch
+
+        toast.success(data?.message || 'Data loaded successfully')
     }
 
     const handleClearFilters = () => {
@@ -80,11 +104,12 @@ const AllInstallmentPlanForm = () => {
         refetch()
     }
 
-    const handleAddSubmit = async (payload: AddPaymentsPayload) => {
-        // await handleAdd(payload)
+    const handleAddSubmit = () => {
         setAddModal(false);
+        // Refresh the list after add modal closes
         refetch();
-    }
+    };
+
 
     if (error) {
         return (
@@ -132,15 +157,14 @@ const AllInstallmentPlanForm = () => {
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
                             />
-                            {canAdd && (
-                                <ButtonElement
-                                    icon={<Plus size={18} />}
-                                    type="button"
-                                    text="Add Payments"
-                                    onClick={() => setAddModal(true)}
-                                    className="!font-semibold"
-                                />
-                            )}
+                            <ButtonElement
+                                icon={<Plus size={18} />}
+                                type="button"
+                                text="Add Payments"
+                                onClick={() => setAddModal(true)}
+                                className="!font-semibold"
+                            />
+
                         </div>
                     </div>
 
@@ -211,7 +235,12 @@ const AllInstallmentPlanForm = () => {
                                                     {payment.amount}
                                                 </td>
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {payment.paymentMethod}
+
+                                                    {
+                                                        paymentsMethodsType.find(
+                                                            (i) => i.id === payment.paymentMethod
+                                                        )?.name
+                                                    }
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
@@ -219,24 +248,44 @@ const AllInstallmentPlanForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    {/* <div className="flex justify-center gap-3">
-                                                        {canEdit && (
+                                                    <div className="flex justify-center gap-3">
+                                                        <EditButton
+                                                            button={
+                                                                <ButtonElement
+                                                                    icon={<Edit size={14} />}
+                                                                    type="button"
+                                                                    text=""
+                                                                    onClick={() => {
+                                                                        setShowPayments(true)
+                                                                        setSelectedId(payment.id ?? '')
+                                                                    }}
+                                                                    className="!text-xs !bg-teal-500"
+                                                                />
+                                                            }
+                                                        />
+
+                                                        <DeleteButton
+                                                            onConfirm={() => handleDelete(payment.id ? payment.id : '')}
+                                                            headerText={<Trash size={16} />}
+                                                            content="Are you sure you want to delete this student?"
+                                                        />
+                                                        {/* {canEdit && (
                                                             <button
                                                                 onClick={() => handleEdit()}
                                                                 className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
                                                             >
                                                                 Edit
                                                             </button>
-                                                        )}
-                                                        {canDelete && (
+                                                        )} */}
+                                                        {/* {canDelete && (
                                                             <button
                                                                 onClick={() => handleDelete(cls.id)}
                                                                 className="text-xs text-red-500 hover:text-red-600 font-medium"
                                                             >
                                                                 Delete
                                                             </button>
-                                                        )}
-                                                    </div> */}
+                                                        )} */}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -265,13 +314,21 @@ const AllInstallmentPlanForm = () => {
                 )}
             </div>
 
+            {showPayments && selectedId && (
+                <EditPayments
+                    PaymentsId={selectedId}
+                    visible={showPayments}
+                    onClose={() => setShowPayments(false)}
+                    onSuccess={handleEditSuccess}
+                />
+            )}
+
             <AddPayments
                 visible={addModal}
-
-                onClose={() => handleAddSubmit}
+                onClose={handleAddSubmit}
             />
         </>
     )
 }
 
-export default AllInstallmentPlanForm
+export default AllPaymentsForm

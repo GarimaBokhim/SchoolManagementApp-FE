@@ -1,83 +1,151 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
-import { IPaginationCrmResponse, IPaginationResponse } from '@/types/IPaginationResponse'
-import { AddInstallmentPlanPayload, InstallmentPlan, InstallmentPlanResponse } from '../types/IInstallments'
 import { Toast } from '@/components/Toast/toast'
+import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
+import { AddInstallmentPlanPayload, AddInstallmentPlanResponse, FilterInstallmentPlanResponse } from '../types/IInstallments'
+
 
 
 export const InstallmentEndPoints = {
-  filterInstallmentPlan: '/api/CrmFinance/FilterInstallmentPlan',
-  addInstallmentPlan: '/api/CrmFinance/AddInstallmentsPlan',
-  allApplicant: '/api/Enrolments/AllApplicant',
-//   filterRegistrations: '/api/Enrolments/FilterTrainingRegistration',
-//   addRegistration: '/api/Enrolments/AddTrainingRegistration',
+  filter: '/api/CrmFinance/FilterInstallmentPlan',
+  add: '/api/CrmFinance/AddInstallmentsPlan',
+  update: '/api/CrmFinance/UpdateInvoice',
+  delete: '/api/CrmFinance/DeleteInvoice',
+  applicants: '/api/Enrolments/AllApplicant'
 }
 
-export const installmentQueryKey = 'InstallmentPlan'
+export const InstallmentPlanQueryKeys = {
+  all: ['InstallmentPlan'],
+  applicants: ['Applicants'],
+}
+
+const normalizeInstallmentPlanPayload = (data: AddInstallmentPlanPayload): AddInstallmentPlanPayload => ({
+  applicantId: String(data.applicantId ?? '').trim(),
+  numberOfInstallments: Number(data.numberOfInstallments) || 0
+})
 
 
 export const useGetAllInstallments = (queryParams?: string) => {
   return useQuery({
-    queryKey: [installmentQueryKey, queryParams],
+    queryKey: [...InstallmentPlanQueryKeys.all, queryParams],
     queryFn: async () => {
-      const paramObj: Record<string, string> = {}
-      if (queryParams) {
-        const parsed = new URLSearchParams(queryParams.replace(/^&/, ''))
-        parsed.forEach((value, key) => { paramObj[key] = value })
-      }
-      const response = await api.get<IPaginationCrmResponse<InstallmentPlan>>(
-        InstallmentEndPoints.filterInstallmentPlan,
-        { params: paramObj }
+      const params = Object.fromEntries(
+        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
       )
-      return response.data ?? {
-        Items: [], TotalItems: 0, PageIndex: 1,
-        pageSize: 10, TotalPages: 1, FirstPage: 1, LastPage: 1,
-      }
+      const response = await api.get<IPaginationCrmResponse<FilterInstallmentPlanResponse>>(
+              InstallmentEndPoints.filter,
+              { params }
+            )
+      
+            return response.data
     },
+    select: (response) => ({
+      items: response?.Data?.Items ?? [],
+      pagination: {
+        totalItems: response?.Data?.TotalItems ?? 0,
+        pageIndex: response?.Data?.PageIndex ?? 1,
+        pageSize: response?.Data?.pageSize ?? 10,
+        totalPages: response?.Data?.TotalPages ?? 1,
+      },
+      message: response?.Message ?? '',
+      statusCode: response?.StatusCode ?? 200,
+    }),
+
+    staleTime: 1000 * 60 * 5,
   })
 }
 
 export const useAddInstallmentsPlan = () => {
   const queryClient = useQueryClient()
-  return useMutation<InstallmentPlanResponse, Error, AddInstallmentPlanPayload>({
-    mutationFn: async (payload) => {
-      const response = await api.post(InstallmentEndPoints.addInstallmentPlan, payload)
+  
+    return useMutation({
+      mutationFn: async (payload: AddInstallmentPlanPayload) => {
+        const normalizedPayload = normalizeInstallmentPlanPayload(payload)
+  
+        const response = await api.post<IPaginationCrmResponse<AddInstallmentPlanResponse>>(
+          InstallmentEndPoints.add,
+          normalizedPayload
+        )
+  
+        return response.data
+      },
+  
+      onSuccess: (response) => {
+        Toast.success(response?.Message || 'InstallmentPlan added successfully')
+  
+        queryClient.invalidateQueries({
+          queryKey: InstallmentPlanQueryKeys.all,
+        })
+      },
+  
+      onError: (error: any) => {
+        Toast.error(
+          error?.response?.data?.Message || 'Failed to add InstallmentPlan'
+        )
+      },
+    })
+}
+
+export const useDeleteInstallmentPlan = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(
+        `${InstallmentEndPoints.delete}/${id}`
+      )
+
       return response.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [installmentQueryKey] })
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'InstallmentPlan deleted successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: InstallmentPlanQueryKeys.all,
+      })
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to delete InstallmentPlan'
+      )
     },
   })
 }
 
-// return useQuery({
-//     queryKey: [queryKey, params],
-//     queryFn: async () => {
-//       const url = params
-//         ? `${ExamEndPoints.getAllExams}${params}`
-//         : `${ExamEndPoints.getAllExams}`;
-//       const response = await api.get<IPaginationResponse<IExam>>(url);
-//       return (
-//         response.data ?? {
-//           data: [],
-//           PageIndex: 0,
-//           isPagination: 1,
-//           pageSize: 10,
-//         }
-//       );
-//     },
-//   });
+export const useUpdateInstallmentPlan = () => {
+  const queryClient = useQueryClient()
 
-export const useGetAllApplicantDropdown = () => {
-  return useQuery({
-    queryKey: ['AllApplicantDropdown'],
-    queryFn: async () => {
-      const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
-        InstallmentEndPoints.allApplicant
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string
+      payload: AddInstallmentPlanPayload
+    }) => {
+      const response = await api.patch(
+        `${InstallmentEndPoints.update}/${id}`,
+        normalizeInstallmentPlanPayload(payload)
       )
-      return response.data?.Items ?? []
+
+      return response.data
     },
-    staleTime: 5 * 60 * 1000,
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'InstallmentPlan updated successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: InstallmentPlanQueryKeys.all,
+      })
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to update InstallmentPlan'
+      )
+    },
   })
 }
 
@@ -86,47 +154,21 @@ export const useGetAllApplicantDropdown = () => {
 
 export const useGetAllApplicants = () => {
   return useQuery({
-    queryKey: ['AllApplicants'],
-    queryFn: async () => {
-      const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
-        '/api/Enrolments/AllApplicant'
-      )
-      return response.data?.Items ?? []
-    },
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-export const useInstallmentPlanMutations = (refetch: () => void) => {
-  const handleAdd = async (payload: AddInstallmentPlanPayload) => {
-    try {
-      await api.post('/api/CrmFinance/AddInstallmentsPlan', payload)
-      Toast.success('InstallmentPlan added successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error InstallmentPlan class.')
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/api/CrmFinance/DeleteInstallmentsPlan/${id}`)
-      Toast.success('InstallmetPlan deleted successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error deleting class.')
-    }
-  }
-
-  const handleEdit = async (id: string) => {
-    try {
-      await api.patch(`/api/CrmFinance/UpdateInstallmentsPlan/${id}`)
-      Toast.success('Update installmentPlan successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error updateing installmentPlan.')
-    }
-  }
-
-  return { handleAdd, handleDelete, handleEdit }
+      queryKey: InstallmentPlanQueryKeys.applicants,
+  
+      queryFn: async () => {
+        const response = await api.get<
+          IPaginationCrmResponse<{
+            id: string
+            fullName: string
+          }>
+        >(InstallmentEndPoints.applicants)
+  
+        return response.data
+      },
+  
+      select: (response) => response?.Data.Items ?? [],
+  
+      staleTime: 1000 * 60 * 5,
+    })
 }
