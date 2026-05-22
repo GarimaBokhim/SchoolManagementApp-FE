@@ -15,27 +15,38 @@ import { Filter, RotateCcw, X } from "lucide-react";
 import DateRangeFilter, {
   DateRangeFilterRef,
 } from "@/components/DateFilter/FilterComponent";
-import { useGetAllLedgers } from "@/app/enduser/(Accountings)/Ledger/hooks";
+import { useGetLedgerById } from "@/app/enduser/(Accountings)/Ledger/hooks";
+import DateConverter from "@/components/DatePicker/DateConverter";
+
 type Props = {
   ledgerId: string;
   visible: boolean;
   onClose: () => void;
 };
+
+const LedgerName = ({ ledgerId }: { ledgerId: string }) => {
+  const { data } = useGetLedgerById(ledgerId);
+  return <span>{data?.name ?? ledgerId}</span>;
+};
+
 const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
-  // const { data: item } = useGetPartiesDetails(partyId);
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
   });
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}&partyId=${ledgerId}`;
   const [params, setParams] = useState<string | null>(null);
+
   const {
     data: ledgerDetails,
     refetch,
     isLoading,
   } = useGetPartiesDetails(query + (params || ""));
-  const { data: allLedgers } = useGetAllLedgers();
+
+  const { data: ledger } = useGetLedgerById(ledgerId);
+
   const formRef = useRef<DateRangeFilterRef>(null);
 
   const onClearClick = () => {
@@ -54,18 +65,22 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
     pageIndex: number;
     isPagination: boolean;
   };
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
+
   const handleSubmit = useForm<IFilterLedgerDetailsByDate>({
     defaultValues: {
       startDate: "",
       endDate: "",
     },
   });
+
   const form = useForm<IFilterLedgerDetailsByDate>();
   const { handleError, clearError } = useErrorHandler();
+
   const onSubmit: SubmitHandler<IFilterLedgerDetailsByDate> = async (
     formData
   ) => {
@@ -100,8 +115,10 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
         Toast.error(errorMsg);
       });
   };
+
   const [totalCredit, setTotalCredit] = useState(0);
   const [totalDebit, setTotalDebit] = useState(0);
+
   useEffect(() => {
     if (ledgerDetails?.Items) {
       const amount = ledgerDetails.Items.reduce(
@@ -116,17 +133,18 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
       setTotalDebit(debitAmount);
     }
   }, [ledgerDetails]);
+
   if (!visible) return null;
+
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-10 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden w-[80%] h-[80%]">
-        <div className="flex w-full justify-between p-3 px-4 pt-4 items-center ">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
-              {allLedgers?.Items?.find((i) => i.id === ledgerId)?.name} &nbsp;{" "}
-              {"Details"}
-            </h1>
-          </div>
+
+        {/* Header */}
+        <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
+            {ledger?.name ?? "..."} &nbsp; Details
+          </h1>
           <button
             type="button"
             onClick={() => onClose()}
@@ -136,7 +154,8 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
           </button>
         </div>
 
-        <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+        {/* Filter */}
+        <div className="mb-6 bg-white dark:bg-[#2c2c2c] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -147,7 +166,6 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
               onSubmit={onSubmit}
               setParams={setParams}
             />
-
             <div className="flex gap-2 ml-auto">
               <ButtonElement
                 type="submit"
@@ -166,6 +184,7 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
           </form>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs sm:text-sm">
             <thead>
@@ -174,10 +193,11 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
                 <th className="px-4 py-3 text-left">Entry Date</th>
                 <th className="px-4 py-3 text-left">Type</th>
                 <th className="px-4 py-3 text-left">Voucher/Bill Number</th>
-                <th className="px-4 py-3 text-left">Ledgers</th>
+                <th className="px-4 py-3 text-left">Ledger</th>
+                <th className="px-4 py-3 text-left">Credit</th>
+                <th className="px-4 py-3 text-left">Debit</th>
               </tr>
             </thead>
-
             <tbody>
               {isLoading ? (
                 <tr>
@@ -186,17 +206,31 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
                   </td>
                 </tr>
               ) : ledgerDetails?.Items && ledgerDetails?.Items.length > 0 ? (
-                ledgerDetails?.Items.map(
+                ledgerDetails.Items.map(
                   (Ledger: ILedgerStatementDetails, index: number) => (
                     <tr
                       key={index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
                     >
                       <td className="py-3 px-4">{index + 1}</td>
-                      <td className="py-3 px-4">{Ledger.dateTime}</td>
+                      <td className="py-3 px-4">
+                        {Ledger.dateTime ? (
+                          <DateConverter date={String(Ledger.dateTime)} />
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
                       <td className="py-3 px-4">{Ledger.referenceNumber}</td>
                       <td className="py-3 px-4">{Ledger.billNumber}</td>
-                      <td className="py-3 px-4">{Ledger.affectedLedgerId}</td>
+                      <td className="py-3 px-4">
+                        {Ledger.affectedLedgerId ? (
+                          <LedgerName ledgerId={Ledger.affectedLedgerId} />
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
+                      <td className="py-3 px-4">{Ledger.creditAmount ?? 0}</td>
+                      <td className="py-3 px-4">{Ledger.debitAmount ?? 0}</td>
                     </tr>
                   )
                 )
@@ -212,13 +246,15 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
               )}
             </tbody>
           </table>
-          <div className="flex justify-end mr-4">
-            <div>
-              <div>Total Credit : {totalCredit}</div>
-              <div>Total Debit : {totalDebit}</div>
-            </div>
+
+          {/* Totals */}
+          <div className="flex justify-end mr-4 mt-2 gap-6 text-sm font-semibold text-gray-700 dark:text-gray-200">
+            <div>Total Credit : <span className="text-emerald-600">{totalCredit}</span></div>
+            <div>Total Debit : <span className="text-red-500">{totalDebit}</span></div>
           </div>
         </div>
+
+        {/* Pagination */}
         {ledgerDetails?.Items && ledgerDetails?.Items.length > 0 && (
           <div className="my-2">
             <Pagination
@@ -238,4 +274,5 @@ const LedgerDetails = ({ ledgerId, visible, onClose }: Props) => {
     </div>
   );
 };
+
 export default LedgerDetails;
