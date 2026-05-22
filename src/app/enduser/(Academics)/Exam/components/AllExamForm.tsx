@@ -21,8 +21,8 @@ import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPerm
 import AddExam from '../pages/Add'
 import DeleteButton from '@/components/Buttons/DeleteButton'
 import PrintAdmitCard from './printcard'
-import { useGetAllStudents } from '@/app/teacher/Students/Student/hooks'
 import { useGetAllClass } from '../../Class/hooks'
+import DateConverter from '@/components/DatePicker/DateConverter'
 
 const AllExamForm = () => {
   const [paginationParams, setPaginationParams] = useState({
@@ -44,10 +44,10 @@ const AllExamForm = () => {
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
-  
+
   // Fetch all classes to map class IDs to class names
   const { data: allClasses } = useGetAllClass()
-  
+
   // Create a mapping from class ID to class name
   const classMap = new Map<string, string>()
   allClasses?.Items?.forEach((classItem) => {
@@ -55,7 +55,7 @@ const AllExamForm = () => {
       classMap.set(classItem.id, classItem.name)
     }
   })
-  
+
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -150,17 +150,17 @@ const AllExamForm = () => {
     setSelectedExamName('')
     form.reset()
   }
-  
+
   // Helper function to get class name from class ID
   const getClassName = (classId: string) => {
     return classMap.get(classId) || classId || 'N/A'
   }
-  
+
   return (
     <>
       <div className="px-2 md:px-4">
         <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 rounded-xl">
-  
+
           <div className="flex flex-col md:flex-row w-full justify-between p-3 px-4 pt-4 items-start md:items-center gap-3">
             <h1 className="text-lg md:text-xl font-semibold">All Exams</h1>
             <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:space-x-3">
@@ -206,8 +206,8 @@ const AllExamForm = () => {
                     selected={
                       allExams
                         ? (allExams?.Items?.find(
-                            (g) => g.name === selectedExamName
-                          ) ?? null)
+                          (g) => g.name === selectedExamName
+                        ) ?? null)
                         : null
                     }
                     onSelect={(user) => setSelectedExamName(user?.name ?? '')}
@@ -249,14 +249,14 @@ const AllExamForm = () => {
                   <th className="px-2 md:px-4 py-3 text-center w-[140px] md:w-[180px]">
                     Actions
                   </th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="p-4 text-center text-gray-500">
                       Loading Exams...
-                     </td>
+                    </td>
                   </tr>
                 ) : filteredExam?.Items?.length ? (
                   filteredExam?.Items.map((Exam: IExam, index: number) => (
@@ -273,7 +273,15 @@ const AllExamForm = () => {
                         {getClassName(Exam.classId)}
                       </td>
                       <td className="py-3 px-2 md:px-4">
-                        {new Date(Exam.examDate).toISOString().split('T')[0]}
+                        {Exam.examDate ? (
+                          <DateConverter date={
+                            Exam.examDate instanceof Date
+                              ? Exam.examDate.toISOString()
+                              : String(Exam.examDate)
+                          } />
+                        ) : (
+                          'N/A'
+                        )}
                       </td>
                       <td className="py-3 px-2 md:px-4">
                         <div className="flex justify-center flex-wrap gap-1 md:gap-2">
