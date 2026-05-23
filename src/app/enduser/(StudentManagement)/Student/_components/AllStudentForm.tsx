@@ -94,6 +94,7 @@ import { PrintIDCardButton } from './idcardprint'
 import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
 import ExcelPreviewModal from './ExcelPreviewModel'
+import DateConverter from '@/components/DatePicker/DateConverter'
 
 const useExcelPreview = () => {
   const [previewData, setPreviewData] = useState<any[]>([])
@@ -530,7 +531,15 @@ const AllStudentForm = () => {
                         {student.phoneNumber || 'N/A'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
-                        {formatDate(student.dateOfBirth)}
+                        {student.dateOfBirth ? (
+                          <DateConverter date={
+                            student.dateOfBirth instanceof Date
+                              ? student.dateOfBirth.toISOString()
+                              : String(student.dateOfBirth)
+                          } />
+                        ) : (
+                          'N/A'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
