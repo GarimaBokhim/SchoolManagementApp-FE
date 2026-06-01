@@ -1,11 +1,11 @@
 
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper"
-import AllPayments from "./pages/CommonPages"
+import AllPaymentsDetails from "./pages/CommonPages"
 
-export default function InstallmentsPage() {
+export default function PaymentsPage() {
     return (
-        <LayoutWrapper title="Installments">
-            <AllPayments />
+        <LayoutWrapper title="Payments">
+            <AllPaymentsDetails />
         </LayoutWrapper>
     )
 }

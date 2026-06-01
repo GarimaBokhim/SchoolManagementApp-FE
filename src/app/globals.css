@@ -132,3 +132,30 @@ html.dark,
 html.dark body {
   background-color: rgb(45, 45, 45);
 }
+
+
+@media print {
+
+  /* Hide everything */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only receipt */
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Hide buttons */
+  .no-print {
+    display: none !important;
+  }
+}

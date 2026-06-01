@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
+import { IPaginationCrmResponse, IPaginationResponse } from "@/types/IPaginationResponse";
 import { Appointment, AddAppointmentPayload } from "../types/IAppointment";
 
 export const AppointmentEndPoints = {
@@ -22,22 +22,26 @@ export const useGetAllAppointments = (queryParams?: string) => {
         });
       }
 
-      const response = await api.get<IPaginationResponse<Appointment>>(
+      const response = await api.get<IPaginationCrmResponse<Appointment>>(
         AppointmentEndPoints.filterAppointments,
         { params: paramObj }
-      );
-
-      return response.data ?? {
-        Items: [],
-        TotalItems: 0,
-        PageIndex: 1,
-        pageSize: 10,
-        TotalPages: 1,
-        FirstPage: 1,
-        LastPage: 1,
-      };
+      )
+      return response.data
     },
-  });
+  select: (response) => ({
+      items: response?.Data?.Items ?? [],
+      pagination: {
+        totalItems: response?.Data?.TotalItems ?? 0,
+        pageIndex: response?.Data?.PageIndex ?? 1,
+        pageSize: response?.Data?.pageSize ?? 10,
+        totalPages: response?.Data?.TotalPages ?? 1,
+      },
+      message: response?.Message ?? '',
+      statusCode: response?.StatusCode ?? 200,
+    }),
+
+    staleTime: 1000 * 60 * 5,
+  })
 };
 
 export const useAddAppointment = () => {

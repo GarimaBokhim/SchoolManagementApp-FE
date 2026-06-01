@@ -36,11 +36,10 @@ const formatDate = (dateStr: string) => {
 
 const StatusBadge = ({ isActive }: { isActive: boolean }) => (
   <span
-    className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
-      isActive
-        ? "bg-green-100 text-green-700 border-green-300"
-        : "bg-red-100 text-red-700 border-red-300"
-    }`}
+    className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${isActive
+      ? "bg-green-100 text-green-700 border-green-300"
+      : "bg-red-100 text-red-700 border-red-300"
+      }`}
   >
     {isActive ? "Active" : "Inactive"}
   </span>
@@ -181,8 +180,8 @@ const AllCounselorsForm = () => {
     );
   }
 
-  const counselors = data?.Items || [];
-  const totalPages = data?.TotalPages || 1;
+  const counselors = data?.items ?? [];
+  const totalPages = data?.pagination?.totalPages ?? 1;
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedCounselors = counselors.slice(startIndex, startIndex + pageSize);
 
@@ -281,9 +280,8 @@ const AllCounselorsForm = () => {
               </div>
             )}
             <table
-              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
-                isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
-              }`}
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+                }`}
             >
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
@@ -293,8 +291,8 @@ const AllCounselorsForm = () => {
                   <th className="px-4 py-3 text-left">Contact Number</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-center w-[80px]">Actions</th>
-             
-                 </tr>
+
+                </tr>
               </thead>
               <tbody>
                 {paginatedCounselors.length > 0 ? (
@@ -305,7 +303,7 @@ const AllCounselorsForm = () => {
                     >
                       <td className="py-1 px-4">
                         {(startIndex + index + 1)}
-                       </td>
+                      </td>
                       <td className="py-1 px-4 font-medium">{counselor.fullName}</td>
                       <td className="py-1 px-4">{counselor.email}</td>
                       <td className="py-1 px-4">{counselor.contactNumber}</td>

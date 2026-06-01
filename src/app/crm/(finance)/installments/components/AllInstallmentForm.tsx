@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { BookOpen, Filter, Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -11,25 +11,134 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 
-import { InstallmentPlan, AddInstallmentPlanPayload } from '../types/IInstallments'
-
-import { useGetAllInstallments } from '../hooks'
-import { AddConsultancyClassPayload } from '@/app/crm/classes/class/types/IClass'
-import AddInstallmentPlan from '../pages/Add'
-// import { AddConsultancyClassModal } from './AddConsultenctClassModel'
-
-const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
-    1: 'IELTS', 2: 'TOEFL', 3: 'PTE', 4: 'Other',
-}
+import { useDeleteInstallmentPlan, useGetAllInstallments } from '../hooks'
+import { InstallmentPlanResponse } from '../types/IInstallments'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
+import EditInstallmentPlan from '../pages/Edit'
+import { InstallmentInvoiceDetailModal } from '../../installmentInvoice/components/InstallmentInvoiceDetailsModal'
+import { Tooltip } from '@/components/ToolTip/Tooltip'
 
 interface FilterFormData {
     startDate: string
     endDate: string
 }
 
+//#region ActionMenu
+interface ActionMenuProps {
+    InstallmentPlan: InstallmentPlanResponse;
+    onEdit: (InstallmentPlan: InstallmentPlanResponse) => void;
+    onDelete: (id: string) => void;
+    canEdit?: boolean;
+    canDelete?: boolean;
+}
+
+const ActionMenu = ({ InstallmentPlan, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+    const [open, setOpen] = useState(false)
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    const calculatePosition = useCallback(() => {
+        if (!buttonRef.current) return
+        const rect = buttonRef.current.getBoundingClientRect()
+        const menuHeight = 160
+        const menuWidth = 180
+        const spaceBelow = window.innerHeight - rect.bottom
+        const openUpward = spaceBelow < menuHeight + 8
+        setMenuStyle({
+            position: 'fixed',
+            right: window.innerWidth - rect.right,
+            top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
+            width: menuWidth,
+            zIndex: 9999,
+        })
+    }, [])
+
+
+
+
+    const toggle = () => {
+        if (!open) calculatePosition()
+        setOpen((prev) => !prev)
+    }
+
+    useEffect(() => {
+        if (!open) return
+        const handle = (e: MouseEvent) => {
+            if (
+                menuRef.current && !menuRef.current.contains(e.target as Node) &&
+                buttonRef.current && !buttonRef.current.contains(e.target as Node)
+            ) setOpen(false)
+        }
+        document.addEventListener('mousedown', handle)
+        return () => document.removeEventListener('mousedown', handle)
+    }, [open])
+
+    useEffect(() => {
+        if (!open) return
+        const update = () => calculatePosition()
+        window.addEventListener('scroll', update, true)
+        window.addEventListener('resize', update)
+        return () => {
+            window.removeEventListener('scroll', update, true)
+            window.removeEventListener('resize', update)
+        }
+    }, [open, calculatePosition])
+
+    return (
+        <div className="flex justify-center">
+            <button
+                ref={buttonRef}
+                onClick={toggle}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                title="Actions"
+            >
+                <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
+            </button>
+
+            {open && (
+                <div
+                    ref={menuRef}
+                    style={menuStyle}
+                    className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+                >
+                    {canEdit && <button
+                        onClick={() => { onEdit(InstallmentPlan); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Edit size={14} /> Edit
+                    </button>}
+                    {canDelete && <button
+                        onClick={() => { onDelete(InstallmentPlan.id); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Trash size={14} /> Delete
+                    </button>}
+
+                </div>
+            )}
+        </div>
+    )
+}
+
+//#endregion
+
 const AllInstallmentPlanForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
+
+
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editInstallmentPlanId, setEditInstallmentPlanId] = useState<string | null>(null)
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteInstallmentPlanId, setDeleteInstallmentPlanId] = useState<string | null>(null)
+
+
+    const [showInstallmentDetailsModal, setShowInstallmentDetailsModal] = useState(false)
+    const [installmentInvoiceId, setInstallmentInvoiceId] = useState<string | null>(null)
+
+
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
@@ -47,14 +156,14 @@ const AllInstallmentPlanForm = () => {
     })
 
     const { data, isLoading, error, refetch } = useGetAllInstallments(params)
-    // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
 
-    const installmentPlan = data?.Data?.Items ?? [];
-    const totalPages = data?.Data?.TotalPages ?? 1;
+    const installmentPlan = data?.items ?? [];
+    const totalPages = data?.pagination?.totalPages ?? 1;
+
+    const deleteInstallmentPlan = useDeleteInstallmentPlan()
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -63,30 +172,33 @@ const AllInstallmentPlanForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
 
-        await toast.promise(
-            (async () => {
-                setParams(fullQuery)
-                await refetch()
-            })(),
-            {
-                loading: 'Fetching data...',
-                success: 'Data fetched successfully!',
-            }
-        )
+        setParams(fullQuery) // 👈 THIS triggers auto refetch
+
+        toast.success(data?.message || 'Data loaded successfully')
     }
 
-    const handleClearFilters = () => {
-        form.reset({ startDate: '', endDate: '' })
-        setParams('')
-        formRef.current?.handleClear()
-        refetch()
+
+
+
+    const handleEditInstallmentPlan = (InstallmentPlan: InstallmentPlanResponse) => {
+        setEditInstallmentPlanId(InstallmentPlan.id)
+        setShowEditModal(true)
     }
 
-    const handleAddSubmit = async (payload: AddInstallmentPlanPayload) => {
-        // await handleAdd(payload)
-        setAddModal(false);
-        refetch();
+    const handleDeleteInstallmentPlan = (id: string) => {
+        setDeleteInstallmentPlanId(id)
+        setShowDeleteModal(true)
     }
+
+
+    const onDelete = async (id: string) => {
+        try {
+            await deleteInstallmentPlan.mutateAsync(id)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
 
     if (error) {
         return (
@@ -134,7 +246,10 @@ const AllInstallmentPlanForm = () => {
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
                             />
-                            {canAdd && (
+
+
+
+                            {/* {canAdd && (
                                 <ButtonElement
                                     icon={<Plus size={18} />}
                                     type="button"
@@ -142,7 +257,7 @@ const AllInstallmentPlanForm = () => {
                                     onClick={() => setAddModal(true)}
                                     className="!font-semibold"
                                 />
-                            )}
+                            )} */}
                         </div>
                     </div>
 
@@ -203,37 +318,41 @@ const AllInstallmentPlanForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {installment.applicantName}
                                                 </td>
-
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {installment.invoiceNumber}
                                                 </td>
 
-                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {installment.numberOfInstallments}
                                                 </td>
+
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
                                                     {installment.totalAmount}
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    {/* <div className="flex justify-center gap-3">
-                                                        {canEdit && (
-                                                            <button
-                                                                onClick={() => handleEdit()}
-                                                                className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        {canDelete && (
-                                                            <button
-                                                                onClick={() => handleDelete(cls.id)}
-                                                                className="text-xs text-red-500 hover:text-red-600 font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div> */}
+                                                    <div className="flex justify-center gap-3">
+
+                                                        <Tooltip text="View Installment Details">
+                                                            <ButtonElement
+                                                                icon={<Eye size={15} />}
+                                                                type="button"
+                                                                text=""
+                                                                onClick={() => {
+                                                                    setShowInstallmentDetailsModal(true)
+                                                                    setInstallmentInvoiceId(installment.invoiceId ?? '')
+                                                                }}
+                                                                className="!text-xs"
+                                                            />
+                                                        </Tooltip>
+                                                        <ActionMenu
+                                                            InstallmentPlan={installment}
+                                                            onEdit={handleEditInstallmentPlan}
+                                                            onDelete={handleDeleteInstallmentPlan}
+                                                            canEdit={true}
+                                                            canDelete={true}
+                                                        />
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -262,11 +381,33 @@ const AllInstallmentPlanForm = () => {
                 )}
             </div>
 
-            <AddInstallmentPlan
-                visible={addModal}
-
-                onClose={() => handleAddSubmit}
+            <InstallmentInvoiceDetailModal
+                isOpen={showInstallmentDetailsModal}
+                onClose={() => { setShowInstallmentDetailsModal(false); setInstallmentInvoiceId(null) }}
+                InvoiceId={installmentInvoiceId}
             />
+
+            {showDeleteModal && deleteInstallmentPlanId && (
+
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={onDelete}
+                    invoiceId={deleteInstallmentPlanId}
+                    title="Delete Installment Plan"
+                    description="Are you sure you want to delete this Installment Plan?"
+                />
+
+            )}
+
+            {showEditModal && editInstallmentPlanId && (
+                <EditInstallmentPlan
+                    InstallmentPlanId={editInstallmentPlanId}
+                    visible={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                />
+            )}
+
         </>
     )
 }

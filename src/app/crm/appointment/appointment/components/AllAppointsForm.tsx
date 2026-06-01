@@ -241,8 +241,8 @@ const AllAppointmentsForm = () => {
     );
   }
 
-  const appointments = data?.Items || [];
-  const totalPages = data?.TotalPages || 1;
+  const appointments = data?.items ?? [];
+  const totalPages = data?.pagination?.totalPages ?? 1;
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedAppointments = appointments.slice(startIndex, startIndex + pageSize);
 
@@ -341,9 +341,8 @@ const AllAppointmentsForm = () => {
               </div>
             )}
             <table
-              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${
-                isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
-              }`}
+              className={`w-full border-collapse text-xs sm:text-sm transition-opacity duration-150 ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"
+                }`}
             >
               <thead>
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">

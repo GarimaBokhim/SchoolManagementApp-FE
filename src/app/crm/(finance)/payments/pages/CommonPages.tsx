@@ -2,21 +2,22 @@
 
 import { useState } from 'react'
 import AllPayments from './All'
+import AllInstallmentPayments from '../../installmentPayments/pages/All'
 const AllPaymentsDetails = () => {
     const tabs = [
         { id: 'payments', label: 'Payments' },
-        // { id: 'schedule', label: 'Schedule Appointment' },
+        { id: 'installmentPayments', label: 'InstallmentPayments' },
         // { id: 'followup', label: 'Follow Up' },
     ]
 
-    const [activeTab, setActiveTab] = useState<string>('lead')
+    const [activeTab, setActiveTab] = useState<string>('payments')
 
     const renderContent = () => {
         switch (activeTab) {
             case 'payments':
                 return <AllPayments />
-            // case 'schedule':
-            //     return <ScheduleAppointment />
+            case 'installmentPayments':
+                return <AllInstallmentPayments />
             // case 'followup':
             //     return <AllFollowUpsForm />
             default:

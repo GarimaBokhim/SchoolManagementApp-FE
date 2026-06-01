@@ -1,4 +1,4 @@
-export interface InstallmentPlan {
+export interface AddInstallmentPlanResponse {
   id: string
   invoiceNumber: string
   applicantName: string
@@ -9,8 +9,10 @@ export interface InstallmentPlan {
 
 export interface InstallmentPlanResponse {
   id: string
-  applicantId: string
   numberOfInstallments: number
+  invoiceId: string
+  applicantName: string
+  invoiceNumber: string
   totalAmount: number,
   isActive: boolean
   schoolId: string
@@ -21,6 +23,12 @@ export interface InstallmentPlanResponse {
 }
 
 export interface AddInstallmentPlanPayload {
-  applicantId: string
   numberOfInstallments: number
+  invoiceId: string
+}
+
+
+export interface UpdateInstallmentPlanPayload {
+  numberOfInstallments: number
+  invoiceId: string
 }

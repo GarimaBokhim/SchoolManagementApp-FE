@@ -36,11 +36,10 @@ export const ButtonElement = ({
       type={type}
       onClick={handleClick || onClick}
       style={style} // ✅ applied
-      className={`px-3 py-2 text-sm font-medium text-white rounded-md ${className} ${customStyle} transition ${
-        disabled
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-[#035BBA] hover:bg-[#4788CD]"
-      }`}
+      className={`px-2 py-2 text-sm font-medium text-white rounded-md ${className} ${customStyle} transition ${disabled
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[#035BBA] hover:bg-[#4788CD]"
+        }`}
     >
       <div className="flex items-center justify-center">
         {icon} &nbsp;

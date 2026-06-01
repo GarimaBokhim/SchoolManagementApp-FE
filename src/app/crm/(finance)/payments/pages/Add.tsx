@@ -3,15 +3,21 @@ import { useForm } from "react-hook-form";
 import { AddPaymentsPayload } from "../types/IPayments";
 //import { SubjectValidator } from "../validators/index";
 import AddPaymentsForms from "../components/AddPaymentsForm";
+import { useInvoiceById } from "../../invoice/hooks/index";
+import { useEffect } from "react";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    invoiceId: string;
+    onSuccess?: () => void;
 }
-const AddPayments = ({ visible, onClose }: Props) => {
+const AddPayments = ({ visible, onClose, onSuccess, invoiceId }: Props) => {
+
+    const invoice = useInvoiceById(invoiceId);
     const form = useForm<AddPaymentsPayload>({
         defaultValues: {
-            applicantId: "",
+            invoiceId: "",
             amount: 0,
             paymentDate: "",
             paymentMethod: 0
@@ -20,6 +26,22 @@ const AddPayments = ({ visible, onClose }: Props) => {
 
         // resolver: yupResolver(SubjectValidator),
     });
+
+    const { reset } = form;
+
+    useEffect(() => {
+        if (!invoice?.data) return;
+
+        reset({
+            invoiceId: invoiceId,
+            amount: invoice.data.totalAmount || 0,
+            paymentDate: "",
+            paymentMethod: 0,
+        });
+
+    }, [invoice.data, invoiceId, reset]);
+
+
     const handleOnClose = () => {
         if (onClose) onClose();
     };
@@ -37,7 +59,7 @@ const AddPayments = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddPaymentsForms form={form} onClose={handleOnClose} />
+                <AddPaymentsForms form={form} onClose={handleOnClose} onSuccess={onSuccess} invoiceId={invoiceId} />
             </div>
         </div>
     );

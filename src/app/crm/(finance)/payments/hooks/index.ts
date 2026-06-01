@@ -1,136 +1,251 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationCrmResponse, IPaginationResponse } from '@/types/IPaginationResponse'
-
-import { AddPaymentsPayload, FilterPaymentsResponse,AddPaymentsResponse } from '../types/IPayments'
-
-
-
+import { AddPaymentsPayload, AddPaymentsResponse, PaymentsResponse, SchoolResponse, UpdatePaymentsPayload } from '../types/IPayments'
 import { Toast } from '@/components/Toast/toast'
 
 
 export const paymentsEndPoints = {
-  filterPayments: '/api/CrmFinance/FilterPayments',
-  addPayments: '/api/CrmFinance/AddPayments',
-  allApplicant: '/api/Enrolments/AllApplicant',
-//   filterRegistrations: '/api/Enrolments/FilterTrainingRegistration',
-//   addRegistration: '/api/Enrolments/AddTrainingRegistration',
+  filter: '/api/CrmFinance/FilterPayments',
+  add: '/api/CrmFinance/AddPayments',
+  update: '/api/CrmFinance/UpdatePayments',
+  delete: '/api/CrmFinance/DeletePayments',
+  applicants: '/api/Enrolments/AllApplicant',
+  get: '/api/CrmFinance/PaymentsById',
+  getSchoolById: '/api/SetupControllers/School',
 }
 
-export const paymentsQueryKey = 'Payments'
+
+export const paymentsQueryKey = {
+  all: ['payments'],
+  applicants: ['Applicants'],
+}
+
+const normalizePaymentsPayload = (data: UpdatePaymentsPayload): UpdatePaymentsPayload => ({
+  invoiceId: String(data.invoiceId ?? '').trim(),
+  amount: Number(data.amount) || 0,
+  paymentDate: String(data.paymentDate ?? '').trim(),
+  paymentMethod: Number(data.paymentMethod) || 0,
+})
+
+export const normalizePayments = (
+  data: Partial<PaymentsResponse> | null | undefined
+  ): PaymentsResponse => {
+    return {
+      id: String(data?.id ?? ''),
+      invoiceId: String(data?.invoiceId ?? ''),
+      amount: Number(data?.amount ?? 0),
+      applicantId: String(data?.applicantId ?? '').trim(),
+      applicantName: String(data?.applicantName ?? '').trim(),
+      invoiceNumber: String(data?.invoiceNumber ?? '').trim(),
+      paymentDate: String(data?.paymentDate ?? ''),
+      paymentMethod: Number(data?.paymentMethod ?? 0),
+      referenceNumber: String(data?.referenceNumber ?? '').trim(),
+      paymentStatus: Number(data?.paymentStatus ?? 0),
+      isActive: Boolean(data?.isActive ?? false),
+      schoolId: String(data?.schoolId ?? ''),
+      createdBy: String(data?.createdBy ?? ''),
+      createdAt: String(data?.createdAt ?? ''),
+      modifiedBy: String(data?.modifiedBy ?? ''),
+      modifiedAt: String(data?.modifiedAt ?? ''),
+    }
+  }
+
 
 
 export const useGetAllPayments = (queryParams?: string) => {
   return useQuery({
-    queryKey: [paymentsQueryKey, queryParams],
+    queryKey: [...paymentsQueryKey.all, queryParams],
     queryFn: async () => {
-      const paramObj: Record<string, string> = {}
-      if (queryParams) {
-        const parsed = new URLSearchParams(queryParams.replace(/^&/, ''))
-        parsed.forEach((value, key) => { paramObj[key] = value })
-      }
-      const response = await api.get<IPaginationCrmResponse<FilterPaymentsResponse>>(
-        paymentsEndPoints.filterPayments,
-        { params: paramObj }
-      )
-      return response.data ?? {
-        Items: [], TotalItems: 0, PageIndex: 1,
-        pageSize: 10, TotalPages: 1, FirstPage: 1, LastPage: 1,
-      }
-    },
-  })
+          const params = Object.fromEntries(
+            new URLSearchParams(queryParams?.replace(/^&/, '') || '')
+          )
+    
+          const response = await api.get<IPaginationCrmResponse<FilterPaymentsResponse>>(
+            paymentsEndPoints.filter,
+            { params }
+          )
+    
+          return response.data
+        },
+      select: (response) => ({
+          items: response?.Data?.Items ?? [],
+          pagination: {
+            totalItems: response?.Data?.TotalItems ?? 0,
+            pageIndex: response?.Data?.PageIndex ?? 1,
+            pageSize: response?.Data?.pageSize ?? 10,
+            totalPages: response?.Data?.TotalPages ?? 1,
+          },
+          message: response?.Message ?? '',
+          statusCode: response?.StatusCode ?? 200,
+        }),
+
+        staleTime: 1000 * 60 * 5,
+      })
 }
 
 export const useAddPayments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: AddPaymentsPayload) => {
+      const normalizedPayload = normalizePaymentsPayload(payload);
+
+      const response = await api.post<IPaginationCrmResponse<AddPaymentsResponse>>(
+        paymentsEndPoints.add,
+        normalizedPayload
+      );
+
+      return response.data;
+    },
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || "Payments added successfully");
+
+      // ✅ refresh payments list
+      queryClient.invalidateQueries({
+        queryKey: paymentsQueryKey.all,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['Invoice'], 
+      });
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || "Failed to add Payments"
+      );
+    },
+  });
+};
+
+export const useDeletePayments = () => {
   const queryClient = useQueryClient()
-  return useMutation<AddPaymentsResponse, Error, AddPaymentsPayload>({
-    mutationFn: async (payload) => {
-      const response = await api.post(paymentsEndPoints.addPayments, payload)
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(
+        `${paymentsEndPoints.delete}/${id}`
+      )
+
       return response.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [paymentsQueryKey] })
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'Invoice deleted successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: paymentsQueryKey.all,
+      })
     },
-  })
-}
 
-// return useQuery({
-//     queryKey: [queryKey, params],
-//     queryFn: async () => {
-//       const url = params
-//         ? `${ExamEndPoints.getAllExams}${params}`
-//         : `${ExamEndPoints.getAllExams}`;
-//       const response = await api.get<IPaginationResponse<IExam>>(url);
-//       return (
-//         response.data ?? {
-//           data: [],
-//           PageIndex: 0,
-//           isPagination: 1,
-//           pageSize: 10,
-//         }
-//       );
-//     },
-//   });
-
-export const useGetAllApplicantDropdown = () => {
-  return useQuery({
-    queryKey: ['AllApplicantDropdown'],
-    queryFn: async () => {
-      const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
-        paymentsEndPoints.allApplicant
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to delete invoice'
       )
-      return response.data?.Items ?? []
     },
-    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export const useEditPayments = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string
+      payload: UpdatePaymentsPayload
+    }) => {
+      const response = await api.patch(
+        `${paymentsEndPoints.update}/${id}`,
+        normalizePaymentsPayload(payload)
+      )
+
+      return response.data
+    },
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'Payments updated successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: paymentsQueryKey.all,
+      })
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to update Payments'
+      )
+    },
   })
 }
 
 
+export const useGetPaymentsById = (paymentId?: string) => {
+  return useQuery({
+    queryKey: [...paymentsQueryKey.all, paymentId],
+
+    queryFn: async (): Promise<PaymentsResponse> => {
+      const response = await api.get<PaymentsResponse>(
+        `${paymentsEndPoints.get}/${paymentId}`
+      )
+
+      return normalizePayments(response.data)
+    },
+
+    enabled: !!paymentId,
+
+    staleTime: 1000 * 60 * 5,
+
+    retry: false,
+  })
+}
 
 
 export const useGetAllApplicants = () => {
   return useQuery({
-    queryKey: ['AllApplicants'],
-    queryFn: async () => {
-      const response = await api.get<IPaginationResponse<{ id: string; fullName: string }>>(
-        '/api/Enrolments/AllApplicant'
-      )
-      return response.data?.Items ?? []
+      queryKey: paymentsQueryKey.applicants,
+  
+      queryFn: async () => {
+        const response = await api.get<
+          IPaginationCrmResponse<{
+            id: string
+            fullName: string
+          }>
+        >(paymentsEndPoints.applicants)
+  
+        return response.data
+      },
+  
+      select: (response) => response?.Data.Items ?? [],
+  
+      staleTime: 1000 * 60 * 5,
+    })
+}
+
+export const useSchoolById = (SchoolId: string| null) => {
+  return useQuery({
+    queryKey: ["schoolId", SchoolId],
+
+    queryFn: async (): Promise<SchoolResponse> => {
+      if (!SchoolId) {
+        throw new Error("Id is required to get School");
+      }
+
+      const response = await api.get<SchoolResponse>(
+        `${paymentsEndPoints.getSchoolById}/${SchoolId}`
+      );
+
+      return response.data;
     },
-    staleTime: 5 * 60 * 1000,
-  })
-}
 
-export const usePaymentsMutations = (refetch: () => void) => {
-  const handleAdd = async (payload: AddPaymentsResponse) => {
-    try {
-      await api.post('/api/CrmFinance/AddPayments', payload)
-      Toast.success('Payments added successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error Payments.')
-    }
-  }
+    staleTime: 0,
+    gcTime: 0, // 
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+};
 
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/api/CrmFinance/DeletePayments/${id}`)
-      Toast.success('InstallmetPlan deleted successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error deleting.')
-    }
-  }
-
-  const handleEdit = async (id: string) => {
-    try {
-      await api.patch(`/api/CrmFinance/UpdatePayments/${id}`)
-      Toast.success('Update Payments successfully!')
-      refetch()
-    } catch {
-      Toast.error('Error updateing payments.')
-    }
-  }
-
-  return { handleAdd, handleDelete, handleEdit }
-}
