@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { BookOpen, Filter, Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -10,19 +10,129 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useGetAllInvoice } from '../hooks'
-import { AddConsultancyClassPayload } from '@/app/crm/classes/class/types/IClass'
+import { useDeleteInvoice, useGetAllInvoice } from '../hooks'
 import AddInvoice from '../pages/Add'
-// import { AddConsultancyClassModal } from './AddConsultenctClassModel'
-
-const ENGLISH_PROFICIENCY_LABELS: Record<number, string> = {
-    1: 'IELTS', 2: 'TOEFL', 3: 'PTE', 4: 'Other',
-}
+import { InvoiceResponse } from '../types/IInvoice'
+import { EditButton } from '@/components/Buttons/EditButton'
+import AddPayments from '../../payments/pages/Add'
+import { InvoiceDetailModal } from './InvoiceDetailsModal'
+import EditInvoice from '../pages/Edit'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
+import { GenerateInvoiceModels } from './GenerateInvoiceModels'
+import { Tooltip } from '@/components/ToolTip/Tooltip'
 
 interface FilterFormData {
     startDate: string
     endDate: string
 }
+
+//#region ActionMenu
+interface ActionMenuProps {
+    Invoice: InvoiceResponse;
+    onEdit: (Invoice: InvoiceResponse) => void;
+    onDelete: (id: string) => void;
+    // onView: (Invoice: InvoiceResponse) => void;
+    canEdit?: boolean;
+    canDelete?: boolean;
+}
+
+const ActionMenu = ({ Invoice, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+    const [open, setOpen] = useState(false)
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    const calculatePosition = useCallback(() => {
+        if (!buttonRef.current) return
+        const rect = buttonRef.current.getBoundingClientRect()
+        const menuHeight = 160
+        const menuWidth = 180
+        const spaceBelow = window.innerHeight - rect.bottom
+        const openUpward = spaceBelow < menuHeight + 8
+        setMenuStyle({
+            position: 'fixed',
+            right: window.innerWidth - rect.right,
+            top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
+            width: menuWidth,
+            zIndex: 9999,
+        })
+    }, [])
+
+    const toggle = () => {
+        if (!open) calculatePosition()
+        setOpen((prev) => !prev)
+    }
+
+    useEffect(() => {
+        if (!open) return
+        const handle = (e: MouseEvent) => {
+            if (
+                menuRef.current && !menuRef.current.contains(e.target as Node) &&
+                buttonRef.current && !buttonRef.current.contains(e.target as Node)
+            ) setOpen(false)
+        }
+        document.addEventListener('mousedown', handle)
+        return () => document.removeEventListener('mousedown', handle)
+    }, [open])
+
+    useEffect(() => {
+        if (!open) return
+        const update = () => calculatePosition()
+        window.addEventListener('scroll', update, true)
+        window.addEventListener('resize', update)
+        return () => {
+            window.removeEventListener('scroll', update, true)
+            window.removeEventListener('resize', update)
+        }
+    }, [open, calculatePosition])
+
+    return (
+        <div className="flex justify-center">
+            <button
+                ref={buttonRef}
+                onClick={toggle}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                title="Actions"
+            >
+                <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
+            </button>
+
+            {open && (
+                <div
+                    ref={menuRef}
+                    style={menuStyle}
+                    className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+                >
+
+                    {/* <button
+                        onClick={() => { onView(Invoice); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Eye size={14} /> View
+                    </button> */}
+                    {canEdit && <button
+                        onClick={() => { onEdit(Invoice); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Edit size={14} /> Edit
+                    </button>}
+                    {canDelete && <button
+                        onClick={() => { onDelete(Invoice.id); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Trash size={14} /> Delete
+                    </button>}
+
+
+
+
+                </div>
+            )}
+        </div>
+    )
+}
+
+//#endregion
 
 const AllInvoiceForm = () => {
     const { menuStatus } = usePermissions()
@@ -30,6 +140,24 @@ const AllInvoiceForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [selectedId, setSelectedId] = useState<string>('')
+
+
+    const [showGenerateInvoiceModal, setShowGenerateInvoiceModal] = useState(false)
+
+
+    const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false)
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+    const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null)
+
+
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null)
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null)
+
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const formRef = useRef<DateRangeFilterRef>(null)
@@ -40,12 +168,16 @@ const AllInvoiceForm = () => {
     })
 
     const paginationForm = useForm({
-        defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
+        defaultValues:
+        {
+            pageSize,
+            pageIndex: currentPage,
+            isPagination: true
+        },
     })
 
-    const { data, isLoading, error, refetch } = useGetAllInvoice(params)
-    // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
-
+    const { data, isLoading, error } = useGetAllInvoice(params)
+    const deleteInvoice = useDeleteInvoice()
     const invoiceDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
@@ -59,22 +191,50 @@ const AllInvoiceForm = () => {
             .join('&')
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
-
-        setParams(fullQuery) // 👈 THIS triggers auto refetch
-
-        toast.success(data?.message || 'Data loaded successfully')
+        setParams(fullQuery)
     }
 
-    const handleClearFilters = () => {
-        form.reset({ startDate: '', endDate: '' })
-        setParams('')
-        formRef.current?.handleClear()
-        refetch()
+
+    const invoiceStatusType = [
+        { id: 1, name: 'Draft' },
+        { id: 2, name: 'Issued' },
+        { id: 3, name: 'PartiallyPaid' },
+        { id: 4, name: 'Paid' },
+        { id: 5, name: 'Cancelled' }
+    ];
+
+
+    const handleEditInvoice = (Invoice: InvoiceResponse) => {
+        setEditInvoiceId(Invoice.id)
+        setShowEditModal(true)
     }
+
+    const handleDeleteInvoice = (id: string) => {
+        setDeleteInvoiceId(id)
+        setShowDeleteModal(true)
+    }
+
+    const handlepayment = () => {
+        setShowPaymentForm(false);
+        setSelectedId("");
+    };
+
+    const onDelete = async (id: string) => {
+        try {
+            await deleteInvoice.mutateAsync(id)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleView = async (Invoice: InvoiceResponse) => {
+        setSelectedInvoiceId(Invoice.id)
+        setShowInvoiceDetailModal(true)
+    }
+
 
     const handleAddSubmit = () => {
         setAddModal(false);
-        // Refresh the list after add modal closes
     };
 
     if (error) {
@@ -106,6 +266,7 @@ const AllInvoiceForm = () => {
         )
     }
 
+
     return (
         <>
             <Toaster position="top-right" />
@@ -131,17 +292,6 @@ const AllInvoiceForm = () => {
                                 className="!font-semibold"
                             />
 
-
-
-                            {/* {canAdd && (
-                                <ButtonElement
-                                    icon={<Plus size={18} />}
-                                    type="button"
-                                    text="Add New Installments"
-                                    onClick={() => setAddModal(true)}
-                                    className="!font-semibold"
-                                />
-                            )} */}
                         </div>
                     </div>
 
@@ -204,35 +354,61 @@ const AllInvoiceForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
                                                     {invoice.invoiceNumber}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {invoice.invoiceStatus}
+                                                    {
+                                                        invoiceStatusType.find(
+                                                            (i) => i.id === invoice.invoiceStatus)
+                                                            ?.name
+                                                    }
                                                 </td>
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
                                                     {invoice.totalAmount}
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    {/* <div className="flex justify-center gap-3">
-                                                        {canEdit && (
-                                                            <button
-                                                                onClick={() => handleEdit()}
-                                                                className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )}
-                                                        {canDelete && (
-                                                            <button
-                                                                onClick={() => handleDelete(cls.id)}
-                                                                className="text-xs text-red-500 hover:text-red-600 font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div> */}
+                                                    <span className='flex justify-center gap-3'>
+
+                                                        <Tooltip text="Invoice Details">
+                                                            <ButtonElement
+                                                                icon={<Eye size={15} />}
+                                                                type="button"
+                                                                text=""
+                                                                onClick={() => {
+                                                                    setShowGenerateInvoiceModal(true)
+                                                                    setSelectedInvoiceId(invoice.id ?? '')
+                                                                    setSelectedSchoolId(invoice.schoolId ?? '')
+                                                                }}
+                                                                className="!text-xs"
+                                                            />
+
+                                                        </Tooltip>
+
+                                                        <Tooltip text="Complete Payment">
+                                                            <ButtonElement
+                                                                type="button"
+                                                                text="Pay Now"
+                                                                onClick={() => {
+                                                                    setShowPaymentForm(true)
+                                                                    setSelectedId(invoice.id ?? '')
+                                                                }}
+                                                                className="!text-xs"
+                                                            />
+                                                        </Tooltip>
+
+                                                        <ActionMenu
+                                                            Invoice={invoice}
+                                                            onEdit={handleEditInvoice}
+                                                            onDelete={handleDeleteInvoice}
+                                                            // onView={handleView}
+                                                            canEdit={true}
+                                                            canDelete={true}
+                                                        />
+
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))
@@ -260,6 +436,56 @@ const AllInvoiceForm = () => {
                     </div>
                 )}
             </div>
+
+            {showPaymentForm && selectedId && (
+                <AddPayments
+                    invoiceId={selectedId}
+                    visible={showPaymentForm}
+                    onClose={() => setShowPaymentForm(false)}
+                    onSuccess={handlepayment}
+                />
+            )}
+
+            <InvoiceDetailModal
+                isOpen={showInvoiceDetailModal}
+                onClose={() => { setShowInvoiceDetailModal(false); setSelectedInvoiceId(null) }}
+                InvoiceId={selectedInvoiceId}
+            />
+
+
+            <GenerateInvoiceModels
+                isOpen={showGenerateInvoiceModal}
+                onClose={() => { setShowGenerateInvoiceModal(false); setSelectedInvoiceId(null) }}
+                InvoiceId={selectedInvoiceId}
+                SchoolId={selectedSchoolId}
+            />
+
+
+            {showDeleteModal && deleteInvoiceId && (
+
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={onDelete}
+                    invoiceId={deleteInvoiceId}
+                    title="Delete Invoice"
+                    description="Are you sure you want to delete this invoice?"
+                />
+
+            )}
+
+
+
+            {showEditModal && editInvoiceId && (
+
+                <EditInvoice
+
+                    InvoiceId={editInvoiceId}
+                    visible={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+
+                />
+            )}
 
             <AddInvoice
                 visible={addModal}

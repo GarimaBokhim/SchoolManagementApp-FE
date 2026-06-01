@@ -12,9 +12,16 @@ const AddInvoice = ({ visible, onClose }: Props) => {
     const form = useForm<AddInvoicePayload>({
         defaultValues: {
             applicantId: "",
-            paidAmount: 0,
+            isInstallments: false,
             issueDate: "",
-            dueDate: ""
+            dueDate: "",
+            addInvoiceItemDTOs: [
+                {
+                    description: '',
+                    amount: 0,
+                    quantity: 0,
+                },
+            ],
 
         },
 

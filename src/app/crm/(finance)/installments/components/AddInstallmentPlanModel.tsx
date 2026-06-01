@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { AddInstallmentPlanPayload } from '../types/IInstallments'
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
@@ -15,42 +15,55 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 type Props = {
   form: UseFormReturn<AddInstallmentPlanPayload>;
   onClose: () => void;
+  invoiceId: string;
+  applicantId: string;
+  onSuccess?: () => void;
 };
-const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
+const AddInstallmentPlanForm = ({ form, onClose, onSuccess, invoiceId, applicantId }: Props) => {
   const addInstallmentPlan = useAddInstallmentsPlan();
   const { handleError, clearError } = useErrorHandler();
-  const { data: allapplicant } = useGetAllApplicants();
 
-  const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
+  useEffect(() => {
+    if (invoiceId) {
+      form.setValue("invoiceId", invoiceId);
+    }
+
+    if (applicantId) {
+      form.setValue("applicantId", applicantId);
+    }
+  }, [applicantId, form]);
+
+
   const handleClose = () => {
     form.reset({
+      invoiceId: "",
       applicantId: "",
       numberOfInstallments: 0
 
     });
-    setSelectedApplicantId(null);
+
+    onClose?.();
   };
 
   const onSubmit: SubmitHandler<AddInstallmentPlanPayload> = async (data) => {
     clearError();
-    const applicantId = String(data.applicantId ?? "").trim();
-    if (!applicantId) {
+    const finalapplicantId = String(applicantId ?? "").trim();
+
+    if (!finalapplicantId) {
       Toast.error("Please select applicant");
       return;
     }
     try {
-      await toast.promise(
-        addInstallmentPlan.mutateAsync({
-          applicantId,
-          numberOfInstallments: data.numberOfInstallments
-        }),
-        {
-          loading: "Adding InstallmentPlan...",
-          success: "Successfully added InstallmentPlan",
-        }
-      );
+      const values = form.getValues();
+      const payload = {
+        applicantId,
+        numberOfInstallments: values.numberOfInstallments,
+        invoiceId
+
+      };
+      addInstallmentPlan.mutateAsync(payload);
       handleClose();
-      onClose();
+      onSuccess?.();
     } catch (error) {
       const errorMsg = handleError(error);
       Toast.error(errorMsg);
@@ -66,10 +79,7 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
             </h1>
             <button
               type="button"
-              onClick={() => {
-                handleClose();
-                onClose();
-              }}
+              onClick={handleClose}
               className="text-red-400 text-2xl hover:text-red-500"
             >
               <X strokeWidth={3} />
@@ -86,40 +96,6 @@ const AddInstallmentPlanForm = ({ form, onClose }: Props) => {
                 required
               />
 
-              <AppCombobox
-                value={sellectedApplicantId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute z-20"
-                label="Applicant"
-                name="applicantId"
-                form={form}
-                required
-                options={allapplicant || []}
-                selected={
-                  allapplicant?.find(
-                    (g) => g.id === sellectedApplicantId
-                  ) || null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    const id = group.id ?? "";
-
-                    setSelectedApplicantId(id || null);
-
-                    form.setValue("applicantId", id, {
-                      shouldValidate: true,
-                    });
-                  } else {
-                    setSelectedApplicantId(null);
-
-                    form.setValue("applicantId", "", {
-                      shouldValidate: true,
-                    });
-                  }
-                }}
-                getLabel={(g) => g?.fullName ?? ""}
-                getValue={(g) => g?.id ?? ""}
-              />
 
             </div>
             <div className="flex justify-center mt-6">

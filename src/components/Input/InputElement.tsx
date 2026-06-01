@@ -13,7 +13,7 @@ interface IInput {
   onChangeSelectedDate?: (date: string) => void;
   isExpiryDate?: boolean;
   name: string;
-  inputType?: "text" | "date" | "file" | "password" | "number";
+  inputType?: "text" | "date" | "file" | "password" | "number" | "time";
   placeholder?: string;
   required?: boolean;
   accept?: string;
@@ -133,15 +133,13 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                   readOnly={readOnly}
                   min={inputType === "number" ? min : 0}
                   max={max}
-                  className={`w-full p-2 py-1.2 border ${
-                    form.formState.errors[name]
-                      ? "border-red-500"
-                      : "border-gray-400"
-                  } ${
-                    readOnly
+                  className={`w-full p-2 py-1.2 border ${form.formState.errors[name]
+                    ? "border-red-500"
+                    : "border-gray-400"
+                    } ${readOnly
                       ? "cursor-not-allowed bg-gray-100 dark:bg-[#353535]"
                       : ""
-                  } rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] dark:text-white border-[#035BBA] dark:bg-[#353535] focus:border-[#4788CD] ${customStyle}`}
+                    } rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] dark:text-white border-[#035BBA] dark:bg-[#353535] focus:border-[#4788CD] ${customStyle}`}
                   defaultValue={defaultValue}
                   inputMode={inputType === "number" ? "decimal" : undefined}
                   value={value}
@@ -168,11 +166,10 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                 />
                 <label
                   htmlFor={name}
-                  className={`absolute left-1 ${
-                    value || form.watch(name)
-                      ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
-                      : ""
-                  } scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[0.8rem] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[0.8rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 peer-focus:bg-[#ffffff] dark:peer-focus:bg-[#353535] text-gray-500 bg-[#ffffff] dark:bg-[#353535] transition-all pointer-events-none`}
+                  className={`absolute left-1 ${value || form.watch(name)
+                    ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
+                    : ""
+                    } scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[0.8rem] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[0.8rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 peer-focus:bg-[#ffffff] dark:peer-focus:bg-[#353535] text-gray-500 bg-[#ffffff] dark:bg-[#353535] transition-all pointer-events-none`}
                 >
                   <div className="flex items-center">
                     {required && (
@@ -190,11 +187,10 @@ export const InputElement = forwardRef<HTMLInputElement, IInput>(
                 onChange={onChange}
                 onSelect={onChange}
                 {...form.register(name, { required })}
-                className={`px-3 mt-1 py-2 rounded border ${
-                  form.formState.errors[name]
-                    ? "border-red-500"
-                    : "border-gray-300"
-                } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm bg-white dark:bg-[#353535] dark:text-white border-[#035BBA] focus:border-[#4788CD] ${customStyle}`}
+                className={`px-3 mt-1 py-2 rounded border ${form.formState.errors[name]
+                  ? "border-red-500"
+                  : "border-gray-300"
+                  } ${className} focus:ring-1 focus:ring-gray-500 focus:outline-none text-sm bg-white dark:bg-[#353535] dark:text-white border-[#035BBA] focus:border-[#4788CD] ${customStyle}`}
                 ref={ref}
               />
             )}

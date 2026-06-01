@@ -20,20 +20,13 @@ import {
 
 import {
     useEditPayments,
-    useGetPaymentsById,
 } from "../hooks";
 
-type ApplicantType = {
-    id: string;
-    fullName: string;
-};
 
 type Props = {
     form: UseFormReturn<UpdatePaymentsPayload>;
     onClose: () => void;
-    onSuccess?: () => void;
     PaymentsId: string;
-    allapplicant?: ApplicantType[];
 };
 
 const paymentMethods = [
@@ -45,102 +38,45 @@ const paymentMethods = [
     { id: 5, name: "Check" },
 ];
 
-const EditPaymentsForm = ({
-    form,
-    onClose,
-    onSuccess,
-    PaymentsId,
-    allapplicant = [],
-}: Props) => {
+const EditPaymentsForm = ({ form, onClose, PaymentsId }: Props) => {
     const editPayments = useEditPayments();
 
     const { handleError, clearError } = useErrorHandler();
-    const { isPrimaryBS } = useDate();
 
-    const { data: PaymentsData } = useGetPaymentsById(PaymentsId);
-
-    const [paymentMethod, setPaymentMethod] = useState<number | null>(null);
-    const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
 
     const handleClose = () => {
-        form.reset();
-        setPaymentMethod(null);
-        setSelectedApplicantId(null);
         onClose();
     };
 
-    // =========================
-    // ✅ FIXED DATE MAPPING (WORKING VERSION)
-    // =========================
-    useEffect(() => {
-        if (!PaymentsData) return;
 
-        const applicantId = PaymentsData?.applicantId ?? "";
-        const method = Number(PaymentsData?.paymentMethod ?? 0);
-
-        let rawDate = PaymentsData?.paymentDate ?? "";
-        rawDate = rawDate.split("T")[0]; // remove time
-
-        let finalDate = rawDate;
-
-        // 🔥 If backend accidentally sends BS → convert to AD
-        const year = Number(rawDate.split("-")[0]);
-
-        if (year >= 2000 && year <= 2090) {
-            try {
-                finalDate = bsToAd(rawDate);
-            } catch {
-                finalDate = rawDate;
-            }
-        }
-
-        form.reset({
-            applicantId,
-            amount: Number(PaymentsData?.amount ?? 0),
-
-            // ✅ IMPORTANT: ALWAYS AD for input type="date"
-            paymentDate: finalDate,
-
-            paymentMethod: method,
-        });
-
-        setSelectedApplicantId(applicantId);
-        setPaymentMethod(method);
-    }, [PaymentsData, form]);
 
     const onSubmit: SubmitHandler<UpdatePaymentsPayload> = async (data) => {
         clearError();
 
+
         try {
-            let finalDate = data.paymentDate;
-
-            // BS → AD only before API submit
-            if (isPrimaryBS && finalDate) {
-                try {
-                    finalDate = bsToAd(finalDate);
-                } catch {
-                    finalDate = data.paymentDate;
-                }
-            }
-
-            await editPayments.mutateAsync({
+            const promise = editPayments.mutateAsync({
                 id: PaymentsId,
-                data: {
-                    applicantId: String(data.applicantId ?? ""),
-                    amount: Number(data.amount ?? 0),
-                    paymentDate: finalDate,
-                    paymentMethod: Number(data.paymentMethod ?? 0),
-                },
+                payload: data,
             });
 
-            Toast.success("Payments updated successfully");
+            await toast.promise(
+                promise,
+                {
+                    loading: "Updating...",
+                    success: (res: any) => res?.message,
+                    error: (err: any) => err?.response?.data?.message,
+                }
+            );
 
             handleClose();
-            onSuccess?.();
+
         } catch (error) {
             Toast.error(handleError(error));
         }
     };
+
+    const paymentMethod = form.watch("paymentMethod") ?? 0;
 
     return (
         <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0">
@@ -185,40 +121,23 @@ const EditPaymentsForm = ({
                                 value={paymentMethod}
                                 options={paymentMethods}
                                 selected={
-                                    paymentMethods.find((g) => g.id === paymentMethod) || null
+                                    paymentMethods.find((g) => g.id === paymentMethod) ?? null
                                 }
                                 onSelect={(option) => {
                                     const id = option?.id ?? 0;
-                                    setPaymentMethod(id);
                                     form.setValue("paymentMethod", id);
                                 }}
                                 getLabel={(o) => o?.name ?? ""}
                                 getValue={(o) => o?.id ?? ""}
                             />
 
-                            <AppCombobox
-                                label="Applicant"
-                                name="applicantId"
-                                form={form}
-                                value={selectedApplicantId}
-                                options={allapplicant}
-                                selected={
-                                    allapplicant.find((g) => g.id === selectedApplicantId) || null
-                                }
-                                onSelect={(group) => {
-                                    const id = group?.id ?? "";
-                                    setSelectedApplicantId(id);
-                                    form.setValue("applicantId", id);
-                                }}
-                                getLabel={(g) => g?.fullName ?? ""}
-                                getValue={(g) => g?.id ?? ""}
-                            />
+
                         </div>
 
                         <div className="flex justify-center mt-6">
                             <ButtonElement
                                 type="submit"
-                                text={editPayments.isPending ? "Updating..." : "Update Payments"}
+                                text="Update Payments"
                             />
                         </div>
                     </form>

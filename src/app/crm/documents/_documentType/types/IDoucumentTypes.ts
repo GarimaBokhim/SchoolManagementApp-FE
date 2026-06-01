@@ -12,5 +12,4 @@ export interface IDocumentType {
 
 export interface IDocumentTypeFormData {
   name: string;
-  countryId: string;
 }

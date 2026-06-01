@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
+import { IPaginationCrmResponse, IPaginationResponse } from "@/types/IPaginationResponse";
 import { Counselor, AddCounselorPayload } from "../types/ICounselor";
 
 export const CounselorEndPoints = {
@@ -22,22 +22,27 @@ export const useGetAllCounselors = (queryParams?: string) => {
         });
       }
 
-      const response = await api.get<IPaginationResponse<Counselor>>(
+      const response = await api.get<IPaginationCrmResponse<Counselor>>(
         CounselorEndPoints.filterCounselors,
         { params: paramObj }
-      );
-
-      return response.data ?? {
-        Items: [],
-        TotalItems: 0,
-        PageIndex: 1,
-        pageSize: 10,
-        TotalPages: 1,
-        FirstPage: 1,
-        LastPage: 1,
-      };
+      )
+      return response.data
     },
-  });
+
+      select: (response) => ({
+      items: response?.Data?.Items ?? [],
+      pagination: {
+        totalItems: response?.Data?.TotalItems ?? 0,
+        pageIndex: response?.Data?.PageIndex ?? 1,
+        pageSize: response?.Data?.pageSize ?? 10,
+        totalPages: response?.Data?.TotalPages ?? 1,
+      },
+      message: response?.Message ?? '',
+      statusCode: response?.StatusCode ?? 200,
+    }),
+
+    staleTime: 1000 * 60 * 5,
+  })
 };
 
 export const useAddCounselor = () => {

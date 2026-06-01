@@ -1,0 +1,81 @@
+export interface VisaApplicationResponse {
+    id: string
+    applicantId: string
+    applicantName: string
+    countryId: string
+    countryName: string
+    universityId: string
+    universityName: string
+    courseId: string
+    courseTitle: string
+    intakeId: string
+    intakeMonth: number
+    appliedDate: string
+    visaStatusId: string
+    visaStatusName: string
+}
+
+export interface AddVisaApplicationResponse {
+    id: string
+    applicantId: string
+    countryId: string
+    universityId: string
+    courseId: string
+    intakeId: string
+    appliedDate: string
+    visaStatusId: string
+    visaDetails: string
+    emailSent: boolean
+    emailContent: string
+}
+
+
+export interface UpdateVisaApplicationResponse {
+    id: string
+    applicantId: string
+    countryId: string
+    universityId: string
+    courseId: string
+    intakeId: string
+    appliedDate: string
+    visaStatusId: string
+    visaDetails: string
+    emailSent: boolean
+    emailContent: string
+}
+
+export interface UpdateVisaApplicationPayload {
+    applicantId: string
+    countryId: string
+    universityId: string
+    courseId: string
+    intakeId: string
+    appliedDate: string
+    visaStatusId: string
+    visaDetails: string
+    emailSent: boolean
+    emailContent: string
+    visaApplicationDocumentsDTOs: VisaApplicationDocument[]
+
+}
+
+export interface AddVisaApplicationPayload {
+    applicantId: string
+    countryId: string
+    universityId: string
+    courseId: string
+    intakeId: string
+    appliedDate: string
+    visaStatusId: string
+    visaDetails: string
+    emailSent: boolean
+    emailContent: string
+    visaApplicationDocumentsDTOs: VisaApplicationDocument[]
+
+}
+
+export interface VisaApplicationDocument {
+    documentTypeId: string
+    documentStatus: number
+    docLink: string
+}

@@ -7,34 +7,34 @@ import EditPaymentsForm from "../components/EditPaymentsForm";
 interface Props {
     visible: boolean;
     onClose: () => void;
-    onSuccess?: () => void;
     PaymentsId: string;
 }
 
-const EditPayments = ({ visible, onClose, onSuccess, PaymentsId }: Props) => {
+const EditPayments = ({ visible, onClose, PaymentsId }: Props) => {
     const { data: paymentsData } = useGetPaymentsById(PaymentsId);
 
     const form = useForm<UpdatePaymentsPayload>({
         defaultValues: {
-            applicantId: "",
+            invoiceId: "",
             amount: 0,
             paymentDate: "",
             paymentMethod: 0
         },
     });
 
-    // Reset form when StudentData changes
+    const { reset } = form;
+
     useEffect(() => {
         if (paymentsData) {
             form.reset({
-                applicantId: paymentsData?.applicantId ?? "",
+                invoiceId: paymentsData?.invoiceId ?? "",
                 amount: paymentsData?.amount ?? "",
                 paymentDate: paymentsData?.paymentDate ?? "",
                 paymentMethod: paymentsData?.paymentMethod ?? ""
 
             });
         }
-    }, [paymentsData, form]);
+    }, [paymentsData, reset]);
 
     if (!visible) return null;
 
@@ -42,7 +42,6 @@ const EditPayments = ({ visible, onClose, onSuccess, PaymentsId }: Props) => {
         <EditPaymentsForm
             form={form}
             onClose={onClose}
-            onSuccess={onSuccess}
             PaymentsId={PaymentsId} />
     );
 };

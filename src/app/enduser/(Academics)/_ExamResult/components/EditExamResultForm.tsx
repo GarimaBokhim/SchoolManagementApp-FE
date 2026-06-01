@@ -19,7 +19,6 @@ import { useGetSubjectByClassId, useGetSubjectById } from '../../Subject/hooks'
 import { useGetAllClass } from '../../Class/hooks'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
 import { IExam } from '../../Exam/types/IExams'
-import { Underdog } from 'next/font/google'
 
 type Props = {
   form: UseFormReturn<IExamResult>

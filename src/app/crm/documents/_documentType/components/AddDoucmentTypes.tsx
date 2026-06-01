@@ -33,11 +33,9 @@ export const AddDocumentTypeForm: React.FC<AddDocumentTypeFormProps> = ({
   const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null)
   const { handleError, clearError } = useErrorHandler()
   const { mutateAsync: addDocumentType } = useAddDocumentType()
-  const { data: countryList } = useGetAllCountries()
 
   const handleSubmit = async (data: IDocumentTypeFormData) => {
     clearError()
-    if (!data.countryId) { setError('Please select a country.'); return }
     setIsSubmitting(true)
     setError(null)
     try {
@@ -92,34 +90,6 @@ export const AddDocumentTypeForm: React.FC<AddDocumentTypeFormProps> = ({
             />
           </div>
 
-          {/* Country */}
-          <div className="flex flex-col gap-1">
-            <label className={labelClass}>
-              Country <span className="text-red-500">*</span>
-            </label>
-            <AppCombobox
-              label="Select Country"
-              name="countryId"
-              form={form}
-              options={countryList ?? []}
-              selected={selectedCountry}
-              dropDownWidth="w-full"
-              dropdownPositionClass="absolute"
-              onSelect={(country) => {
-                setSelectedCountry(country)
-                form.setValue('countryId', country?.id ?? '')
-                setError(null)
-              }}
-              getLabel={(c) => c?.name ?? ''}
-              getValue={(c) => c?.id ?? ''}
-              renderOptionExtra={(c) => (
-                <span className={`text-xs ${c?.isActive ? 'text-green-500' : 'text-gray-400'}`}>
-                  {c?.isActive ? 'Active' : 'Inactive'}
-                </span>
-              )}
-              placeholder="Search country..."
-            />
-          </div>
         </div>
 
         <div className="flex justify-center mt-6">

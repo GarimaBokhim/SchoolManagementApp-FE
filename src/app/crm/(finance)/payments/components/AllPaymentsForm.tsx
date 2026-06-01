@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { BookOpen, Edit, Filter, Plus, Trash } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BookOpen, Edit, Eye, EyeOff, Filter, MoreVertical, Plus, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -11,27 +11,133 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 
-import { AddPaymentsPayload } from '../types/IPayments'
+import { AddPaymentsPayload, PaymentsResponse } from '../types/IPayments'
 
 import { useDeletePayments, useGetAllPayments } from '../hooks'
-import AddPayments from '../pages/Add'
-import { EditButton } from '@/components/Buttons/EditButton'
-import DeleteButton from '@/components/Buttons/DeleteButton'
-import EditPaymentsForm from './EditPaymentsForm'
-import EditStudent from '../pages/Edit'
 import EditPayments from '../pages/Edit'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
+import { PaymentsReceiptDetailsModal } from './PaymentsReceiptModals'
+import { Tooltip } from '@/components/ToolTip/Tooltip'
 
 interface FilterFormData {
     startDate: string
     endDate: string
 }
 
+
+
+//#region ActionMenu
+interface ActionMenuProps {
+    Payment: PaymentsResponse;
+    onEdit: (Payment: PaymentsResponse) => void;
+    onDelete: (id: string) => void;
+    canEdit?: boolean;
+    canDelete?: boolean;
+}
+
+const ActionMenu = ({ Payment, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+    const [open, setOpen] = useState(false)
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    const calculatePosition = useCallback(() => {
+        if (!buttonRef.current) return
+        const rect = buttonRef.current.getBoundingClientRect()
+        const menuHeight = 160
+        const menuWidth = 180
+        const spaceBelow = window.innerHeight - rect.bottom
+        const openUpward = spaceBelow < menuHeight + 8
+        setMenuStyle({
+            position: 'fixed',
+            right: window.innerWidth - rect.right,
+            top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
+            width: menuWidth,
+            zIndex: 9999,
+        })
+    }, [])
+
+    const toggle = () => {
+        if (!open) calculatePosition()
+        setOpen((prev) => !prev)
+    }
+
+    useEffect(() => {
+        if (!open) return
+        const handle = (e: MouseEvent) => {
+            if (
+                menuRef.current && !menuRef.current.contains(e.target as Node) &&
+                buttonRef.current && !buttonRef.current.contains(e.target as Node)
+            ) setOpen(false)
+        }
+        document.addEventListener('mousedown', handle)
+        return () => document.removeEventListener('mousedown', handle)
+    }, [open])
+
+    useEffect(() => {
+        if (!open) return
+        const update = () => calculatePosition()
+        window.addEventListener('scroll', update, true)
+        window.addEventListener('resize', update)
+        return () => {
+            window.removeEventListener('scroll', update, true)
+            window.removeEventListener('resize', update)
+        }
+    }, [open, calculatePosition])
+
+    return (
+        <div className="flex justify-center">
+            <button
+                ref={buttonRef}
+                onClick={toggle}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                title="Actions"
+            >
+                <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
+            </button>
+
+            {open && (
+                <div
+                    ref={menuRef}
+                    style={menuStyle}
+                    className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
+                >
+                    {canEdit && <button
+                        onClick={() => { onEdit(Payment); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Edit size={14} /> Edit
+                    </button>}
+                    {canDelete && <button
+                        onClick={() => { onDelete(Payment.id); setOpen(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                        <Trash size={14} /> Delete
+                    </button>}
+
+                </div>
+            )}
+        </div>
+    )
+}
+
+//#endregion
+
 const AllPaymentsForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
-    const [showPayments, setShowPayments] = useState(false)
-    const [selectedId, setSelectedId] = useState<string>('')
+
+    const [showPaymentReceiptModal, setShowPaymentsReceiptModal] = useState(false)
+    const [selectedPaymentsId, setSelectedPaymentsId] = useState<string | null>(null)
+    const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null)
+
+
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editPaymentsId, setEditPaymentsId] = useState<string | null>(null)
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deletePaymentsId, setDeletePaymentsId] = useState<string | null>(null)
 
 
 
@@ -51,7 +157,7 @@ const AllPaymentsForm = () => {
         defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
     })
 
-    const { data, isLoading, error, refetch } = useGetAllPayments(params)
+    const { data, isLoading, error } = useGetAllPayments(params)
     const deletePayments = useDeletePayments()
 
     const payments = data?.items ?? [];
@@ -66,14 +172,29 @@ const AllPaymentsForm = () => {
         { id: 5, name: 'Check' }
     ];
 
-    const handleEditSuccess = () => {
-        setShowPayments(false);
-        setSelectedId("");
-    };
+    const paymentStatus = [
+        { id: 1, name: 'Pending' },
+        { id: 2, name: 'Completed' },
+        { id: 3, name: 'Failed' }
+    ];
+
+    const handleEditPayments = (Payments: PaymentsResponse) => {
+        setEditPaymentsId(Payments.id)
+        setShowEditModal(true)
+    }
+
+    const handleDeletePayments = (id: string) => {
+        setDeletePaymentsId(id)
+        setShowDeleteModal(true)
+    }
+
+    const handlePaymentReceipt = async (Payments: PaymentsResponse) => {
+        setSelectedPaymentsId(Payments.id)
+        setShowPaymentsReceiptModal(true)
+    }
 
 
-
-    const handleDelete = async (id: string) => {
+    const onDelete = async (id: string) => {
         try {
             await deletePayments.mutateAsync(id)
         } catch (error) {
@@ -97,18 +218,6 @@ const AllPaymentsForm = () => {
         toast.success(data?.message || 'Data loaded successfully')
     }
 
-    const handleClearFilters = () => {
-        form.reset({ startDate: '', endDate: '' })
-        setParams('')
-        formRef.current?.handleClear()
-        refetch()
-    }
-
-    const handleAddSubmit = () => {
-        setAddModal(false);
-        // Refresh the list after add modal closes
-        refetch();
-    };
 
 
     if (error) {
@@ -157,13 +266,6 @@ const AllPaymentsForm = () => {
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
                             />
-                            <ButtonElement
-                                icon={<Plus size={18} />}
-                                type="button"
-                                text="Add Payments"
-                                onClick={() => setAddModal(true)}
-                                className="!font-semibold"
-                            />
 
                         </div>
                     </div>
@@ -200,6 +302,7 @@ const AllPaymentsForm = () => {
                                         <th className="px-4 py-3 text-left hidden md:table-cell">Amount</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">PaymentMethod</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">PaymentStatus</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">PaymentDate</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -244,47 +347,43 @@ const AllPaymentsForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                                                    {payment.paymentDate}
+                                                    {
+                                                        paymentStatus.find(
+                                                            (i) => i.id === payment.paymentStatus
+                                                        )?.name
+                                                    }
+                                                </td>
+
+                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">
+                                                    {payment?.paymentDate ? payment.paymentDate.split("T")[0] : ""}
                                                 </td>
 
                                                 <td className="px-4 py-3">
                                                     <div className="flex justify-center gap-3">
-                                                        <EditButton
-                                                            button={
-                                                                <ButtonElement
-                                                                    icon={<Edit size={14} />}
-                                                                    type="button"
-                                                                    text=""
-                                                                    onClick={() => {
-                                                                        setShowPayments(true)
-                                                                        setSelectedId(payment.id ?? '')
-                                                                    }}
-                                                                    className="!text-xs !bg-teal-500"
-                                                                />
-                                                            }
-                                                        />
 
-                                                        <DeleteButton
-                                                            onConfirm={() => handleDelete(payment.id ? payment.id : '')}
-                                                            headerText={<Trash size={16} />}
-                                                            content="Are you sure you want to delete this student?"
+                                                        <Tooltip text="Payment Details">
+                                                            <ButtonElement
+                                                                icon={<Eye size={14} />}
+                                                                type="button"
+                                                                text=""
+                                                                onClick={() => {
+                                                                    setShowPaymentsReceiptModal(true)
+                                                                    setSelectedPaymentsId(payment.id ?? '')
+                                                                    setSelectedSchoolId(payment.schoolId ?? '')
+                                                                }}
+                                                                className="!text-xs"
+                                                            />
+
+                                                        </Tooltip>
+
+
+                                                        <ActionMenu
+                                                            Payment={payment}
+                                                            onEdit={handleEditPayments}
+                                                            onDelete={handleDeletePayments}
+                                                            canEdit={true}
+                                                            canDelete={true}
                                                         />
-                                                        {/* {canEdit && (
-                                                            <button
-                                                                onClick={() => handleEdit()}
-                                                                className="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        )} */}
-                                                        {/* {canDelete && (
-                                                            <button
-                                                                onClick={() => handleDelete(cls.id)}
-                                                                className="text-xs text-red-500 hover:text-red-600 font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )} */}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -314,19 +413,33 @@ const AllPaymentsForm = () => {
                 )}
             </div>
 
-            {showPayments && selectedId && (
-                <EditPayments
-                    PaymentsId={selectedId}
-                    visible={showPayments}
-                    onClose={() => setShowPayments(false)}
-                    onSuccess={handleEditSuccess}
+            <PaymentsReceiptDetailsModal
+                isOpen={showPaymentReceiptModal}
+                onClose={() => { setShowPaymentsReceiptModal(false); setSelectedPaymentsId(null) }}
+                PaymentsId={selectedPaymentsId}
+                SchoolId={selectedSchoolId}
+            />
+
+            {showDeleteModal && deletePaymentsId && (
+
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={onDelete}
+                    invoiceId={deletePaymentsId}
+                    title="Delete Payments"
+                    description="Are you sure you want to delete this Payments?"
                 />
+
             )}
 
-            <AddPayments
-                visible={addModal}
-                onClose={handleAddSubmit}
-            />
+            {showEditModal && editPaymentsId && (
+                <EditPayments
+                    PaymentsId={editPaymentsId}
+                    visible={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                />
+            )}
         </>
     )
 }

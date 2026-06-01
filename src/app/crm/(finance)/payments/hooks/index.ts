@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationCrmResponse, IPaginationResponse } from '@/types/IPaginationResponse'
-import { AddPaymentsPayload, FilterPaymentsResponse,AddPaymentsResponse, UpdatePaymentsPayload } from '../types/IPayments'
+import { AddPaymentsPayload, AddPaymentsResponse, PaymentsResponse, SchoolResponse, UpdatePaymentsPayload } from '../types/IPayments'
 import { Toast } from '@/components/Toast/toast'
 
 
@@ -12,6 +12,7 @@ export const paymentsEndPoints = {
   delete: '/api/CrmFinance/DeletePayments',
   applicants: '/api/Enrolments/AllApplicant',
   get: '/api/CrmFinance/PaymentsById',
+  getSchoolById: '/api/SetupControllers/School',
 }
 
 
@@ -21,15 +22,15 @@ export const paymentsQueryKey = {
 }
 
 const normalizePaymentsPayload = (data: UpdatePaymentsPayload): UpdatePaymentsPayload => ({
-  applicantId: String(data.applicantId ?? '').trim(),
+  invoiceId: String(data.invoiceId ?? '').trim(),
   amount: Number(data.amount) || 0,
   paymentDate: String(data.paymentDate ?? '').trim(),
   paymentMethod: Number(data.paymentMethod) || 0,
 })
 
 export const normalizePayments = (
-  data: Partial<FilterPaymentsResponse> | null | undefined
-  ): FilterPaymentsResponse => {
+  data: Partial<PaymentsResponse> | null | undefined
+  ): PaymentsResponse => {
     return {
       id: String(data?.id ?? ''),
       invoiceId: String(data?.invoiceId ?? ''),
@@ -84,35 +85,40 @@ export const useGetAllPayments = (queryParams?: string) => {
 }
 
 export const useAddPayments = () => {
-  const queryClient = useQueryClient()
-  
-    return useMutation({
-      mutationFn: async (payload: AddPaymentsPayload) => {
-        const normalizedPayload = normalizePaymentsPayload(payload)
-  
-        const response = await api.post<IPaginationCrmResponse<AddPaymentsResponse>>(
-          paymentsEndPoints.add,
-          normalizedPayload
-        )
-  
-        return response.data
-      },
-  
-      onSuccess: (response) => {
-        Toast.success(response?.Message || 'Payments added successfully')
-  
-        queryClient.invalidateQueries({
-          queryKey: paymentsQueryKey.all,
-        })
-      },
-  
-      onError: (error: any) => {
-        Toast.error(
-          error?.response?.data?.Message || 'Failed to add Payments'
-        )
-      },
-    })
-}
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: AddPaymentsPayload) => {
+      const normalizedPayload = normalizePaymentsPayload(payload);
+
+      const response = await api.post<IPaginationCrmResponse<AddPaymentsResponse>>(
+        paymentsEndPoints.add,
+        normalizedPayload
+      );
+
+      return response.data;
+    },
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || "Payments added successfully");
+
+      // ✅ refresh payments list
+      queryClient.invalidateQueries({
+        queryKey: paymentsQueryKey.all,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['Invoice'], 
+      });
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || "Failed to add Payments"
+      );
+    },
+  });
+};
 
 export const useDeletePayments = () => {
   const queryClient = useQueryClient()
@@ -148,14 +154,14 @@ export const useEditPayments = () => {
   return useMutation({
     mutationFn: async ({
       id,
-      data,
+      payload,
     }: {
       id: string
-      data: UpdatePaymentsPayload
+      payload: UpdatePaymentsPayload
     }) => {
       const response = await api.patch(
         `${paymentsEndPoints.update}/${id}`,
-        normalizePaymentsPayload(data)
+        normalizePaymentsPayload(payload)
       )
 
       return response.data
@@ -182,8 +188,8 @@ export const useGetPaymentsById = (paymentId?: string) => {
   return useQuery({
     queryKey: [...paymentsQueryKey.all, paymentId],
 
-    queryFn: async (): Promise<FilterPaymentsResponse> => {
-      const response = await api.get<FilterPaymentsResponse>(
+    queryFn: async (): Promise<PaymentsResponse> => {
+      const response = await api.get<PaymentsResponse>(
         `${paymentsEndPoints.get}/${paymentId}`
       )
 
@@ -219,3 +225,27 @@ export const useGetAllApplicants = () => {
       staleTime: 1000 * 60 * 5,
     })
 }
+
+export const useSchoolById = (SchoolId: string| null) => {
+  return useQuery({
+    queryKey: ["schoolId", SchoolId],
+
+    queryFn: async (): Promise<SchoolResponse> => {
+      if (!SchoolId) {
+        throw new Error("Id is required to get School");
+      }
+
+      const response = await api.get<SchoolResponse>(
+        `${paymentsEndPoints.getSchoolById}/${SchoolId}`
+      );
+
+      return response.data;
+    },
+
+    staleTime: 0,
+    gcTime: 0, // 
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+};
+

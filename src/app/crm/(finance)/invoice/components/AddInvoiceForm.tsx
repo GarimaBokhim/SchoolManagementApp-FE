@@ -1,14 +1,12 @@
 'use client'
-
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
 import { AddInvoicePayload } from '../types/IInvoice'
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
+import { SubmitHandler, useFieldArray, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { useAddInvoice, useGetAllApplicants } from "../hooks";
-import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 
@@ -20,39 +18,56 @@ const AddInvoiceForm = ({ form, onClose }: Props) => {
     const addInvoice = useAddInvoice();
     const { handleError, clearError } = useErrorHandler();
     const { data: allapplicant } = useGetAllApplicants();
-
     const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
+
     const handleClose = () => {
         form.reset({
             applicantId: "",
-            paidAmount: 0,
+            isInstallments: false,
             issueDate: "",
-            dueDate: ""
-
+            dueDate: "",
+            addInvoiceItemDTOs: [
+                {
+                    description: "",
+                    amount: 0,
+                    quantity: 0
+                }
+            ]
         });
-        setSelectedApplicantId(null);
+        setSelectedApplicantId(null)
+        onClose()
     };
 
-    const onSubmit: SubmitHandler<AddInvoicePayload> = async (data) => {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: 'addInvoiceItemDTOs',
+    })
+
+    const onSubmit: SubmitHandler<AddInvoicePayload> = async () => {
         clearError();
-        const applicantId = String(data.applicantId ?? "").trim();
+        const values = form.getValues();
+        const applicantId = String(values.applicantId ?? "").trim();
+
         if (!applicantId) {
             Toast.error("Please select applicant");
             return;
         }
-        try {
-            await addInvoice.mutateAsync({
-                applicantId,
-                paidAmount: data.paidAmount,
-                issueDate: data.issueDate,
-                dueDate: data.dueDate,
-            })
 
-            handleClose()
-            onClose()
-        } catch (error) {
-            Toast.error(handleError(error))
-        }
+        const payload = {
+            applicantId: values.applicantId,
+            isInstallments: false,
+            issueDate: values.issueDate,
+            dueDate: values.dueDate,
+            addInvoiceItemDTOs: (values.addInvoiceItemDTOs ?? []).map(item => ({
+                description: item.description,
+                amount: Number(item.amount),
+                quantity: Number(item.quantity),
+            })),
+        };
+
+        await addInvoice.mutateAsync(payload);
+        handleClose();
+        onClose();
     };
     return (
         <div className=" inset-0 flex items-center justify-center  w-full h-full">
@@ -75,14 +90,6 @@ const AddInvoiceForm = ({ form, onClose }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-
-                            <InputElement
-                                label="Paid Amount"
-                                form={form}
-                                name="paidAmount"
-                                placeholder="Enter PaidAmount"
-                                required
-                            />
 
                             <AppCombobox
                                 value={sellectedApplicantId}
@@ -119,7 +126,6 @@ const AddInvoiceForm = ({ form, onClose }: Props) => {
                                 getValue={(g) => g?.id ?? ""}
                             />
 
-
                             <InputElement
                                 label="IssueDate"
                                 form={form}
@@ -139,6 +145,85 @@ const AddInvoiceForm = ({ form, onClose }: Props) => {
                             />
 
                         </div>
+
+
+                        {/* ITEMS */}
+                        <div className="mt-8">
+                            <h2 className="font-semibold mb-4">Invoice Items</h2>
+
+                            {fields.length === 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        append({
+                                            description: "",
+                                            quantity: 0,
+                                            amount: 0,
+                                        })
+                                    }
+                                    className="px-4 py-2 bg-black text-white rounded"
+                                >
+                                    Add Item
+                                </button>
+                            )}
+
+                            {fields.map((field, index) => (
+                                <div
+                                    key={field.id}
+                                    className="border p-4 rounded mb-4"
+                                >
+                                    <div className="flex justify-between mb-2">
+                                        <span>Item {index + 1}</span>
+
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    append({
+                                                        description: "",
+                                                        quantity: 0,
+                                                        amount: 0,
+                                                    })
+                                                }
+                                            >
+                                                <Plus />
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => remove(index)}
+                                            >
+                                                <Trash2 />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <InputElement
+                                            label="Description"
+                                            form={form}
+                                            name={`addInvoiceItemDTOs.${index}.description`}
+                                        />
+
+                                        <InputElement
+                                            label="Quantity"
+                                            form={form}
+                                            name={`addInvoiceItemDTOs.${index}.quantity`}
+                                            inputType="number"
+                                        />
+
+                                        <InputElement
+                                            label="Amount"
+                                            form={form}
+                                            name={`addInvoiceItemDTOs.${index}.amount`}
+                                            inputType="number"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+
                         <div className="flex justify-center mt-6">
                             <ButtonElement type="submit" text={"Submit"} />
                         </div>

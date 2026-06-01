@@ -7,10 +7,10 @@ export interface AddInstallmentPlanResponse {
   modifiedAt: string
 }
 
-export interface FilterInstallmentPlanResponse {
+export interface InstallmentPlanResponse {
   id: string
-  applicantId: string
   numberOfInstallments: number
+  invoiceId: string
   applicantName: string
   invoiceNumber: string
   totalAmount: number,
@@ -23,6 +23,12 @@ export interface FilterInstallmentPlanResponse {
 }
 
 export interface AddInstallmentPlanPayload {
-  applicantId: string
   numberOfInstallments: number
+  invoiceId: string
+}
+
+
+export interface UpdateInstallmentPlanPayload {
+  numberOfInstallments: number
+  invoiceId: string
 }

@@ -7,12 +7,16 @@ import AddInstallmentPlanForm from "../components/AddInstallmentPlanModel";
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    invoiceId: string;
+    applicantId: string;
+    onSuccess?: () => void;
 }
-const AddInstallmentPlan = ({ visible, onClose }: Props) => {
+const AddInstallmentPlan = ({ visible, onClose, onSuccess, applicantId, invoiceId }: Props) => {
     const form = useForm<AddInstallmentPlanPayload>({
         defaultValues: {
             applicantId: "",
-            numberOfInstallments: 0
+            numberOfInstallments: 0,
+            invoiceId: ""
 
         },
 
@@ -35,7 +39,7 @@ const AddInstallmentPlan = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddInstallmentPlanForm form={form} onClose={handleOnClose} />
+                <AddInstallmentPlanForm form={form} onClose={handleOnClose} onSuccess={onSuccess} invoiceId={invoiceId} applicantId={applicantId} />
             </div>
         </div>
     );
