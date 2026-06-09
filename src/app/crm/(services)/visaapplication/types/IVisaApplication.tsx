@@ -55,7 +55,6 @@ export interface UpdateVisaApplicationPayload {
     visaDetails: string
     emailSent: boolean
     emailContent: string
-    visaApplicationDocumentsDTOs: VisaApplicationDocument[]
 
 }
 
@@ -70,12 +69,5 @@ export interface AddVisaApplicationPayload {
     visaDetails: string
     emailSent: boolean
     emailContent: string
-    visaApplicationDocumentsDTOs: VisaApplicationDocument[]
 
-}
-
-export interface VisaApplicationDocument {
-    documentTypeId: string
-    documentStatus: number
-    docLink: string
 }

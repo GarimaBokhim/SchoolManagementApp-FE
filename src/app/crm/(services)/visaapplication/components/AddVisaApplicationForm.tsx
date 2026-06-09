@@ -7,11 +7,12 @@ import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-h
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddVisaApplication, useGetAllApplicants, useGetAllCountry, useGetAllCourse, useGetAllIntake, useGetAllUniversity, useGetAllVisaStatus } from "../hooks";
+import { useAddVisaApplication, useGetAllApplicants, useGetAllCountry, useGetAllIntake, useGetAllVisaStatus, useGetCourseByUniversity, useGetUniversityByCountry } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
+import { useGetAllDocType } from '@/app/crm/(academicprogram)/documents/hooks';
 
 type Props = {
     form: UseFormReturn<AddVisaApplicationPayload>;
@@ -21,9 +22,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
     const addVisaApplication = useAddVisaApplication();
     const { handleError, clearError } = useErrorHandler();
     const { data: allapplicant } = useGetAllApplicants();
-    const { data: allCountry } = useGetAllCountry();
-    const { data: allUniversity } = useGetAllUniversity();
-    const { data: allCourse } = useGetAllCourse();
+    const { data: country } = useGetAllCountry();
     const { data: allintake = [] } = useGetAllIntake();
     const { data: allVisaStatus } = useGetAllVisaStatus();
 
@@ -31,11 +30,15 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
 
     const [sellectedApplicantId, setSelectedApplicantId] = useState<string | null>("");
-    const [sellectedCountryId, setSelectedCountryId] = useState<string | null>("");
-    const [sellectedUniversityId, setSelectedUniversityId] = useState<string | null>("");
-    const [sellectedCourseId, setSelectedCourseId] = useState<string | null>("");
     const [sellectedIntakeId, setSelectedIntakeId] = useState<string | null>("");
     const [sellectedVisaStatusId, setSelectedVisaStatusId] = useState<string | null>("");
+
+    const countryId = form.watch('countryId');
+    const universityId = form.watch('universityId');
+    const courseId = form.watch('courseId');
+
+    const { data: universityByCountry } = useGetUniversityByCountry(countryId);
+    const { data: courseByUniversity } = useGetCourseByUniversity(universityId);
 
     const handleClose = () => {
         form.reset({
@@ -48,96 +51,33 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
             visaStatusId: "",
             visaDetails: "",
             emailSent: false,
-            emailContent: "",
-            visaApplicationDocumentsDTOs: [
-                {
-                    documentTypeId: "",
-                    documentStatus: 0,
-                    docLink: "",
-                },
-            ],
+            emailContent: ""
 
         });
         setSelectedApplicantId(null);
     };
 
-    const {
-        fields,
-        append,
-        remove,
-    } = useFieldArray({
-        control: form.control,
-        name: 'visaApplicationDocumentsDTOs',
-    })
-
-
-
-
-
     const onSubmit: SubmitHandler<AddVisaApplicationPayload> = async (data) => {
         clearError();
-        const applicantId = String(data.applicantId ?? "").trim();
-        if (!applicantId) {
-            Toast.error("Please select applicant");
-            return;
-        }
 
+        const values = form.getValues();
 
-        const countryId = String(data.countryId ?? "").trim();
-        if (!countryId) {
-            Toast.error("Please select countryId");
-            return;
-        }
+        const payload = {
+            applicantId: values.applicantId,
+            countryId: values.countryId,
+            universityId: values.universityId,
+            courseId: values.courseId,
+            intakeId: values.intakeId,
+            appliedDate: values.appliedDate,
+            visaStatusId: values.visaStatusId,
+            emailSent: values.emailSent,
+            visaDetails: values.visaDetails,
+            emailContent: values.emailContent
+        };
 
-
-        const universityId = String(data.universityId ?? "").trim();
-        if (!universityId) {
-            Toast.error("Please select universityId");
-            return;
-        }
-
-
-
-        const courseId = String(data.courseId ?? "").trim();
-        if (!courseId) {
-            Toast.error("Please select courseId");
-            return;
-        }
-
-
-        const intakeId = String(data.intakeId ?? "").trim();
-        if (!intakeId) {
-            Toast.error("Please select intakeId");
-            return;
-        }
-
-
-        const visaStatusId = String(data.visaStatusId ?? "").trim();
-        if (!visaStatusId) {
-            Toast.error("Please select visaStatusId");
-            return;
-        }
-        try {
-            await addVisaApplication.mutateAsync({
-                applicantId,
-                countryId,
-                universityId,
-                courseId,
-                intakeId,
-                appliedDate: data.appliedDate,
-                visaStatusId,
-                emailSent: data.emailSent,
-                visaDetails: data.visaDetails,
-                emailContent: data.emailContent,
-                visaApplicationDocumentsDTOs:
-                    data.visaApplicationDocumentsDTOs ?? [],
-            })
-
-            handleClose()
-            onClose()
-        } catch (error) {
-            Toast.error(handleError(error))
-        }
+        await addVisaApplication.mutateAsync(payload);
+        handleClose();
+        onClose();
     };
     return (
         <div className=" inset-0 flex items-center justify-center  w-full h-full">
@@ -199,111 +139,77 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                             />
 
 
+                            {/* COUNTRY */}
                             <AppCombobox
-                                value={sellectedCountryId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
-                                label="Country"
+                                value={countryId}
                                 name="countryId"
+                                label="Country"
                                 form={form}
-                                required
-                                options={allCountry || []}
+                                options={country || []}
                                 selected={
-                                    allCountry?.find(
-                                        (g) => g.id === sellectedCountryId
-                                    ) || null
+                                    country?.find((x) => x.id === countryId) ||
+                                    null
                                 }
-                                onSelect={(group) => {
-                                    if (group) {
-                                        const id = group.id ?? "";
+                                onSelect={(item) => {
+                                    const id = item?.id ?? '';
 
-                                        setSelectedCountryId(id || null);
+                                    form.setValue('countryId', id, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    });
 
-                                        form.setValue("countryId", id, {
-                                            shouldValidate: true,
-                                        });
-                                    } else {
-                                        setSelectedCountryId(null);
-
-                                        form.setValue("countryId", "", {
-                                            shouldValidate: true,
-                                        });
-                                    }
+                                    form.setValue('universityId', '');
+                                    form.setValue('courseId', '');
                                 }}
-                                getLabel={(g) => g?.name ?? ""}
-                                getValue={(g) => g?.id ?? ""}
+                                getLabel={(i) => i?.name ?? ''}
+                                getValue={(i) => i?.id ?? ''}
                             />
 
-
-
+                            {/* UNIVERSITY */}
                             <AppCombobox
-                                value={sellectedUniversityId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
-                                label="University"
+                                value={universityId}
                                 name="universityId"
+                                label="University"
                                 form={form}
-                                required
-                                options={allUniversity || []}
+                                options={universityByCountry || []}
                                 selected={
-                                    allUniversity?.find(
-                                        (g) => g.id === sellectedUniversityId
+                                    universityByCountry?.find(
+                                        (x) => x.id === universityId
                                     ) || null
                                 }
-                                onSelect={(group) => {
-                                    if (group) {
-                                        const id = group.id ?? "";
+                                onSelect={(item) => {
+                                    const id = item?.id ?? '';
 
-                                        setSelectedUniversityId(id || null);
+                                    form.setValue('universityId', id, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    });
 
-                                        form.setValue("universityId", id, {
-                                            shouldValidate: true,
-                                        });
-                                    } else {
-                                        setSelectedUniversityId(null);
-
-                                        form.setValue("universityId", "", {
-                                            shouldValidate: true,
-                                        });
-                                    }
+                                    form.setValue('courseId', '');
                                 }}
-                                getLabel={(g) => g?.name ?? ""}
-                                getValue={(g) => g?.id ?? ""}
+                                getLabel={(i) => i?.name ?? ''}
+                                getValue={(i) => i?.id ?? ''}
                             />
 
+                            {/* COURSE */}
                             <AppCombobox
-                                value={sellectedCourseId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
-                                label="Course"
+                                value={courseId}
                                 name="courseId"
+                                label="Course"
                                 form={form}
-                                required
-                                options={allCourse || []}
+                                options={courseByUniversity || []}
                                 selected={
-                                    allCourse?.find(
-                                        (g) => g.id === sellectedCourseId
+                                    courseByUniversity?.find(
+                                        (x) => x.id === courseId
                                     ) || null
                                 }
-                                onSelect={(group) => {
-                                    if (group) {
-                                        const id = group.id ?? "";
-
-                                        setSelectedCourseId(id || null);
-
-                                        form.setValue("courseId", id, {
-                                            shouldValidate: true,
-                                        });
-                                    } else {
-                                        setSelectedCourseId(null);
-
-                                        form.setValue("courseId", "", {
-                                            shouldValidate: true,
-                                        });
-                                    }
+                                onSelect={(item) => {
+                                    form.setValue('courseId', item?.id ?? '', {
+                                        shouldValidate: true,
+                                    });
                                 }}
-                                getLabel={(g) => g?.title ?? ""}
-                                getValue={(g) => g?.id ?? ""}
+                                getLabel={(i) => i?.title ?? ''}
+                                getValue={(i) => i?.id ?? ''}
                             />
 
                             <AppCombobox
@@ -464,89 +370,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                                 }
                             />
                         </div>
-
-
-                        {/* ITEMS */}
-                        <div className="mt-8">
-                            <h2 className="font-semibold mb-4">Invoice Items</h2>
-
-                            {fields.length === 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        append({
-                                            description: "",
-                                            quantity: 0,
-                                            amount: 0,
-                                        })
-                                    }
-                                    className="px-4 py-2 bg-black text-white rounded"
-                                >
-                                    Add Item
-                                </button>
-                            )}
-
-                            {fields.map((field, index) => (
-                                <div
-                                    key={field.id}
-                                    className="border p-4 rounded mb-4"
-                                >
-                                    <div className="flex justify-between mb-2">
-                                        <span>Item {index + 1}</span>
-
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    append({
-                                                        documentTypeId: '',
-                                                        documentStatus: 0,
-                                                        docLink: '',
-                                                    })
-                                                }
-                                            >
-                                                <Plus />
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => remove(index)}
-                                            >
-                                                <Trash2 />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <InputElement
-                                            label="Document Type Id"
-                                            form={form}
-                                            name={`visaApplicationDocumentsDTOs.${index}.documentTypeId`}
-                                            placeholder="Enter document type"
-                                            required
-                                        />
-
-                                        <InputElement
-                                            label="Document Status"
-                                            form={form}
-                                            name={`visaApplicationDocumentsDTOs.${index}.documentStatus`}
-                                            inputType="number"
-                                            placeholder="Enter status"
-                                            required
-                                        />
-
-                                        <InputElement
-                                            label="Document Link"
-                                            form={form}
-                                            name={`visaApplicationDocumentsDTOs.${index}.docLink`}
-                                            placeholder="Enter document link"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
 
                         <div className="flex justify-center mt-6">
                             <ButtonElement type="submit" text={"Submit"} />
