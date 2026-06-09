@@ -61,7 +61,7 @@ export const useGetAllPayments = (queryParams?: string) => {
             new URLSearchParams(queryParams?.replace(/^&/, '') || '')
           )
     
-          const response = await api.get<IPaginationCrmResponse<FilterPaymentsResponse>>(
+          const response = await api.get<IPaginationCrmResponse<PaymentsResponse>>(
             paymentsEndPoints.filter,
             { params }
           )

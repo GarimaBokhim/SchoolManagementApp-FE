@@ -53,7 +53,7 @@ const EditFollowUp = ({ visible, onClose, FollowUpId }: Props) => {
         <EditFollowUpForm
             form={form}
             onClose={onClose}
-            FollowUpId={FolllowUpId}
+            FollowUpId={FollowUpId}
         />
     );
 };

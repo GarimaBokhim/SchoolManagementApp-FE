@@ -30,7 +30,7 @@ const EditRequirementsForm = ({ form, onClose, RequirementsId }: Props) => {
     const editRequirements = useUpdateRequirements();
     const { handleError, clearError } = useErrorHandler();
 
-    //const { data: allCourse } = useGetAllCourse();
+
     const { data: allCountry } = useGetAllCountry();
     const { handleSubmit } = form;
 

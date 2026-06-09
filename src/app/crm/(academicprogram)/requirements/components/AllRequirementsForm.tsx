@@ -4,18 +4,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
-import toast from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteRequirements, useGetAllRequirements, useNonRequiredTypeStatus, useRequiredTypeStatus } from '../hooks'
-import { RequiredDocTypeStatusPayload, RequirementsResponse } from '../types/IRequirements'
+import { RequirementsResponse } from '../types/IRequirements'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
-import { Tooltip } from '@/components/ToolTip/Tooltip'
-import EditRequirementsForm from './EditRequirementsForm'
 import AddRequirements from '../pages/Add'
+import EditRequirements from '../pages/Edit'
 
 interface FilterFormData {
     startDate: string
@@ -475,7 +473,7 @@ const AllRequirementsForm = () => {
                     visible={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={onDelete}
-                    invoiceId={deleteRequirementsId}
+                    id={deleteRequirementsId}
                     title="Delete Requirements"
                     description="Are you sure you want to delete this Requirements?"
                 />
@@ -486,11 +484,11 @@ const AllRequirementsForm = () => {
 
             {showEditModal && editRequirementsId && (
 
-                <EditRequirementsForm
-
+                <EditRequirements
                     RequirementsId={editRequirementsId}
                     visible={showEditModal}
                     onClose={() => setShowEditModal(false)}
+
 
                 />
             )}

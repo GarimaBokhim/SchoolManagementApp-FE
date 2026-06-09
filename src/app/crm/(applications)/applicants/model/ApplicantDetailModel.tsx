@@ -72,27 +72,27 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: countries } = useGetAllCountries();
-  const { data: universities } = useGetUniversities();
-  const { data: courses } = useGetAllCourses();
+  // const { data: countries } = useGetAllCountries();
+  // const { data: universities } = useGetUniversities();
+  // const { data: courses } = useGetAllCourses();
 
-  const getCountryName = (id: string) => {
-    if (!countries || !id) return id;
-    const country = countries.find((c: any) => c.id === id);
-    return country ? country.name : id;
-  };
+  // const getCountryName = (id: string) => {
+  //   if (!countries || !id) return id;
+  //   const country = countries.find((c: any) => c.id === id);
+  //   return country ? country.name : id;
+  // };
 
-  const getUniversityName = (id: string) => {
-    if (!universities || !id) return id;
-    const university = universities.find((u: any) => u.id === id);
-    return university ? university.name : id;
-  };
+  // const getUniversityName = (id: string) => {
+  //   if (!universities || !id) return id;
+  //   const university = universities.find((u: any) => u.id === id);
+  //   return university ? university.name : id;
+  // };
 
-  const getCourseName = (id: string) => {
-    if (!courses || !id) return id;
-    const course = courses.find((c: any) => c.id === id);
-    return course ? (course.title || course.name || course.courseName || id) : id;
-  };
+  // const getCourseName = (id: string) => {
+  //   if (!courses || !id) return id;
+  //   const course = courses.find((c: any) => c.id === id);
+  //   return course ? (course.title || course.name || course.courseName || id) : id;
+  // };
 
   useEffect(() => {
     if (!isOpen || !applicantId) return;
@@ -162,8 +162,8 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                 )}
                 {detail && (
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${detail.isActive
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
                     }`}>
                     {detail.isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -228,7 +228,7 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                    <InfoRow
+                    {/* <InfoRow
                       icon={<Globe size={16} className="text-emerald-600 dark:text-emerald-400" />}
                       label="Target Country"
                       value={getCountryName(detail.countryId)}
@@ -242,7 +242,7 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                       icon={<BookOpen size={16} className="text-purple-600 dark:text-purple-400" />}
                       label="Course"
                       value={getCourseName(detail.courseId)}
-                    />
+                    /> */}
                     <InfoRow
                       icon={<Clock size={16} className="text-orange-500 dark:text-orange-400" />}
                       label="Enrolled On"
@@ -258,8 +258,8 @@ export const ApplicantDetailModal = ({ isOpen, onClose, applicantId }: Applicant
                       label="Status"
                       value={
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${detail.isActive
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                           }`}>
                           {detail.isActive ? 'Active' : 'Inactive'}
                         </span>
