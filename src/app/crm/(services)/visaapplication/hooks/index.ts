@@ -101,6 +101,7 @@ export const useAddVisaApplication = () => {
   return useMutation({
     mutationFn: async (payload: AddVisaApplicationPayload) => {
       const normalizedPayload = normalizeInvoicePayload(payload)
+      
 
       const response = await api.post<IPaginationCrmResponse<AddVisaApplicationResponse>>(
         VisaApplicationEndpoints.add,
