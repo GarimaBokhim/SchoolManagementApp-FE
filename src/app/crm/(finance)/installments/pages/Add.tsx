@@ -14,7 +14,6 @@ interface Props {
 const AddInstallmentPlan = ({ visible, onClose, onSuccess, applicantId, invoiceId }: Props) => {
     const form = useForm<AddInstallmentPlanPayload>({
         defaultValues: {
-            applicantId: "",
             numberOfInstallments: 0,
             invoiceId: ""
 

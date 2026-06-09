@@ -411,7 +411,7 @@ const AllInstallmentPaymentsForm = () => {
                     visible={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={onDelete}
-                    invoiceId={deleteInstallmentPaymentsId}
+                    id={deleteInstallmentPaymentsId}
                     title="Delete InstallmentPayments"
                     description="Are you sure you want to delete this InstallmentPayments?"
                 />

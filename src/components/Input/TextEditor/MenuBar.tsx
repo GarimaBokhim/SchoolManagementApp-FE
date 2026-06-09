@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// @ts-ignore: allow importing CSS side-effect in TSX without global declaration
 import './index.css'
-import { Editor } from '@tiptap/react'
+import type { Editor } from '@tiptap/core'
 
 import {
   Bold,
@@ -213,7 +214,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
 
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleSubscript().run()}
+              onClick={() => editor.chain().focus().toggleMark('subscript').run()}
               className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('subscript') ? activeButtonClasses : ''
                 }`}
               title="Subscript"
@@ -223,7 +224,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
 
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleSuperscript().run()}
+              onClick={() => editor.chain().focus().toggleMark('superscript').run()}
               className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('superscript') ? activeButtonClasses : ''
                 }`}
               title="Superscript"
@@ -566,9 +567,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                   type="button"
                   className="p-2 rounded hover:bg-gray-200"
                   onClick={() =>
-                    editor
-                      .chain()
-                      .focus()
+                    (editor.chain().focus() as any)
                       .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
                       .run()
                   }
@@ -581,7 +580,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().addColumnBefore().run()}
+                  onClick={() => (editor.chain().focus() as any).addColumnBefore().run()}
                 >
                   <PlusCircle className="w-4 h-4" />
                 </button>
@@ -591,7 +590,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().addColumnAfter().run()}
+                  onClick={() => (editor.chain().focus() as any).addColumnAfter().run()}
                 >
                   <PlusSquare className="w-4 h-4" />
                 </button>
@@ -601,7 +600,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().deleteColumn().run()}
+                  onClick={() => (editor.chain().focus() as any).deleteColumn().run()}
                 >
                   <MinusSquare className="w-4 h-4" />
                 </button>
@@ -611,7 +610,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().addRowBefore().run()}
+                  onClick={() => (editor.chain().focus() as any).addRowBefore().run()}
                 >
                   <ArrowUp className="w-4 h-4" />
                 </button>
@@ -621,7 +620,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().addRowAfter().run()}
+                  onClick={() => (editor.chain().focus() as any).addRowAfter().run()}
                 >
                   <ArrowDown className="w-4 h-4" />
                 </button>
@@ -631,7 +630,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().deleteRow().run()}
+                  onClick={() => (editor.chain().focus() as any).deleteRow().run()}
                 >
                   <MinusCircle className="w-4 h-4" />
                 </button>
@@ -641,7 +640,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().deleteTable().run()}
+                  onClick={() => (editor.chain().focus() as any).deleteTable().run()}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -651,7 +650,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                 <button
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
-                  onClick={() => editor.chain().focus().goToNextCell().run()}
+                  onClick={() => (editor.chain().focus() as any).goToNextCell().run()}
                 >
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -662,7 +661,7 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
                   type="button"
                   className={`p-2 rounded transition-colors ${buttonClasses}`}
                   onClick={() =>
-                    editor.chain().focus().goToPreviousCell().run()
+                    (editor.chain().focus() as any).goToPreviousCell().run()
                   }
                 >
                   <ArrowLeft className="w-4 h-4" />

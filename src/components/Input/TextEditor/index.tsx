@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 
 import StarterKit from '@tiptap/starter-kit'
 
-import TextStyle from '@tiptap/extension-text-style'
+import { TextStyle } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 
 import Underline from '@tiptap/extension-underline'
@@ -13,13 +13,6 @@ import Highlight from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import TextAlign from '@tiptap/extension-text-align'
-import Superscript from '@tiptap/extension-superscript'
-import Subscript from '@tiptap/extension-subscript'
-
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
 
 import MenuBar from './MenuBar'
 
@@ -29,20 +22,16 @@ interface TextEditorProps {
 }
 
 const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
-
   const editor = useEditor({
     extensions: [
       StarterKit,
 
-      // ✅ inline styling system
+      // inline styling system
       TextStyle,
       Color,
 
       Underline,
       Highlight,
-
-      Superscript,
-      Subscript,
 
       Link.configure({
         openOnClick: false,
@@ -54,16 +43,9 @@ const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
     ],
 
-    // IMPORTANT: keep empty initial state
+    // initial content (only used once)
     content: '',
 
     editorProps: {
@@ -79,16 +61,18 @@ const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
   })
 
   /**
-   * ✅ SAFE SYNC FROM OUTSIDE (API / RHF / reset)
+   * ✅ SAFE external sync (API / form reset / load content)
    */
   useEffect(() => {
     if (!editor) return
 
-    const current = editor.getHTML()
     const incoming = content || ''
+    const current = editor.getHTML()
 
     if (incoming !== current) {
-      editor.commands.setContent(incoming, false)
+      editor.commands.setContent(incoming, {
+        emitUpdate: false,
+      })
     }
   }, [content, editor])
 

@@ -37,6 +37,7 @@ export const normalizeInstallmentPlan = (
     return {
       id: String(data?.id ?? ''),
       numberOfInstallments: Number(data?.numberOfInstallments ?? 0),
+      applicantName: String(data?.applicantName ?? ''),
       invoiceId: String(data?.invoiceId ?? '').trim(),
       invoiceNumber: String(data?.invoiceNumber ?? '').trim(),
       totalAmount: Number(data?.totalAmount ?? 0),

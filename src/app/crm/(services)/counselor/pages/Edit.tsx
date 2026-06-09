@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { UpdateCounselorPayload } from "../types/ICounselor";
 import EditCounselorForm from "../components/EditCounselorForm";
 import { useCounselorById } from "../hooks";
+import EditAppointmentForm from "../../appointments/components/EditAppointmentForm";
 
 interface Props {
     visible: boolean;
@@ -43,10 +44,10 @@ const EditCounselor = ({ visible, onClose, CounselorId }: Props) => {
     if (!visible) return null;
 
     return (
-        <EditAppointmentForm
+        <EditCounselorForm
             form={form}
             onClose={onClose}
-            AppointmentId={AppointmentId}
+            CounselorId={CounselorId}
         />
     );
 };

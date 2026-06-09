@@ -27,17 +27,12 @@ const AddInstallmentPlanForm = ({ form, onClose, onSuccess, invoiceId, applicant
     if (invoiceId) {
       form.setValue("invoiceId", invoiceId);
     }
-
-    if (applicantId) {
-      form.setValue("applicantId", applicantId);
-    }
-  }, [applicantId, form]);
+  }, [form]);
 
 
   const handleClose = () => {
     form.reset({
       invoiceId: "",
-      applicantId: "",
       numberOfInstallments: 0
 
     });
@@ -56,7 +51,6 @@ const AddInstallmentPlanForm = ({ form, onClose, onSuccess, invoiceId, applicant
     try {
       const values = form.getValues();
       const payload = {
-        applicantId,
         numberOfInstallments: values.numberOfInstallments,
         invoiceId
 
