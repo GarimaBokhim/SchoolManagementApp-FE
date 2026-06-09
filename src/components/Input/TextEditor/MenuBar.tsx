@@ -139,9 +139,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               type="button"
               onClick={() => editor.chain().focus().undo().run()}
               disabled={!editor.can().undo()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                !editor.can().undo() ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${!editor.can().undo() ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               title="Undo (Ctrl+Z)"
             >
               <Undo className="w-4 h-4" />
@@ -151,9 +150,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               type="button"
               onClick={() => editor.chain().focus().redo().run()}
               disabled={!editor.can().redo()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                !editor.can().redo() ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${!editor.can().redo() ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               title="Redo (Ctrl+Y)"
             >
               <Redo className="w-4 h-4" />
@@ -166,9 +164,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('bold') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('bold') ? activeButtonClasses : ''
+                }`}
               title="Bold (Ctrl+B)"
             >
               <Bold className="w-4 h-4" />
@@ -177,9 +174,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('italic') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('italic') ? activeButtonClasses : ''
+                }`}
               title="Italic (Ctrl+I)"
             >
               <Italic className="w-4 h-4" />
@@ -188,9 +184,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('underline') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('underline') ? activeButtonClasses : ''
+                }`}
               title="Underline (Ctrl+U)"
             >
               <UnderlineIcon className="w-4 h-4" />
@@ -199,9 +194,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('strike') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('strike') ? activeButtonClasses : ''
+                }`}
               title="Strikethrough"
             >
               <Strikethrough className="w-4 h-4" />
@@ -210,9 +204,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleHighlight().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('highlight') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('highlight') ? activeButtonClasses : ''
+                }`}
               title="Highlight Text"
             >
               <Highlighter className="w-4 h-4" />
@@ -221,9 +214,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleSubscript().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('subscript') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('subscript') ? activeButtonClasses : ''
+                }`}
               title="Subscript"
             >
               <SubscriptIcon className="w-4 h-4" />
@@ -232,9 +224,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleSuperscript().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('superscript') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('superscript') ? activeButtonClasses : ''
+                }`}
               title="Superscript"
             >
               <SuperscriptIcon className="w-4 h-4" />
@@ -284,11 +275,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 1 }).run()
               }
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('heading', { level: 1 })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('heading', { level: 1 })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Heading 1"
             >
               <Heading1 className="w-4 h-4" />
@@ -299,11 +289,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 2 }).run()
               }
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('heading', { level: 2 })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('heading', { level: 2 })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Heading 2"
             >
               <Heading2 className="w-4 h-4" />
@@ -314,11 +303,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 3 }).run()
               }
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('heading', { level: 3 })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('heading', { level: 3 })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Heading 3"
             >
               <Heading3 className="w-4 h-4" />
@@ -327,9 +315,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().setParagraph().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('paragraph') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('paragraph') ? activeButtonClasses : ''
+                }`}
               title="Paragraph"
             >
               <Type className="w-4 h-4" />
@@ -342,11 +329,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().setTextAlign('left').run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive({ textAlign: 'left' })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive({ textAlign: 'left' })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Align Left"
             >
               <AlignLeft className="w-4 h-4" />
@@ -357,11 +343,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               onClick={() =>
                 editor.chain().focus().setTextAlign('center').run()
               }
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive({ textAlign: 'center' })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive({ textAlign: 'center' })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Align Center"
             >
               <AlignCenter className="w-4 h-4" />
@@ -370,11 +355,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().setTextAlign('right').run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive({ textAlign: 'right' })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive({ textAlign: 'right' })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Align Right"
             >
               <AlignRight className="w-4 h-4" />
@@ -385,11 +369,10 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               onClick={() =>
                 editor.chain().focus().setTextAlign('justify').run()
               }
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive({ textAlign: 'justify' })
-                  ? activeButtonClasses
-                  : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive({ textAlign: 'justify' })
+                ? activeButtonClasses
+                : ''
+                }`}
               title="Justify"
             >
               <AlignJustify className="w-4 h-4" />
@@ -402,9 +385,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('bulletList') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('bulletList') ? activeButtonClasses : ''
+                }`}
               title="Bullet List"
             >
               <List className="w-4 h-4" />
@@ -413,9 +395,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('orderedList') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('orderedList') ? activeButtonClasses : ''
+                }`}
               title="Numbered List"
             >
               <ListOrdered className="w-4 h-4" />
@@ -424,9 +405,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('blockquote') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('blockquote') ? activeButtonClasses : ''
+                }`}
               title="Quote Block"
             >
               <Quote className="w-4 h-4" />
@@ -438,9 +418,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
             <button
               type="button"
               onClick={setLink}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                editor.isActive('link') ? activeButtonClasses : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${editor.isActive('link') ? activeButtonClasses : ''
+                }`}
               title="Insert Link (Ctrl+K)"
             >
               <LinkIcon className="w-4 h-4" />
@@ -450,9 +429,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
               type="button"
               onClick={() => editor.chain().focus().unsetLink().run()}
               disabled={!editor.isActive('link')}
-              className={`p-2 rounded transition-colors ${buttonClasses} ${
-                !editor.isActive('link') ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`p-2 rounded transition-colors ${buttonClasses} ${!editor.isActive('link') ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               title="Remove Link"
             >
               <Unlink className="w-4 h-4" />
@@ -699,9 +677,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-1 rounded ${buttonClasses} ${
-            editor.isActive('bold') ? 'bg-blue-500 text-white' : ''
-          }`}
+          className={`p-1 rounded ${buttonClasses} ${editor.isActive('bold') ? 'bg-blue-500 text-white' : ''
+            }`}
         >
           <Bold className="w-4 h-4" />
         </button>
@@ -709,9 +686,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-1 rounded ${buttonClasses} ${
-            editor.isActive('italic') ? 'bg-blue-500 text-white' : ''
-          }`}
+          className={`p-1 rounded ${buttonClasses} ${editor.isActive('italic') ? 'bg-blue-500 text-white' : ''
+            }`}
         >
           <Italic className="w-4 h-4" />
         </button>
@@ -719,9 +695,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`p-1 rounded ${buttonClasses} ${
-            editor.isActive('underline') ? 'bg-blue-500 text-white' : ''
-          }`}
+          className={`p-1 rounded ${buttonClasses} ${editor.isActive('underline') ? 'bg-blue-500 text-white' : ''
+            }`}
         >
           <UnderlineIcon className="w-4 h-4" />
         </button>
@@ -729,9 +704,8 @@ const RichTextEditor = ({ editor }: { editor: Editor | null }) => {
         <button
           type="button"
           onClick={setLink}
-          className={`p-1 rounded ${buttonClasses} ${
-            editor.isActive('link') ? 'bg-blue-500 text-white' : ''
-          }`}
+          className={`p-1 rounded ${buttonClasses} ${editor.isActive('link') ? 'bg-blue-500 text-white' : ''
+            }`}
         >
           <LinkIcon className="w-4 h-4" />
         </button>

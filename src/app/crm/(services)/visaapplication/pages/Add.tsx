@@ -21,13 +21,6 @@ const AddVisaApplication = ({ visible, onClose }: Props) => {
             visaDetails: "",
             emailSent: false,
             emailContent: "",
-            visaApplicationDocumentsDTOs: [
-                {
-                    documentTypeId: "",
-                    documentStatus: 0,
-                    docLink: "",
-                },
-            ],
 
         },
 

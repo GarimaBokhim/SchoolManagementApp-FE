@@ -7,7 +7,7 @@ interface Props {
     visible: boolean;
     onClose: () => void;
     onConfirm: (id: string) => Promise<void> | void;
-    invoiceId: string;
+    id: string;
     title?: string;
     description?: string;
 }
@@ -16,7 +16,7 @@ const DeleteComponents = ({
     visible,
     onClose,
     onConfirm,
-    invoiceId,
+    id,
     title,
     description
 }: Props) => {
@@ -38,7 +38,7 @@ const DeleteComponents = ({
     const handleConfirm = async () => {
         try {
             setLoading(true);
-            await onConfirm(invoiceId);
+            await onConfirm(id);
         } finally {
             setLoading(false);
             onClose();

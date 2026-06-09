@@ -1,22 +1,26 @@
 'use client'
 
 import { useEditor, EditorContent } from '@tiptap/react'
+import { useEffect } from 'react'
+
 import StarterKit from '@tiptap/starter-kit'
+
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
+
 import Underline from '@tiptap/extension-underline'
-import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
+import TextAlign from '@tiptap/extension-text-align'
 import Superscript from '@tiptap/extension-superscript'
 import Subscript from '@tiptap/extension-subscript'
-import { TextStyle } from '@tiptap/extension-text-style'
-import Color from '@tiptap/extension-color'
-import { Table } from '@tiptap/extension-table'
+
+import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 
-import { FontSize } from '@tiptap/extension-text-style'
 import MenuBar from './MenuBar'
 
 interface TextEditorProps {
@@ -25,23 +29,24 @@ interface TextEditorProps {
 }
 
 const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
-  const editor = useEditor({
-    immediatelyRender: false,
 
+  const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
-      Highlight,
+
+      // ✅ inline styling system
       TextStyle,
       Color,
-      FontSize,
+
+      Underline,
+      Highlight,
+
       Superscript,
       Subscript,
 
       Link.configure({
         openOnClick: false,
         autolink: true,
-        linkOnPaste: true,
       }),
 
       Image,
@@ -58,7 +63,8 @@ const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
       TableCell,
     ],
 
-    content,
+    // IMPORTANT: keep empty initial state
+    content: '',
 
     editorProps: {
       attributes: {
@@ -72,9 +78,21 @@ const TextEditor = ({ content = '', onChange }: TextEditorProps) => {
     },
   })
 
-  if (!editor) {
-    return null
-  }
+  /**
+   * ✅ SAFE SYNC FROM OUTSIDE (API / RHF / reset)
+   */
+  useEffect(() => {
+    if (!editor) return
+
+    const current = editor.getHTML()
+    const incoming = content || ''
+
+    if (incoming !== current) {
+      editor.commands.setContent(incoming, false)
+    }
+  }, [content, editor])
+
+  if (!editor) return null
 
   return (
     <div className="w-full">

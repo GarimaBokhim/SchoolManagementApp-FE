@@ -12,18 +12,16 @@ export const VisaApplicationEndpoints = {
   delete: '/api/VisaApplication/DeleteVisaApplication',
   applicants: '/api/Enrolments/AllApplicant',
   country: '/api/AcademicPrograms/GetAllCountry',
-  university: '/api/AcademicPrograms/FilterUniversity',
-  course: '/api/AcademicPrograms/FilterCourse',
   intake: '/api/AcademicPrograms/FilterIntake',
   visaStatus: '/api/VisaApplication/FilterVisaStatus',
+    CourseByUniversity: '/api/AcademicPrograms/CourseByUniversity',
+   UniversityByCountry: '/api/AcademicPrograms/UniversityByCountry'
 }
 
 export const VisaApplicationQueryKeys = {
   all: ['VisaApplication'],
   applicants: ['Applicants'],
    country: ['country'],
-    university: ['university'],
-     course: ['course'],
       intake: ['intake'],
        visaStatus: ['visaStatus']
 }
@@ -32,24 +30,17 @@ export const VisaApplicationQueryKeys = {
 const normalizeInvoicePayload = (
   data: AddVisaApplicationPayload
 ): AddVisaApplicationPayload => ({
-  applicantId: String(data.applicantId ?? '').trim(),
-  countryId: String(data.countryId ?? '').trim(),
-  universityId: String(data.universityId ?? '').trim(),
-  courseId: String(data.courseId ?? '').trim(),
-  intakeId: String(data.intakeId ?? '').trim(),
-  appliedDate: String(data.appliedDate ?? '').trim(),
-  visaStatusId: String(data.visaStatusId ?? '').trim(),
-  emailSent: Boolean(data.emailSent),
-  visaDetails: String(data.visaDetails ?? '').trim(),
-  emailContent: String(data.emailContent ?? '').trim(),
+ applicantId: data.applicantId,
+  countryId: data.countryId,
+  universityId: data.universityId,
+  courseId: data.courseId,
+  intakeId: data.intakeId,
+  appliedDate: data.appliedDate,
+  visaStatusId: data.visaStatusId,
+  visaDetails: data.visaDetails,
+  emailSent: data.emailSent,
+  emailContent: data.emailContent
 
-  visaApplicationDocumentsDTOs: (
-    data.visaApplicationDocumentsDTOs ?? []
-  ).map((doc) => ({
-    documentTypeId: String(doc.documentTypeId ?? '').trim(),
-    documentStatus: Number(doc.documentStatus ?? 0),
-    docLink: String(doc.docLink ?? '').trim(),
-  })),
 });
 
 
@@ -66,15 +57,7 @@ const normalizeUpdateInvoicePayload = (
   visaStatusId: String(data.visaStatusId ?? '').trim(),
   emailSent: Boolean(data.emailSent),
   visaDetails: String(data.visaDetails ?? '').trim(),
-  emailContent: String(data.emailContent ?? '').trim(),
-
-  visaApplicationDocumentsDTOs: (
-    data.visaApplicationDocumentsDTOs ?? []
-  ).map((doc) => ({
-    documentTypeId: String(doc.documentTypeId ?? '').trim(),
-    documentStatus: Number(doc.documentStatus ?? 0),
-    docLink: String(doc.docLink ?? '').trim(),
-  })),
+  emailContent: String(data.emailContent ?? '').trim()
 });
 
 
@@ -257,65 +240,6 @@ export const useGetAllCountry = () => {
   });
 };
 
-  
-
-export const useGetAllUniversity = () => {
-  return useQuery({
-    queryKey: VisaApplicationQueryKeys.university,
-
-     queryFn: async () => {
-      const response = await api.get<
-        IPaginationCrmResponse<{
-          id: string
-          name: string
-        }>
-      >(VisaApplicationEndpoints.university, {
-        params: {
-          pageSize: 10,
-          pageIndex: 1,
-          isPagination: true,
-        },
-      });
-
-      return response.data;
-    },
-
-    select: (response) => response?.Data.Items ?? [],
-
-    staleTime: 1000 * 60 * 5,
-  });
-};
-
-
-export const useGetAllCourse = () => {
-  return useQuery({
-    queryKey: VisaApplicationQueryKeys.course,
-
-    queryFn: async () => {
-      const response = await api.get<
-        IPaginationCrmResponse<{
-          id: string
-          title: string
-        }>
-      >(VisaApplicationEndpoints.course, {
-        params: {
-          pageSize: 10,
-          pageIndex: 1,
-          isPagination: true,
-        },
-      });
-
-      return response.data;
-    },
-
-    select: (response) => response?.Data.Items ?? [],
-
-    staleTime: 1000 * 60 * 5,
-  });
-};
-
-
-
 
 export const useGetAllIntake = () => {
   return useQuery({
@@ -370,6 +294,73 @@ export const useGetAllVisaStatus = () => {
 
     select: (response) => response?.Data.Items ?? [],
 
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useGetCourseByUniversity = (UniversityId?: string | null) => {
+  return useQuery({
+     queryKey: ["UniversityId", UniversityId],
+
+    queryFn: async () => {
+      if (!UniversityId) {
+        throw new Error("Id is required to get Course");
+      }
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string;
+          title: string;
+        }>
+      >(
+        `${VisaApplicationEndpoints.CourseByUniversity}/${UniversityId}`,
+        {
+          params: {
+            pageSize: 10,
+            pageIndex: 1,
+            isPagination: false,
+          },
+        }
+      );
+
+      return response.data;
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+    enabled: !!UniversityId, 
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+
+
+
+export const useGetUniversityByCountry = (CountryId?: string | null) => {
+  return useQuery({
+     queryKey: ["CountryId", CountryId],
+
+    queryFn: async () => {
+      if (!CountryId) {
+        throw new Error("Id is required to get University");
+      }
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string
+          name: string
+        }>
+      >(
+         `${VisaApplicationEndpoints.UniversityByCountry}/${CountryId}`, {
+        params: {
+          pageSize: 10,
+          pageIndex: 1,
+          isPagination: false,
+        },
+      });
+
+      return response.data;
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+    enabled: !!CountryId,
     staleTime: 1000 * 60 * 5,
   });
 };
