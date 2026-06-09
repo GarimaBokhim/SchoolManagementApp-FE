@@ -119,6 +119,8 @@ export const useAddVisaApplication = () => {
       })
     },
 
+    
+
     onError: (error: any) => {
       Toast.error(
         error?.response?.data?.Message || 'Failed to add VisaApplication'
