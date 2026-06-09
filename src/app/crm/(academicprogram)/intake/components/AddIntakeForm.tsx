@@ -19,18 +19,12 @@ type Props = {
 const AddIntakeForm = ({ form, onClose }: Props) => {
     const addIntake = useAddIntake();
     const { handleError, clearError } = useErrorHandler();
-
-
     const { data: country } = useGetAllCountry();
-
     const [sellectedCountryId, setSelectedCountryId] = useState<string | null>("");
     const [sellectedUniversityId, setSelectedUniversityId] = useState<string | null>("");
     const [sellectedCourseId, setSelectedCourseId] = useState<string | null>("");
-
     const { data: universityByCountry } = useGetUniversityByCountry(sellectedCountryId);
     const { data: courseByUniversity } = useGetCourseByUniversity(sellectedUniversityId);
-
-
     const [isOpen, setIsOpen] = useState(true);
 
     const [month, setMonth] = useState<number | null>(null);
