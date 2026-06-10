@@ -101,6 +101,8 @@ export const useAddVisaApplication = () => {
   return useMutation({
     mutationFn: async (payload: AddVisaApplicationPayload) => {
       const normalizedPayload = normalizeInvoicePayload(payload)
+
+      console.log("PayloadData",normalizedPayload)
       
 
       const response = await api.post<IPaginationCrmResponse<AddVisaApplicationResponse>>(

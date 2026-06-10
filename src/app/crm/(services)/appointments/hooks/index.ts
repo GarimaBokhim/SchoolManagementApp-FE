@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import { AddAppointmentPayload, AppointmentResponse, UpdateAppointmentPayload, AddAppointmentResponse, LeadEnquiryDetailsResponse, CountryResponse, CourseResponse, UniversityResponse, InquiryResponse, ConvertToApplicantPayload, ConvertToApplicantResponse } from '../types/IAppointment'
+import { AddAppointmentPayload, AppointmentResponse, UpdateAppointmentPayload, AddAppointmentResponse, LeadEnquiryDetailsResponse, CountryResponse, CourseResponse, UniversityResponse, InquiryResponse, ConvertToApplicantPayload, ConvertToApplicantResponse, FollowUpFilters, FollowUpResponse, UpdateFollowUpPayload, AddFollowUpPayload, AddFollowUpResponse } from '../types/IAppointment'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 import { UpdatePaymentsPayload } from '@/app/crm/(finance)/payments/types/IPayments'
 
@@ -15,6 +15,10 @@ export const AppointmentEndpoints = {
   filterCouncellor:'/api/Enrolments/FilterCounselor',
   filterLead:'/api/Enrolments/FilterInquery',
   LeadDetails:'/api/Enrolments/ShowLeadEnqueryDetails',
+
+   addFollowUp: '/api/Enrolments/AddFollowUp',
+
+  filterFollowUps: '/api/Enrolments/FilterFollowUps',
 
   ConvertToApplicant:'/api/Enrolments/ConvertToApplicant',
 
@@ -41,7 +45,8 @@ export const AppointmentQueryKeys = {
   country: ['Country'],
   course: ['Course'],
   university: ['University'],
-    UserProfile: ['UserProfile']
+    UserProfile: ['UserProfile'],
+    followUp: ['FollowUp']
 }
 
 const normalizeUpdateAppointmentPayload = (data: UpdateAppointmentPayload): UpdateAppointmentPayload => ({
@@ -70,6 +75,31 @@ const normalizeConvertToApplicantPayload = (data: ConvertToApplicantPayload): Co
   countryId: String(data.countryId ?? '').trim(),
   universityId: String(data.universityId ?? '').trim(),
   courseId: String(data.courseId ?? '').trim()
+
+});
+
+
+const normalizeUpdateFollowUpPayload = (data: UpdateFollowUpPayload): UpdateFollowUpPayload => ({
+  id: String(data.id ?? '').trim(),
+  userId: String(data.userId ?? '').trim(),
+  startTime: String(data.startTime ?? '').trim(),
+  endTime: String(data.endTime ?? '').trim(),
+  followUpDate: String(data.followUpDate ?? '').trim(),
+  notes: String(data.notes ?? '').trim(),
+  followUpStatus: Number(data.followUpStatus ?? 0),
+    appointmentId: String(data.appointmentId ?? '').trim()
+});
+
+
+const normalizeFollowUpPayload = (data: AddFollowUpPayload): AddFollowUpPayload => ({
+  userId: String(data.userId ?? '').trim(),
+  startTime: String(data.startTime ?? '').trim(),
+  endTime: String(data.endTime ?? '').trim(),
+  followUpDate: String(data.followUpDate ?? '').trim(),
+  notes: String(data.notes ?? '').trim(),
+    followUpStatus: Number(data.followUpStatus ?? 0),
+  appointmentId: String(data.appointmentId ?? '').trim()
+
 
 });
 
@@ -592,3 +622,62 @@ export const useGetAllUserProfile = () => {
     staleTime: 1000 * 60 * 5,
   });
 };
+
+export const useGetAllFollowUp = (filters: FollowUpFilters) => {
+  return useQuery({
+     queryKey: AppointmentQueryKeys.followUp,
+    queryFn: async () => {
+
+    const response = await api.get<IPaginationCrmResponse<FollowUpResponse>>(
+       AppointmentEndpoints.filterFollowUps,
+        { params: filters}
+      )
+      return response.data
+    },
+    select: (response) => ({
+      items: response?.Data?.Items ?? [],
+      pagination: {
+        totalItems: response?.Data?.TotalItems ?? 0,
+        pageIndex: response?.Data?.PageIndex ?? 1,
+        pageSize: response?.Data?.pageSize ?? 10,
+        totalPages: response?.Data?.TotalPages ?? 1,
+      },
+      message: response?.Message ?? '',
+      statusCode: response?.StatusCode ?? 200,
+    }),
+
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export const useAddFollowUp = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: AddFollowUpPayload) => {
+      const normalizedPayload = normalizeFollowUpPayload(payload)
+
+      const response = await api.post<IPaginationCrmResponse<AddFollowUpResponse>>(
+        AppointmentEndpoints.addFollowUp,
+        normalizedPayload
+      )
+
+      return response.data
+    },
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'FollowUp added successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: AppointmentQueryKeys.followUp,
+      })
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to add FollowUp'
+      )
+    },
+  })
+}
+

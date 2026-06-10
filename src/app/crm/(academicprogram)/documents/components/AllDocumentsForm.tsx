@@ -321,8 +321,9 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
     // }
 
 
-    const handleAddSubmit = () => {
-    };
+
+
+
 
     if (error) {
         return (
@@ -459,16 +460,59 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
                                             <div className="mb-3">
                                                 {doc.docLink ? (
                                                     <div className="w-full h-40 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                                                        <img
-                                                            src={`${process.env.NEXT_PUBLIC_API_URL}/${doc.docLink}`}
-                                                            alt="document"
-                                                            onClick={() =>
-                                                                setPreviewImage(
-                                                                    `${process.env.NEXT_PUBLIC_API_URL}/${doc.docLink}`
-                                                                )
-                                                            }
-                                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                                                        />
+                                                        {/\.(jpg|jpeg|png|gif|webp)$/i.test(doc.docLink) ? (
+                                                            <img
+                                                                src={`${process.env.NEXT_PUBLIC_API_URL}/${doc.docLink.replace(/^\/+/, "")}`}
+                                                                alt="document"
+                                                                onClick={() =>
+                                                                    setPreviewImage(
+                                                                        `${process.env.NEXT_PUBLIC_API_URL}/${doc.docLink.replace(/^\/+/, "")}`
+                                                                    )
+                                                                }
+                                                                className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                onClick={() => {
+                                                                    const fileUrl = `${process.env.NEXT_PUBLIC_API_URL}/${doc.docLink.replace(/^\/+/, "")}`;
+                                                                    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+
+                                                                    if (/\.pdf$/i.test(doc.docLink)) {
+                                                                        // PDF → open directly
+                                                                        window.open(fileUrl, "_blank", "noopener,noreferrer");
+                                                                    } else if (/\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(doc.docLink)) {
+                                                                        // Word / Excel / PowerPoint → Google Docs Viewer
+                                                                        window.open(googleViewerUrl, "_blank", "noopener,noreferrer");
+                                                                    } else {
+                                                                        window.open(fileUrl, "_blank", "noopener,noreferrer");
+                                                                    }
+                                                                }}
+                                                                className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                            >
+                                                                <span className="text-5xl">
+                                                                    {/\.pdf$/i.test(doc.docLink)
+                                                                        ? "📄"
+                                                                        : /\.(doc|docx)$/i.test(doc.docLink)
+                                                                            ? "📝"
+                                                                            : /\.(xls|xlsx)$/i.test(doc.docLink)
+                                                                                ? "📊"
+                                                                                : /\.(ppt|pptx)$/i.test(doc.docLink)
+                                                                                    ? "📑"
+                                                                                    : "📁"}
+                                                                </span>
+                                                                <span className="mt-2 text-sm font-medium">
+                                                                    {/\.pdf$/i.test(doc.docLink)
+                                                                        ? "View PDF"
+                                                                        : /\.(doc|docx)$/i.test(doc.docLink)
+                                                                            ? "View Word"
+                                                                            : /\.(xls|xlsx)$/i.test(doc.docLink)
+                                                                                ? "View Excel"
+                                                                                : /\.(ppt|pptx)$/i.test(doc.docLink)
+                                                                                    ? "View PowerPoint"
+                                                                                    : "Open File"}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <div className="w-full h-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 font-semibold">

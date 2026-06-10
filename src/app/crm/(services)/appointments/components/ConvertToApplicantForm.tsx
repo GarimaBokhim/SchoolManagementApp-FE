@@ -9,27 +9,20 @@ import {
     useConvertToApplicant,
     useGetAllCountry,
     useGetCourseByUniversity,
-    useGetUniversityByCountry,
-    useGetAllUserProfile
+    useGetUniversityByCountry
 } from '../hooks'
 import { ConvertToApplicantPayload } from '../types/IAppointment'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 
 type Props = {
     form: UseFormReturn<ConvertToApplicantPayload>
+    userId: string
 }
 
-const ConvertToApplicantForm = ({ form }: Props) => {
+const ConvertToApplicantForm = ({ form, userId }: Props) => {
     const convertToApplicant = useConvertToApplicant();
     const { handleError, clearError } = useErrorHandler();
     const { data: country } = useGetAllCountry();
-
-
-    const { data: course } = useGetCourseByUniversity();
-    const { data: university } = useGetUniversityByCountry();
-
-
-    const { data: userProfile } = useGetAllUserProfile();
 
 
     const [selecteduniversityId, setSelectedUniversityId] = useState<string | null>("");
@@ -37,8 +30,6 @@ const ConvertToApplicantForm = ({ form }: Props) => {
     const [sellecteCourseId, setSelectedCourseId] = useState<string | null>("");
 
 
-
-    const [sellectedUserProfileId, setSelecteduserProfileId] = useState<string | null>("");
 
     const { data: universityByCountry } = useGetUniversityByCountry(sellectedCountryId);
     const { data: courseByUniversity } = useGetCourseByUniversity(selecteduniversityId);
@@ -64,7 +55,7 @@ const ConvertToApplicantForm = ({ form }: Props) => {
         const values = form.getValues();
 
         const payload = {
-            userId: values.userId,
+            userId: userId,
             passportNo: values.passportNo,
             countryId: values.countryId,
             universityId: values.universityId,
@@ -82,41 +73,6 @@ const ConvertToApplicantForm = ({ form }: Props) => {
 
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-
-                    <AppCombobox
-                        value={sellectedUserProfileId}
-                        dropDownWidth="w-full"
-                        dropdownPositionClass="absolute z-20"
-                        label="User"
-                        name="userId"
-                        form={form}
-                        required
-                        options={userProfile || []}
-                        selected={
-                            userProfile?.find(
-                                (g) => g.id === sellectedUserProfileId
-                            ) || null
-                        }
-                        onSelect={(group) => {
-                            if (group) {
-                                const id = group.id ?? "";
-
-                                setSelecteduserProfileId(id || null);
-
-                                form.setValue("userId", id, {
-                                    shouldValidate: true,
-                                });
-                            } else {
-                                setSelecteduserProfileId(null);
-
-                                form.setValue("userId", "", {
-                                    shouldValidate: true,
-                                });
-                            }
-                        }}
-                        getLabel={(g) => g?.fullName ?? ""}
-                        getValue={(g) => g?.id ?? ""}
-                    />
 
                     <InputElement
                         label="PassportNo"

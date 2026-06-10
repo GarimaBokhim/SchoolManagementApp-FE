@@ -1,16 +1,19 @@
 'use client'
 
-import AllFollowUp from "@/app/crm/(applications)/followup/pages/All"
+import AllFollowUp from "./AllFollowUp"
+
 
 const FollowUpTab = ({
-    appointmentId
+    UserId,
+    AppointmentId
 }: {
-    appointmentId: string | null
+    UserId: string
+    AppointmentId: string
 }) => {
 
     return (
         <div>
-            <AllFollowUp />
+            <AllFollowUp UserId={UserId} AppointmentId={AppointmentId} />
         </div>
     )
 }

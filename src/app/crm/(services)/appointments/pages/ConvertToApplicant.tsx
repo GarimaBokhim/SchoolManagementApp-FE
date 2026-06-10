@@ -5,7 +5,7 @@ import ConvertToApplicantForm from "../components/ConvertToApplicantForm"
 import { ConvertToApplicantPayload } from "../types/IAppointment";
 
 
-const ConvertToApplicant = ({ appointmentId }: { appointmentId: string | null }) => {
+const ConvertToApplicant = ({ userId }: { userId: string }) => {
 
     const form = useForm<ConvertToApplicantPayload>({
         defaultValues: {
@@ -21,7 +21,7 @@ const ConvertToApplicant = ({ appointmentId }: { appointmentId: string | null })
 
     return (
         <div>
-            <ConvertToApplicantForm form={form} />
+            <ConvertToApplicantForm form={form} userId={userId} />
         </div>
     )
 }

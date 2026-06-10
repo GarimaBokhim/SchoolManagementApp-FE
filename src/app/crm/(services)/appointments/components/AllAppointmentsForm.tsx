@@ -153,10 +153,12 @@ const AllAppointmentForm = () => {
         isOpen: boolean;
         appointmentId: string;
         leadId: string | null;
+        userId: string
     }>({
         isOpen: false,
         appointmentId: "",
         leadId: null,
+        userId: ""
     });
 
 
@@ -274,7 +276,7 @@ const AllAppointmentForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All Invoice</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Appointments</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -286,7 +288,7 @@ const AllAppointmentForm = () => {
                             <ButtonElement
                                 icon={<Plus size={18} />}
                                 type="button"
-                                text="Add Invoice"
+                                text="Add Appointments"
                                 onClick={() => setAddModal(true)}
                                 className="!font-semibold"
                             />
@@ -402,6 +404,7 @@ const AllAppointmentForm = () => {
                                                                         isOpen: true,
                                                                         appointmentId: appointment.id ?? null,
                                                                         leadId: appointment.leadId ?? null,
+                                                                        userId: appointment.userId ?? null
                                                                     });
                                                                 }}
                                                                 className="!text-xs"
@@ -457,11 +460,14 @@ const AllAppointmentForm = () => {
                 isOpen={appointmentModal.isOpen}
                 AppointmentId={appointmentModal.appointmentId}
                 LeadId={appointmentModal.leadId}
+                UserId={appointmentModal.userId}
+
                 onClose={() =>
                     setAppointmentModal({
                         isOpen: false,
                         appointmentId: "",
                         leadId: null,
+                        userId: ""
                     })
                 }
             />
