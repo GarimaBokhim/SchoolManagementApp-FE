@@ -10,12 +10,9 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteFollowUp, useGetAllFollowUp } from '../hooks'
-import { FollowUpResponse } from '../types/IFollowUp'
-import { Tooltip } from '@/components/ToolTip/Tooltip'
-import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
-import EditFollowUp from '../pages/Edit'
-import AddFollowUp from '../pages/Add'
+import { useGetAllFollowUp } from '../hooks'
+import { FollowUpFilters, FollowUpResponse } from '../types/IAppointment'
+import AddFollowUp from '../pages/AddFollowUp'
 
 interface FilterFormData {
     startDate: string
@@ -130,12 +127,20 @@ const ActionMenu = ({ FollowUp, onEdit, onDelete, canEdit = true, canDelete = tr
 
 //#endregion
 
-const AllFollowUpForm = () => {
+interface Props {
+    UserId: string;
+    AppointmentId: string
+}
+
+const AllFollowUpForm = ({ UserId, AppointmentId }: Props) => {
+
+    console.log("TESTED", UserId, AppointmentId)
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
+
 
     const [showEditModal, setShowEditModal] = useState(false)
     const [editFollowUpId, setEditFollowUpId] = useState<string | null>(null)
@@ -143,7 +148,7 @@ const AllFollowUpForm = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteFollowUpId, setDeleteFollowUpId] = useState<string | null>(null)
 
-
+    const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
@@ -160,9 +165,15 @@ const AllFollowUpForm = () => {
             isPagination: true
         },
     })
-    const [params, setParams] = useState('')
-    const { data, isLoading, error } = useGetAllFollowUp(params)
-    const deleteFollowUp = useDeleteFollowUp()
+
+    const [filters, setFilters] = useState<FollowUpFilters>({
+        userId: UserId,
+        pageIndex: 1,
+        pageSize: 10,
+    })
+
+    const { data, isLoading, error } = useGetAllFollowUp(filters)
+    //const deleteFollowUp = useDeleteFollowUp()
     const followUpDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
@@ -200,18 +211,14 @@ const AllFollowUpForm = () => {
     }
 
 
-    const onDelete = async (id: string) => {
-        try {
-            await deleteFollowUp.mutateAsync(id)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    // const handleView = async (Invoice: AppointmentResponse) => {
-    //     setSelectedInvoiceId(Invoice.id)
-    //     setShowInvoiceDetailModal(true)
+    // const onDelete = async (id: string) => {
+    //     try {
+    //         await deleteFollowUp.mutateAsync(id)
+    //     } catch (error) {
+    //         console.error(error)
+    //     }
     // }
+
 
 
     const handleAddSubmit = () => {
@@ -357,7 +364,6 @@ const AllFollowUpForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
                                                     {followUpStatusType.find(
                                                         (s) => s.id === Number(followup.followUpStatus)
                                                     )?.name}
@@ -424,7 +430,7 @@ const AllFollowUpForm = () => {
             </div>
 
 
-            {showDeleteModal && deleteFollowUpId && (
+            {/* {showDeleteModal && deleteFollowUpId && (
 
                 <DeleteComponents
                     visible={showDeleteModal}
@@ -435,10 +441,10 @@ const AllFollowUpForm = () => {
                     description="Are you sure you want to delete this FollowUp?"
                 />
 
-            )}
+            )} */}
 
 
-
+            {/* 
             {showEditModal && editFollowUpId && (
 
                 <EditFollowUp
@@ -448,11 +454,13 @@ const AllFollowUpForm = () => {
                     onClose={() => setShowEditModal(false)}
 
                 />
-            )}
+            )} */}
 
             <AddFollowUp
                 visible={addModal}
                 onClose={handleAddSubmit}
+                AppointmentId={AppointmentId}
+                UserId={UserId}
             />
         </>
     )

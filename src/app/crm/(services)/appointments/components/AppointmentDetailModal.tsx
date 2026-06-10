@@ -17,12 +17,14 @@ export const AppointmentDetailModal = ({
     isOpen,
     onClose,
     AppointmentId,
-    LeadId
+    LeadId,
+    UserId
 }: {
     isOpen: boolean
     onClose: () => void
     AppointmentId: string
     LeadId: string | null
+    UserId: string
 }) => {
 
     const form = useForm({
@@ -30,6 +32,8 @@ export const AppointmentDetailModal = ({
             notes: "",
         },
     });
+
+
 
 
     const [loading, setLoading] = useState(false)
@@ -102,14 +106,15 @@ export const AppointmentDetailModal = ({
             case 'followups':
                 return (
                     <FollowUpTab
-                        appointmentId={AppointmentId}
+                        AppointmentId={AppointmentId}
+                        UserId={UserId}
                     />
                 )
 
             case 'convert':
                 return (
                     <ConvertToApplicant
-                        appointmentId={AppointmentId}
+                        userId={UserId}
                     />
                 )
 
@@ -125,7 +130,7 @@ export const AppointmentDetailModal = ({
             className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
                  bg-black/40 backdrop-blur-sm ml-15 md:ml-64 sm:ml-16 xs:ml-0"
         >
-            <div className="w-full max-w-[85rem] bg-white rounded-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="w-full max-w-[75rem] bg-white rounded-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
                 {/* HEADER */}
 

@@ -109,7 +109,7 @@ export const LeadDetailsForm = ({ inquiryId }: LeadDetailsProps) => {
                 <InfoItem
                     icon={<Phone size={18} />}
                     label="Phone"
-                    value={detail?.phone}
+                    value={detail?.contactNumber}
                 />
 
                 <InfoItem

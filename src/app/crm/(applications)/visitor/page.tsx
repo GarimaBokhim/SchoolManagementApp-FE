@@ -2,9 +2,9 @@
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper"
 import AllVisitorsDetails from "./pages/CommonPages"
 
-export default function VisitorPage() {
+export default function VisitorsPage() {
     return (
-        <LayoutWrapper title="Visitor">
+        <LayoutWrapper title="Visitors">
             <AllVisitorsDetails />
         </LayoutWrapper>
     )

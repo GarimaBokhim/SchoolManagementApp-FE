@@ -2,17 +2,17 @@
 
 import { useState } from 'react'
 import AllApplicants from './All'
-const AllApplicantDetails = () => {
+const AllApplicantsDetails = () => {
     const tabs = [
-        { id: 'applicant', label: 'Applicant' },
+        { id: 'applicants', label: 'Applicants' }
     ]
 
-    const [activeTab, setActiveTab] = useState<string>('applicant')
+    const [activeTab, setActiveTab] = useState<string>('applicants')
+
     const renderContent = () => {
         switch (activeTab) {
-            case 'counselor':
+            case 'applicants':
                 return <AllApplicants />
-
             default:
                 return <AllApplicants />
         }
@@ -20,7 +20,6 @@ const AllApplicantDetails = () => {
 
     return (
         <div className="p-4 h-full">
-
             {/* Tabs */}
             <div className="bg-blue-100 rounded-t-xl px-4 pt-4 flex gap-1">
                 {tabs.map((t) => {
@@ -50,4 +49,4 @@ const AllApplicantDetails = () => {
     )
 }
 
-export default AllApplicantDetails
+export default AllApplicantsDetails

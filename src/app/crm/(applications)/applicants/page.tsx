@@ -1,11 +1,11 @@
 
 import LayoutWrapper from "@/components/Sidebar/ClientWrapper"
-import AllApplicantDetails from "./pages/CommonPages"
+import AllApplicantsDetails from "./pages/CommonPages"
 
-export default function ApplicantPage() {
+export default function VisitorPage() {
     return (
-        <LayoutWrapper title="Applicant">
-            <AllApplicantDetails />
+        <LayoutWrapper title="Visitor">
+            <AllApplicantsDetails />
         </LayoutWrapper>
     )
 }

@@ -254,7 +254,7 @@ const AllCounselorForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All Invoice</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Counselor</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -266,7 +266,7 @@ const AllCounselorForm = () => {
                             <ButtonElement
                                 icon={<Plus size={18} />}
                                 type="button"
-                                text="Add Invoice"
+                                text="Add Counselor"
                                 onClick={() => setAddModal(true)}
                                 className="!font-semibold"
                             />

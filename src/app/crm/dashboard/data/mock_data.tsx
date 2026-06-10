@@ -1,86 +1,112 @@
-import { 
+import {
   Eye, TrendingUp, Calendar, BookOpen, ClipboardList,
-  MessageCircle, BookMarked, Plane, CheckSquare,
-  PhoneCall, Users, Target, ArrowDownCircle, ArrowUpCircle,
-  GraduationCap, Globe, FileText, DollarSign, MessageSquare
+  MessageCircle, BookMarked, Plane, CheckSquare, Users
 } from 'lucide-react';
+import { useQuickActionDetailsCounts } from '../hooks';
 
-export const dashboardStats = [
-  {
-    label: 'Visitors',
-    count: 1284,
-    icon: Eye,
-    iconBg: 'bg-sky-100 dark:bg-sky-900/40',
-    iconColor: 'text-sky-600 dark:text-sky-400',
-    route: '/crm/visitors',
-  },
-  {
-    label: 'Appointments',
-    count: 74,
-    icon: Calendar,
-    iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
-    iconColor: 'text-yellow-600 dark:text-yellow-400',
-    route: '/crm/appointment',
-  },
-  {
-    label: 'Universities',
-    count: 56,
-    icon: BookOpen,
-    iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-    iconColor: 'text-purple-600 dark:text-purple-400',
-    route: '/crm/university',
-  },
-  {
-    label: 'Applications',
-    count: 189,
-    icon: ClipboardList,
-    iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
-    iconColor: 'text-indigo-600 dark:text-indigo-400',
-    route: '/crm/applications',
-  },
-  {
-    label: 'Inquiries',
-    count: 347,
-    icon: MessageCircle,
-    iconBg: 'bg-violet-100 dark:bg-violet-900/40',
-    iconColor: 'text-violet-600 dark:text-violet-400',
-  },
-  {
-    label: 'Class Enrollments',
-    count: 892,
-    icon: BookMarked,
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-  },
-  {
-    label: 'Abroad Enrollments',
-    count: 214,
-    icon: Plane,
-    iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-    iconColor: 'text-blue-600 dark:text-blue-400',
-  },
-  {
-    label: 'Decision',
-    count: 128,
-    icon: CheckSquare,
-    iconBg: 'bg-teal-100 dark:bg-teal-900/40',
-    iconColor: 'text-teal-600 dark:text-teal-400',
-  },
-  {
-    label: 'Leads',
-    count: 563,
-    icon: TrendingUp,
-    iconBg: 'bg-orange-100 dark:bg-orange-900/40',
-    iconColor: 'text-orange-600 dark:text-orange-400',
-  },
-  {
-    label: 'Appearances',
-    count: 431,
-    icon: Users,
-    iconBg: 'bg-pink-100 dark:bg-pink-900/40',
-    iconColor: 'text-pink-600 dark:text-pink-400',
-  },
-];
+export const useDashboardStats = () => {
+  const { data, isLoading, isError } = useQuickActionDetailsCounts();
+
+  const counts = data ?? {
+    VisitorCounts: 0,
+    LeadsCount: 0,
+    appointmentsCounts: 0,
+    applicantCounts: 0,
+    countryCounts: 0,
+    universityCounts: 0,
+    courseCounts: 0,
+    classEnrollCounts: 0,
+    visaApplicationCounts: 0,
+    decisionCounts: 0,
+  };
+
+  const stats = [
+    {
+      label: 'Visitors',
+      count: counts.VisitorCounts,
+      icon: Eye,
+      iconBg: 'bg-sky-100 dark:bg-sky-900/40',
+      iconColor: 'text-sky-600 dark:text-sky-400',
+      route: '/crm/visitor',
+    },
+    {
+      label: 'Appointments',
+      count: counts.appointmentsCounts,
+      icon: Calendar,
+      iconBg: 'bg-yellow-100 dark:bg-yellow-900/40',
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      route: '/crm/appointments',
+    },
+
+    {
+      label: 'Applications',
+      count: counts.applicantCounts,
+      icon: ClipboardList,
+      iconBg: 'bg-indigo-100 dark:bg-indigo-900/40',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      route: '/crm/applicants',
+    },
+    {
+      label: 'Leads',
+      count: counts.LeadsCount,
+      icon: TrendingUp,
+      iconBg: 'bg-orange-100 dark:bg-orange-900/40',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      route: '/crm/visitor',
+    },
+    {
+      label: 'Class Enrollments',
+      count: counts.classEnrollCounts,
+      icon: BookMarked,
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      route: '/crm/classes',
+    },
+    {
+      label: 'Visa Application',
+      count: counts.visaApplicationCounts,
+      icon: Plane,
+      iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      route: '/crm/visaapplication',
+    },
+    {
+      label: 'Decision',
+      count: counts.decisionCounts,
+      icon: CheckSquare,
+      iconBg: 'bg-teal-100 dark:bg-teal-900/40',
+      iconColor: 'text-teal-600 dark:text-teal-400',
+      route: '/crm/visaapplication',
+    },
+    {
+      label: 'Country',
+      count: counts.countryCounts,
+      icon: Users,
+      iconBg: 'bg-pink-100 dark:bg-pink-900/40',
+      iconColor: 'text-pink-600 dark:text-pink-400',
+      route: '/crm/university'
+    },
+    {
+      label: 'Universities',
+      count: counts.universityCounts,
+      icon: BookOpen,
+      iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      route: '/crm/university'
+    },
+    {
+      label: 'Course',
+      count: counts.courseCounts,
+      icon: BookOpen,
+      iconBg: 'bg-violet-100 dark:bg-violet-900/40',
+      iconColor: 'text-violet-600 dark:text-violet-400',
+      route: '/crm/university'
+
+    },
+  ];
+
+  return { stats, isLoading, isError };
+};
 
 export const students = [
   {
@@ -198,13 +224,13 @@ export const deadlines = [
   { university: 'Monash University', program: 'Diploma', deadline: 'Feb 28, 2024', status: 'urgent' },
 ];
 
-export const sidebarMenuItems = [
-  { icon: GraduationCap, label: 'Overview', path: '/' },
-  { icon: Users, label: 'Students', count: '1,248', path: '/students' },
-  { icon: Calendar, label: 'Appointments', count: '18', path: '/appointments' },
-  { icon: FileText, label: 'Applications', path: '/applications' },
-  { icon: MessageSquare, label: 'Communications', count: '42', path: '/communications' },
-  { icon: DollarSign, label: 'Payments', path: '/payments' },
-  { icon: BookOpen, label: 'Universities', path: '/universities' },
-  { icon: Globe, label: 'Reports', path: '/reports' },
-];
+// export const sidebarMenuItems = [
+//   { icon: GraduationCap, label: 'Overview', path: '/' },
+//   { icon: Users, label: 'Students', count: '1,248', path: '/students' },
+//   { icon: Calendar, label: 'Appointments', count: '18', path: '/appointments' },
+//   { icon: FileText, label: 'Applications', path: '/applications' },
+//   { icon: MessageSquare, label: 'Communications', count: '42', path: '/communications' },
+//   { icon: DollarSign, label: 'Payments', path: '/payments' },
+//   { icon: BookOpen, label: 'Universities', path: '/universities' },
+//   { icon: Globe, label: 'Reports', path: '/reports' },
+// ];

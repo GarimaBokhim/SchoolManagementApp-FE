@@ -10,12 +10,12 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteFollowUp, useGetAllFollowUp } from '../hooks'
-import { FollowUpResponse } from '../types/IFollowUp'
+import { useDeleteApplicants, useGetAllApplicants } from '../hooks'
+import { ApplicantResponse } from '../types/IApplicants'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
-import EditFollowUp from '../pages/Edit'
-import AddFollowUp from '../pages/Add'
+import EditApplicants from '../pages/Edit'
+import UserProfilePopupForm from './UserprofilePopUpForm'
 
 interface FilterFormData {
     startDate: string
@@ -24,15 +24,15 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    FollowUp: FollowUpResponse;
-    onEdit: (FollowUp: FollowUpResponse) => void;
+    Applicants: ApplicantResponse;
+    onEdit: (Applicants: ApplicantResponse) => void;
     onDelete: (id: string) => void;
     // onView: (Invoice: InvoiceResponse) => void;
     canEdit?: boolean;
     canDelete?: boolean;
 }
 
-const ActionMenu = ({ FollowUp, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+const ActionMenu = ({ Applicants, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -107,13 +107,13 @@ const ActionMenu = ({ FollowUp, onEdit, onDelete, canEdit = true, canDelete = tr
                         <Eye size={14} /> View
                     </button> */}
                     {canEdit && <button
-                        onClick={() => { onEdit(FollowUp); setOpen(false) }}
+                        onClick={() => { onEdit(Applicants); setOpen(false) }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                     >
                         <Edit size={14} /> Edit
                     </button>}
                     {canDelete && <button
-                        onClick={() => { onDelete(FollowUp.id); setOpen(false) }}
+                        onClick={() => { onDelete(Applicants.id); setOpen(false) }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                     >
                         <Trash size={14} /> Delete
@@ -130,7 +130,7 @@ const ActionMenu = ({ FollowUp, onEdit, onDelete, canEdit = true, canDelete = tr
 
 //#endregion
 
-const AllFollowUpForm = () => {
+const AllApplicantsForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
@@ -138,10 +138,14 @@ const AllFollowUpForm = () => {
     const [addModal, setAddModal] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false)
-    const [editFollowUpId, setEditFollowUpId] = useState<string | null>(null)
+    const [editApplicantsId, setEditApplicantsId] = useState<string | null>(null)
 
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const [deleteFollowUpId, setDeleteFollowUpId] = useState<string | null>(null)
+    const [deleteApplicantsId, setDeleteApplicantsId] = useState<string | null>(null)
+
+
+    const [showProfilePopup, setShowProfilePopup] = useState(false);
+    const [selectedProfileApplicant, setSelectedProfileApplicant] = useState<ApplicantResponse | null>(null);
 
 
     const [currentPage, setCurrentPage] = useState(1)
@@ -161,9 +165,10 @@ const AllFollowUpForm = () => {
         },
     })
     const [params, setParams] = useState('')
-    const { data, isLoading, error } = useGetAllFollowUp(params)
-    const deleteFollowUp = useDeleteFollowUp()
-    const followUpDetails = data?.items ?? [];
+    const { data, isLoading, error } = useGetAllApplicants(params)
+    const ApplicantsDetails = data?.items ?? [];
+    const deleteApplicants = useDeleteApplicants()
+
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
@@ -180,29 +185,36 @@ const AllFollowUpForm = () => {
     }
 
 
-    const followUpStatusType = [
-        { id: 1, name: 'Draft' },
-        { id: 2, name: 'Issued' },
-        { id: 3, name: 'PartiallyPaid' },
-        { id: 4, name: 'Paid' },
-        { id: 5, name: 'Cancelled' }
+    const EnrollmentTypes = [
+        { id: 1, name: 'Lead' },
+        { id: 2, name: 'Applicant' },
+        { id: 3, name: 'Student' },
+        { id: 4, name: 'Counseling' },
+        { id: 5, name: 'Qualified' },
+        { id: 6, name: 'Rejected' },
+        { id: 7, name: 'New' }
     ];
 
 
-    const handleEditFollowUp = (FollowUp: FollowUpResponse) => {
-        setEditFollowUpId(FollowUp.id)
+    const handleEditApplicants = (Applicants: ApplicantResponse) => {
+        setEditApplicantsId(Applicants.id)
         setShowEditModal(true)
     }
 
-    const handleDeleteFollowUp = (id: string) => {
-        setDeleteFollowUpId(id)
+    const handleDeleteApplicants = (id: string) => {
+        setDeleteApplicantsId(id)
         setShowDeleteModal(true)
     }
+
+    const handleNameClick = (applicant: ApplicantResponse) => {
+        setSelectedProfileApplicant(applicant);
+        setShowProfilePopup(true);
+    };
 
 
     const onDelete = async (id: string) => {
         try {
-            await deleteFollowUp.mutateAsync(id)
+            await deleteApplicants.mutateAsync(id)
         } catch (error) {
             console.error(error)
         }
@@ -226,7 +238,7 @@ const AllFollowUpForm = () => {
                     <div className="text-center py-16">
                         <BookOpen size={64} className="mx-auto text-red-400 mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                            Error loading FollowUp
+                            Error loading Applicants
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400">Please try again later.</p>
                     </div>
@@ -256,7 +268,7 @@ const AllFollowUpForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All FollowUp</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All Applicants</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -268,7 +280,7 @@ const AllFollowUpForm = () => {
                             <ButtonElement
                                 icon={<Plus size={18} />}
                                 type="button"
-                                text="Add FollowUp"
+                                text="Add Applicants"
                                 onClick={() => setAddModal(true)}
                                 className="!font-semibold"
                             />
@@ -302,30 +314,29 @@ const AllFollowUpForm = () => {
                                 <thead>
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
-                                        <th className="px-4 py-3 text-left">User</th>
-                                        <th className="px-4 py-3 text-left">StartTime</th>
-                                        <th className="px-4 py-3 text-left">EndTime</th>
-
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">FollowUpDate</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Notes</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Status</th>
+                                        <th className="px-4 py-3 text-left">FullName</th>
+                                        <th className="px-4 py-3 text-left">Email</th>
+                                        <th className="px-4 py-3 text-left">EnrolmentType</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">CountryName</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">UniversityName</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">CourseName</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {followUpDetails.length === 0 ? (
+                                    {ApplicantsDetails.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={8}
                                                 className="p-4 text-center italic text-gray-500 dark:text-gray-400"
                                             >
-                                                No FollowUp found.
+                                                No Applicants found.
                                             </td>
                                         </tr>
                                     ) : (
-                                        followUpDetails.map((followup, index) => (
+                                        ApplicantsDetails.map((Applicants, index) => (
                                             <tr
-                                                key={followup.id}
+                                                key={Applicants.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
                                                 <td className="px-4 py-3 text-gray-500">
@@ -333,35 +344,40 @@ const AllFollowUpForm = () => {
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {followup.fullName}
+                                                    <button
+                                                        onClick={() => handleNameClick(Applicants)}
+                                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-2 hover:underline-offset-4 transition-all font-medium text-left"
+                                                    >
+                                                        {Applicants.fullName ?? "-"}
+                                                    </button>
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
-                                                    {followup.startTime}
+                                                    {Applicants.email}
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {followup.endTime}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {followup.followUpDate}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {followup.notes}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {followUpStatusType.find(
-                                                        (s) => s.id === Number(followup.followUpStatus)
+                                                    {EnrollmentTypes.find(
+                                                        (s) => s.id === Number(Applicants.enrolmentType)
                                                     )?.name}
                                                 </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
+                                                    {Applicants.countryName}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
+                                                    {Applicants.universityName}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
+                                                    {Applicants.courseName}
+                                                </td>
+
 
 
                                                 <td className="px-4 py-3">
@@ -386,9 +402,9 @@ const AllFollowUpForm = () => {
 
 
                                                         <ActionMenu
-                                                            FollowUp={followup}
-                                                            onEdit={handleEditFollowUp}
-                                                            onDelete={handleDeleteFollowUp}
+                                                            Applicants={Applicants}
+                                                            onEdit={handleEditApplicants}
+                                                            onDelete={handleDeleteApplicants}
                                                             // onView={handleView}
                                                             canEdit={true}
                                                             canDelete={true}
@@ -406,7 +422,7 @@ const AllFollowUpForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {followUpDetails.length > 0 && totalPages > 1 && (
+                {ApplicantsDetails.length > 0 && totalPages > 1 && (
                     <div className="mt-4">
                         <Pagination
                             form={paginationForm}
@@ -424,38 +440,47 @@ const AllFollowUpForm = () => {
             </div>
 
 
-            {showDeleteModal && deleteFollowUpId && (
+            {showDeleteModal && deleteApplicantsId && (
 
                 <DeleteComponents
                     visible={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={onDelete}
-                    id={deleteFollowUpId}
-                    title="Delete FollowUp"
-                    description="Are you sure you want to delete this FollowUp?"
+                    id={deleteApplicantsId}
+                    title="Delete Applicants"
+                    description="Are you sure you want to delete this Applicants?"
                 />
 
             )}
 
+            <UserProfilePopupForm
+                isOpen={showProfilePopup}
+                onClose={() => {
+                    setShowProfilePopup(false);
+                    setSelectedProfileApplicant(null);
+                }}
+                applicant={selectedProfileApplicant}
+            />
 
 
-            {showEditModal && editFollowUpId && (
 
-                <EditFollowUp
+            {showEditModal && editApplicantsId && (
 
-                    FollowUpId={editFollowUpId}
+                <EditApplicants
+
+                    ApplicantsId={editApplicantsId}
                     visible={showEditModal}
                     onClose={() => setShowEditModal(false)}
 
                 />
             )}
 
-            <AddFollowUp
+            {/* <AddApplicants
                 visible={addModal}
                 onClose={handleAddSubmit}
-            />
+            /> */}
         </>
     )
 }
 
-export default AllFollowUpForm
+export default AllApplicantsForm

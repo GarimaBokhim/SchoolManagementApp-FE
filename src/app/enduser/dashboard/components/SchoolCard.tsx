@@ -38,19 +38,20 @@ export default function SchoolInfoCard({ schoolId }: Props) {
   }
 
   return (
-    <div className="relative bg-green-700 dark:bg-[#0A0A0A] text-white rounded-lg shadow-md overflow-hidden p-6">
+    <div className="relative bg-gradient-to-r from-[#1877F2] to-[#0A66FF] dark:from-[#0A0A0A] dark:to-[#111] text-white rounded-lg shadow-md overflow-hidden p-6">
       <div className="flex gap-4">
         {/* Left: School Logo */}
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
-          {logoUrl && !logoError ? (
+          {schoolData?.imageUrl ? (
             <img
-              src={logoUrl}
+              src={`${process.env.NEXT_PUBLIC_API_URL}/${schoolData.imageUrl}`}
               alt="School Logo"
               className="w-full h-full object-cover"
-              onError={() => setLogoError(true)}
             />
           ) : (
-            <School className="w-10 h-10 text-green-700" />
+            <span className="text-sm font-bold text-gray-700">
+              {schoolData?.shortName?.charAt(0) ?? "S"}
+            </span>
           )}
         </div>
 

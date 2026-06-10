@@ -5,17 +5,18 @@ import AllAppointment from './All'
 import AllCounselor from '../../counselor/pages/All'
 const AllAppointmentDetails = () => {
     const tabs = [
-        { id: 'counselor', label: 'Counselor' },
         { id: 'appointment', label: 'Appointment' },
+        { id: 'counselor', label: 'Counselor' }
+
     ]
 
-    const [activeTab, setActiveTab] = useState<string>('counselor')
+    const [activeTab, setActiveTab] = useState<string>('appointment')
     const renderContent = () => {
         switch (activeTab) {
-            case 'counselor':
-                return <AllCounselor />
             case 'appointment':
                 return <AllAppointment />
+            case 'counselor':
+                return <AllCounselor />
 
             default:
                 return <AllCounselor />
