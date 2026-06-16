@@ -5,7 +5,7 @@ import React, { forwardRef } from 'react'
 import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
 import { IExam } from '../types/IExams'
 import { IParent } from '@/app/enduser/(StudentManagement)/_Parent/types/IParents'
-import { ISchool } from '@/app/admin/Setup/School/types/ISchool' // adjust path as needed
+import { ISchool } from '@/app/admin/Setup/School/types/ISchool'
 
 type ClassDetail = {
   name: string
@@ -13,8 +13,8 @@ type ClassDetail = {
 
 type AdmitCardProps = {
   student: IStudent
-  exam: IExam
-  schoolDetail?: ISchool | null  
+  exam?: IExam
+  schoolDetail?: ISchool | null
   classDetail?: ClassDetail
   parent?: IParent | null
 }
@@ -61,7 +61,6 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
           {/* Main content */}
           <div className="flex-1 p-6 text-sm relative">
             <div className="grid grid-cols-2 gap-x-10 gap-y-2">
-
               {/* Row 1 */}
               <div>
                 <b>Student Name:</b> {student.firstName}{' '}
@@ -108,7 +107,6 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
               <div>
                 <b>Exam Name:</b> {exam?.name ?? '-'}
               </div>
-
             </div>
 
             <div className="mt-4 text-xs font-semibold text-right">
@@ -121,10 +119,10 @@ const AdmitCard = forwardRef<HTMLDivElement, AdmitCardProps>(
             <img
               src={
                 student.imageUrl || student.studentImg?.toString()
-                  ? (student.imageUrl || student.studentImg?.toString())
+                  ? student.imageUrl || student.studentImg?.toString()
                   : student.genderStatus === 2
-                  ? '/assets/female.png'
-                  : '/assets/male.png'
+                    ? '/assets/female.png'
+                    : '/assets/male.png'
               }
               className="w-[90px] h-[110px] border object-cover"
               alt="Student"
