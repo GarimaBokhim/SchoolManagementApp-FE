@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useGetAllSchool } from '@/app/admin/Setup/School/hooks'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetClassById } from '@/app/enduser/(Academics)/Class/hooks'
@@ -21,22 +21,22 @@ const paymentMethods: Record<number, string> = {
 }
 
 const PaymentReceiptPrint = ({ data, onReady }: Props) => {
+  const contentRef = useRef<HTMLDivElement>(null)
   const { data: schools } = useGetAllSchool()
   const { data: students } = useGetAllStudents('?IsPagination=false')
   const { data: classData } = useGetClassById(data.classid)
-
   const { data: feeSummary } = useGetStudentFeesummary(
     `?studentId=${data.studentid}&classId=${data.classid}`
   )
 
-  // ✅ Find the matching receipt item by receiptNumber
-  const matchedSummary = feeSummary?.Items?.find(
-    (item) => item.receiptNumber === data.receiptNumber
-  ) ?? feeSummary?.Items?.[0]
+  const matchedSummary =
+    feeSummary?.Items?.find(
+      (item) => item.receiptNumber === data.receiptNumber
+    ) ?? feeSummary?.Items?.[0]
 
   const dueAmount = matchedSummary?.dueAmount
   const totalAmount = matchedSummary?.totalAmount
-  const feeStructure = matchedSummary?.FeeStructureForFeeSummaryDTOs ?? []  // ✅ new
+  const feeStructure = matchedSummary?.FeeStructureForFeeSummaryDTOs ?? []
 
   const schoolId = useMemo(() => {
     try {
@@ -55,9 +55,14 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
 
   const isReady =
     schools?.Items?.length && students?.Items?.length && classData && feeSummary
-
   useEffect(() => {
-    if (isReady) onReady?.()
+    if (isReady) {
+      const timeout = setTimeout(() => {
+        console.log('Component content is ready, calling onReady')
+        onReady?.()
+      }, 200)
+      return () => clearTimeout(timeout)
+    }
   }, [isReady, onReady])
 
   const studentName = useMemo(() => {
@@ -92,13 +97,23 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
     totalAmount,
     dueAmount,
     receiptNumber: data.receiptNumber,
-    feeStructure,  // ✅ new
+    feeStructure,
   }
 
   if (!isReady) return null
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+    <div
+      ref={contentRef}
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '16px',
+        background: 'white',
+        WebkitPrintColorAdjust: 'exact',
+        printColorAdjust: 'exact',
+      }}
+    >
       <div
         style={{
           width: '700px',
@@ -107,6 +122,8 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
           fontSize: '12px',
           fontFamily: 'Arial, sans-serif',
           background: '#fff',
+          WebkitPrintColorAdjust: 'exact',
+          printColorAdjust: 'exact',
         }}
       >
         <Receipt label="School Copy" showSeparator {...receiptData} />

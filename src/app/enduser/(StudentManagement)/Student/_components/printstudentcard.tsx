@@ -1,77 +1,75 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-"use client";
-import React, { forwardRef, useEffect, useState, useMemo } from "react";
-import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { IStudent } from "@/app/enduser/(StudentManagement)/Student/types/IStudents";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
+'use client'
+import React, { forwardRef, useEffect, useState, useMemo } from 'react'
+import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { IStudent } from '@/app/enduser/(StudentManagement)/Student/types/IStudents'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 const resolveStudentImageUrl = (student: IStudent): string => {
-  const rawPath =
-    (student.imageUrl ||
-      (typeof student.studentImg === "string" ? student.studentImg : "") ||
-      "").trim();
-  if (!rawPath) return "";
-  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith("blob:")) return rawPath;
-  const base = BASE_URL.replace(/\/+$/, "");
-  const path = rawPath.replace(/^\/+/, "");
-  return base ? `${base}/${path}` : `/${path}`;
-};
+  const rawPath = (
+    student.imageUrl ||
+    (typeof student.studentImg === 'string' ? student.studentImg : '') ||
+    ''
+  ).trim()
+  if (!rawPath) return ''
+  if (/^https?:\/\//i.test(rawPath) || rawPath.startsWith('blob:'))
+    return rawPath
+  const base = BASE_URL.replace(/\/+$/, '')
+  const path = rawPath.replace(/^\/+/, '')
+  return base ? `${base}/${path}` : `/${path}`
+}
 
 type Props = {
-  StudentId: string | number;
-};
+  StudentId: string | number
+}
 
 const StudentIDCard = forwardRef<HTMLDivElement, Props>(
   ({ StudentId }, ref) => {
-    const { data } = useGetStudentById(StudentId as string);
-    const [student, setStudent] = useState<IStudent | null>(null);
-    const { data: allClass } = useGetAllClass();
-    
-    // Get schoolId from localStorage (same as admit card)
+    const { data } = useGetStudentById(StudentId as string)
+    const [student, setStudent] = useState<IStudent | null>(null)
+    const { data: allClass } = useGetAllClass()
+
     const schoolId = useMemo(() => {
       try {
-        const storedUser = localStorage.getItem('userDetails');
-        if (!storedUser) return null;
-        return JSON.parse(storedUser).schoolId ?? null;
+        const storedUser = localStorage.getItem('userDetails')
+        if (!storedUser) return null
+        return JSON.parse(storedUser).schoolId ?? null
       } catch {
-        return null;
+        return null
       }
-    }, []);
-    
-    // Fetch school details dynamically
-    const { data: schoolDetail } = useGetSchoolById(schoolId);
-    
-    // Get current academic year dynamically
-    const currentYear = new Date().getFullYear();
-    const academicYear = `Valid Academic Year ${currentYear}-${currentYear + 1}`;
+    }, [])
+
+    const { data: schoolDetail } = useGetSchoolById(schoolId)
+
+    const currentYear = new Date().getFullYear()
+    const academicYear = `Valid Academic Year ${currentYear}-${currentYear + 1}`
 
     useEffect(() => {
-      if (data) setStudent(data);
-    }, [data]);
+      if (data) setStudent(data)
+    }, [data])
 
-    if (!student) return null;
+    if (!student) return <div className="p-4">Loading...</div>
 
-    // Find class name
-    const className = allClass?.Items?.find((c) => c.id === student.classId)?.name || "N/A";
-    const sectionName = student.classSectionId || "N/A";
-    const imageUrl = resolveStudentImageUrl(student);
+    const className =
+      allClass?.Items?.find((c) => c.id === student.classId)?.name || 'N/A'
+    const sectionName = student.classSectionId || 'N/A'
+    const imageUrl = resolveStudentImageUrl(student)
 
     return (
       <div
         ref={ref}
-        className="w-[520px] h-[300px] rounded-2xl overflow-hidden shadow-2xl border bg-white font-sans print:shadow-none"
+        className="w-[520px] h-[300px] rounded-2xl overflow-hidden shadow-2xl border bg-white font-sans"
       >
         <div className="h-[60px] bg-gradient-to-r from-indigo-800 via-blue-700 to-cyan-600 text-white flex items-center justify-between px-6">
           <div>
-            {/* Dynamic School Name and Address */}
             <h1 className="text-lg font-bold tracking-wide">
-              {schoolDetail?.name || "Saraswati Higher Secondary School"}
+              {schoolDetail?.name || 'Saraswati Higher Secondary School'}
             </h1>
             <p className="text-xs opacity-90">
-              {schoolDetail?.address || "Birtamode-4, Jhapa"}
+              {schoolDetail?.address || 'Birtamode-4, Jhapa'}
             </p>
           </div>
           <div className="text-xs font-semibold bg-white text-indigo-800 px-3 py-1 rounded-full">
@@ -91,7 +89,11 @@ const StudentIDCard = forwardRef<HTMLDivElement, Props>(
               ) : student.genderStatus === 1 ? (
                 <img src="/assets/male.jpg" alt="Male" className="w-12 h-12" />
               ) : student.genderStatus === 2 ? (
-                <img src="/assets/female.jpg" alt="Female" className="w-12 h-12" />
+                <img
+                  src="/assets/female.jpg"
+                  alt="Female"
+                  className="w-12 h-12"
+                />
               ) : (
                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
                   <span className="text-gray-500">?</span>
@@ -131,21 +133,18 @@ const StudentIDCard = forwardRef<HTMLDivElement, Props>(
 
             <div className="pt-6">
               <div className="border-t border-gray-400 w-[140px]"></div>
-              <p className="text-xs text-gray-600 mt-1">
-                Principal Signature
-              </p>
+              <p className="text-xs text-gray-600 mt-1">Principal Signature</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Strip with Dynamic Website and Academic Year */}
         <div className="h-[40px] bg-indigo-800 text-white flex items-center justify-between px-6 text-xs">
           <span>{academicYear}</span>
         </div>
       </div>
-    );
+    )
   }
-);
+)
 
-StudentIDCard.displayName = "StudentIDCard";
-export default StudentIDCard;
+StudentIDCard.displayName = 'StudentIDCard'
+export default StudentIDCard

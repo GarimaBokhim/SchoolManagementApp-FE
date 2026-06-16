@@ -1,61 +1,61 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
+'use client'
+import { useEffect, useRef, useState } from 'react'
 import {
   IIssuedCertificate,
   IFilterIssuedCertificateByDate,
-} from "../types/IIssuedCertificate";
+} from '../types/IIssuedCertificate'
 
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Filter, Plus, Printer, RotateCcw, Trash } from "lucide-react";
-import EditIssuedCertificate from "../pages/Edit";
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { EditButton } from '@/components/Buttons/EditButton'
+import { Edit, Filter, Plus, Printer, RotateCcw, Trash } from 'lucide-react'
+import EditIssuedCertificate from '../pages/Edit'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+} from '@/components/DateFilter/FilterComponent'
 import {
   useFilterIssuedCertificateByDate,
   useRemoveIssuedCertificate,
-} from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddIssuedCertificate from "../pages/Add";
-import DeleteButton from "@/components/Buttons/DeleteButton";
-import { useGetAllTemplate } from "../../CertificateTemplate/hooks";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import CollegeCertificate from "./CollegeCertificate";
-import SchoolCertificate from "./SchoolCertificate";
-import BlankCertificateForm from "./Blankcertificate";
+} from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddIssuedCertificate from '../pages/Add'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+import { useGetAllTemplate } from '../../CertificateTemplate/hooks'
+import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import CollegeCertificate from './CollegeCertificate'
+import SchoolCertificate from './SchoolCertificate'
+import BlankCertificateForm from './Blankcertificate'
 type Props = {
-  onDataFromChild?: (startDate: string | null, endDate: string | null) => void;
-};
+  onDataFromChild?: (startDate: string | null, endDate: string | null) => void
+}
 const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
-  const [showIssuedCertificate, setShowIssuedCertificate] = useState(false);
-  const [addModal, setAddModal] = useState(false);
-  const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const { data: allStudent } = useGetAllStudents();
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
+  const [showIssuedCertificate, setShowIssuedCertificate] = useState(false)
+  const [addModal, setAddModal] = useState(false)
+  const { menuStatus } = usePermissions()
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
+  const [selectedId, setSelectedId] = useState<string>('')
+  const { data: allStudent } = useGetAllStudents()
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
@@ -63,57 +63,57 @@ const AllIssuedCertificateForm = ({ onDataFromChild }: Props) => {
         type="button"
         text=""
         onClick={() => {
-          setShowIssuedCertificate(true);
-          setSelectedId(id);
+          setShowIssuedCertificate(true)
+          setSelectedId(id)
         }}
         className="!text-xs font-bold !bg-teal-500"
       />
-    );
-  };
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const [params, setParams] = useState("");
+    )
+  }
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
-  });
+  })
   const form = useForm<IFilterIssuedCertificateByDate>({
     defaultValues: {
-      templateId: "",
-      startDate: "",
-      endDate: "",
+      templateId: '',
+      startDate: '',
+      endDate: '',
     },
-  });
-  const fullQuery = query + (params || "");
+  })
+  const fullQuery = query + (params || '')
 
   const {
     data: filteredIssuedCertificate,
     refetch,
     isLoading,
-  } = useFilterIssuedCertificateByDate(fullQuery);
-  const { data: allTemplate } = useGetAllTemplate();
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [showStudentPrint, setShowStudentPrint] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<string | null>("");
-  const [selectedExamId, setSelectedExamId] = useState<string | undefined>("");
+  } = useFilterIssuedCertificateByDate(fullQuery)
+  const { data: allTemplate } = useGetAllTemplate()
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [showStudentPrint, setShowStudentPrint] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<string | null>('')
+  const [selectedExamId, setSelectedExamId] = useState<string | undefined>('')
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     null
-  );
-  const [templateId, setTemplateId] = useState<string | null>(null);
+  )
+  const [templateId, setTemplateId] = useState<string | null>(null)
   useEffect(() => {
-    if (onDataFromChild) onDataFromChild(start, end);
-  }, [start, end, onDataFromChild]);
+    if (onDataFromChild) onDataFromChild(start, end)
+  }, [start, end, onDataFromChild])
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
-  const BLANK_TEMPLATE_ID = "35dfb35d-367e-4783-b1b0-45557c2ed7a9";
-const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
+    refetch()
+  }, [paginationParams, refetch])
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
+  const BLANK_TEMPLATE_ID = '35dfb35d-367e-4783-b1b0-45557c2ed7a9'
+  const SCHOOL_TEMPLATE_ID = 'abcbbdbc-2155-40fa-bd8f-a37c93bf6b59'
 
   const onSubmit: SubmitHandler<IFilterIssuedCertificateByDate> = async (
     formData
   ) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.templateId
@@ -127,52 +127,52 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      setStart(formData.startDate);
-      setEnd(formData.endDate);
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      setStart(formData.startDate)
+      setEnd(formData.endDate)
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
-  const refForInput = useRef<HTMLInputElement>(null);
+  }
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
-  const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteIssuedCertificate = useRemoveIssuedCertificate();
+    refForInput.current?.focus()
+  }, [])
+  const formRef = useRef<DateRangeFilterRef>(null)
+  const deleteIssuedCertificate = useRemoveIssuedCertificate()
   const handleDelete = async (id: string) => {
     try {
-      await deleteIssuedCertificate.mutateAsync(id);
-      toast.success("User deleted successfully!");
-      refetch();
+      await deleteIssuedCertificate.mutateAsync(id)
+      toast.success('User deleted successfully!')
+      refetch()
     } catch {
-      toast.error("Error deleting user.");
+      toast.error('Error deleting user.')
     }
-  };
+  }
 
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    setSelectedTemplateId("");
-    formRef.current?.handleClear();
-    setStart("");
-    form.reset();
-    if (onDataFromChild) onDataFromChild(null, null);
-    setEnd("");
-  };
+    refetch()
+    setParams('')
+    setSelectedTemplateId('')
+    formRef.current?.handleClear()
+    setStart('')
+    form.reset()
+    if (onDataFromChild) onDataFromChild(null, null)
+    setEnd('')
+  }
   return (
     <>
       <Toaster position="top-right" />
@@ -228,13 +228,13 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                       }
                       onSelect={(group) => {
                         if (group) {
-                          setSelectedTemplateId(group.id || null);
+                          setSelectedTemplateId(group.id || null)
                         } else {
-                          setSelectedTemplateId(null);
+                          setSelectedTemplateId(null)
                         }
                       }}
-                      getLabel={(g) => g?.templateName ?? ""}
-                      getValue={(g) => g?.id ?? ""}
+                      getLabel={(g) => g?.templateName ?? ''}
+                      getValue={(g) => g?.id ?? ''}
                     />
                   </div>
 
@@ -317,7 +317,7 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                                     handleDelete(
                                       IssuedCertificate.id
                                         ? IssuedCertificate.id
-                                        : ""
+                                        : ''
                                     )
                                   }
                                   headerText={<Trash />}
@@ -327,7 +327,7 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                               {canEdit && (
                                 <EditButton
                                   button={buttonElement(
-                                    IssuedCertificate.id ?? ""
+                                    IssuedCertificate.id ?? ''
                                   )}
                                 />
                               )}
@@ -338,16 +338,16 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                                     text=""
                                     type="button"
                                     onClick={() => {
-                                      setShowStudentPrint(true);
+                                      setShowStudentPrint(true)
                                       setTemplateId(
                                         IssuedCertificate.templateId
-                                      );
+                                      )
                                       setSelectedExamId(
                                         IssuedCertificate?.examId
-                                      );
+                                      )
                                       setSelectedStudent(
                                         IssuedCertificate.studentId
-                                      );
+                                      )
                                     }}
                                     className="!text-xs"
                                   />
@@ -371,27 +371,27 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                 </tbody>
               </table>
             </div>
-           {showStudentPrint && templateId && (
-  templateId === BLANK_TEMPLATE_ID ? (
-   <BlankCertificateForm 
-     onClose={() => setShowStudentPrint(false)}
-     studentId={selectedStudent ?? ""} 
-     examId={selectedExamId ?? ""}   
-     />
-  ) : templateId === SCHOOL_TEMPLATE_ID ? (
-    <SchoolCertificate
-      studentId={selectedStudent ?? ""}
-      examId={selectedExamId ?? ""}
-      onClose={() => setShowStudentPrint(false)}
-    />
-  ) : (
-    <CollegeCertificate
-      studentId={selectedStudent ?? ""}
-      examId={selectedExamId ?? ""}
-      onClose={() => setShowStudentPrint(false)}
-    />
-  )
-)}
+            {showStudentPrint &&
+              templateId &&
+              (templateId === BLANK_TEMPLATE_ID ? (
+                <BlankCertificateForm
+                  onClose={() => setShowStudentPrint(false)}
+                  studentId={selectedStudent ?? ''}
+                  examId={selectedExamId ?? ''}
+                />
+              ) : templateId === SCHOOL_TEMPLATE_ID ? (
+                <SchoolCertificate
+                  studentId={selectedStudent ?? ''}
+                  examId={selectedExamId ?? ''}
+                  onClose={() => setShowStudentPrint(false)}
+                />
+              ) : (
+                <CollegeCertificate
+                  studentId={selectedStudent ?? ''}
+                  examId={selectedExamId ?? ''}
+                  onClose={() => setShowStudentPrint(false)}
+                />
+              ))}
 
             {showIssuedCertificate && selectedId && (
               <EditIssuedCertificate
@@ -414,19 +414,19 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
                 pagination={{
                   currentPage: Array.isArray(filteredIssuedCertificate)
                     ? 1
-                    : filteredIssuedCertificate?.PageIndex ?? 1,
+                    : (filteredIssuedCertificate?.PageIndex ?? 1),
                   firstPage: Array.isArray(filteredIssuedCertificate)
                     ? 1
-                    : filteredIssuedCertificate?.FirstPage ?? 1,
+                    : (filteredIssuedCertificate?.FirstPage ?? 1),
                   lastPage: Array.isArray(filteredIssuedCertificate)
                     ? 1
-                    : filteredIssuedCertificate?.LastPage ?? 1,
+                    : (filteredIssuedCertificate?.LastPage ?? 1),
                   nextPage: Array.isArray(filteredIssuedCertificate)
                     ? 1
-                    : filteredIssuedCertificate?.NextPage ?? 1,
+                    : (filteredIssuedCertificate?.NextPage ?? 1),
                   previousPage: Array.isArray(filteredIssuedCertificate)
                     ? 1
-                    : filteredIssuedCertificate?.PreviousPage ?? 1,
+                    : (filteredIssuedCertificate?.PreviousPage ?? 1),
                 }}
                 handleSearch={handleSearch}
               />
@@ -434,7 +434,7 @@ const SCHOOL_TEMPLATE_ID = "abcbbdbc-2155-40fa-bd8f-a37c93bf6b59";
           )}
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllIssuedCertificateForm;
+export default AllIssuedCertificateForm
