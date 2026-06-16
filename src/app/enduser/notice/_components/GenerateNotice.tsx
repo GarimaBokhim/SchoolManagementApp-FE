@@ -1,82 +1,129 @@
-"use client";
-import { X } from "lucide-react";
-import { useGetSchoolById } from "@/app/admin/Setup/School/hooks";
-import { useRef, useEffect } from "react";
+'use client'
+import { X } from 'lucide-react'
+import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
+import { useRef, useEffect } from 'react'
 
-import { INotice } from "../types/INotice";
+import { INotice } from '../types/INotice'
 
 interface Props {
-  notice: INotice;
-  onClose: () => void;
+  notice: INotice
+  onClose: () => void
 }
 
 const GenerateNotice: React.FC<Props> = ({ notice, onClose }) => {
-  const storedUser = localStorage.getItem("userDetails");
-  let schoolId = "";
+  const storedUser = localStorage.getItem('userDetails')
+  let schoolId = ''
   if (storedUser) {
     try {
-      const parsedUser = JSON.parse(storedUser);
-      schoolId = parsedUser.schoolId;
+      const parsedUser = JSON.parse(storedUser)
+      schoolId = parsedUser.schoolId
     } catch (error) {
-      console.error("Failed to parse user details:", error);
+      console.error('Failed to parse user details:', error)
     }
   }
 
-  const { data: SchoolData } = useGetSchoolById(schoolId);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const { data: SchoolData } = useGetSchoolById(schoolId)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handlePrint = () => {
-    const content = document.getElementById("notice")?.outerHTML;
-    if (!content) return;
+    const content = document.getElementById('notice')?.innerHTML
+    if (!content) return
 
-    const printWindow = window.open("", "", "width=900,height=1000");
-    printWindow?.document.write(`
-  <html>
-    <head>
-      <title>Notice</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-      .clip-path-diagonal {
-  clip-path: polygon(0 0, 100% 0, 70% 100%, 0% 100%);
-}
+    const printWindow = window.open('', '', 'width=900,height=1000')
+    if (!printWindow) return
 
-@media print {
-  #notice {
-    box-shadow: none !important;
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Notice</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+
+            .clip-path-diagonal {
+              clip-path: polygon(0 0, 100% 0, 70% 100%, 0% 100%);
+            }
+
+            /* Header Styling */
+            .bg-sky-900 {
+              background-color: #075985 !important;
+              color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .bg-sky-800 {
+              background-color: #0c4a6e !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .text-white {
+              color: white !important;
+            }
+
+            .text-gray-800 {
+              color: #1f2937 !important;
+            }
+
+            .text-gray-700 {
+              color: #374151 !important;
+            }
+
+            .text-gray-600 {
+              color: #4b5563 !important;
+            }
+
+            .bg-white {
+              background-color: white !important;
+            }
+
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+          <script>
+            window.onload = function() {
+              setTimeout(() => window.print(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `)
+
+    printWindow.document.close()
   }
-}
-
-        @media print {
-          @page { size: A4 portrait; margin: 0 !important; }
-          body { margin: 0; padding: 0; }
-          body * { visibility: hidden; }
-          #marksheet, #marksheet * { visibility: visible; }
-          #marksheet { position: absolute; top: 0; left: 0; width: 210mm; height: 297mm; padding: 20mm; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      </style>
-    </head>
-    <body>${content}</body>
-  </html>
-`);
-    printWindow?.document.close();
-    printWindow?.focus();
-    printWindow?.print();
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
       <div
@@ -84,15 +131,15 @@ const GenerateNotice: React.FC<Props> = ({ notice, onClose }) => {
         className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-auto"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Print Notice</h2>{" "}
+          <h2 className="text-xl font-semibold">Print Notice</h2>{' '}
           <button onClick={onClose} className="text-red-500 text-xl">
-            <X />{" "}
-          </button>{" "}
+            <X />{' '}
+          </button>{' '}
         </div>
         <div
           id="notice"
           className="bg-white mx-auto shadow-lg"
-          style={{ width: "210mm", minHeight: "297mm" }}
+          style={{ width: '210mm', minHeight: '297mm' }}
         >
           {/* Header */}
           <div className="relative bg-sky-900 text-white px-6 py-8">
@@ -112,7 +159,7 @@ const GenerateNotice: React.FC<Props> = ({ notice, onClose }) => {
           {/* Body */}
           <div className="px-10 py-8 text-gray-800">
             <h2 className="text-2xl font-bold text-center mb-6">
-              {notice.title || "School Notice"}
+              {notice.title || 'School Notice'}
             </h2>
 
             <div
@@ -138,7 +185,7 @@ const GenerateNotice: React.FC<Props> = ({ notice, onClose }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GenerateNotice;
+export default GenerateNotice

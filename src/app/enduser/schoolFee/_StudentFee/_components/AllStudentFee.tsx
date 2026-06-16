@@ -1,47 +1,54 @@
-"use client";
-import { useEffect, useRef, useState, useMemo } from "react";
-import { IFilterStudentFee, IStudentFee } from "../types/IStudentFee";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Pencil, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+'use client'
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { IFilterStudentFee, IStudentFee } from '../types/IStudentFee'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import {
+  Filter,
+  Plus,
+  RotateCcw,
+  Pencil,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+} from '@/components/DateFilter/FilterComponent'
 import {
   useFilterStudentFeeByDate,
   useGetStudentFeeById,
   useGetClassById,
-} from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddStudentFee from "../pages/Add";
-import EditStudentFee from "../pages/Edit";
-import { useGetAllStudents } from "@/app/enduser/(StudentManagement)/Student/hooks";
-import { Eye, CreditCard, X } from "lucide-react";
-import ViewStudentFeeForm from "./filterstudentsfeedetail";
-import PaymentRecordForm from "./paymentrecords";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import DueSlipModal from "./DueSLipModel";
-
+} from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddStudentFee from '../pages/Add'
+import EditStudentFee from '../pages/Edit'
+import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { Eye, CreditCard, X } from 'lucide-react'
+import ViewStudentFeeForm from './filterstudentsfeedetail'
+import PaymentRecordForm from './paymentrecords'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import DueSlipModal from './DueSLipModel'
 
 // ─── Row Component ───────────────────────────────────────────────────────────
 type StudentFeeRowProps = {
-  StudentFee: IStudentFee;
-  index: number;
-  getSerialNumber: (index: number) => number;
-  getStudentName: (studentId: string) => string;
-  canEdit: boolean;
-  setPendingEditId: (id: string) => void;
-  setSelectedStudentFee: (fee: IStudentFee) => void;
-  setViewModal: (val: boolean) => void;
-  setViewpaymentModal: (val: boolean) => void;
-};
+  StudentFee: IStudentFee
+  index: number
+  getSerialNumber: (index: number) => number
+  getStudentName: (studentId: string) => string
+  canEdit: boolean
+  setPendingEditId: (id: string) => void
+  setSelectedStudentFee: (fee: IStudentFee) => void
+  setViewModal: (val: boolean) => void
+  setViewpaymentModal: (val: boolean) => void
+}
 
 const StudentFeeRow = ({
   StudentFee,
@@ -54,22 +61,22 @@ const StudentFeeRow = ({
   setViewModal,
   setViewpaymentModal,
 }: StudentFeeRowProps) => {
-  const { data: classData } = useGetClassById(StudentFee.classId);
+  const { data: classData } = useGetClassById(StudentFee.classId)
 
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100">
       <td className="py-3 px-4 text-center">{getSerialNumber(index)}</td>
       <td className="py-3 px-4">{getStudentName(StudentFee.studentId)}</td>
-      <td className="py-3 px-4">{classData?.name || "-"}</td>
+      <td className="py-3 px-4">{classData?.name || '-'}</td>
       <td className="py-3 px-4 text-right">
         {StudentFee.totalAmount !== undefined && StudentFee.totalAmount !== null
           ? StudentFee.totalAmount.toLocaleString()
-          : "-"}
+          : '-'}
       </td>
       <td className="py-3 px-4 text-right">
         {StudentFee.dueAmount !== undefined && StudentFee.dueAmount !== null
           ? StudentFee.dueAmount.toLocaleString()
-          : "-"}
+          : '-'}
       </td>
       <td className="py-3 px-4 text-center">
         <div className="flex justify-center gap-2 flex-wrap">
@@ -77,8 +84,8 @@ const StudentFeeRow = ({
             text=""
             icon={<Pencil className="text-white" size={15} />}
             onClick={() => {
-              const rowId = StudentFee.id ?? StudentFee.Id ?? "";
-              setPendingEditId(rowId);
+              const rowId = StudentFee.id ?? StudentFee.Id ?? ''
+              setPendingEditId(rowId)
             }}
             className="!bg-blue-500 hover:!bg-blue-600"
           />
@@ -86,8 +93,8 @@ const StudentFeeRow = ({
             text=""
             icon={<Eye className="text-white" size={15} />}
             onClick={() => {
-              setSelectedStudentFee(StudentFee);
-              setViewModal(true);
+              setSelectedStudentFee(StudentFee)
+              setViewModal(true)
             }}
             className="!bg-teal-500 hover:!bg-teal-600"
           />
@@ -95,16 +102,16 @@ const StudentFeeRow = ({
             text=""
             icon={<CreditCard className="text-white" size={15} />}
             onClick={() => {
-              setSelectedStudentFee(StudentFee);
-              setViewpaymentModal(true);
+              setSelectedStudentFee(StudentFee)
+              setViewpaymentModal(true)
             }}
             className="!bg-purple-500 hover:!bg-purple-600"
           />
         </div>
       </td>
     </tr>
-  );
-};
+  )
+}
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 const AllStudentFeeForm = () => {
@@ -112,84 +119,91 @@ const AllStudentFeeForm = () => {
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
 
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
 
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
 
-  const [addModal, setAddModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
-  const [editRecord, setEditRecord] = useState<(IStudentFee & { id: string }) | null>(null);
-  const [viewModal, setViewModal] = useState(false);
-  const [viewpaymentModal, setViewpaymentModal] = useState(false);
-  const [dueSlipModal, setDueSlipModal] = useState(false);
+  const [addModal, setAddModal] = useState(false)
+  const [editModal, setEditModal] = useState(false)
+  const [editRecord, setEditRecord] = useState<
+    (IStudentFee & { id: string }) | null
+  >(null)
+  const [viewModal, setViewModal] = useState(false)
+  const [viewpaymentModal, setViewpaymentModal] = useState(false)
+  const [dueSlipModal, setDueSlipModal] = useState(false)
 
-  const { menuStatus } = usePermissions();
-  const { canAdd, canEdit } = useMenuPermissionData(menuStatus);
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const [params, setParams] = useState("");
+  const { menuStatus } = usePermissions()
+  const { canAdd, canEdit } = useMenuPermissionData(menuStatus)
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
 
-  const { data: allStudent } = useGetAllStudents("?IsPagination=false");
-  const { data: allClasses } = useGetAllClass("?IsPagination=false");
+  const { data: allStudent } = useGetAllStudents('?IsPagination=false')
+  const { data: allClasses } = useGetAllClass('?IsPagination=false')
 
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [selectedClassName, setSelectedClassName] = useState<string>("");
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>("");
-  const [selectedStudentFee, setSelectedStudentFee] = useState<IStudentFee | null>(null);
-  const [pendingEditId, setPendingEditId] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
+  const [selectedClassName, setSelectedClassName] = useState<string>('')
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>('')
+  const [selectedStudentFee, setSelectedStudentFee] =
+    useState<IStudentFee | null>(null)
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null)
 
   // State for class chips pagination
-  const [classStartIndex, setClassStartIndex] = useState<number>(0);
-  const CLASSES_PER_PAGE = 6;
+  const [classStartIndex, setClassStartIndex] = useState<number>(0)
+  const CLASSES_PER_PAGE = 6
 
-  const { data: fullEditRecord } = useGetStudentFeeById(pendingEditId ?? undefined);
+  const { data: fullEditRecord } = useGetStudentFeeById(
+    pendingEditId ?? undefined
+  )
 
   useEffect(() => {
     if (fullEditRecord && pendingEditId) {
-      setEditRecord({ ...fullEditRecord, id: pendingEditId });
-      setEditModal(true);
+      setEditRecord({ ...fullEditRecord, id: pendingEditId })
+      setEditModal(true)
     }
-  }, [fullEditRecord, pendingEditId]);
+  }, [fullEditRecord, pendingEditId])
 
-  const fullQuery = query + (params || "");
+  const fullQuery = query + (params || '')
 
   const {
     data: filteredStudentFee,
     refetch,
     isLoading,
-  } = useFilterStudentFeeByDate(fullQuery);
+  } = useFilterStudentFeeByDate(fullQuery)
 
   // ── Client-side class filter ──
   const clientFilteredItems = selectedClassId
-    ? filteredStudentFee?.Items?.filter((fee) => fee.classId === selectedClassId)
-    : filteredStudentFee?.Items;
+    ? filteredStudentFee?.Items?.filter(
+        (fee) => fee.classId === selectedClassId
+      )
+    : filteredStudentFee?.Items
 
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
+    refetch()
+  }, [paginationParams, refetch])
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
-      studentId: "",
-      startDate: "",
-      endDate: "",
-      classId: "",
+      studentId: '',
+      startDate: '',
+      endDate: '',
+      classId: '',
     },
-  });
+  })
 
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
 
   const onSubmit: SubmitHandler<IFilterStudentFee> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.studentId
@@ -203,88 +217,96 @@ const AllStudentFeeForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
+  }
 
-  const refForInput = useRef<HTMLInputElement>(null);
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
+    refForInput.current?.focus()
+  }, [])
 
-  const formRef = useRef<DateRangeFilterRef>(null);
+  const formRef = useRef<DateRangeFilterRef>(null)
 
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    setSelectedClassId(null);
-    setSelectedClassName("");
-    formRef.current?.handleClear();
-    setSelectedStudentId("");
-    form.reset();
-  };
+    refetch()
+    setParams('')
+    setSelectedClassId(null)
+    setSelectedClassName('')
+    formRef.current?.handleClear()
+    setSelectedStudentId('')
+    form.reset()
+  }
 
   const getStudentName = (studentId: string): string => {
     const student = allStudent?.Items?.find(
       (i) => i.id != null && String(i.id) === String(studentId)
-    );
-    if (!student) return "-";
+    )
+    if (!student) return '-'
     return [student.firstName, student.middleName, student.lastName]
       .filter(Boolean)
-      .join(" ");
-  };
+      .join(' ')
+  }
 
   const getSerialNumber = (index: number): number => {
-    return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
-  };
+    return (
+      (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1
+    )
+  }
 
-  const handleClassFilter = (classId: string | null, className: string = "") => {
-    setSelectedClassId(classId);
-    setSelectedClassName(className);
-    setPaginationParams((prev) => ({ ...prev, pageIndex: 1 }));
+  const handleClassFilter = (
+    classId: string | null,
+    className: string = ''
+  ) => {
+    setSelectedClassId(classId)
+    setSelectedClassName(className)
+    setPaginationParams((prev) => ({ ...prev, pageIndex: 1 }))
     // Reset class start index when selecting a class? No, keep it as is
-  };
+  }
 
   // Get visible classes (6 at a time)
   const visibleClasses = useMemo(() => {
-    const classes = allClasses?.Items ?? [];
-    return classes.slice(classStartIndex, classStartIndex + CLASSES_PER_PAGE);
-  }, [allClasses?.Items, classStartIndex]);
+    const classes = allClasses?.Items ?? []
+    return classes.slice(classStartIndex, classStartIndex + CLASSES_PER_PAGE)
+  }, [allClasses?.Items, classStartIndex])
 
-  const canGoPrev = classStartIndex > 0;
-  const canGoNext = classStartIndex + CLASSES_PER_PAGE < (allClasses?.Items?.length ?? 0);
+  const canGoPrev = classStartIndex > 0
+  const canGoNext =
+    classStartIndex + CLASSES_PER_PAGE < (allClasses?.Items?.length ?? 0)
 
   const handlePrevClasses = () => {
-    setClassStartIndex((prev) => Math.max(0, prev - CLASSES_PER_PAGE));
-  };
+    setClassStartIndex((prev) => Math.max(0, prev - CLASSES_PER_PAGE))
+  }
 
   const handleNextClasses = () => {
     setClassStartIndex((prev) =>
-      Math.min((allClasses?.Items?.length ?? 0) - CLASSES_PER_PAGE, prev + CLASSES_PER_PAGE)
-    );
-  };
+      Math.min(
+        (allClasses?.Items?.length ?? 0) - CLASSES_PER_PAGE,
+        prev + CLASSES_PER_PAGE
+      )
+    )
+  }
 
   return (
     <>
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-start gap-3 flex-wrap">
             {/* Class Filter Section - Grouped together */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
@@ -303,11 +325,12 @@ const AllStudentFeeForm = () => {
                   {/* "All Classes" button as the first chip */}
                   <button
                     type="button"
-                    onClick={() => handleClassFilter(null, "")}
+                    onClick={() => handleClassFilter(null, '')}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
-                      ${selectedClassId === null
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                      ${
+                        selectedClassId === null
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                          : 'bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]'
                       }`}
                   >
                     All Classes
@@ -315,22 +338,23 @@ const AllStudentFeeForm = () => {
 
                   {/* Class chips - Shows 6 at a time */}
                   {visibleClasses.map((cls) => {
-                    const id = cls.id ?? (cls as any).Id ?? "";
-                    const isActive = selectedClassId === id;
+                    const id = cls.id ?? (cls as any).Id ?? ''
+                    const isActive = selectedClassId === id
                     return (
                       <button
                         key={id}
                         type="button"
                         onClick={() => handleClassFilter(id, cls.name)}
                         className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap
-                          ${isActive
-                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                            : "bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]"
+                          ${
+                            isActive
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                              : 'bg-white dark:bg-[#444] text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-[#555]'
                           }`}
                       >
                         {cls.name}
                       </button>
-                    );
+                    )
                   })}
                 </div>
 
@@ -353,11 +377,16 @@ const AllStudentFeeForm = () => {
                 disabled={!selectedClassId}
                 onClick={() => setDueSlipModal(true)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors
-                  ${selectedClassId
-                    ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500 cursor-pointer"
-                    : "bg-gray-100 dark:bg-[#444] text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed"
+                  ${
+                    selectedClassId
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-500 cursor-pointer'
+                      : 'bg-gray-100 dark:bg-[#444] text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed'
                   }`}
-                title={!selectedClassId ? "Select a class to view due slip" : `View due slip for ${selectedClassName}`}
+                title={
+                  !selectedClassId
+                    ? 'Select a class to view due slip'
+                    : `View due slip for ${selectedClassName}`
+                }
               >
                 <FileText size={14} />
                 Due Slip
@@ -409,16 +438,16 @@ const AllStudentFeeForm = () => {
                       ) || null
                     }
                     onSelect={(group) => {
-                      setSelectedStudentId(group?.id ?? null);
+                      setSelectedStudentId(group?.id ?? null)
                     }}
                     getLabel={(g) =>
                       g
                         ? [g.firstName, g.middleName, g.lastName]
-                          .filter(Boolean)
-                          .join(" ")
-                        : "-"
+                            .filter(Boolean)
+                            .join(' ')
+                        : '-'
                     }
-                    getValue={(g) => g?.id ?? ""}
+                    getValue={(g) => g?.id ?? ''}
                   />
                 </div>
 
@@ -456,7 +485,10 @@ const AllStudentFeeForm = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 dark:text-gray-300"
+                    >
                       Loading Student Fees...
                     </td>
                   </tr>
@@ -479,7 +511,10 @@ const AllStudentFeeForm = () => {
                   )
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
                       No Student Fees found.
                     </td>
                   </tr>
@@ -511,9 +546,9 @@ const AllStudentFeeForm = () => {
           visible={editModal}
           editRecord={editRecord}
           onClose={() => {
-            setEditModal(false);
-            setEditRecord(null);
-            refetch();
+            setEditModal(false)
+            setEditRecord(null)
+            refetch()
           }}
         />
       </div>
@@ -547,8 +582,8 @@ const AllStudentFeeForm = () => {
               <X size={24} strokeWidth={2.5} />
             </button>
             <PaymentRecordForm
-              studentid={selectedStudentFee?.studentId || ""}
-              classid={selectedStudentFee?.classId || ""}
+              studentid={selectedStudentFee?.studentId || ''}
+              classid={selectedStudentFee?.classId || ''}
               onClose={() => setViewpaymentModal(false)}
             />
           </div>
@@ -564,7 +599,7 @@ const AllStudentFeeForm = () => {
         />
       )}
     </>
-  );
-};
+  )
+}
 
-export default AllStudentFeeForm;
+export default AllStudentFeeForm

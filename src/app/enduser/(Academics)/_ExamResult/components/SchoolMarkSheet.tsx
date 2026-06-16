@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
-import { useGetSubjectById } from '../../Subject/hooks' // Changed import
+import { useGetSubjectById } from '../../Subject/hooks'
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useRef, useEffect, useState } from 'react'
@@ -19,14 +19,13 @@ interface Props {
   onClose: () => void
 }
 
-// Component to fetch and display subject name by ID
 const SubjectNameCell = ({ subjectId }: { subjectId: string }) => {
   const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
-  
+
   if (isLoading) return <span className="text-gray-400">Loading...</span>
   if (error) return <span className="text-red-500">-</span>
   if (!subject) return <span>-</span>
-  
+
   return <span>{subject.name}</span>
 }
 
@@ -56,14 +55,13 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
     (exam: IExam) => exam.id === examId
   )?.name
 
-  //Resolve district and province names from IDs
-  const districtName = allDistricts?.Items?.find(
-    (d) => d.Id === StudentData?.districtId
-  )?.districtNameInEnglish ?? '-'
+  const districtName =
+    allDistricts?.Items?.find((d) => d.Id === StudentData?.districtId)
+      ?.districtNameInEnglish ?? '-'
 
-  const provinceName = allProvinces?.Items?.find(
-    (p) => p.Id === StudentData?.provinceId
-  )?.provinceNameInEnglish ?? '-'
+  const provinceName =
+    allProvinces?.Items?.find((p) => p.Id === StudentData?.provinceId)
+      ?.provinceNameInEnglish ?? '-'
 
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -80,38 +78,73 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
 
   const handlePrint = () => {
     const content = document.getElementById('marksheet')?.outerHTML
-    if (!content) return
+    if (!content) {
+      alert('Content not found')
+      return
+    }
+
     const printWindow = window.open('', '', 'width=900,height=1000')
-    printWindow?.document.write(`
-  <html>
-    <head>
-      <title>Marksheet</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-      <style>
-        * {
-          font-family: 'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif;
+
+    if (!printWindow) {
+      alert('Could not open print window. Please allow popups for this site.')
+      return
+    }
+
+    try {
+      printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Marksheet</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      * {
+        font-family: 'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 0 !important;
         }
         body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+          margin: 0;
+          padding: 0;
         }
-        @media print {
-          @page { size: A4 portrait; margin: 0 !important; }
-          body { margin: 0; padding: 0; }
-          body * { visibility: hidden; }
-          #marksheet, #marksheet * { visibility: visible; }
-          #marksheet { position: absolute; top: 0; left: 0; width: 210mm; height: 297mm; padding: 20mm; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    </style>
+  </head>
+  <body>
+    ${content}
+    <script>
+      window.onload = function() {
+        setTimeout(function() {
+          window.print();
+        }, 500);
+      };
+    <\/script>
+  </body>
+</html>
+      `)
+      printWindow.document.close()
+
+      setTimeout(() => {
+        if (printWindow) {
+          printWindow.focus()
         }
-      </style>
-    </head>
-    <body>${content}</body>
-  </html>
-`)
-    printWindow?.document.close()
-    printWindow?.focus()
-    printWindow?.print()
+      }, 100)
+    } catch (error) {
+      console.error('Print error:', error)
+      alert('Error preparing print dialog: ' + error)
+    }
   }
 
   const getGradePointValue = (grade: string): number => {
@@ -147,7 +180,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
   const headerBg = '#e6e7ff'
   const headerColor = '#080ccb'
 
-  // Format date of birth
   const dateOfBirth = StudentData?.dateOfBirth
     ? new Date(StudentData.dateOfBirth).toISOString().split('T')[0]
     : '-'
@@ -161,15 +193,14 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
         <div
           id="marksheet"
           className="bg-white shadow-2xl mx-auto border-2 text-gray-800 p-4 sm:p-6"
-          style={{ fontFamily: "'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif" }}
+          style={{
+            fontFamily:
+              "'Noto Sans Devanagari', 'Times New Roman', 'Arial', sans-serif",
+          }}
         >
           <div className="p-3 sm:p-5">
-
-            {/* ── HEADER ── */}
             <header className="pb-4 mb-2 relative">
               <div className="flex items-center justify-center w-full relative min-h-[130px]">
-
-                {/* Left: School Logo */}
                 <div className="absolute left-0 top-0 w-24 h-24 flex items-center justify-center">
                   <img
                     src="/assets/nepal.png"
@@ -178,7 +209,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                   />
                 </div>
 
-                {/* Center: School Info */}
                 <div className="text-center flex-1 px-28">
                   <div className="text-sm font-semibold">नेपाल सरकार</div>
                   <div className="text-sm font-medium">Government of Nepal</div>
@@ -199,7 +229,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                   </div>
                 </div>
 
-                {/* Right: Student Photo */}
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border border-gray-400 flex items-center justify-center overflow-hidden bg-gray-50">
                     <img
@@ -212,7 +241,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </div>
             </header>
 
-            {/* ── STUDENT INFO ── */}
             <div
               className="text-sm mb-4 mt-3 leading-7 text-justify px-1"
               style={{ color: blue }}
@@ -220,47 +248,44 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               <p>
                 THE GRADE(S) SECURED BY{' '}
                 <span className="font-bold text-black">
-                  {[StudentData?.firstName, StudentData?.middleName, StudentData?.lastName]
+                  {[
+                    StudentData?.firstName,
+                    StudentData?.middleName,
+                    StudentData?.lastName,
+                  ]
                     .filter(Boolean)
                     .join(' ') || '-'}
-                </span>
-                {' '}DATE OF BIRTH:{' '}
-                <span className="font-bold text-black">
-                  {dateOfBirth}
-                </span>
-                {' '}SYMBOL NO.:{' '}
+                </span>{' '}
+                DATE OF BIRTH:{' '}
+                <span className="font-bold text-black">{dateOfBirth}</span>{' '}
+                SYMBOL NO.:{' '}
                 <span className="font-bold text-black">
                   {StudentData?.admissionNumber || '-'}
-                </span>
-                {' '}REGISTRATION NO.:{' '}
+                </span>{' '}
+                REGISTRATION NO.:{' '}
                 <span className="font-bold text-black">
                   {StudentData?.registrationNumber || '-'}
-                </span>
-                {' '}GRADE:{' '}
+                </span>{' '}
+                GRADE:{' '}
                 <span className="font-bold text-black">
                   {allclass?.name || '-'}
-                </span>
-                {' '}SCHOOL:{' '}
+                </span>{' '}
+                SCHOOL:{' '}
                 <span className="font-bold text-black">
                   {SchoolData?.name || '-'}
-                </span>
-                {' '}DISTRICT:{' '}
-                <span className="font-bold text-black">
-                  {districtName}
-                </span>
-                {' '}PROVINCE:{' '}
-                <span className="font-bold text-black">
-                  {provinceName}
-                </span>
-                {' '}IN THE ANNUAL BASIC EDUCATION EXAMINATION{' '}
+                </span>{' '}
+                DISTRICT:{' '}
+                <span className="font-bold text-black">{districtName}</span>{' '}
+                PROVINCE:{' '}
+                <span className="font-bold text-black">{provinceName}</span> IN
+                THE ANNUAL BASIC EDUCATION EXAMINATION{' '}
                 <span className="font-bold text-black">
                   {ExamName ? ExamName.toUpperCase() : ''}
-                </span>
-                {' '}ARE GIVEN BELOW:
+                </span>{' '}
+                ARE GIVEN BELOW:
               </p>
             </div>
 
-            {/* ── SUBJECTS TABLE ── */}
             <table
               className="w-full border-collapse text-sm mb-4"
               style={{ border: `1px solid ${blue}` }}
@@ -333,45 +358,73 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               </thead>
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
-                  ? data.MarksWithGrades.map((m: ISubjectMark, index: number) => {
-                      const gradePoint =
-                        m.GPA !== undefined && m.GPA !== null
-                          ? m.GPA
-                          : getGradePointValue(m.grade)
-                      return (
-                        <tr
-                          key={index}
-                          className="text-center"
-                          style={{ backgroundColor: '#ffffff', color: blue }}
-                        >
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            {index + 1}
-                          </td>
-                          <td className="p-2 text-left px-3" style={{ border: `1px solid ${blue}`, color: blue }}>
-                            {/* Using the new SubjectNameCell component with useGetSubjectById */}
-                            <SubjectNameCell subjectId={m.subjectId} />
-                          </td>
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            4
-                          </td>
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            {'-'}
-                          </td>
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            {'-'}
-                          </td>
-                          <td className="p-2 font-medium" style={{ border: `1px solid ${blue}` }}>
-                            {m.grade || '-'}
-                          </td>
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            {gradePoint}
-                          </td>
-                          <td className="p-2" style={{ border: `1px solid ${blue}` }}>
-                            {'-'}
-                          </td>
-                        </tr>
-                      )
-                    })
+                  ? data.MarksWithGrades.map(
+                      (m: ISubjectMark, index: number) => {
+                        const gradePoint =
+                          m.GPA !== undefined && m.GPA !== null
+                            ? m.GPA
+                            : getGradePointValue(m.grade)
+                        return (
+                          <tr
+                            key={index}
+                            className="text-center"
+                            style={{ backgroundColor: '#ffffff', color: blue }}
+                          >
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {index + 1}
+                            </td>
+                            <td
+                              className="p-2 text-left px-3"
+                              style={{
+                                border: `1px solid ${blue}`,
+                                color: blue,
+                              }}
+                            >
+                              <SubjectNameCell subjectId={m.subjectId} />
+                            </td>
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              4
+                            </td>
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {'-'}
+                            </td>
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {'-'}
+                            </td>
+                            <td
+                              className="p-2 font-medium"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {m.grade || '-'}
+                            </td>
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {gradePoint}
+                            </td>
+                            <td
+                              className="p-2"
+                              style={{ border: `1px solid ${blue}` }}
+                            >
+                              {'-'}
+                            </td>
+                          </tr>
+                        )
+                      }
+                    )
                   : [
                       'Nepali',
                       'English',
@@ -388,18 +441,57 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                         className="text-center"
                         style={{ backgroundColor: '#ffffff', color: blue }}
                       >
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>{index + 1}</td>
-                        <td className="p-2 text-left px-3" style={{ border: `1px solid ${blue}`, color: blue }}>{subject}</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>4</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
-                        <td className="p-2" style={{ border: `1px solid ${blue}` }}>-</td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          {index + 1}
+                        </td>
+                        <td
+                          className="p-2 text-left px-3"
+                          style={{ border: `1px solid ${blue}`, color: blue }}
+                        >
+                          {subject}
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          4
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
+                        <td
+                          className="p-2"
+                          style={{ border: `1px solid ${blue}` }}
+                        >
+                          -
+                        </td>
                       </tr>
                     ))}
 
-                {/* GPA Row */}
                 <tr style={{ backgroundColor: headerBg, color: headerColor }}>
                   <td
                     colSpan={6}
@@ -415,11 +507,10 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                     {gpa}
                   </td>
                   <td className="p-2" style={{ border: `1px solid ${blue}` }} />
-                 </tr>
+                </tr>
               </tbody>
             </table>
 
-            {/* ── FOOTER ── */}
             <div className="mt-4 pt-2 text-xs" style={{ color: blue }}>
               <div className="flex justify-between items-start gap-4">
                 <div className="flex flex-col gap-1 text-xs">
@@ -441,7 +532,6 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 

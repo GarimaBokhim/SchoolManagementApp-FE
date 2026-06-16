@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import toast, { Toaster } from 'react-hot-toast'
-import { Filter, Printer, RotateCcw } from 'lucide-react'
+import { Filter, Printer, RotateCcw, X } from 'lucide-react'
 
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { InputElement } from '@/components/Input/InputElement'
@@ -20,7 +20,6 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetStudentByClass } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import PaymentReceiptPrint from './printpaymentrecordindividually'
-import { useReactToPrint } from 'react-to-print'
 
 interface ViewStudentFeeFormProps {
   studentId?: string
@@ -35,14 +34,12 @@ const ViewStudentFeeForm = ({
 
   const { data: allClasses } = useGetAllClass()
 
-  // ✅ Initialize state directly from props so comboboxes preload on mount
   const [selectedStudentId, setSelectedStudentId] = useState(studentId ?? '')
   const [selectedClassId, setSelectedClassId] = useState(classId ?? '')
 
   const { data: allStudents } = useGetStudentByClass(selectedClassId)
   const { data: allclasses } = useGetAllClass()
   const [params, setParams] = useState(() => {
-    // ✅ Also initialize params from props on first render
     if (studentId && classId) {
       return `?studentId=${encodeURIComponent(studentId)}&classId=${encodeURIComponent(classId)}`
     } else if (classId) {
@@ -55,7 +52,7 @@ const ViewStudentFeeForm = ({
 
   const componentRef = useRef<HTMLDivElement>(null)
   const [printData, setPrintData] = useState<IPaymentRecord | null>(null)
-  const [shouldPrint, setShouldPrint] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   const form = useForm<IFilterStudentFee>({
     defaultValues: {
@@ -63,14 +60,6 @@ const ViewStudentFeeForm = ({
       classId: classId ?? '',
       startDate: '',
       endDate: '',
-    },
-  })
-
-  const handlePrintComponent = useReactToPrint({
-    contentRef: componentRef,
-    onAfterPrint: () => {
-      setPrintData(null)
-      setShouldPrint(false)
     },
   })
 
@@ -82,27 +71,91 @@ const ViewStudentFeeForm = ({
     isLoading,
   } = useGetStudentFeesummary(params)
 
-  // ✅ Trigger print only after printData is set and component has rendered
-  useEffect(() => {
-    if (printData && shouldPrint) {
-      const timeout = setTimeout(() => {
-        handlePrintComponent?.()
-        setShouldPrint(false)
-      }, 300)
-      return () => clearTimeout(timeout)
+  // ✅ Direct print function - opens new window and prints content
+  const handlePrintDirect = () => {
+    if (!componentRef.current) {
+      toast.error('No content to print')
+      return
     }
-  }, [printData, shouldPrint])
 
-  // ✅ Sync props into state and form when props change
+    const printContent = componentRef.current.innerHTML
+    const printWindow = window.open('', '', 'width=900,height=1000')
+
+    if (!printWindow) {
+      toast.error('Could not open print window. Please check popup settings.')
+      return
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Payment Receipt</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background: white;
+              padding: 20px;
+            }
+            img {
+              max-width: 100%;
+              height: auto;
+            }
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            table, td, th {
+              border: 1px solid #000 !important;
+            }
+            td, th {
+              padding: 4px 6px;
+            }
+            h3, div {
+              margin: 0;
+            }
+            @media print {
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+              }
+              body {
+                margin: 0;
+                padding: 10px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+          <script>
+            window.onload = function() {
+              setTimeout(() => {
+                window.print();
+              }, 100);
+            };
+          </script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
   useEffect(() => {
     if (!studentId || !classId) return
 
     queueMicrotask(() => {
-      // Sync student
       setSelectedStudentId(studentId)
       setValue('studentId', studentId)
-
-      // ✅ Sync class — this was missing before
       setSelectedClassId(classId)
       setValue('classId', classId)
 
@@ -149,12 +202,12 @@ const ViewStudentFeeForm = ({
   const onClear = () => {
     form.reset({
       studentId: '',
-      classId: classId ?? '',  // ✅ restore class prop on clear
+      classId: classId ?? '',
       startDate: '',
       endDate: '',
     })
     setSelectedStudentId('')
-    setSelectedClassId(classId ?? '')  // ✅ restore class combobox on clear
+    setSelectedClassId(classId ?? '')
 
     if (classId) {
       setParams(`?classId=${encodeURIComponent(classId)}`)
@@ -166,13 +219,20 @@ const ViewStudentFeeForm = ({
 
   const getPaymentMethodLabel = (value: number) => {
     switch (value) {
-      case 0: return 'Cash'
-      case 1: return 'Credit Card'
-      case 2: return 'Debit Card'
-      case 3: return 'Bank Transfer'
-      case 4: return 'Mobile Payment'
-      case 5: return 'Cheque'
-      default: return 'Unknown'
+      case 0:
+        return 'Cash'
+      case 1:
+        return 'Credit Card'
+      case 2:
+        return 'Debit Card'
+      case 3:
+        return 'Bank Transfer'
+      case 4:
+        return 'Mobile Payment'
+      case 5:
+        return 'Cheque'
+      default:
+        return 'Unknown'
     }
   }
 
@@ -185,11 +245,10 @@ const ViewStudentFeeForm = ({
       paymentMethod: fee.paymentMethod,
       reference: fee.reference || '-',
       receiptNumber: fee.receiptNumber || '-',
-
     }
 
     setPrintData(data)
-    setShouldPrint(true)
+    setShowPreview(true)
   }
 
   return (
@@ -212,7 +271,8 @@ const ViewStudentFeeForm = ({
               form={form}
               options={allStudents?.Items ?? []}
               selected={
-                allStudents?.Items?.find((s) => s.id === selectedStudentId) ?? null
+                allStudents?.Items?.find((s) => s.id === selectedStudentId) ??
+                null
               }
               onSelect={(student) => {
                 const id = student?.id ?? ''
@@ -231,8 +291,8 @@ const ViewStudentFeeForm = ({
               getLabel={(s) =>
                 s
                   ? [s.firstName, s.middleName, s.lastName]
-                    .filter(Boolean)
-                    .join(' ')
+                      .filter(Boolean)
+                      .join(' ')
                   : '-'
               }
               getValue={(s) => s?.id ?? ''}
@@ -338,7 +398,8 @@ const ViewStudentFeeForm = ({
                   <tr key={index}>
                     <td className="px-4 py-3">{index + 1}</td>
                     <td className="px-4 py-3">
-                      {allClasses?.Items?.find((c) => c.id === fee.classId)?.name ?? '-'}
+                      {allClasses?.Items?.find((c) => c.id === fee.classId)
+                        ?.name ?? '-'}
                     </td>
                     <td className="px-4 py-3">{fee.paidAmount}</td>
                     <td className="px-4 py-3">
@@ -367,12 +428,55 @@ const ViewStudentFeeForm = ({
         </table>
       </div>
 
-      {/* Always rendered so ref is always attached, hidden when no printData */}
-      <div style={{ display: 'none' }}>
-        <div ref={componentRef}>
-          {printData && <PaymentReceiptPrint data={printData} />}
+      {/* PRINT PREVIEW MODAL */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Print Preview</h2>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 bg-gray-50">
+              <div
+                ref={componentRef}
+                className="bg-white rounded border shadow-sm"
+              >
+                {printData && (
+                  <PaymentReceiptPrint
+                    data={printData}
+                    onReady={() => console.log('Receipt ready for printing')}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t p-4 flex justify-end gap-2">
+              <ButtonElement
+                type="button"
+                text="Close"
+                onClick={() => {
+                  setShowPreview(false)
+                  setPrintData(null)
+                }}
+                className="px-4 py-2 !bg-gray-500 hover:!bg-gray-600"
+              />
+              <ButtonElement
+                type="button"
+                text="Print"
+                icon={<Printer size={14} />}
+                onClick={handlePrintDirect}
+                className="px-4 py-2 !bg-blue-600 hover:!bg-blue-700 text-white"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

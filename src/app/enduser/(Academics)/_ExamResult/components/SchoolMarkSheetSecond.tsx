@@ -1,7 +1,7 @@
 'use client'
 import { X, Building } from 'lucide-react'
 import { useGenerateMarkSheet } from '../hooks'
-import { useGetSubjectById } from '../../Subject/hooks' // Changed import
+import { useGetSubjectById } from '../../Subject/hooks'
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
 import { useRef, useEffect, useState } from 'react'
@@ -10,7 +10,7 @@ import { useGetAllClass, useGetClassById } from '../../Class/hooks'
 import { IClass } from '../../Class/types/IClass'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
-import { ISubjectMark } from '../types/IExamResults' // Import the type
+import { ISubjectMark } from '../types/IExamResults'
 
 interface Props {
   studentId: string
@@ -18,18 +18,21 @@ interface Props {
   onClose: () => void
 }
 
-// Component to fetch and display subject name by ID
 const SubjectNameCell = ({ subjectId }: { subjectId: string }) => {
   const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
-  
+
   if (isLoading) return <span className="text-gray-400">Loading...</span>
   if (error) return <span className="text-red-500">-</span>
   if (!subject) return <span>-</span>
-  
+
   return <span>{subject.name}</span>
 }
 
-const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) => {
+const SchoolMarkSheetSecond: React.FC<Props> = ({
+  studentId,
+  examId,
+  onClose,
+}) => {
   const { data } = useGenerateMarkSheet(studentId, examId)
   const { data: StudentData } = useGetStudentById(studentId)
   const { data: allExam } = useGetAllExams()
@@ -53,24 +56,21 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
   const ExamName = allExam?.Items.find(
     (exam: IExam) => exam.id === examId
   )?.name
-  
-  // Get the image URL - use imageUrl from API response
+
   const getImageUrl = () => {
     if (!SchoolData?.imageUrl) {
       console.log('No imageUrl found in school data')
       return null
     }
-    
+
     const imageUrl = SchoolData.imageUrl
     console.log('Raw imageUrl from API:', imageUrl)
-    
-    // Skip if it's a placeholder value
+
     if (imageUrl === '-' || imageUrl === 'string' || imageUrl === '') {
       console.log('Image URL is a placeholder:', imageUrl)
       return null
     }
-    
-    // Construct full URL
+
     const fullUrl = `https://schoolapp.netraverselabs.com/${imageUrl}`
     console.log('Full image URL:', fullUrl)
     return fullUrl
@@ -98,31 +98,71 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
 
   const handlePrint = () => {
     const content = document.getElementById('marksheet')?.outerHTML
-    if (!content) return
+    if (!content) {
+      alert('Content not found')
+      return
+    }
 
     const printWindow = window.open('', '', 'width=900,height=1000')
-    printWindow?.document.write(`
-  <html>
-    <head>
-      <title>Marksheet</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        @media print {
-          @page { size: A4 portrait; margin: 0 !important; }
-          body { margin: 0; padding: 0; }
-          body * { visibility: hidden; }
-          #marksheet, #marksheet * { visibility: visible; }
-          #marksheet { position: absolute; top: 0; left: 0; width: 210mm; height: 297mm; padding: 20mm; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    if (!printWindow) {
+      alert('Could not open print window. Please allow popups for this site.')
+      return
+    }
+
+    try {
+      printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Marksheet</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <style>
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 0 !important;
         }
-      </style>
-    </head>
-    <body>${content}</body>
-  </html>
-`)
-    printWindow?.document.close()
-    printWindow?.focus()
-    printWindow?.print()
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    ${content}
+    <script>
+      window.onload = function() {
+        setTimeout(function() {
+          window.print();
+        }, 500);
+      };
+    <\/script>
+  </body>
+</html>
+      `)
+      printWindow.document.close()
+
+      setTimeout(() => {
+        if (printWindow) {
+          printWindow.focus()
+        }
+      }, 100)
+    } catch (error) {
+      console.error('Print error:', error)
+      alert('Error preparing print dialog: ' + error)
+    }
   }
 
   return (
@@ -145,7 +185,6 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
           <div className="border-4 border-sky-500 p-3 sm:p-5">
             <header className="pb-4 mb-2 relative">
               <div className="flex items-start justify-center w-full">
-                {/* School Logo on Top Left */}
                 <div className="absolute left-0 top-0 w-24 h-24 border-2 border-gray-300 rounded-md flex items-center justify-center overflow-hidden bg-gray-50 shadow-sm">
                   {schoolLogoUrl && !imageError ? (
                     <img
@@ -162,7 +201,6 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                   )}
                 </div>
 
-                {/* Student Image on Top Right */}
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
                     <img
@@ -184,8 +222,12 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
               <p className="flex">
-                <strong>Name:</strong> 
-                {[StudentData?.firstName, StudentData?.middleName, StudentData?.lastName]
+                <strong>Name:</strong>
+                {[
+                  StudentData?.firstName,
+                  StudentData?.middleName,
+                  StudentData?.lastName,
+                ]
                   .filter(Boolean)
                   .join(' ') || '-'}
               </p>
@@ -196,7 +238,8 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                 <strong>Class:</strong> {allclass?.name || '-'}
               </p>
               <p>
-                <strong>Roll No:</strong> {StudentData?.registrationNumber || '-'}
+                <strong>Roll No:</strong>{' '}
+                {StudentData?.registrationNumber || '-'}
               </p>
             </div>
 
@@ -210,40 +253,46 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                   <th className="border border-sky-500 p-1 w-24">
                     Marks Obtained
                   </th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
-                  ? data.MarksWithGrades.map((m: ISubjectMark, index: number) => (
-                      <tr key={index} className="text-center">
-                        <td className="border border-sky-500 p-1">{index + 1}</td>
-                        <td className="border border-sky-500 p-1 text-left px-2">
-                          {/* Using the new SubjectNameCell component with useGetSubjectById */}
-                          <SubjectNameCell subjectId={m.subjectId} />
-                        </td>
-                        <td className="border border-sky-500 p-1">
-                          {m.grade || '-'}
-                        </td>
-                        <td className="border border-sky-500 p-1">
-                          {m.GPA || '-'}
-                        </td>
-                        <td className="border border-sky-500 p-1">
-                          {m.marksObtained}
-                        </td>
-                      </tr>
-                    ))
-                  : // Fallback empty state
-                    Array(5).fill(null).map((_, index) => (
-                      <tr key={index} className="text-center">
-                        <td className="border border-sky-500 p-1">{index + 1}</td>
-                        <td className="border border-sky-500 p-1 text-left px-2">
-                          -
-                        </td>
-                        <td className="border border-sky-500 p-1">-</td>
-                        <td className="border border-sky-500 p-1">-</td>
-                        <td className="border border-sky-500 p-1">-</td>
-                      </tr>
-                    ))}
+                  ? data.MarksWithGrades.map(
+                      (m: ISubjectMark, index: number) => (
+                        <tr key={index} className="text-center">
+                          <td className="border border-sky-500 p-1">
+                            {index + 1}
+                          </td>
+                          <td className="border border-sky-500 p-1 text-left px-2">
+                            <SubjectNameCell subjectId={m.subjectId} />
+                          </td>
+                          <td className="border border-sky-500 p-1">
+                            {m.grade || '-'}
+                          </td>
+                          <td className="border border-sky-500 p-1">
+                            {m.GPA || '-'}
+                          </td>
+                          <td className="border border-sky-500 p-1">
+                            {m.marksObtained}
+                          </td>
+                        </tr>
+                      )
+                    )
+                  : Array(5)
+                      .fill(null)
+                      .map((_, index) => (
+                        <tr key={index} className="text-center">
+                          <td className="border border-sky-500 p-1">
+                            {index + 1}
+                          </td>
+                          <td className="border border-sky-500 p-1 text-left px-2">
+                            -
+                          </td>
+                          <td className="border border-sky-500 p-1">-</td>
+                          <td className="border border-sky-500 p-1">-</td>
+                          <td className="border border-sky-500 p-1">-</td>
+                        </tr>
+                      ))}
               </tbody>
             </table>
 
@@ -262,7 +311,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                     <th className="border-b border-x p-1 border-sky-500">C</th>
                     <th className="border-b border-x p-1 border-sky-500">D</th>
                     <th className="border-b border-x p-1 border-sky-500">NG</th>
-                   </tr>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr className="text-center">
@@ -289,7 +338,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
                       1.6
                     </td>
                     <td className="border-t border-x p-1 border-sky-500">-</td>
-                   </tr>
+                  </tr>
                 </tbody>
               </table>
 
@@ -315,7 +364,8 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({ studentId, examId, onClose }) 
               </p>
               <p className="flex justify-end gap-4">
                 <strong>
-                  Total Running Days: {allattendencecount?.totalRunningDays || 0}
+                  Total Running Days:{' '}
+                  {allattendencecount?.totalRunningDays || 0}
                 </strong>
                 <strong>
                   Total Absent Days {allattendencecount?.totalAbsentDays || 0}

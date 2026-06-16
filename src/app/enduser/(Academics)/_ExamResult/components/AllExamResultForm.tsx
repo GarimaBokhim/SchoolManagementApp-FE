@@ -29,7 +29,10 @@ import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hoo
 
 const formatStudentDisplayName = (s: IStudent | undefined) => {
   if (!s) return ''
-  return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim()
+  return [s.firstName, s.middleName, s.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
 }
 
 function paginationItems<T>(data: unknown): T[] {
@@ -66,11 +69,11 @@ const examResultRowId = (row: ApiExamResultRow): string | undefined =>
 // Custom component to fetch and display student name by ID
 const StudentNameCell = ({ studentId }: { studentId: string | undefined }) => {
   const { data: studentData, isLoading } = useGetStudentById(studentId || '')
-  
+
   if (!studentId) return <span>—</span>
   if (isLoading) return <span className="text-gray-400">Loading...</span>
   if (!studentData) return <span>—</span>
-  
+
   return <span>{formatStudentDisplayName(studentData)}</span>
 }
 
@@ -94,11 +97,11 @@ const AllExamResultForm = () => {
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
-  
+
   // State for storing student data for filter dropdown
   const [studentOptions, setStudentOptions] = useState<IStudent[]>([])
   const [isLoadingStudents, setIsLoadingStudents] = useState(false)
-  
+
   // Edit button element
   const editButtonElement = (id: string) => {
     return (
@@ -114,16 +117,16 @@ const AllExamResultForm = () => {
       />
     )
   }
-  
+
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allExam } = useGetAllExams()
-  
+
   const [showStudentPrint, setShowStudentPrint] = useState(false)
   const [showStudentPrintSecond, setShowStudentPrintSecond] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<string | null>('')
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null)
-  
+
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   })
@@ -135,7 +138,7 @@ const AllExamResultForm = () => {
       endDate: '',
     },
   })
-  
+
   const fullQuery = query + (params || '')
 
   const {
@@ -144,15 +147,17 @@ const AllExamResultForm = () => {
     isLoading,
   } = useFilterExamResultByDate(fullQuery)
   const examResultRows = paginationItems<ApiExamResultRow>(filteredExamResult)
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null
+  )
 
   useEffect(() => {
     refetch()
   }, [paginationParams, refetch])
-  
+
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
-  
+
   const onSubmit: SubmitHandler<IFilterExamResultByDate> = async (formData) => {
     clearError()
     try {
@@ -189,15 +194,15 @@ const AllExamResultForm = () => {
       console.error('Error during form submission:', error)
     }
   }
-  
+
   const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
     refForInput.current?.focus()
   }, [])
-  
+
   const formRef = useRef<DateRangeFilterRef>(null)
   const deleteExamResult = useRemoveExamResult()
-  
+
   const handleDelete = async (id: string) => {
     try {
       await deleteExamResult.mutateAsync(id)
@@ -207,7 +212,7 @@ const AllExamResultForm = () => {
       toast.error('Error deleting user.')
     }
   }
-  
+
   const onClearClick = () => {
     refetch()
     setParams('')
@@ -220,17 +225,19 @@ const AllExamResultForm = () => {
   // You'll need to get unique student IDs from examResultRows
   useEffect(() => {
     const loadStudentOptions = async () => {
-      const uniqueStudentIds = [...new Set(
-        examResultRows.map(row => examResultStudentId(row)).filter(Boolean)
-      )]
-      
+      const uniqueStudentIds = [
+        ...new Set(
+          examResultRows.map((row) => examResultStudentId(row)).filter(Boolean)
+        ),
+      ]
+
       setIsLoadingStudents(true)
       // This is a limitation - you might want to create a separate API endpoint
       // to get students by multiple IDs, or keep using getAllStudentsV2 for the filter
       // For now, we'll keep the filter simple or you can implement batch fetching
       setIsLoadingStudents(false)
     }
-    
+
     loadStudentOptions()
   }, [examResultRows])
 
@@ -286,7 +293,9 @@ const AllExamResultForm = () => {
                       form.setValue('studentId', id)
                     }}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Enter Student ID to filter</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter Student ID to filter
+                  </p>
                 </div>
 
                 {/* Action buttons */}
@@ -317,7 +326,7 @@ const AllExamResultForm = () => {
                   <th className="px-4 py-3">Student Name</th>
                   <th className="px-4 py-3">Remarks</th>
                   <th className="px-4 py-3 text-center w-[280px]">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {isLoading ? (
@@ -327,81 +336,82 @@ const AllExamResultForm = () => {
                     </td>
                   </tr>
                 ) : examResultRows.length > 0 ? (
-                  examResultRows.map((ExamResult: ApiExamResultRow, index: number) => {
-                    const sid = examResultStudentId(ExamResult)
-                    const eid = examResultExamId(ExamResult)
-                    return (
-                      <tr
-                        key={examResultRowId(ExamResult) ?? index}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                      >
-                        <td className="py-3 px-4">{index + 1}</td>
-                        <td className="py-3 px-4">
-                          {
-                            paginationItems<{ id?: string; name?: string }>(
-                              allExam
-                            ).find((i) => String(i.id) === String(eid))?.name
-                          }
-                        </td>
-                        <td className="py-3 px-4">
-                          {/* Using the new StudentNameCell component with useGetStudentById */}
-                          <StudentNameCell studentId={sid} />
-                        </td>
-                        <td className="px-2 md:px-4">{ExamResult.remarks}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex justify-center gap-2">
-                            {/* First Print Button - Opens SchoolMarkSheet */}
-                            <ButtonElement
-                              icon={<Printer size={14} />}
-                              text=""
-                              type="button"
-                              onClick={() => {
-                                setShowStudentPrint(true)
-                                setSelectedExamId(eid ?? null)
-                                setSelectedStudent(sid ?? '')
-                              }}
-                              className="!text-xs !bg-blue-500 hover:!bg-blue-600"
-                            />
-                            
-                            {/* Second Print Button - Opens SchoolMarkSheetSecond */}
-                            <ButtonElement
-                              icon={<Printer size={14} />}
-                              text=""
-                              type="button"
-                              onClick={() => {
-                                setShowStudentPrintSecond(true)
-                                setSelectedExamId(eid ?? null)
-                                setSelectedStudent(sid ?? '')
-                              }}
-                              className="!text-xs !bg-blue-500 hover:!bg-blue-600"
-                            />
-                            
-                            {/* Edit Button - Conditional */}
-                            {canEdit && (
-                              <EditButton
-                                button={editButtonElement(
-                                  examResultRowId(ExamResult) ?? ''
-                                )}
+                  examResultRows.map(
+                    (ExamResult: ApiExamResultRow, index: number) => {
+                      const sid = examResultStudentId(ExamResult)
+                      const eid = examResultExamId(ExamResult)
+                      return (
+                        <tr
+                          key={examResultRowId(ExamResult) ?? index}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                        >
+                          <td className="py-3 px-4">{index + 1}</td>
+                          <td className="py-3 px-4">
+                            {
+                              paginationItems<{ id?: string; name?: string }>(
+                                allExam
+                              ).find((i) => String(i.id) === String(eid))?.name
+                            }
+                          </td>
+                          <td className="py-3 px-4">
+                            {/* Using the new StudentNameCell component with useGetStudentById */}
+                            <StudentNameCell studentId={sid} />
+                          </td>
+                          <td className="px-2 md:px-4">{ExamResult.remarks}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex justify-center gap-2">
+                              {/* First Print Button - Opens SchoolMarkSheet */}
+                              <ButtonElement
+                                icon={<Printer size={14} />}
+                                text=""
+                                type="button"
+                                onClick={() => {
+                                  setShowStudentPrint(true)
+                                  setSelectedExamId(eid ?? null)
+                                  setSelectedStudent(sid ?? '')
+                                }}
+                                className="!text-xs !bg-blue-500 hover:!bg-blue-600"
                               />
-                            )}
-                            
-                            {/* Delete Button - Conditional */}
-                            {canDelete && (
-                              <DeleteButton
-                                onConfirm={() =>
-                                  handleDelete(
+
+                              <ButtonElement
+                                icon={<Printer size={14} />}
+                                text=""
+                                type="button"
+                                onClick={() => {
+                                  setShowStudentPrintSecond(true)
+                                  setSelectedExamId(eid ?? null)
+                                  setSelectedStudent(sid ?? '')
+                                }}
+                                className="!text-xs !bg-blue-500 hover:!bg-blue-600"
+                              />
+
+                              {/* Edit Button - Conditional */}
+                              {canEdit && (
+                                <EditButton
+                                  button={editButtonElement(
                                     examResultRowId(ExamResult) ?? ''
-                                  )
-                                }
-                                headerText={<Trash />}
-                                content="Are you sure you want to delete this ExamResult?"
-                              />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
+                                  )}
+                                />
+                              )}
+
+                              {/* Delete Button - Conditional */}
+                              {canDelete && (
+                                <DeleteButton
+                                  onConfirm={() =>
+                                    handleDelete(
+                                      examResultRowId(ExamResult) ?? ''
+                                    )
+                                  }
+                                  headerText={<Trash />}
+                                  content="Are you sure you want to delete this ExamResult?"
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    }
+                  )
                 ) : (
                   <tr>
                     <td

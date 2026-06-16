@@ -16,7 +16,7 @@ type ReceiptProps = {
   dueAmount?: number | string
   totalAmount?: number | string
   receiptNumber?: string
-  feeStructure?: IFeeStructureItem[]  // ✅ new
+  feeStructure?: IFeeStructureItem[] // ✅ new
 }
 
 const Receipt = ({
@@ -35,9 +35,8 @@ const Receipt = ({
   dueAmount = '',
   totalAmount = '',
   receiptNumber = '',
-  feeStructure = [],  // ✅ new
+  feeStructure = [],
 }: ReceiptProps) => {
-
   const feeSubtotal = feeStructure.reduce((sum, f) => sum + f.totalAmount, 0)
 
   const cellStyle: React.CSSProperties = {
@@ -77,13 +76,17 @@ const Receipt = ({
           <img
             src={schoolLogoUrl}
             alt=""
-            style={{ width: '180px', height: '180px', objectFit: 'contain', opacity: 0.07 }}
+            style={{
+              width: '180px',
+              height: '180px',
+              objectFit: 'contain',
+              opacity: 0.07,
+            }}
           />
         </div>
       )}
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-
         {/* Header */}
         <div
           style={{
@@ -110,7 +113,9 @@ const Receipt = ({
           )}
           <h3 style={{ margin: 0 }}>{schoolName}</h3>
           {schoolAddress && (
-            <div style={{ fontSize: '11px', color: '#444', marginBottom: '1px' }}>
+            <div
+              style={{ fontSize: '11px', color: '#444', marginBottom: '1px' }}
+            >
               {schoolAddress}
             </div>
           )}
@@ -128,15 +133,35 @@ const Receipt = ({
         </div>
 
         {/* Date and Method */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span>Date: <b>{paymentDate}</b></span>
-          <span>Method: <b>{paymentMethod}</b></span>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '4px',
+          }}
+        >
+          <span>
+            Date: <b>{paymentDate}</b>
+          </span>
+          <span>
+            Method: <b>{paymentMethod}</b>
+          </span>
         </div>
 
         {/* Student and Class */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span>Student: <b>{studentName || '-'}</b></span>
-          <span>Class: <b>{className}</b></span>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '6px',
+          }}
+        >
+          <span>
+            Student: <b>{studentName || '-'}</b>
+          </span>
+          <span>
+            Class: <b>{className}</b>
+          </span>
         </div>
 
         {/* Reference */}
@@ -147,24 +172,46 @@ const Receipt = ({
         {/* ✅ Fee Breakdown Table */}
         {feeStructure.length > 0 && (
           <div style={{ marginBottom: '10px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '11px',
+              }}
+            >
               <thead>
                 <tr>
                   <th style={headerCellStyle}>Fee Type</th>
-                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>Amount</th>
-                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>Times</th>
-                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>Discount</th>
-                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>Total</th>
+                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                    Amount
+                  </th>
+                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                    Times
+                  </th>
+                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                    Discount
+                  </th>
+                  <th style={{ ...headerCellStyle, textAlign: 'right' }}>
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {feeStructure.map((fee, index) => (
                   <tr key={index}>
                     <td style={cellStyle}>{fee.feeTypeName}</td>
-                    <td style={{ ...cellStyle, textAlign: 'right' }}>{fee.amount}</td>
-                    <td style={{ ...cellStyle, textAlign: 'right' }}>{fee.times}</td>
-                    <td style={{ ...cellStyle, textAlign: 'right' }}>{fee.discountAmount}</td>
-                    <td style={{ ...cellStyle, textAlign: 'right' }}>{fee.totalAmount}</td>
+                    <td style={{ ...cellStyle, textAlign: 'right' }}>
+                      {fee.amount}
+                    </td>
+                    <td style={{ ...cellStyle, textAlign: 'right' }}>
+                      {fee.times}
+                    </td>
+                    <td style={{ ...cellStyle, textAlign: 'right' }}>
+                      {fee.discountAmount}
+                    </td>
+                    <td style={{ ...cellStyle, textAlign: 'right' }}>
+                      {fee.totalAmount}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -172,11 +219,21 @@ const Receipt = ({
                 <tr>
                   <td
                     colSpan={4}
-                    style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold' }}
+                    style={{
+                      ...cellStyle,
+                      textAlign: 'right',
+                      fontWeight: 'bold',
+                    }}
                   >
                     Subtotal
                   </td>
-                  <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold' }}>
+                  <td
+                    style={{
+                      ...cellStyle,
+                      textAlign: 'right',
+                      fontWeight: 'bold',
+                    }}
+                  >
                     {feeSubtotal.toFixed(2)}
                   </td>
                 </tr>
@@ -189,32 +246,51 @@ const Receipt = ({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Total Amount</td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
-                <b>{totalAmount !== '' && totalAmount !== undefined ? totalAmount : 'N/A'}</b>
+                Total Amount
+              </td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                <b>
+                  {totalAmount !== '' && totalAmount !== undefined
+                    ? totalAmount
+                    : 'N/A'}
+                </b>
               </td>
             </tr>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Amount Paid</td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                Amount Paid
+              </td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
                 <b>{amountPaid}</b>
               </td>
             </tr>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>Due Amount</td>
               <td style={{ border: '1px solid #000', padding: '4px' }}>
-                <b>{dueAmount !== '' && dueAmount !== undefined ? dueAmount : 'N/A'}</b>
+                Due Amount
+              </td>
+              <td style={{ border: '1px solid #000', padding: '4px' }}>
+                <b>
+                  {dueAmount !== '' && dueAmount !== undefined
+                    ? dueAmount
+                    : 'N/A'}
+                </b>
               </td>
             </tr>
           </tbody>
         </table>
 
         {/* Signatures */}
-        <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-between' }}>
+        <div
+          style={{
+            marginTop: '30px',
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}
+        >
           <span>Cashier Signature</span>
           <span>Authorized By</span>
         </div>
-
       </div>
     </div>
   )
