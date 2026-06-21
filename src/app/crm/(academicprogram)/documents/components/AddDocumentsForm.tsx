@@ -13,8 +13,9 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 type Props = {
     form: UseFormReturn<AddDocumentsPayload>;
     onClose: () => void;
+    ApplicantId: string
 };
-const AddDocumentsForm = ({ form, onClose }: Props) => {
+const AddDocumentsForm = ({ form, onClose, ApplicantId }: Props) => {
     const addDocuments = useAddDocuments();
     const { handleError, clearError } = useErrorHandler();
     const { data: applicant } = useGetAllApplicants();
@@ -28,7 +29,7 @@ const AddDocumentsForm = ({ form, onClose }: Props) => {
 
     const handleClose = () => {
         form.reset({
-            applicantId: "",
+            applicantId: ApplicantId ? ApplicantId : "",
             documentsDTOs: [
                 {
                     documentTypeId: "",
@@ -52,7 +53,7 @@ const AddDocumentsForm = ({ form, onClose }: Props) => {
         const values = form.getValues();
 
         const payload = {
-            applicantId: values.applicantId,
+            applicantId: ApplicantId ? ApplicantId : values.applicantId,
             documentsDTOs: (values.documentsDTOs ?? []).map(item => ({
                 documentTypeId: item.documentTypeId,
                 docFile: item.docFile
@@ -63,6 +64,8 @@ const AddDocumentsForm = ({ form, onClose }: Props) => {
         handleClose();
         onClose();
     };
+
+    const hasApplicant = ApplicantId && ApplicantId.trim().length > 0;
 
 
     return (
@@ -85,39 +88,38 @@ const AddDocumentsForm = ({ form, onClose }: Props) => {
                         </button>
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
+                        {!hasApplicant && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+                                <AppCombobox
+                                    value={sellecteApplicantId}
+                                    dropDownWidth="w-full"
+                                    dropdownPositionClass="absolute z-20"
+                                    label="Applicant"
+                                    name="applicantId"
+                                    form={form}
+                                    required
+                                    options={applicant || []}
+                                    selected={
+                                        applicant?.find(
+                                            (item) => item.id === sellecteApplicantId
+                                        ) || null
+                                    }
+                                    onSelect={(item) => {
+                                        const applicantId = item?.id ?? "";
 
-                            <AppCombobox
-                                value={sellecteApplicantId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
-                                label="Applicant"
-                                name="applicantId"
-                                form={form}
-                                required
-                                options={applicant || []}
-                                selected={
-                                    applicant?.find(
-                                        (item) => item.id === sellecteApplicantId
-                                    ) || null
-                                }
-                                onSelect={(item) => {
-                                    const applicantId = item?.id ?? "";
+                                        setSelectedApplicantId(applicantId || null);
 
-                                    setSelectedApplicantId(applicantId || null);
-
-                                    form.setValue("applicantId", applicantId, {
-                                        shouldValidate: true,
-                                        shouldDirty: true,
-                                    });
-
-                                }}
-                                getLabel={(item) => item?.fullName ?? ""}
-                                getValue={(item) => item?.id ?? ""}
-                            />
-
-                        </div>
+                                        form.setValue("applicantId", applicantId, {
+                                            shouldValidate: true,
+                                            shouldDirty: true,
+                                        });
+                                    }}
+                                    getLabel={(item) => item?.fullName ?? ""}
+                                    getValue={(item) => item?.id ?? ""}
+                                />
+                            </div>
+                        )}
 
 
                         {/* ITEMS */}

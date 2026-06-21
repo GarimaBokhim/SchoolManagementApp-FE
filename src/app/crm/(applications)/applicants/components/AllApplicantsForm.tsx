@@ -315,11 +315,13 @@ const AllApplicantsForm = () => {
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
                                         <th className="px-4 py-3 text-left">FullName</th>
+                                        <th className="px-4 py-3 text-left">ApplicantId</th>
                                         <th className="px-4 py-3 text-left">Email</th>
                                         <th className="px-4 py-3 text-left">EnrolmentType</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">CountryName</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">UniversityName</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">CourseName</th>
+                                        <th className="px-4 py-3 text-left hidden md:table-cell">AdmissionDate</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -354,6 +356,11 @@ const AllApplicantsForm = () => {
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
+                                                    {Applicants.applicantId}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
                                                     {Applicants.email}
                                                 </td>
 
@@ -376,6 +383,11 @@ const AllApplicantsForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
                                                     {Applicants.courseName}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
+                                                    {Applicants.admissionDate}
                                                 </td>
 
 

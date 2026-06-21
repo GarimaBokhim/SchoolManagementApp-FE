@@ -509,26 +509,7 @@ const UserProfilePopupForm = ({ isOpen, onClose, applicant }: UserProfilePopupPr
                                                             {GENDER_STATUS_MAP[profile?.genderStatus ?? 0] || 'N/a'}
                                                         </span>
                                                     </div>
-                                                    <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Interested Country</span>
-                                                        <span className="text-xs font-semibold text-gray-800 dark:text-white">
-                                                            {profile?.intrestedCountry || '-'}
-                                                        </span>
-                                                    </div>
 
-                                                    <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Interested University</span>
-                                                        <span className="text-xs font-semibold text-gray-800 dark:text-white">
-                                                            {profile?.intrestedUniversity || '-'}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Interested Course</span>
-                                                        <span className="text-xs font-semibold text-gray-800 dark:text-white">
-                                                            {profile?.intrestedCourse || '-'}
-                                                        </span>
-                                                    </div>
                                                 </div>
                                             </>
                                         )}
@@ -553,37 +534,39 @@ const UserProfilePopupForm = ({ isOpen, onClose, applicant }: UserProfilePopupPr
                                                 <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
                                                     <span className="text-xs text-gray-600 dark:text-gray-400">Application ID</span>
                                                     <span className="text-xs font-medium text-gray-800 dark:text-white">
-                                                        APP-2024-001
+                                                        {profile?.applicantId || '-'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
                                                     <span className="text-xs text-gray-600 dark:text-gray-400">Applied Date</span>
                                                     <span className="text-xs font-medium text-gray-800 dark:text-white">
-                                                        March 15, 2026
+                                                        {profile?.admissionDate || '-'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
-                                                    <span className="text-xs text-gray-600 dark:text-gray-400">Course Interested</span>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">Interested Country</span>
                                                     <span className="text-xs font-medium text-gray-800 dark:text-white">
-                                                        Computer Science
+                                                        {profile?.intrestedCountry || '-'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">Interested University</span>
+                                                    <span className="text-xs font-medium text-gray-800 dark:text-white">
+                                                        {profile?.intrestedUniversity || '-'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">Interested Course</span>
+                                                    <span className="text-xs font-medium text-gray-800 dark:text-white">
+                                                        {profile?.intrestedCourse || '-'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
                                                     <span className="text-xs text-gray-600 dark:text-gray-400">Preferred Intake</span>
                                                     <span className="text-xs font-medium text-gray-800 dark:text-white">
-                                                        Fall 2026
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between py-1.5 border-b border-blue-100 dark:border-blue-800">
-                                                    <span className="text-xs text-gray-600 dark:text-gray-400">Education Level</span>
-                                                    <span className="text-xs font-medium text-gray-800 dark:text-white">
-                                                        Bachelor&apos;s Degree
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between py-1.5">
-                                                    <span className="text-xs text-gray-600 dark:text-gray-400">School</span>
-                                                    <span className="text-xs font-medium text-gray-800 dark:text-white text-right">
-                                                        {applicant.schoolName || 'Shreentry College'}
+                                                        {profile?.intakeTitle || '-'}
                                                     </span>
                                                 </div>
                                             </div>
