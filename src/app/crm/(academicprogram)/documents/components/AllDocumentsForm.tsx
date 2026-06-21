@@ -365,11 +365,17 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
             >
 
                 <div
-                    className="print-area font-mono w-full max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300"
+                    className="
+                    w-full max-w-7xl
+                    max-h-[92vh]
+                    overflow-hidden
+                    rounded-3xl
+                    bg-white dark:bg-[#252525]
+                    shadow-2xl
+                    border border-gray-200 dark:border-gray-700
+                "
                     onClick={(e) => e.stopPropagation()}
                 >
-
-
 
                     <Toaster position="top-right" />
                     <div className="p-4 sm:p-6">
@@ -389,8 +395,8 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
                                     <button
                                         onClick={onClose}
                                         className="w-8 h-8 flex items-center justify-center rounded-full
-                       bg-red-500 text-white hover:bg-red-600 shadow
-                       ml-1"
+                                        bg-red-500 text-white hover:bg-red-600 shadow
+                                        ml-1"
                                         title="Close"
                                     >
                                         ✕
@@ -428,7 +434,7 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
                                     DocumentsDetails.map((doc, index) => (
                                         <div
                                             key={doc.id}
-                                            className="
+                                            className=" m-5
                                                 group bg-white dark:bg-[#2a2b2e]
                                                 border border-gray-200 dark:border-gray-700
                                                 rounded-xl p-4
@@ -439,7 +445,7 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
                                         >
 
                                             {/* Header */}
-                                            <div className="flex justify-between items-start mb-3">
+                                            <div className="flex justify-between items-start mb-3 m-5">
 
                                                 {/* S.N */}
                                                 <span className="text-xs px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">

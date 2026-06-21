@@ -33,18 +33,23 @@ export interface ApplicantResponse {
     universityName: number
     courseId: string
     courseName: string
+    applicantId: string
+    admissionDate: string
 }
 
 
 export interface UserProfileResponse {
     id: string
     fullName: string
+    applicantId: string
     email: string
+    admissionDate: string
     enrolmentType: number
     genderStatus: number
     intrestedCountry: string
     intrestedUniversity: number
     intrestedCourse: string
+    intakeTitle: string
 }
 
 

@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import AllInquiry from './All'
 import AllFollowUp from '../../followup/pages/All'
+import AllAppointment from '@/app/crm/(services)/appointments/pages/All'
 const AllVisitorsDetails = () => {
     const tabs = [
         { id: 'visitor', label: 'Visitors' },
-        { id: 'followup', label: 'FollowUp' },
+        { id: 'appointments', label: 'Appointments' },
     ]
 
     const [activeTab, setActiveTab] = useState<string>('visitor')
@@ -15,8 +16,8 @@ const AllVisitorsDetails = () => {
         switch (activeTab) {
             case 'visitor':
                 return <AllInquiry />
-            case 'followup':
-                return <AllFollowUp />
+            case 'appointments':
+                return <AllAppointment />
             default:
                 return <AllInquiry />
         }

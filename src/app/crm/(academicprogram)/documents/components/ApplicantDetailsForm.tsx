@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, PlusCircle, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -136,8 +136,11 @@ const ApplicantDetailsForm = () => {
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
 
+    const [addDocsModal, setAddDocsModal] = useState(false);
+
 
     const [showDocumentForm, setShowDocumentForm] = useState(false);
+    const [showAddDocumentForm, setShowAddDocumentForm] = useState(false);
     const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null)
 
 
@@ -179,6 +182,7 @@ const ApplicantDetailsForm = () => {
 
     const handleAddSubmit = () => {
         setAddModal(false);
+        setAddDocsModal(false);
     };
 
     if (error) {
@@ -227,13 +231,6 @@ const ApplicantDetailsForm = () => {
                                 icon={<Filter size={14} />}
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
-                            />
-                            <ButtonElement
-                                icon={<Plus size={18} />}
-                                type="button"
-                                text="Add Documents"
-                                onClick={() => setAddModal(true)}
-                                className="!font-semibold"
                             />
 
                         </div>
@@ -332,6 +329,23 @@ const ApplicantDetailsForm = () => {
 
                                                         </Tooltip>
 
+
+                                                        <Tooltip text="Documents Form">
+
+                                                            <ButtonElement
+                                                                icon={<PlusCircle size={15} />}
+                                                                type="button"
+                                                                text=" AddDocs"
+                                                                onClick={() => {
+                                                                    setShowAddDocumentForm(true)
+                                                                    setSelectedApplicantId(Applicants.id ?? '')
+                                                                    setAddDocsModal(true);
+                                                                }}
+                                                                className="!text-xs"
+                                                            />
+
+                                                        </Tooltip>
+
                                                         {/* <ActionMenu
                                                             Applicants={Applicants}
                                                             onEdit={handleEditApplicants}
@@ -380,10 +394,20 @@ const ApplicantDetailsForm = () => {
 
             )}
 
-            <AddDocuments
+
+            {showAddDocumentForm && selectedApplicantId && (
+                <AddDocuments
+                    ApplicantId={selectedApplicantId}
+                    visible={addDocsModal}
+                    onClose={handleAddSubmit}
+                />
+            )}
+
+            {/* <AddDocuments
+                ApplicantId=""
                 visible={addModal}
                 onClose={handleAddSubmit}
-            />
+            /> */}
 
 
 

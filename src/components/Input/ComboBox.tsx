@@ -63,8 +63,8 @@ function InnerCombobox<T>(
     query === ""
       ? options
       : options?.filter((option) =>
-          getLabel(option).toLowerCase().includes(query.toLowerCase())
-        );
+        getLabel(option).toLowerCase().includes(query.toLowerCase())
+      );
 
   // Sync display text whenever `selected` changes (including on load)
   useEffect(() => {
@@ -100,15 +100,13 @@ function InnerCombobox<T>(
             <div className="relative items-center flex">
               <ComboboxInput
                 value={query}
-                className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white ${
-                  form?.formState?.errors?.[name]
+                className={`w-full p-2 py-1.5 border rounded-md outline-none peer placeholder:opacity-0 bg-[#ffffff] focus:border-[#4788CD] border-gray-400 dark:bg-[#353535] dark:text-white ${form?.formState?.errors?.[name]
                     ? "border-red-500"
                     : "border-gray-400"
-                }${
-                  readOnly
+                  }${readOnly
                     ? "cursor-not-allowed bg-gray-100 dark:bg-[#3d3d3d]"
                     : ""
-                }`}
+                  }`}
                 displayValue={(option: T | null) =>
                   option ? String(getLabel(option) || "") : ""
                 }
@@ -135,11 +133,10 @@ function InnerCombobox<T>(
               />
               <label
                 htmlFor={name}
-                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[1.2em] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[1.1rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500 transition-all pointer-events-none ${
-                  value || (form ? form.watch(name) : value)
+                className={`absolute flex items-center left-1 scale-90 peer-placeholder-shown:scale-100 peer-focus:scale-90 -top-[1.2em] px-2 origin-left peer-placeholder-shown:top-2 peer-focus:-top-[1.1rem] peer-focus:text-[#4788CD] dark:peer-focus:text-gray-200 dark:peer-focus:bg-[#353535] peer-focus:bg-[#ffffff] text-gray-500 transition-all pointer-events-none ${value || (form ? form.watch(name) : value)
                     ? "bg-[#ffffff] dark:bg-[#353535] dark:text-white"
                     : ""
-                }`}
+                  }`}
               >
                 {required && (
                   <span className="text-red-500 text-xl mr-1">*</span>
@@ -152,9 +149,8 @@ function InnerCombobox<T>(
                 <div className="z-[50]">
                   {filteredOptions && filteredOptions.length > 0 && (
                     <ComboboxOptions
-                      className={`bg-[#ffffff] border rounded shadow z-50 max-h-40 overflow-y-auto dark:text-white dark:bg-[#353535] ${
-                        dropdownPositionClass || "top-full left-0 right-0 mt-1"
-                      } ${dropDownWidth}`}
+                      className={`bg-[#ffffff] border rounded shadow z-50 max-h-40 overflow-y-auto dark:text-white dark:bg-[#353535] ${dropdownPositionClass || "top-full left-0 right-0 mt-1"
+                        } ${dropDownWidth}`}
                     >
                       {filteredOptions.map((option, index) => (
                         <ComboboxOption
@@ -164,9 +160,8 @@ function InnerCombobox<T>(
                         >
                           {({ active }) => (
                             <div
-                              className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${
-                                active ? "bg-gray-100 dark:bg-[#585858]" : ""
-                              }`}
+                              className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${active ? "bg-gray-100 dark:bg-[#585858]" : ""
+                                }`}
                             >
                               <span>{getLabel(option)}</span>
                               {renderOptionExtra && (
@@ -185,10 +180,10 @@ function InnerCombobox<T>(
             )}
             {form
               ? form.formState.errors[name]?.message && (
-                  <span className="text-red-500 text-sm mt-1">
-                    {form.formState.errors[name]?.message}
-                  </span>
-                )
+                <span className="text-red-500 text-sm mt-1">
+                  {form.formState.errors[name]?.message}
+                </span>
+              )
               : ""}
           </div>
         )}
