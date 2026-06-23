@@ -18,9 +18,6 @@ export interface VisaApplicationResponse {
 export interface AddVisaApplicationResponse {
     id: string
     applicantId: string
-    countryId: string
-    universityId: string
-    courseId: string
     intakeId: string
     appliedDate: string
     visaStatusId: string
@@ -33,9 +30,6 @@ export interface AddVisaApplicationResponse {
 export interface UpdateVisaApplicationResponse {
     id: string
     applicantId: string
-    countryId: string
-    universityId: string
-    courseId: string
     intakeId: string
     appliedDate: string
     visaStatusId: string
@@ -46,9 +40,6 @@ export interface UpdateVisaApplicationResponse {
 
 export interface UpdateVisaApplicationPayload {
     applicantId: string
-    countryId: string
-    universityId: string
-    courseId: string
     intakeId: string
     appliedDate: string
     visaStatusId: string
@@ -60,14 +51,28 @@ export interface UpdateVisaApplicationPayload {
 
 export interface AddVisaApplicationPayload {
     applicantId: string
-    countryId: string
-    universityId: string
-    courseId: string
     intakeId: string
     appliedDate: string
     visaStatusId: string
     visaDetails: string
     emailSent: boolean
     emailContent: string
+
+}
+
+export interface VisaDetailsByApplicant {
+    countryId: string
+    countryName: string
+    universityId: string
+    universityName: string
+    courseId: string
+    courseTitle: string
+
+}
+
+
+export interface IntakeDTOs {
+    id: string
+    intakeName: string
 
 }

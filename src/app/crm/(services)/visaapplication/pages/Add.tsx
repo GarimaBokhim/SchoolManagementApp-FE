@@ -12,9 +12,6 @@ const AddVisaApplication = ({ visible, onClose }: Props) => {
     const form = useForm<AddVisaApplicationPayload>({
         defaultValues: {
             applicantId: "",
-            countryId: "",
-            universityId: "",
-            courseId: "",
             intakeId: "",
             appliedDate: "",
             visaStatusId: "",

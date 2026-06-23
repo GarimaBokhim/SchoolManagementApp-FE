@@ -1,5 +1,6 @@
 
 export interface AddIntakePayload {
+    intakeName: string
     month: Number
     deadline: string
     isOpen: boolean
@@ -24,6 +25,7 @@ export interface AddIntakeResponse {
 
 export interface IntakeResponse {
     id: string
+    intakeName: string
     month: number
     deadline: string
     isOpen: boolean
@@ -40,6 +42,7 @@ export interface IntakeResponse {
 
 export interface UpdateIntakePayload {
     id: string
+    intakeName: string
     month: Number
     deadline: string
     isOpen: boolean
