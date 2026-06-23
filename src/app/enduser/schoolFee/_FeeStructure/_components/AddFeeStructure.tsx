@@ -100,12 +100,12 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
       prev.map((row, i) => {
         if (i !== index) return row;
         const updated = { ...row, ...fields };
-        
+
         // If feePaidType is being updated, auto-update the times field
         if (fields.feePaidType !== undefined) {
           updated.times = getDefaultTimes(fields.feePaidType);
         }
-        
+
         // Calculate discount amount based on percentage if percentage or amount or times changed
         if (fields.discountPercentage !== undefined || fields.amount !== undefined || fields.times !== undefined) {
           const discountAmount = calcDiscountAmount(
@@ -115,7 +115,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
           );
           updated.discountAmount = discountAmount;
         }
-        
+
         // If discount amount is manually set, calculate percentage from it
         if (fields.discountAmount !== undefined) {
           const subtotal = updated.amount * updated.times;
@@ -125,7 +125,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
             updated.discountPercentage = 0;
           }
         }
-        
+
         updated.totalAmount = calcTotalAmount(updated.amount, updated.times, updated.discountAmount);
         return updated;
       })
@@ -254,7 +254,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold w-8">S.N</th>
                       <th className="px-3 py-2 text-left font-semibold">Fee Type</th>
-                      <th className="px-3 py-2 text-left font-semibold">Paid Type</th>
+
                       <th className="px-3 py-2 text-right font-semibold">Amount (Rs.)</th>
                       <th className="px-3 py-2 text-right font-semibold">Times</th>
                       <th className="px-3 py-2 text-right font-semibold">Subtotal (Rs.)</th>
@@ -295,20 +295,7 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
                             </select>
                           </td>
 
-                          {/* Paid Type */}
-                          <td className="px-3 py-2">
-                            <select
-                              className="w-full border border-gray-200 dark:border-gray-500 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
-                              value={row.feePaidType}
-                              onChange={(e) => updateRow(index, { feePaidType: Number(e.target.value) })}
-                            >
-                              {FEE_PAID_TYPE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
+
 
                           {/* Amount */}
                           <td className="px-3 py-2">

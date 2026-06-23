@@ -6,6 +6,8 @@ import {
   VisaApplicationResponse,
   AddVisaApplicationResponse,
   UpdateVisaApplicationPayload,
+  VisaDetailsByApplicant,
+  IntakeDTOs,
 } from '../types/IVisaApplication'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 
@@ -21,6 +23,9 @@ export const VisaApplicationEndpoints = {
   CourseByUniversity: '/api/AcademicPrograms/CourseByUniversity',
   UniversityByCountry: '/api/AcademicPrograms/UniversityByCountry',
   RequiredDocuments: '/api/AcademicPrograms/DocumentsByDTOs',
+
+  IntakeDTOs: '/api/AcademicPrograms/IntakeByDTOs',
+  visaDetails: '/api/VisaApplication/VisaDetailsByApplicant',
 }
 
 export const VisaApplicationQueryKeys = {
@@ -39,9 +44,6 @@ const normalizeInvoicePayload = (
   data: AddVisaApplicationPayload
 ): AddVisaApplicationPayload => ({
   applicantId: data.applicantId,
-  countryId: data.countryId,
-  universityId: data.universityId,
-  courseId: data.courseId,
   intakeId: data.intakeId,
   appliedDate: data.appliedDate,
   visaStatusId: data.visaStatusId,
@@ -54,9 +56,6 @@ const normalizeUpdateInvoicePayload = (
   data: UpdateVisaApplicationPayload
 ): UpdateVisaApplicationPayload => ({
   applicantId: String(data.applicantId ?? '').trim(),
-  countryId: String(data.countryId ?? '').trim(),
-  universityId: String(data.universityId ?? '').trim(),
-  courseId: String(data.courseId ?? '').trim(),
   intakeId: String(data.intakeId ?? '').trim(),
   appliedDate: String(data.appliedDate ?? '').trim(),
   visaStatusId: String(data.visaStatusId ?? '').trim(),
@@ -248,7 +247,7 @@ export const useGetAllIntake = () => {
       const response = await api.get<
         IPaginationCrmResponse<{
           id: string
-          month: number
+          intakeName: string
         }>
       >(VisaApplicationEndpoints.intake, {
         params: {
@@ -293,6 +292,29 @@ export const useGetAllVisaStatus = () => {
     staleTime: 1000 * 60 * 5,
   })
 }
+
+export const useVisaDetailsByApplicant = (ApplicantId: string | null) => {
+  return useQuery({
+    queryKey: ["VisaByApplicantId", ApplicantId],
+
+    queryFn: async (): Promise<VisaDetailsByApplicant> => {
+      if (!ApplicantId) {
+        throw new Error("Id is required to get VisaDetails");
+      }
+
+      const response = await api.get<VisaDetailsByApplicant>(
+        `${VisaApplicationEndpoints.visaDetails}/${ApplicantId}`
+      );
+
+      return response.data;
+    },
+
+    staleTime: 0,
+    gcTime: 0, // 
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+};
 
 export const useGetCourseByUniversity = (UniversityId?: string | null) => {
   return useQuery({
@@ -366,6 +388,34 @@ export const useGetDocumentsByApplication = (
         IPaginationCrmResponse<IRequiredDocuments>
       >(
         `${VisaApplicationEndpoints.RequiredDocuments}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
+        {
+          params: {
+            pageSize: 10,
+            pageIndex: 1,
+            isPagination: false,
+          },
+        }
+      )
+      return data.Data.Items
+    },
+    enabled: Boolean(countryId && universityId && courseId),
+  })
+}
+
+
+
+export const useGetIntake = (
+  countryId?: string | null,
+  universityId?: string | null,
+  courseId?: string | null
+) => {
+  return useQuery({
+    queryKey: ['intakeByDTOs', countryId, universityId, courseId],
+    queryFn: async () => {
+      const { data } = await api.get<
+        IPaginationCrmResponse<IntakeDTOs>
+      >(
+        `${VisaApplicationEndpoints.IntakeDTOs}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
         {
           params: {
             pageSize: 10,

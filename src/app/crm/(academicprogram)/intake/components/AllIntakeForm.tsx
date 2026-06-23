@@ -334,6 +334,7 @@ const AllIntakeForm = () => {
                                 <thead>
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
+                                        <th className="px-4 py-3 text-left">Name</th>
                                         <th className="px-4 py-3 text-left">Month</th>
                                         <th className="px-4 py-3 text-left">Deadline</th>
 
@@ -362,6 +363,11 @@ const AllIntakeForm = () => {
                                             >
                                                 <td className="px-4 py-3 text-gray-500">
                                                     {(currentPage - 1) * pageSize + index + 1}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+
+                                                    {Intakees.intakeName}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell">

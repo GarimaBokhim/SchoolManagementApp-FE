@@ -32,6 +32,7 @@ export const IntakeQueryKeys = {
 
 const normalizeUpdateIntakePayload = (data: UpdateIntakePayload): UpdateIntakePayload => ({
   id: String(data.id ?? '').trim(),
+  intakeName: String(data.intakeName ?? '').trim(),
   month: Number(data.month ?? 0),
   deadline: String(data.deadline ?? '').trim(),
   isOpen: Boolean(data.isOpen ?? true),
@@ -42,6 +43,7 @@ const normalizeUpdateIntakePayload = (data: UpdateIntakePayload): UpdateIntakePa
 
 
 const normalizeIntakePayload = (data: AddIntakePayload): AddIntakePayload => ({
+    intakeName: String(data.intakeName ?? '').trim(),
  month: Number(data.month ?? 0),
   deadline: String(data.deadline ?? '').trim(),
   isOpen: Boolean(data.isOpen ?? true),

@@ -14,7 +14,9 @@ import {
   useGetAllVisaStatus,
   useGetCourseByUniversity,
   useGetDocumentsByApplication,
+  useGetIntake,
   useGetUniversityByCountry,
+  useVisaDetailsByApplicant,
 } from '../hooks'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -29,9 +31,9 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
   const addVisaApplication = useAddVisaApplication()
   const { clearError } = useErrorHandler()
   const { data: allapplicant } = useGetAllApplicants()
-  const { data: country } = useGetAllCountry()
-  const { data: allintake = [] } = useGetAllIntake()
   const { data: allVisaStatus } = useGetAllVisaStatus()
+
+
 
   const emailSent = form.watch('emailSent')
 
@@ -43,33 +45,36 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
     string | null
   >('')
 
-  const countryId = form.watch('countryId')
-  const universityId = form.watch('universityId')
-  const courseId = form.watch('courseId')
+  const intakeId = form.watch('intakeId')
+  const applicantId = form.watch('applicantId')
 
-  const { data: universityByCountry } = useGetUniversityByCountry(countryId)
-  const { data: courseByUniversity } = useGetCourseByUniversity(universityId)
+  const { data: visaDetails } = useVisaDetailsByApplicant(applicantId)
+
 
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false)
   const [attachedDocuments, setAttachedDocuments] = useState<
     AttachedDocument[]
   >([])
   const { data: requiredDocuments } = useGetDocumentsByApplication(
-    countryId,
-    universityId,
-    courseId
+    visaDetails?.countryId,
+    visaDetails?.universityId,
+    visaDetails?.courseId
   )
 
-  const canAttachDocuments = Boolean(countryId && universityId && courseId)
+
+  const { data: intakeDetails } = useGetIntake(
+    visaDetails?.countryId,
+    visaDetails?.universityId,
+    visaDetails?.courseId
+  )
+
+  const canAttachDocuments = Boolean(visaDetails?.countryId && visaDetails?.universityId && visaDetails?.courseId)
   const attachedCount = attachedDocuments.filter((d) => d.file).length
   const requiredCount = requiredDocuments?.length ?? 0
 
   const handleClose = () => {
     form.reset({
       applicantId: '',
-      countryId: '',
-      universityId: '',
-      courseId: '',
       intakeId: '',
       appliedDate: '',
       visaStatusId: '',
@@ -88,9 +93,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
     const payload = {
       applicantId: values.applicantId,
-      countryId: values.countryId,
-      universityId: values.universityId,
-      courseId: values.courseId,
       intakeId: values.intakeId,
       appliedDate: values.appliedDate,
       visaStatusId: values.visaStatusId,
@@ -163,77 +165,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 getLabel={(g) => g?.fullName ?? ''}
                 getValue={(g) => g?.id ?? ''}
               />
-              <AppCombobox
-                dropdownPositionClass="absolute"
-                dropDownWidth="w-full"
-                value={countryId}
-                name="countryId"
-                label="Country"
-                form={form}
-                options={country || []}
-                selected={country?.find((x) => x.id === countryId) || null}
-                onSelect={(item) => {
-                  const id = item?.id ?? ''
 
-                  form.setValue('countryId', id, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  })
-
-                  form.setValue('universityId', '')
-                  form.setValue('courseId', '')
-                  setAttachedDocuments([])
-                }}
-                getLabel={(i) => i?.name ?? ''}
-                getValue={(i) => i?.id ?? ''}
-              />
-
-              <AppCombobox
-                value={universityId}
-                name="universityId"
-                label="University"
-                dropdownPositionClass="absolute"
-                dropDownWidth="w-full"
-                form={form}
-                options={universityByCountry || []}
-                selected={
-                  universityByCountry?.find((x) => x.id === universityId) ||
-                  null
-                }
-                onSelect={(item) => {
-                  const id = item?.id ?? ''
-
-                  form.setValue('universityId', id, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  })
-
-                  form.setValue('courseId', '')
-                  setAttachedDocuments([])
-                }}
-                getLabel={(i) => i?.name ?? ''}
-                getValue={(i) => i?.id ?? ''}
-              />
-              <AppCombobox
-                value={courseId}
-                name="courseId"
-                label="Course"
-                dropdownPositionClass="absolute"
-                dropDownWidth="w-full"
-                form={form}
-                options={courseByUniversity || []}
-                selected={
-                  courseByUniversity?.find((x) => x.id === courseId) || null
-                }
-                onSelect={(item) => {
-                  form.setValue('courseId', item?.id ?? '', {
-                    shouldValidate: true,
-                  })
-                  setAttachedDocuments([])
-                }}
-                getLabel={(i) => i?.title ?? ''}
-                getValue={(i) => i?.id ?? ''}
-              />
 
               <AppCombobox
                 label="Intake"
@@ -242,73 +174,16 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 dropDownWidth="w-full"
                 form={form}
                 value={sellectedIntakeId}
-                options={allintake.map((item) => ({
-                  id: item.id,
-                  name:
-                    item.month === 1
-                      ? 'January'
-                      : item.month === 2
-                        ? 'February'
-                        : item.month === 3
-                          ? 'March'
-                          : item.month === 4
-                            ? 'April'
-                            : item.month === 5
-                              ? 'May'
-                              : item.month === 6
-                                ? 'June'
-                                : item.month === 7
-                                  ? 'July'
-                                  : item.month === 8
-                                    ? 'August'
-                                    : item.month === 9
-                                      ? 'September'
-                                      : item.month === 10
-                                        ? 'October'
-                                        : item.month === 11
-                                          ? 'November'
-                                          : item.month === 12
-                                            ? 'December'
-                                            : '',
-                }))}
+                options={intakeDetails || []}
                 selected={
-                  allintake
-                    .map((item) => ({
-                      id: item.id,
-                      name:
-                        item.month === 1
-                          ? 'January'
-                          : item.month === 2
-                            ? 'February'
-                            : item.month === 3
-                              ? 'March'
-                              : item.month === 4
-                                ? 'April'
-                                : item.month === 5
-                                  ? 'May'
-                                  : item.month === 6
-                                    ? 'June'
-                                    : item.month === 7
-                                      ? 'July'
-                                      : item.month === 8
-                                        ? 'August'
-                                        : item.month === 9
-                                          ? 'September'
-                                          : item.month === 10
-                                            ? 'October'
-                                            : item.month === 11
-                                              ? 'November'
-                                              : item.month === 12
-                                                ? 'December'
-                                                : '',
-                    }))
-                    .find((g) => g.id === sellectedIntakeId) || null
+                  intakeDetails?.find((x) => x.id === intakeId) || null
                 }
+
                 onSelect={(option) => {
                   setSelectedIntakeId(option?.id ?? null)
                   form.setValue('intakeId', option?.id ?? '')
                 }}
-                getLabel={(o) => o?.name || ''}
+                getLabel={(o) => o?.intakeName || ''}
                 getValue={(o) => o?.id || ''}
               />
 
@@ -370,11 +245,10 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                       <button
                         type="button"
                         onClick={() => field.onChange(!value)}
-                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${
-                          value
-                            ? 'bg-green-500 justify-end'
-                            : 'bg-gray-300 dark:bg-gray-600 justify-start'
-                        }`}
+                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${value
+                          ? 'bg-green-500 justify-end'
+                          : 'bg-gray-300 dark:bg-gray-600 justify-start'
+                          }`}
                       >
                         <span className="h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300" />
                       </button>
@@ -446,9 +320,9 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
       <AttachDocumentsModal
         open={isDocsModalOpen}
         onClose={() => setIsDocsModalOpen(false)}
-        countryId={countryId}
-        universityId={universityId}
-        courseId={courseId}
+        countryId={visaDetails?.countryId}
+        universityId={visaDetails?.universityId}
+        courseId={visaDetails?.courseId}
         initialValues={attachedDocuments}
         onSave={(documents) => setAttachedDocuments(documents)}
       />

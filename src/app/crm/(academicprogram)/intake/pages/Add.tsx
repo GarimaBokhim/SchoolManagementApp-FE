@@ -11,6 +11,7 @@ interface Props {
 const AddIntake = ({ visible, onClose }: Props) => {
     const form = useForm<AddIntakePayload>({
         defaultValues: {
+            intakeName: "",
             month: 0,
             deadline: "",
             isOpen: true,

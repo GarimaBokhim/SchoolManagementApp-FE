@@ -49,6 +49,7 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
         clearError();
         try {
             await addIntake.mutateAsync({
+                intakeName: data.intakeName,
                 month: data.month,
                 deadline: data.deadline,
                 isOpen: data.isOpen,
@@ -84,6 +85,13 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+
+                            <InputElement
+                                label="Name"
+                                form={form}
+                                name="intakeName"
+                                required
+                            />
 
                             <AppCombobox
                                 label="Month"
