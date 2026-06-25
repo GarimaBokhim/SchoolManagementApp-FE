@@ -1,79 +1,84 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { IFilterFeeStructure, IFeeStructure } from "../types/IFeeStructure";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { Filter, Plus, RotateCcw, Trash, Pencil } from "lucide-react";
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import {
+  IFilterFeeStructure,
+  IFeeStructure,
+  FeePaidType,
+} from '../types/IFeeStructure'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { Filter, Plus, RotateCcw, Trash, Pencil } from 'lucide-react'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
-import { useFilterFeeStructureByDate, useRemoveFeeStructure } from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddFeeStructure from "../pages/Add";
-import UpdateFeeStructure from "../pages/Edit";
-import { useGetAllClass } from "@/app/enduser/(Academics)/Class/hooks";
-import DeleteButton from "@/components/Buttons/DeleteButton";
+} from '@/components/DateFilter/FilterComponent'
+import { useFilterFeeStructureByDate, useRemoveFeeStructure } from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddFeeStructure from '../pages/Add'
+import UpdateFeeStructure from '../pages/Edit'
+import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
+import DeleteButton from '@/components/Buttons/DeleteButton'
 
 const AllFeeStructureForm = () => {
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
-  
+  })
+
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
-  
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
+
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
-  
-  const [addModal, setAddModal] = useState(false);
-  const [updateModal, setUpdateModal] = useState(false);
-  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeStructure | null>(null);
-  
-  const { menuStatus } = usePermissions();
-  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus);
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const [params, setParams] = useState("");
-  const { data: allClass } = useGetAllClass();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>("");
-  const fullQuery = query + (params || "");
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
+
+  const [addModal, setAddModal] = useState(false)
+  const [updateModal, setUpdateModal] = useState(false)
+  const [selectedFeeStructure, setSelectedFeeStructure] =
+    useState<IFeeStructure | null>(null)
+
+  const { menuStatus } = usePermissions()
+  const { canAdd, canDelete, canEdit } = useMenuPermissionData(menuStatus)
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
+  const { data: allClass } = useGetAllClass()
+  const [selectedClassId, setSelectedClassId] = useState<string | null>('')
+  const fullQuery = query + (params || '')
 
   const {
     data: filteredFeeStructure,
     refetch,
     isLoading,
-  } = useFilterFeeStructureByDate(fullQuery);
-  
+  } = useFilterFeeStructureByDate(fullQuery)
+
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
-  
+    refetch()
+  }, [paginationParams, refetch])
+
   const form = useForm<IFilterFeeStructure>({
     defaultValues: {
-      classId: "",
-      startDate: "",
-      endDate: "",
+      classId: '',
+      startDate: '',
+      endDate: '',
     },
-  });
-  
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
-  
+  })
+
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
+
   const onSubmit: SubmitHandler<IFilterFeeStructure> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.classId
@@ -87,68 +92,68 @@ const AllFeeStructureForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
-  
-  const refForInput = useRef<HTMLInputElement>(null);
+  }
+
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
-  
-  const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteFeeStructure = useRemoveFeeStructure();
-  
+    refForInput.current?.focus()
+  }, [])
+
+  const formRef = useRef<DateRangeFilterRef>(null)
+  const deleteFeeStructure = useRemoveFeeStructure()
+
   const handleDelete = async (id: string) => {
     try {
-      await deleteFeeStructure.mutateAsync(id);
-      toast.success("Fee structure deleted successfully!");
-      refetch();
+      await deleteFeeStructure.mutateAsync(id)
+      toast.success('Fee structure deleted successfully!')
+      refetch()
     } catch {
-      toast.error("Error deleting fee structure.");
+      toast.error('Error deleting fee structure.')
     }
-  };
-  
+  }
+
   const handleEdit = (feeStructure: IFeeStructure) => {
-    setSelectedFeeStructure(feeStructure);
-    setUpdateModal(true);
-  };
-  
+    setSelectedFeeStructure(feeStructure)
+    setUpdateModal(true)
+  }
+
   const handleCloseUpdateModal = () => {
-    setUpdateModal(false);
-    setSelectedFeeStructure(null);
-    refetch();
-  };
-  
+    setUpdateModal(false)
+    setSelectedFeeStructure(null)
+    refetch()
+  }
+
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    setSelectedClassId("");
-    formRef.current?.handleClear();
-    form.reset();
-  };
-  
+    refetch()
+    setParams('')
+    setSelectedClassId('')
+    formRef.current?.handleClear()
+    form.reset()
+  }
+
   // Helper function to get class name by ID
   const getClassName = (classId: string) => {
-    const classItem = allClass?.Items?.find((i) => i.id === classId);
-    return classItem?.name || "N/A";
-  };
-  
+    const classItem = allClass?.Items?.find((i) => i.id === classId)
+    return classItem?.name || 'N/A'
+  }
+
   return (
     <>
       <Toaster position="top-right" />
@@ -175,7 +180,7 @@ const AllFeeStructureForm = () => {
               )}
             </div>
           </div>
-          
+
           {openFilter && (
             <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
               <form
@@ -202,10 +207,10 @@ const AllFeeStructureForm = () => {
                       null
                     }
                     onSelect={(group) => {
-                      setSelectedClassId(group?.id ?? null);
+                      setSelectedClassId(group?.id ?? null)
                     }}
-                    getLabel={(g) => g?.name ?? ""}
-                    getValue={(g) => g?.id ?? ""}
+                    getLabel={(g) => g?.name ?? ''}
+                    getValue={(g) => g?.id ?? ''}
                   />
                 </div>
 
@@ -227,13 +232,14 @@ const AllFeeStructureForm = () => {
               </form>
             </div>
           )}
-          
+
           <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
                   <th className="px-4 py-3">S.N</th>
                   <th className="px-4 py-3">Class</th>
+                  <th className="px-4 py-3">Paid Types</th>
                   <th className="px-4 py-3">Fee Category Name</th>
                   <th className="px-4 py-3">Total Amount</th>
                   <th className="px-4 py-3">Discount Amount</th>
@@ -243,7 +249,10 @@ const AllFeeStructureForm = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 dark:text-gray-300"
+                    >
                       Loading Fee Structure...
                     </td>
                   </tr>
@@ -255,26 +264,36 @@ const AllFeeStructureForm = () => {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
                         <td className="py-3 px-4">
-                          {(paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1}
+                          {(paginationParams.pageIndex - 1) *
+                            paginationParams.pageSize +
+                            index +
+                            1}
                         </td>
                         <td className="py-3 px-4">
                           {getClassName(feeStructure.classId)}
                         </td>
                         <td className="py-3 px-4">
-                          {(feeStructure as any).feeCategoryName || "N/A"}
+                          {feeStructure.paidTypes
+                            ? FeePaidType[feeStructure.paidTypes]
+                            : 'N/A'}
                         </td>
                         <td className="py-3 px-4">
-                          {(feeStructure as any).totalAmount?.toFixed(2) || "0.00"}
+                          {feeStructure.feeCategoryName || 'N/A'}
                         </td>
                         <td className="py-3 px-4">
-                          {(feeStructure as any).discountAmount?.toFixed(2) || "0.00"}
+                          {feeStructure.totalAmount?.toFixed(2) || '0.00'}
+                        </td>
+                        <td className="py-3 px-4">
+                          {feeStructure.discountAmount?.toFixed(2) || '0.00'}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2 flex-wrap">
                             {canEdit && (
                               <ButtonElement
                                 text=""
-                                icon={<Pencil className="text-white" size={15} />}
+                                icon={
+                                  <Pencil className="text-white" size={15} />
+                                }
                                 onClick={() => handleEdit(feeStructure)}
                                 className="!bg-blue-500 hover:!bg-blue-600"
                               />
@@ -282,7 +301,9 @@ const AllFeeStructureForm = () => {
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
-                                  handleDelete(feeStructure.id ? feeStructure.id : "")
+                                  handleDelete(
+                                    feeStructure.id ? feeStructure.id : ''
+                                  )
                                 }
                                 headerText={<Trash />}
                                 content="Are you sure you want to delete this Fee Structure?"
@@ -295,7 +316,10 @@ const AllFeeStructureForm = () => {
                   )
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500 italic">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
                       No Fee Structure found.
                     </td>
                   </tr>
@@ -304,7 +328,7 @@ const AllFeeStructureForm = () => {
             </table>
           </div>
         </div>
-        
+
         {filteredFeeStructure && filteredFeeStructure?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
@@ -320,12 +344,12 @@ const AllFeeStructureForm = () => {
             />
           </div>
         )}
-        
+
         <AddFeeStructure
           visible={addModal}
           onClose={() => {
-            setAddModal(false);
-            refetch();
+            setAddModal(false)
+            refetch()
           }}
         />
 
@@ -336,7 +360,7 @@ const AllFeeStructureForm = () => {
         />
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllFeeStructureForm;
+export default AllFeeStructureForm

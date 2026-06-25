@@ -63,38 +63,52 @@ const normalizeUpdateInvoicePayload = (
   visaDetails: String(data.visaDetails ?? '').trim(),
   emailContent: String(data.emailContent ?? '').trim(),
 })
-
 export const useGetAllVisaApplication = (queryParams?: string) => {
   return useQuery({
     queryKey: [...VisaApplicationQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<
-        IPaginationCrmResponse<VisaApplicationResponse>
-      >(VisaApplicationEndpoints.filter, { params })
-
-      return response.data
+      const url = queryParams
+        ? `${VisaApplicationEndpoints.filter}${queryParams}`
+        : VisaApplicationEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<VisaApplicationResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
+// export const useGetAllVisaApplication = (queryParams?: string) => {
+//   return useQuery({
+//     queryKey: [...VisaApplicationQueryKeys.all, queryParams],
+
+//     queryFn: async () => {
+//       const params = Object.fromEntries(
+//         new URLSearchParams(queryParams?.replace(/^&/, '') || '')
+//       )
+
+//       const response = await api.get<
+//         IPaginationCrmResponse<VisaApplicationResponse>
+//       >(VisaApplicationEndpoints.filter, { params })
+
+//       return response.data
+//     },
+
+//     select: (response) => ({
+//       items: response?.Data?.Items ?? [],
+//       pagination: {
+//         totalItems: response?.Data?.TotalItems ?? 0,
+//         pageIndex: response?.Data?.PageIndex ?? 1,
+//         pageSize: response?.Data?.pageSize ?? 2,
+//         totalPages: response?.Data?.TotalPages ?? 1,
+//       },
+//       message: response?.Message ?? '',
+//       statusCode: response?.StatusCode ?? 200,
+//     }),
+
+//     staleTime: 1000 * 60 * 5,
+//   })
+// }
 
 export const useAddVisaApplication = () => {
   const queryClient = useQueryClient()
@@ -295,26 +309,26 @@ export const useGetAllVisaStatus = () => {
 
 export const useVisaDetailsByApplicant = (ApplicantId: string | null) => {
   return useQuery({
-    queryKey: ["VisaByApplicantId", ApplicantId],
+    queryKey: ['VisaByApplicantId', ApplicantId],
 
     queryFn: async (): Promise<VisaDetailsByApplicant> => {
       if (!ApplicantId) {
-        throw new Error("Id is required to get VisaDetails");
+        throw new Error('Id is required to get VisaDetails')
       }
 
       const response = await api.get<VisaDetailsByApplicant>(
         `${VisaApplicationEndpoints.visaDetails}/${ApplicantId}`
-      );
+      )
 
-      return response.data;
+      return response.data
     },
 
     staleTime: 0,
-    gcTime: 0, // 
+    gcTime: 0, //
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-  });
-};
+  })
+}
 
 export const useGetCourseByUniversity = (UniversityId?: string | null) => {
   return useQuery({
@@ -402,8 +416,6 @@ export const useGetDocumentsByApplication = (
   })
 }
 
-
-
 export const useGetIntake = (
   countryId?: string | null,
   universityId?: string | null,
@@ -412,9 +424,7 @@ export const useGetIntake = (
   return useQuery({
     queryKey: ['intakeByDTOs', countryId, universityId, courseId],
     queryFn: async () => {
-      const { data } = await api.get<
-        IPaginationCrmResponse<IntakeDTOs>
-      >(
+      const { data } = await api.get<IPaginationCrmResponse<IntakeDTOs>>(
         `${VisaApplicationEndpoints.IntakeDTOs}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
         {
           params: {
