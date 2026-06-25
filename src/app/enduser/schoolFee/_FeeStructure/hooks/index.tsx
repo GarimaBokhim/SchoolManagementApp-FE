@@ -31,12 +31,10 @@ const normalizeFeeStructureDto = (
   discountAmount: Number(raw.discountAmount ?? raw.DiscountAmount ?? 0),
   times: Number(raw.times ?? raw.Times ?? 1),
   totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
-  feePaidType: Number(raw.feePaidType ?? raw.FeePaidType ?? 1),
   discountPercentage: Number(
     raw.discountPercentage ?? raw.DiscountPercentage ?? 0
   ),
   feeTypeName: String(raw.feeTypeName ?? raw.FeeTypeName ?? ''),
-  paidTypes: Number(raw.paidTypes ?? raw.PaidTypes ?? 0),
 })
 
 const normalizeFeeStructure = (data: unknown): IFeeStructure => {

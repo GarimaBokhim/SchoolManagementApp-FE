@@ -7,7 +7,6 @@ export interface IStudentFee {
   discountPercentage: number
   studentFeeDetailsDTOs: IStudentFeeDetails[]
   totalAmount?: number
-  isFirst: boolean
   dueAmount?: number
 }
 

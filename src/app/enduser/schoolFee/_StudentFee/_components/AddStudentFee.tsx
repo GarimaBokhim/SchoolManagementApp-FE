@@ -214,7 +214,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     setSelectedClassId(editRecord.classId)
     setSelectedFeeStructureId(fsId)
     setDiscountPercentage(editRecord.discountPercentage ?? 0)
-    setIsFirst(Boolean(editRecord.isFirst))
     prevStudentIdRef.current = editRecord.studentId
     setManualRows(
       (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }))
@@ -277,12 +276,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     const value = Number(e.target.value)
     setDiscountPercentage(value)
     form.setValue('discountPercentage', value)
-  }
-
-  const handleIsFirstChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.checked
-    setIsFirst(value)
-    form.setValue('isFirst', value)
   }
 
   useEffect(() => {

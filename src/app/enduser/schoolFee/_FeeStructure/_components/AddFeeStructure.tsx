@@ -44,9 +44,7 @@ const emptyRow = (): IFeeStructureDTO => ({
   discountAmount: 0,
   times: 1,
   totalAmount: 0,
-  feePaidType: 1,
   discountPercentage: 0,
-  paidTypes: 0,
 })
 
 const calcDiscountAmount = (
@@ -107,9 +105,6 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
       prev.map((row, i) => {
         if (i !== index) return row
         const updated = { ...row, ...fields }
-        if (fields.feePaidType !== undefined) {
-          updated.times = getDefaultTimes(fields.feePaidType)
-        }
         if (
           fields.discountPercentage !== undefined ||
           fields.amount !== undefined ||
@@ -162,13 +157,13 @@ const AddFeeStructureForm = ({ form, onClose }: Props) => {
     const payload = {
       classId: selectedClassId,
       feeCategoryId: selectedFeeCategoryId,
+      paidTypes: selectedPaidTypes,
       feeStructureDTOs: rows.map((r) => ({
         feeTypeId: r.feeTypeId,
         amount: Number(r.amount),
         discountAmount: Number(r.discountAmount),
         times: Number(r.times),
         totalAmount: calcTotalAmount(r.amount, r.times, r.discountAmount),
-        feePaidType: r.feePaidType,
         discountPercentage: Number(r.discountPercentage || 0),
       })),
     }

@@ -2,12 +2,12 @@ export interface IFeeStructure {
   id?: string
   classId: string
   feeCategoryId: string
+  paidTypes: number
   feeCategoryName?: string
   feeStructureDTOs: IFeeStructureDTO[]
   totalAmount?: number
   discountAmount?: number
   isActive?: boolean
-  paidTypes: number
   schoolId?: string
   createdBy?: string
   createdAt?: string
@@ -22,8 +22,6 @@ export interface IFeeStructureDTO {
   discountAmount: number
   times: number
   totalAmount: number
-  feePaidType: number
-  paidTypes: number
   discountPercentage?: number
   feeTypeName?: string
 }
