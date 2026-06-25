@@ -284,12 +284,12 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                           </p>
                         </div>
 
-                        {/* Fee Table */}
                         <table className="w-full text-sm border-collapse">
                           <thead>
                             <tr className="bg-gray-800 text-white text-xs uppercase tracking-wide">
-                              <th className="px-4 py-2 text-left">
-                                Description
+                              <th className="px-4 py-2 text-left">S.N</th>
+                              <th className="px-4 py-2 text-center">
+                                Particular
                               </th>
                               <th className="px-4 py-2 text-right">
                                 Amount (Rs.)
@@ -297,36 +297,47 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                             </tr>
                           </thead>
                           <tbody>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-2 text-gray-700">
+                            <tr className="border-b border-gray-100 text-left">
+                              <td className="px-4 py-2 text-gray-700">1</td>
+                              <td className="px-4 py-2 text-gray-700 text-center">
                                 Total Fee Charged
                               </td>
                               <td className="px-4 py-2 text-right font-medium text-gray-800">
                                 {item.totalAmount.toLocaleString()}
                               </td>
                             </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-2 text-gray-700">
+
+                            <tr className="border-b border-gray-100 text-left">
+                              <td className="px-4 py-2 text-gray-700">2</td>
+                              <td className="px-4 py-2 text-gray-700 text-center">
                                 Discount
                               </td>
                               <td className="px-4 py-2 text-right text-green-600 font-medium">
                                 - {item.discount.toLocaleString()}
                               </td>
                             </tr>
-                            <tr className="border-b border-gray-100">
-                              <td className="px-4 py-2 text-gray-700">
+
+                            <tr className="border-b border-gray-100 text-left">
+                              <td className="px-4 py-2 text-gray-700">3</td>
+                              <td className="px-4 py-2 text-gray-700 text-center">
                                 Amount Paid
                               </td>
                               <td className="px-4 py-2 text-right text-green-600 font-medium">
                                 - {item.paidAmount.toLocaleString()}
                               </td>
                             </tr>
-                            <tr className="bg-gray-50">
-                              <td className="px-4 py-3 font-bold text-gray-800 text-base">
+
+                            <tr className="bg-gray-50 text-left">
+                              <td className="px-4 py-3 font-bold text-gray-800">
+                                4
+                              </td>
+                              <td className="px-4 py-3 font-bold text-gray-800 text-center text-base">
                                 Due Amount
                               </td>
                               <td
-                                className={`px-4 py-3 text-right font-bold text-base ${due > 0 ? 'text-red-600' : 'text-green-600'}`}
+                                className={`px-4 py-3 text-right font-bold text-base ${
+                                  due > 0 ? 'text-red-600' : 'text-green-600'
+                                }`}
                               >
                                 Rs. {due.toLocaleString()}
                               </td>

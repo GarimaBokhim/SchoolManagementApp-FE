@@ -28,7 +28,9 @@ export interface IFeeStructureDTO {
 const queryKey = 'FeeStructureDetail'
 
 /** Backend may return PascalCase JSON; normalize to camelCase DTOs. */
-function normalizeFeeStructureDto(raw: Record<string, unknown>): IFeeStructureDTO {
+function normalizeFeeStructureDto(
+  raw: Record<string, unknown>
+): IFeeStructureDTO {
   return {
     feeTypeId: String(raw.feeTypeId ?? raw.FeeTypeId ?? ''),
     amount: Number(raw.amount ?? raw.Amount ?? 0),
@@ -44,10 +46,7 @@ export function normalizeFeeStructureDetailPayload(
 ): IFeeStructureDetail {
   const d = data as Record<string, unknown>
   const dtosRaw =
-    d.feeStructureDTOs ??
-    d.FeeStructureDTOs ??
-    d.feeStructureDtos ??
-    []
+    d.feeStructureDTOs ?? d.FeeStructureDTOs ?? d.feeStructureDtos ?? []
 
   const arr = Array.isArray(dtosRaw) ? dtosRaw : []
 
@@ -78,7 +77,6 @@ export const useGetFeeStructureById = (feeStructureId: string) => {
   })
 }
 
-// Maps API feeStructureDTOs → IStudentFeeDetails shape used by the form
 export const mapFeeStructureDTOsToDetails = (
   dtos: IFeeStructureDTO[],
   discountPercentage: number = 0
@@ -95,5 +93,6 @@ export const mapFeeStructureDTOsToDetails = (
       times: dto.times,
       totalAmount,
       feePaidType: dto.feePaidType,
+      NameOfMonths: [],
     }
   })

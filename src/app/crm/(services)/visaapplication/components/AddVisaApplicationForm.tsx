@@ -9,19 +9,16 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import {
   useAddVisaApplication,
   useGetAllApplicants,
-  useGetAllCountry,
-  useGetAllIntake,
   useGetAllVisaStatus,
-  useGetCourseByUniversity,
   useGetDocumentsByApplication,
   useGetIntake,
-  useGetUniversityByCountry,
   useVisaDetailsByApplicant,
 } from '../hooks'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import TextEditor from '@/components/Input/TextEditor'
 import AttachDocumentsModal, { AttachedDocument } from './AttachDocumentModel'
+import { useAddDocuments } from '@/app/crm/(academicprogram)/documents/hooks'
 
 type Props = {
   form: UseFormReturn<AddVisaApplicationPayload>
@@ -29,11 +26,10 @@ type Props = {
 }
 const AddVisaApplicationForm = ({ form, onClose }: Props) => {
   const addVisaApplication = useAddVisaApplication()
+  const addDocuments = useAddDocuments()
   const { clearError } = useErrorHandler()
   const { data: allapplicant } = useGetAllApplicants()
   const { data: allVisaStatus } = useGetAllVisaStatus()
-
-
 
   const emailSent = form.watch('emailSent')
 
@@ -50,7 +46,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
   const { data: visaDetails } = useVisaDetailsByApplicant(applicantId)
 
-
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false)
   const [attachedDocuments, setAttachedDocuments] = useState<
     AttachedDocument[]
@@ -61,14 +56,15 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
     visaDetails?.courseId
   )
 
-
   const { data: intakeDetails } = useGetIntake(
     visaDetails?.countryId,
     visaDetails?.universityId,
     visaDetails?.courseId
   )
 
-  const canAttachDocuments = Boolean(visaDetails?.countryId && visaDetails?.universityId && visaDetails?.courseId)
+  const canAttachDocuments = Boolean(
+    visaDetails?.countryId && visaDetails?.universityId && visaDetails?.courseId
+  )
   const attachedCount = attachedDocuments.filter((d) => d.file).length
   const requiredCount = requiredDocuments?.length ?? 0
 
@@ -86,7 +82,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
     setAttachedDocuments([])
   }
 
-  const onSubmit: SubmitHandler<AddVisaApplicationPayload> = async (data) => {
+  const onSubmit: SubmitHandler<AddVisaApplicationPayload> = async () => {
     clearError()
 
     const values = form.getValues()
@@ -106,7 +102,14 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
           file: doc.file,
         })),
     }
-
+    const documentPayload = {
+      applicantId: values.applicantId,
+      documentsDTOs: (payload.documents ?? []).map((item) => ({
+        documentTypeId: item.documentsId,
+        docFile: item.file,
+      })),
+    }
+    await addDocuments.mutateAsync(documentPayload)
     await addVisaApplication.mutateAsync(payload)
     handleClose()
     onClose()
@@ -166,7 +169,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 getValue={(g) => g?.id ?? ''}
               />
 
-
               <AppCombobox
                 label="Intake"
                 dropdownPositionClass="absolute"
@@ -175,10 +177,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 form={form}
                 value={sellectedIntakeId}
                 options={intakeDetails || []}
-                selected={
-                  intakeDetails?.find((x) => x.id === intakeId) || null
-                }
-
+                selected={intakeDetails?.find((x) => x.id === intakeId) || null}
                 onSelect={(option) => {
                   setSelectedIntakeId(option?.id ?? null)
                   form.setValue('intakeId', option?.id ?? '')
@@ -245,10 +244,11 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                       <button
                         type="button"
                         onClick={() => field.onChange(!value)}
-                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${value
-                          ? 'bg-green-500 justify-end'
-                          : 'bg-gray-300 dark:bg-gray-600 justify-start'
-                          }`}
+                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${
+                          value
+                            ? 'bg-green-500 justify-end'
+                            : 'bg-gray-300 dark:bg-gray-600 justify-start'
+                        }`}
                       >
                         <span className="h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300" />
                       </button>

@@ -1,35 +1,35 @@
 export interface IFeeStructure {
-  id?: string;
-  classId: string;
-  feeCategoryId: string;
-  feeCategoryName?: string;
-  feeStructureDTOs: IFeeStructureDTO[];
-  totalAmount?: number;  // Optional: for display in list view
-  discountAmount?: number; // Optional: for display in list view
-  isActive?: boolean;
-  schoolId?: string;
-  createdBy?: string;
-  createdAt?: string;
-  modifiedBy?: string;
-  modifiedAt?: string;
+  id?: string
+  classId: string
+  feeCategoryId: string
+  paidTypes: number
+  feeCategoryName?: string
+  feeStructureDTOs: IFeeStructureDTO[]
+  totalAmount?: number
+  discountAmount?: number
+  isActive?: boolean
+  schoolId?: string
+  createdBy?: string
+  createdAt?: string
+  modifiedBy?: string
+  modifiedAt?: string
 }
 
 export interface IFeeStructureDTO {
-  id?: string;  // Required for updates
-  feeTypeId: string;
-  amount: number;
-  discountAmount: number;
-  times: number;
-  totalAmount: number;
-  feePaidType: number;
-  discountPercentage?: number;
-  feeTypeName?: string;  // Optional: for display purposes
+  id?: string
+  feeTypeId: string
+  amount: number
+  discountAmount: number
+  times: number
+  totalAmount: number
+  discountPercentage?: number
+  feeTypeName?: string
 }
 
 export interface IFilterFeeStructure {
-  startDate?: string;  // Make optional
-  endDate?: string;    // Make optional
-  classId?: string;    // Make optional
+  startDate?: string
+  endDate?: string
+  classId?: string
 }
 
 export enum NameOfMonthsEnum {
@@ -52,5 +52,4 @@ export enum FeePaidType {
   Monthly = 2,
   Quarterly = 3,
   Yearly = 4,
-  Semester = 5,
 }
