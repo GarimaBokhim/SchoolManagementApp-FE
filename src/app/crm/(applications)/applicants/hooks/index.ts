@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse} from '../types/IApplicants'
+import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse, DocumentStatusResponse} from '../types/IApplicants'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 
 
@@ -12,11 +12,13 @@ export const ApplicantsEndpoints = {
   delete: '/api/Enrolments/DeleteApplicants',
   getById:'/api/Enrolments/ApplicantsById',
   userProfile: '/api/Enrolments/UserProfile',
+  documentStatus: '/api/AcademicPrograms/DocumentStatusByApplicant',
   
 }
 
 export const ApplicantsQueryKeys = {
   all: ['Applicants'],
+  documentStatus: ['DocumentStatus'],
   appointment: ['Appointment'],
   UserProfile: ['UserProfile']
 }
@@ -72,6 +74,47 @@ export const useGetAllApplicants = (queryParams?: string) => {
     staleTime: 1000 * 60 * 5,
   })
 }
+
+
+export const useDocumentStatus = ({
+  applicantId,
+  pageIndex,
+  pageSize,
+}: {
+  applicantId?: string;
+  pageIndex: number;
+  pageSize: number;
+}) => {
+  return useQuery({
+    queryKey: [
+      ...ApplicantsQueryKeys.documentStatus,
+      applicantId,
+      pageIndex,
+      pageSize,
+    ],
+
+    enabled: !!applicantId,
+
+    queryFn: async () => {
+      const response = await api.get<
+        IPaginationCrmResponse<DocumentStatusResponse>
+      >(ApplicantsEndpoints.documentStatus, {
+        params: {
+          applicantId,
+          pageIndex,
+          pageSize,
+        },
+      });
+
+      return response.data;
+    },
+
+    select: (response) => ({
+      items: response?.Data?.Items ?? [],
+      pagination: response?.Data,
+    }),
+  });
+};
 
 
 export const useAddApplicants = () => {

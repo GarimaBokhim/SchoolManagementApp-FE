@@ -10,7 +10,7 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteApplicants, useGetAllApplicants } from '../hooks'
+import { useDeleteApplicants, useDocumentStatus, useGetAllApplicants } from '../hooks'
 import { ApplicantResponse } from '../types/IApplicants'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
@@ -167,6 +167,8 @@ const AllApplicantsForm = () => {
     const [params, setParams] = useState('')
     const { data, isLoading, error } = useGetAllApplicants(params)
     const ApplicantsDetails = data?.items ?? [];
+
+
     const deleteApplicants = useDeleteApplicants()
 
     const totalPages = data?.pagination?.totalPages ?? 1;

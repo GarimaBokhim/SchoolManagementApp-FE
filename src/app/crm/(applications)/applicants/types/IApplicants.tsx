@@ -19,6 +19,13 @@ export interface ConvertApplicantResponse {
 }
 
 
+export interface DocumentStatusResponse {
+    id: string
+    documentName: string
+    documentStatus: number
+}
+
+
 
 export interface ApplicantResponse {
     id: string

@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import AllRequirements from '../pages/All'
+import AllVisaRequirements from '../../visarequirements/pages/All'
 const AllRequirementsDetails = () => {
     const tabs = [
         { id: 'requirements', label: 'Requirements' },
+        { id: 'visarequirements', label: 'VisaRequirements' },
     ]
 
     const [activeTab, setActiveTab] = useState<string>('requirements')
@@ -13,8 +15,8 @@ const AllRequirementsDetails = () => {
         switch (activeTab) {
             case 'requirements':
                 return <AllRequirements />
-            // case 'followup':
-            //     return <AllFollowUpsForm />
+            case 'visarequirements':
+                return <AllVisaRequirements />
             default:
                 return <AllRequirements />
         }
