@@ -17,6 +17,19 @@ export interface VisaRequirementsDTOs {
     visaRequirementStatus: number
 }
 
+
+export interface VisaRequirementIdResponse {
+    id: string
+    countryId: string
+    countryName: string
+    universityId: string
+    universityName: string
+    universityAddress: string
+    courseId: string
+    courseTitle: string
+    visaRequirementsDTOs: VisaRequirementsDTOs[]
+}
+
 export interface AddVisaRequirementResponse {
     id: string
     countryId: string
