@@ -9,6 +9,7 @@ import {
   MoreVertical,
   Plus,
   ReceiptIndianRupeeIcon,
+  RotateCcw,
   Trash,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -21,16 +22,21 @@ import DateRangeFilter, {
 } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteApplicants, useGetAllApplicants } from '../hooks'
+import { useDeleteApplicants, useDocumentStatus, useGetAllApplicants } from '../hooks'
 import { ApplicantResponse } from '../types/IApplicants'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import EditApplicants from '../pages/Edit'
 import UserProfilePopupForm from './UserprofilePopUpForm'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useGetAllUserProfile } from '../../followup/hooks'
 
 interface FilterFormData {
   startDate: string
   endDate: string
+  userId: string
 }
 
 //#region ActionMenu
@@ -255,6 +261,7 @@ const ApplicantCard = ({
 
 const AllApplicantsForm = () => {
   const { menuStatus } = usePermissions()
+  const { handleError, clearError } = useErrorHandler()
   const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
   const [openFilter, setOpenFilter] = useState(false)
@@ -272,42 +279,82 @@ const AllApplicantsForm = () => {
   const [selectedProfileApplicant, setSelectedProfileApplicant] =
     useState<ApplicantResponse | null>(null)
 
-  const [currentPage, setCurrentPage] = useState(1)
+  const [paginationParams, setPaginationParams] = useState({
+    pageSize: 10,
+    pageIndex: 1,
+    isPagination: true,
+  })
+
+  type SearchParam = {
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
+  const handlePageChange = (params: SearchParam) => {
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
+
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const [params, setParams] = useState('')
+  const fullQuery = query + (params || '')
+
   const formRef = useRef<DateRangeFilterRef>(null)
-  const pageSize = 10
+
 
   const form = useForm<FilterFormData>({
     defaultValues: { startDate: '', endDate: '' },
   })
 
-  const paginationForm = useForm({
-    defaultValues: {
-      pageSize,
-      pageIndex: currentPage,
-      isPagination: true,
-    },
-  })
-  const [params, setParams] = useState('')
+  const [selectedUserName, setSelectedUserName] = useState<string | null>(
+    ""
+  );
+
+  const onClearClick = () => {
+    setParams("");
+    formRef.current?.handleClear();
+    form.reset();
+  };
+
+
   const { data, isLoading, error } = useGetAllApplicants(params)
-  const ApplicantsDetails = data?.items ?? []
+
+  const { data: getAllUserProfile } = useGetAllUserProfile();
+
+  const ApplicantsDetails = data?.Items ?? []
   const deleteApplicants = useDeleteApplicants()
 
-  const totalPages = data?.pagination?.totalPages ?? 1
-
   const onFilterSubmit = async (formData: FilterFormData) => {
-    const queryParams = [
-      formData.startDate
-        ? `startDate=${encodeURIComponent(formData.startDate)}`
-        : null,
-      formData.endDate
-        ? `endDate=${encodeURIComponent(formData.endDate)}`
-        : null,
-    ]
-      .filter(Boolean)
-      .join('&')
-
-    const fullQuery = queryParams ? `&${queryParams}` : ''
-    setParams(fullQuery)
+    clearError()
+    try {
+      const queryParams = [
+        formData.userId
+          ? `userId=${encodeURIComponent(formData.userId)}`
+          : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join('&')
+      const fullQuery = queryParams ? `?${queryParams}` : ''
+      await toast.promise(
+        (async () => {
+          setParams(fullQuery)
+        })(),
+        {
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
+        }
+      )
+    } catch (error) {
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
+    }
   }
 
   const EnrollmentTypes = [
@@ -407,7 +454,7 @@ const AllApplicantsForm = () => {
           </div>
 
           {openFilter && (
-            <div className="mb-4 sm:mb-6 mx-3 sm:mx-4 bg-white dark:bg-[#353535] p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="mb-6 mx-4 bg-white dark:bg-[#353535] p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
               <form
                 onSubmit={form.handleSubmit(onFilterSubmit)}
                 className="flex flex-wrap items-end gap-4 md:gap-6"
@@ -420,6 +467,48 @@ const AllApplicantsForm = () => {
                   startDateKey="startDate"
                   endDateKey="endDate"
                 />
+
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedUserName}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="User"
+                    name="userId"
+                    form={form}
+                    options={getAllUserProfile}
+                    selected={
+                      getAllUserProfile?.find(
+                        (g) => g.fullName === selectedUserName
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      if (group) {
+                        setSelectedUserName(group.fullName || null);
+                      } else {
+                        setSelectedUserName(null);
+                      }
+                    }}
+                    getLabel={(g) => g?.fullName ?? ""}
+                    getValue={(g) => g?.id ?? ""}
+                  />
+                </div>
+
+                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                  <ButtonElement
+                    type="submit"
+                    text="Filter"
+                    icon={<Filter size={14} />}
+                    className="!bg-emerald-600 hover:!bg-emerald-700"
+                  />
+                  <ButtonElement
+                    type="button"
+                    text="Clear"
+                    icon={<RotateCcw size={14} />}
+                    onClick={onClearClick}
+                    className="!bg-gray-500 hover:!bg-gray-600"
+                  />
+                </div>
               </form>
             </div>
           )}
@@ -433,27 +522,7 @@ const AllApplicantsForm = () => {
             </div>
           ) : (
             <>
-              {/* Mobile: cards (below md) */}
-              <div className="px-3 sm:px-4 pb-4 grid grid-cols-1 gap-3 md:hidden">
-                {ApplicantsDetails.map((Applicants, index) => (
-                  <ApplicantCard
-                    key={Applicants.id}
-                    Applicants={Applicants}
-                    index={index}
-                    rowNumber={(currentPage - 1) * pageSize + index + 1}
-                    enrolmentName={
-                      EnrollmentTypes.find(
-                        (s) => s.id === Number(Applicants.enrolmentType)
-                      )?.name
-                    }
-                    onNameClick={handleNameClick}
-                    onEdit={handleEditApplicants}
-                    onDelete={handleDeleteApplicants}
-                    canEdit={true}
-                    canDelete={true}
-                  />
-                ))}
-              </div>
+
 
               {/* Desktop / tablet: table (md and up) */}
               <div className="hidden md:block px-4 pb-4">
@@ -487,9 +556,7 @@ const AllApplicantsForm = () => {
                           key={Applicants.id}
                           className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                         >
-                          <td className="px-4 py-3 text-gray-500">
-                            {(currentPage - 1) * pageSize + index + 1}
-                          </td>
+                          <td className="px-4 py-3 text-gray-500">{index + 1}</td>
 
                           <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                             <button
@@ -553,19 +620,18 @@ const AllApplicantsForm = () => {
           )}
         </div>
 
-        {ApplicantsDetails.length > 0 && totalPages > 1 && (
+        {data && data?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination
-              form={paginationForm}
+              form={form}
               pagination={{
-                currentPage,
-                firstPage: 1,
-                lastPage: totalPages,
-                nextPage:
-                  currentPage < totalPages ? currentPage + 1 : currentPage,
-                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                currentPage: data?.PageIndex ?? 1,
+                firstPage: data?.FirstPage ?? 1,
+                lastPage: data?.LastPage ?? 1,
+                nextPage: data?.NextPage ?? 1,
+                previousPage: data?.PreviousPage ?? 1,
               }}
-              handleSearch={(p) => setCurrentPage(p.pageIndex)}
+              handleSearch={handlePageChange}
             />
           </div>
         )}

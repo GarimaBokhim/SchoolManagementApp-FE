@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -10,17 +10,21 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useGetAllInstallmentPayments, useDeleteInstallmentPayments } from '../hooks'
+import { useGetAllInstallmentPayments, useDeleteInstallmentPayments, useGetAllInvoice } from '../hooks'
 import DeleteButton from '@/components/Buttons/DeleteButton'
 import { InstallmentPaymentsResponse } from '../types/IInstallmentPayments'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import EditInstallmentPayments from '../pages/Edit'
 import { InstallmentInvoiceDetailModal } from '../../installmentInvoice/components/InstallmentInvoiceDetailsModal'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
     startDate: string
     endDate: string
+    invoiceId: string
 }
 
 //#region ActionMenu
@@ -128,6 +132,7 @@ const ActionMenu = ({ InstallmentPayment, onEdit, onDelete, canEdit = true, canD
 const AllInstallmentPaymentsForm = () => {
     const { menuStatus } = usePermissions()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
+    const { handleError, clearError } = useErrorHandler()
 
     const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -143,24 +148,51 @@ const AllInstallmentPaymentsForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
 
-    const paginationForm = useForm({
-        defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
-    })
+    const [selectedInvoiceNumber, setSelectedInvoiceNumber] = useState<string | null>(
+        ""
+    );
+
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
 
     const { data, isLoading, error } = useGetAllInstallmentPayments(params)
+
+    const { data: getAllInvoice } = useGetAllInvoice()
+
+
     const deleteInstallmentPayments = useDeleteInstallmentPayments()
 
-    const Installmentpayments = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const Installmentpayments = data?.Items ?? [];
 
     const paymentsMethodsType = [
         { id: 0, name: 'Cash' },
@@ -194,21 +226,37 @@ const AllInstallmentPaymentsForm = () => {
 
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-
-        setParams(fullQuery) // 👈 THIS triggers auto refetch
-
-        toast.success(data?.message || 'Data loaded successfully')
+        clearError()
+        try {
+            const queryParams = [
+                formData.invoiceId
+                    ? `invoiceId=${encodeURIComponent(formData.invoiceId)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
-
     const handleClearFilters = () => {
         form.reset({ startDate: '', endDate: '' })
         setParams('')
@@ -287,6 +335,48 @@ const AllInstallmentPaymentsForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedInvoiceNumber}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Invoice"
+                                        name="invoiceId"
+                                        form={form}
+                                        options={getAllInvoice}
+                                        selected={
+                                            getAllInvoice?.find(
+                                                (g) => g.invoiceNumber === selectedInvoiceNumber
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedInvoiceNumber(group.invoiceNumber || null);
+                                            } else {
+                                                setSelectedInvoiceNumber(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.invoiceNumber ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -323,9 +413,7 @@ const AllInstallmentPaymentsForm = () => {
                                                 key={Installmentpayment.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
-                                                <td className="px-4 py-3 text-gray-500">
-                                                    {(currentPage - 1) * pageSize + index + 1}
-                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Installmentpayment.applicantName}
@@ -388,18 +476,18 @@ const AllInstallmentPaymentsForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {Installmentpayments.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

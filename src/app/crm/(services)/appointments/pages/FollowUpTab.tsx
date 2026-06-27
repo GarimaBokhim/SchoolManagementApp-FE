@@ -11,6 +11,8 @@ const FollowUpTab = ({
     AppointmentId: string
 }) => {
 
+
+
     return (
         <div>
             <AllFollowUp UserId={UserId} AppointmentId={AppointmentId} />

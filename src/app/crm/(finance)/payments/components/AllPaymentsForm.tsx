@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, EyeOff, Filter, MoreVertical, Plus, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, EyeOff, Filter, MoreVertical, Plus, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -13,15 +13,19 @@ import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPerm
 
 import { AddPaymentsPayload, PaymentsResponse } from '../types/IPayments'
 
-import { useDeletePayments, useGetAllPayments } from '../hooks'
+import { useDeletePayments, useGetAllInvoice, useGetAllPayments } from '../hooks'
 import EditPayments from '../pages/Edit'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import { PaymentsReceiptDetailsModal } from './PaymentsReceiptModals'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
     startDate: string
     endDate: string
+    invoiceId: string
 }
 
 
@@ -125,6 +129,7 @@ const ActionMenu = ({ Payment, onEdit, onDelete, canEdit = true, canDelete = tru
 
 const AllPaymentsForm = () => {
     const { menuStatus } = usePermissions()
+    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
 
@@ -144,24 +149,51 @@ const AllPaymentsForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
 
-    const paginationForm = useForm({
-        defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
-    })
+    const [selectedInvoiceNumber, setSelectedInvoiceNumber] = useState<string | null>(
+        ""
+    );
+
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
 
     const { data, isLoading, error } = useGetAllPayments(params)
+
+    const { data: getAllInvoice } = useGetAllInvoice()
+
+
     const deletePayments = useDeletePayments()
 
-    const payments = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const payments = data?.Items ?? [];
 
     const paymentsMethodsType = [
         { id: 0, name: 'Cash' },
@@ -203,19 +235,36 @@ const AllPaymentsForm = () => {
     }
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-
-        setParams(fullQuery) // 👈 THIS triggers auto refetch
-
-        toast.success(data?.message || 'Data loaded successfully')
+        clearError()
+        try {
+            const queryParams = [
+                formData.invoiceId
+                    ? `invoiceId=${encodeURIComponent(formData.invoiceId)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
 
 
@@ -285,6 +334,48 @@ const AllPaymentsForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedInvoiceNumber}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Invoice"
+                                        name="invoiceId"
+                                        form={form}
+                                        options={getAllInvoice}
+                                        selected={
+                                            getAllInvoice?.find(
+                                                (g) => g.invoiceNumber === selectedInvoiceNumber
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedInvoiceNumber(group.invoiceNumber || null);
+                                            } else {
+                                                setSelectedInvoiceNumber(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.invoiceNumber ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -322,9 +413,7 @@ const AllPaymentsForm = () => {
                                                 key={payment.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
-                                                <td className="px-4 py-3 text-gray-500">
-                                                    {(currentPage - 1) * pageSize + index + 1}
-                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {payment.applicantName}
@@ -396,18 +485,18 @@ const AllPaymentsForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {payments.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

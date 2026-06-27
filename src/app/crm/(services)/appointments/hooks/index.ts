@@ -103,36 +103,20 @@ const normalizeFollowUpPayload = (data: AddFollowUpPayload): AddFollowUpPayload 
 
 });
 
+
 export const useGetAllAppointment = (queryParams?: string) => {
   return useQuery({
     queryKey: [...AppointmentQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<AppointmentResponse>>(
-        AppointmentEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${AppointmentEndpoints.filter}${queryParams}`
+        : AppointmentEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<AppointmentResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
 
@@ -623,32 +607,23 @@ export const useGetAllUserProfile = () => {
   });
 };
 
-export const useGetAllFollowUp = (filters: FollowUpFilters) => {
+
+export const useGetAllFollowUp = (queryParams?: string) => {
   return useQuery({
-     queryKey: AppointmentQueryKeys.followUp,
+    queryKey: [...AppointmentQueryKeys.all, queryParams],
     queryFn: async () => {
-
-    const response = await api.get<IPaginationCrmResponse<FollowUpResponse>>(
-       AppointmentEndpoints.filterFollowUps,
-        { params: filters}
-      )
-      return response.data
+      const url = queryParams
+        ? `${AppointmentEndpoints.filterFollowUps}${queryParams}`
+        : AppointmentEndpoints.filterFollowUps
+      const response =
+        await api.get<IPaginationCrmResponse<FollowUpResponse>>(url)
+      return response.data.Data
     },
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
+
 
 export const useAddFollowUp = () => {
   const queryClient = useQueryClient()

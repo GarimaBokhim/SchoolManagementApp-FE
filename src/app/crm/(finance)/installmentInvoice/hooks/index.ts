@@ -50,38 +50,23 @@ const normalizeInstallmentInvoicePayload = (data: AddInstallmentInvoicePayload):
   })),
 });
 
+
 export const useGetAllInstallmentInvoice = (queryParams?: string) => {
   return useQuery({
     queryKey: [...InstallmentInvoiceQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<InstallmentInvoiceResponse>>(
-        InstallmentInvoiceEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${InstallmentInvoiceEndpoints.filter}${queryParams}`
+        : InstallmentInvoiceEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<InstallmentInvoiceResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
+
 
 
 export const useAddInstallmentInvoice = () => {

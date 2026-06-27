@@ -22,7 +22,8 @@ export const InquiryEndpoints = {
   university:'/api/AcademicPrograms/FilterUniversity',
 
   CourseByUniversity: '/api/AcademicPrograms/CourseByUniversity',
-  UniversityByCountry: '/api/AcademicPrograms/UniversityByCountry'
+  UniversityByCountry: '/api/AcademicPrograms/UniversityByCountry',
+   userprofile:'/api/Enrolments/GetAllUserProfile',
 
 }
 
@@ -30,6 +31,7 @@ export const InquiryQueryKeys = {
   all: ['Inquiry'],
   country: ['Country'],
   course: ['Course'],
+  UserProfile: ['UserProfile'],
   university: ['University'],
   requirementsById: ['InvoiceByIds'],
   documentType:["DocumentType"],
@@ -112,36 +114,20 @@ export const normalizeAddInquiryPayload = (data: AddInquiryPayload): AddInquiryP
   })),
 });
 
+
 export const useGetAllInquiry = (queryParams?: string) => {
   return useQuery({
     queryKey: [...InquiryQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<InquiryResponse>>(
-        InquiryEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${InquiryEndpoints.filter}${queryParams}`
+        : InquiryEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<InquiryResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
 
@@ -333,6 +319,34 @@ export const useGetAllCourse = () => {
           title: string
         }>
       >(InquiryEndpoints.course, {
+        params: {
+          pageSize: 10,
+          pageIndex: 1,
+          isPagination: false,
+        },
+      });
+
+      return response.data;
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+
+export const useGetAllUserProfile = () => {
+  return useQuery({
+    queryKey: InquiryQueryKeys.UserProfile,
+
+    queryFn: async () => {
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string
+          fullName: string
+        }>
+      >(InquiryEndpoints.userprofile, {
         params: {
           pageSize: 10,
           pageIndex: 1,

@@ -1,21 +1,25 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteRequirements, useGetAllRequirements, useNonRequiredTypeStatus, useRequiredTypeStatus } from '../hooks'
+import { useDeleteRequirements, useGetAllCourse, useGetAllRequirements, useNonRequiredTypeStatus, useRequiredTypeStatus } from '../hooks'
 import { RequirementsResponse } from '../types/IRequirements'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import AddRequirements from '../pages/Add'
 import EditRequirements from '../pages/Edit'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
+    courseId: string
     startDate: string
     endDate: string
 }
@@ -130,40 +134,61 @@ const ActionMenu = ({ Requirements, onEdit, onDelete, canEdit = true, canDelete 
 
 const AllRequirementsForm = () => {
     const { menuStatus } = usePermissions()
+    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
-
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-
     const [selectedId, setSelectedId] = useState<string>('')
-
-
-
-
-
     const [showEditModal, setShowEditModal] = useState(false)
     const [editRequirementsId, setEditRequirementsId] = useState<string | null>(null)
-
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteRequirementsId, setDeleteRequirementsId] = useState<string | null>(null)
 
+
+
+
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
+    const [selectedCourseName, setSelectedCourseName] = useState<string | null>(
+        ""
+    );
 
-    const paginationForm = useForm({
-        defaultValues:
-        {
-            pageSize,
-            pageIndex: currentPage,
-            isPagination: true
-        },
-    })
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
+
+
+
+
+    const { data: getallCourse } = useGetAllCourse();
+
+
 
     const { data, isLoading, error } = useGetAllRequirements(params)
     const deleteRequirements = useDeleteRequirements()
@@ -174,20 +199,39 @@ const AllRequirementsForm = () => {
 
 
 
-    const requirementsDetails = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const requirementsDetails = data?.Items ?? [];
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-        setParams(fullQuery)
+        clearError()
+        try {
+            const queryParams = [
+                formData.courseId
+                    ? `courseId=${encodeURIComponent(formData.courseId)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
 
 
@@ -289,6 +333,48 @@ const AllRequirementsForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedCourseName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Course"
+                                        name="courseId"
+                                        form={form}
+                                        options={getallCourse}
+                                        selected={
+                                            data?.Items?.find(
+                                                (g) => g.title === selectedCourseName
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedCourseName(group.title || null);
+                                            } else {
+                                                setSelectedCourseName(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.title ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -448,18 +534,18 @@ const AllRequirementsForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {requirementsDetails.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

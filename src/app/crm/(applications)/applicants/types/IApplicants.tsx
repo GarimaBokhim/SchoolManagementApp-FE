@@ -19,6 +19,13 @@ export interface ConvertApplicantResponse {
 }
 
 
+export interface DocumentStatusResponse {
+    id: string
+    documentName: string
+    documentStatus: number
+}
+
+
 
 export interface ApplicantResponse {
     id: string
@@ -62,4 +69,26 @@ export interface UpdateApplicantPayload {
     countryId: string
     universityId: string
     courseId: string
+}
+
+export interface VisaRequirementByResponse {
+    id: string
+    visaRequirementsDTOs: VisaRequirementsDTOs[]
+}
+
+export interface VisaRequirementsDTOs {
+    step: number
+    visaStatusId: string
+    visaStatusName: string
+    visaRequirementStatus: number
+}
+
+export interface VisaDetailsByApplicant {
+    countryId: string
+    countryName: string
+    universityId: string
+    universityName: string
+    courseId: string
+    courseTitle: string
+
 }

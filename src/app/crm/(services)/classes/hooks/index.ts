@@ -33,40 +33,21 @@ const normalizeClassPayload = (data: AddClassPayload): AddClassPayload => ({
   englishProficiency: Number(data.englishProficiency ?? 0),
 })
 
-
 export const useGetAllClass = (queryParams?: string) => {
   return useQuery({
     queryKey: [...ClassQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<ClassResponse>>(
-        ClassEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${ClassEndpoints.filter}${queryParams}`
+        : ClassEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<ClassResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
-
 
 export const useAddClass = () => {
   const queryClient = useQueryClient()

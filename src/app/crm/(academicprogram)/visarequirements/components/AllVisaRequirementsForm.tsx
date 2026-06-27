@@ -3,18 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Toaster } from 'react-hot-toast'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useGetAllInquiry, useDeleteInquiry, useGetAllUserProfile } from '../hooks'
-import { InquiryResponse } from '../types/IVisitors'
+import { useDeleteVisaRequirement, useGetAllCountry, useGetAllVisaRequirement } from '../hooks'
+import { AddVisaRequirementResponse, UpdateVisaRequirementResponse } from '../types/IVisaRequirements'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
-import { Tooltip } from '@/components/ToolTip/Tooltip'
-import AddInquiry from '../pages/Add'
+import AddVisaRequirements from '../pages/Add'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -22,20 +20,20 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 interface FilterFormData {
     startDate: string
     endDate: string
-    userId: string
+    countryId: string
 }
 
 //#region ActionMenu
 interface ActionMenuProps {
-    Inquiry: InquiryResponse;
-    onEdit: (Inquiry: InquiryResponse) => void;
+    VisaRequirements: AddVisaRequirementResponse;
+    onEdit: (VisaRequirements: UpdateVisaRequirementResponse) => void;
     onDelete: (id: string) => void;
     // onView: (Invoice: InvoiceResponse) => void;
     canEdit?: boolean;
     canDelete?: boolean;
 }
 
-const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
+const ActionMenu = ({ VisaRequirements, onEdit, onDelete, canEdit = true, canDelete = true }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -55,7 +53,8 @@ const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = tru
             width: menuWidth,
             zIndex: 9999,
         })
-    }, [])
+    }, []);
+
 
     const toggle = () => {
         if (!open) calculatePosition()
@@ -110,13 +109,13 @@ const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = tru
                         <Eye size={14} /> View
                     </button> */}
                     {canEdit && <button
-                        onClick={() => { onEdit(Inquiry); setOpen(false) }}
+                        onClick={() => { onEdit(VisaRequirements); setOpen(false) }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                     >
                         <Edit size={14} /> Edit
                     </button>}
                     {canDelete && <button
-                        onClick={() => { onDelete(Inquiry.id); setOpen(false) }}
+                        onClick={() => { onDelete(VisaRequirements.id); setOpen(false) }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                     >
                         <Trash size={14} /> Delete
@@ -133,7 +132,7 @@ const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = tru
 
 //#endregion
 
-const AllInquiryForm = () => {
+const AllVisaRequirementsForm = () => {
     const { menuStatus } = usePermissions()
     const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
@@ -141,17 +140,12 @@ const AllInquiryForm = () => {
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
 
-    const [selectedId, setSelectedId] = useState<string>('')
-
-
-
-
 
     const [showEditModal, setShowEditModal] = useState(false)
-    const [editInquiryId, setEditInquiryId] = useState<string | null>(null)
+    const [editVisaRequirementsId, setEditVisaRequirementsId] = useState<string | null>(null)
 
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const [deleteInquiryId, setDeleteInquiryId] = useState<string | null>(null)
+    const [deleteVisaRequirementsId, setDeleteVisaRequirementsId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -179,8 +173,7 @@ const AllInquiryForm = () => {
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
-
-    const [selectedUserName, setSelectedUserName] = useState<string | null>(
+    const [selectedCountryName, setSelectedCountryName] = useState<string | null>(
         ""
     );
 
@@ -190,22 +183,22 @@ const AllInquiryForm = () => {
         form.reset();
     };
 
+    const { data, isLoading, error } = useGetAllVisaRequirement(params)
+
+    const { data: getAllCountry } = useGetAllCountry()
 
 
-    const { data, isLoading, error } = useGetAllInquiry(params)
-
-    const { data: getAllUserProfile } = useGetAllUserProfile();
-    const deleteInquiry = useDeleteInquiry()
+    const deleteVisaRequirements = useDeleteVisaRequirement()
 
 
-    const inquiryDetails = data?.Items ?? [];
+    const VisaRequirementsDetails = data?.Items ?? [];
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         clearError()
         try {
             const queryParams = [
-                formData.userId
-                    ? `userId=${encodeURIComponent(formData.userId)}`
+                formData.countryId
+                    ? `countryId=${encodeURIComponent(formData.countryId)}`
                     : null,
                 formData.startDate
                     ? `startDate=${encodeURIComponent(formData.startDate)}`
@@ -233,26 +226,39 @@ const AllInquiryForm = () => {
         }
     }
 
+    // const sortedVisaRequirements = [
+    //     ...(data?.Items ?? []).flatMap(
+    //         (x) => x.visaRequirementsDTOs ?? []
+    //     ),
+    // ].sort((a, b) => a.step - b.step);
 
 
-    const handleEditInquiry = (Inquiry: InquiryResponse) => {
-        setEditInquiryId(Inquiry.id)
+
+    const handleEditVisaRequirements = (VisaRequirements: UpdateVisaRequirementResponse) => {
+        setEditVisaRequirementsId(VisaRequirements.id)
         setShowEditModal(true)
     }
 
-    const handleDeleteInquiry = (id: string) => {
-        setDeleteInquiryId(id)
+    const handleDeleteVisaRequirements = (id: string) => {
+        setDeleteVisaRequirementsId(id)
         setShowDeleteModal(true)
     }
 
 
     const onDelete = async (id: string) => {
         try {
-            await deleteInquiry.mutateAsync(id)
+            await deleteVisaRequirements.mutateAsync(id)
         } catch (error) {
             console.error(error)
         }
     }
+
+    const visaRequirementsType = [
+        { id: 1, name: 'Completed' },
+        { id: 2, name: 'Pending' },
+        { id: 3, name: 'Rejected' },
+        { id: 4, name: 'ActionRequired' }
+    ];
 
 
     const handleAddSubmit = () => {
@@ -267,7 +273,7 @@ const AllInquiryForm = () => {
                     <div className="text-center py-16">
                         <BookOpen size={64} className="mx-auto text-red-400 mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                            Error loading Inquiry
+                            Error loading classes
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400">Please try again later.</p>
                     </div>
@@ -297,7 +303,7 @@ const AllInquiryForm = () => {
 
                     {/* Header */}
                     <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
-                        <h1 className="text-xl font-semibold dark:text-white">All Inquiry</h1>
+                        <h1 className="text-xl font-semibold dark:text-white">All VisaRequirements</h1>
                         <div className="flex items-center space-x-3">
                             <ButtonElement
                                 type="button"
@@ -309,7 +315,7 @@ const AllInquiryForm = () => {
                             <ButtonElement
                                 icon={<Plus size={18} />}
                                 type="button"
-                                text="Add Inquiry"
+                                text="Add VisaRequirements"
                                 onClick={() => setAddModal(true)}
                                 className="!font-semibold"
                             />
@@ -335,26 +341,26 @@ const AllInquiryForm = () => {
 
                                 <div className="flex-1 min-w-[240px]">
                                     <AppCombobox
-                                        value={selectedUserName}
+                                        value={selectedCountryName}
                                         dropDownWidth="w-full"
                                         dropdownPositionClass="absolute"
-                                        label="User"
-                                        name="userId"
+                                        label="Country"
+                                        name="countryId"
                                         form={form}
-                                        options={data?.Items}
+                                        options={getAllCountry}
                                         selected={
-                                            getAllUserProfile?.find(
-                                                (g) => g.fullName === selectedUserName
+                                            getAllCountry?.find(
+                                                (g) => g.name === selectedCountryName
                                             ) || null
                                         }
                                         onSelect={(group) => {
                                             if (group) {
-                                                setSelectedUserName(group.fullName || null);
+                                                setSelectedCountryName(group.name || null);
                                             } else {
-                                                setSelectedUserName(null);
+                                                setSelectedCountryName(null);
                                             }
                                         }}
-                                        getLabel={(g) => g?.fullName ?? ""}
+                                        getLabel={(g) => g?.name ?? ""}
                                         getValue={(g) => g?.id ?? ""}
                                     />
                                 </div>
@@ -379,111 +385,129 @@ const AllInquiryForm = () => {
                     )}
 
                     {/* Table */}
-                    <div className="px-4 pb-4">
-                        <div className="w-full overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-                            <table className="min-w-full text-sm">
-                                <thead>
-                                    <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
-                                        <th className="px-4 py-3 text-left">S.N</th>
-                                        <th className="px-4 py-3 text-left">Name</th>
-                                        <th className="px-4 py-3 text-left">Email</th>
-                                        <th className="px-4 py-3 text-left">Phone</th>
+                    <div className="px-4 pb-6">
+                        {VisaRequirementsDetails.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-900/30">
+                                <div className="text-5xl mb-3">📄</div>
+                                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                                    No VisaRequirements Found
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    VisaRequirements will appear here once added.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Source</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">EducationLevel</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Completion Year</th>
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Enrollment Type</th>
-                                        <th className="px-4 py-3 text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {inquiryDetails.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={8} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
-                                                No Inquiry found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        inquiryDetails.map((inquiry, index) => (
-                                            <tr
-                                                key={inquiry.id}
-                                                className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
-                                            >
-                                                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
+                                {VisaRequirementsDetails.map((VisaRequirements) => {
 
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {inquiry.fullName}
-                                                </td>
+                                    // ✅ FIX: steps are per item (NO flatMap)
+                                    const sortedSteps = [...(VisaRequirements.visaRequirementsDTOs ?? [])]
+                                        .sort((a, b) => a.step - b.step)
 
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                    return (
+                                        <div
+                                            key={VisaRequirements.id}
+                                            className="
+                            group relative overflow-hidden
+                            rounded-3xl
+                            border border-white/60 dark:border-gray-900
+                            bg-white dark:bg-[#1e1f24]
+                            shadow-md shadow-3xl
+                        "
+                                        >
+                                            {/* Top Gradient */}
+                                            <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
 
-                                                    {inquiry.email}
-                                                </td>
+                                            <div className="p-5">
 
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.phone}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.source}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.educationLevel}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.completionYear}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.enrolmentType}
-                                                </td>
-
-                                                <td className="px-4 py-3">
-                                                    <span className='flex justify-center gap-3'>
-
-                                                        {/* <Tooltip text="Invoice Details">
-                                                            <ButtonElement
-                                                                icon={<Eye size={15} />}
-                                                                type="button"
-                                                                text=""
-                                                                onClick={() => {
-                                                                    setShowGenerateInvoiceModal(true)
-                                                                    setSelectedInvoiceId(invoice.id ?? '')
-                                                                    setSelectedSchoolId(invoice.schoolId ?? '')
-                                                                }}
-                                                                className="!text-xs"
-                                                            />
-
-                                                        </Tooltip>
-                                                        */}
-
-
-
-                                                        <ActionMenu
-                                                            Inquiry={inquiry}
-                                                            onEdit={handleEditInquiry}
-                                                            onDelete={handleDeleteInquiry}
-                                                            // onView={handleView}
-                                                            canEdit={true}
-                                                            canDelete={true}
-                                                        />
-
+                                                {/* Header */}
+                                                <div className="flex items-start justify-between mb-5">
+                                                    <span className="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-300">
+                                                        🌍 {VisaRequirements.countryName}
                                                     </span>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+
+                                                    <ActionMenu
+                                                        VisaRequirements={VisaRequirements}
+                                                        onEdit={handleEditVisaRequirements}
+                                                        onDelete={handleDeleteVisaRequirements}
+                                                        canEdit={true}
+                                                        canDelete={true}
+                                                    />
+                                                </div>
+
+                                                {/* University */}
+                                                <div className="rounded-2xl bg-gradient-to-r from-violet-50 to-white dark:from-violet-900/20 dark:to-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+                                                    <p className="text-xs uppercase tracking-wider text-gray-400 mb-3">
+                                                        University
+                                                    </p>
+
+                                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                        {VisaRequirements.universityName}
+                                                    </h3>
+
+                                                    <span className="block mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        {VisaRequirements.universityAddress}
+                                                    </span>
+
+                                                    <div className="mt-3 inline-block px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-100 dark:border-blue-800/30">
+                                                        {VisaRequirements.courseTitle}
+                                                    </div>
+                                                </div>
+
+                                                {/* ✅ STEPS (FIXED PER ITEM) */}
+                                                <div className="mt-4 space-y-3">
+                                                    {sortedSteps.map((item) => (
+                                                        <div
+                                                            key={item.visaStatusId}
+                                                            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
+                                                        >
+                                                            {/* Step */}
+                                                            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-medium">
+                                                                {String(item.step).padStart(2, "0")}
+                                                            </div>
+
+                                                            {/* Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-[11px] text-gray-400">
+                                                                    Step {item.step}
+                                                                </p>
+                                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                                    {item.visaStatusName}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Status */}
+                                                            {item.visaRequirementStatus === 1 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-600">
+                                                                    Done
+                                                                </span>
+                                                            )}
+
+                                                            {item.visaRequirementStatus === 2 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-yellow-50 text-yellow-600">
+                                                                    Current
+                                                                </span>
+                                                            )}
+
+                                                            {item.visaRequirementStatus === 0 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                                                                    Pending
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+
+                            </div>
+                        )}
                     </div>
+
                 </div>
 
                 {/* Pagination */}
@@ -505,33 +529,34 @@ const AllInquiryForm = () => {
             </div>
 
 
-            {showDeleteModal && deleteInquiryId && (
+
+            {showDeleteModal && deleteVisaRequirementsId && (
 
                 <DeleteComponents
                     visible={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={onDelete}
-                    id={deleteInquiryId}
-                    title="Delete Inquiry"
-                    description="Are you sure you want to delete this Inquiry?"
+                    id={deleteVisaRequirementsId}
+                    title="Delete VisaRequirements"
+                    description="Are you sure you want to delete this VisaRequirements?"
                 />
 
             )}
 
 
 
-            {/* {showEditModal && editInquiryId && (
+            {/* {showEditModal && editVisaRequirementsId && (
 
-                <EditFollowUp
-
-                    FollowUpId={editInquiryId}
+                <EditVisaRequirements
+                    VisaRequirementsId={editVisaRequirementsId}
                     visible={showEditModal}
                     onClose={() => setShowEditModal(false)}
+
 
                 />
             )} */}
 
-            <AddInquiry
+            <AddVisaRequirements
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
@@ -539,4 +564,4 @@ const AllInquiryForm = () => {
     )
 }
 
-export default AllInquiryForm
+export default AllVisaRequirementsForm
