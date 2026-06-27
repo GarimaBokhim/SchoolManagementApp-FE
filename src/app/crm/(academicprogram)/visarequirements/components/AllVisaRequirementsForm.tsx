@@ -1,22 +1,26 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteVisaRequirement, useGetAllVisaRequirement } from '../hooks'
+import { useDeleteVisaRequirement, useGetAllCountry, useGetAllVisaRequirement } from '../hooks'
 import { AddVisaRequirementResponse, UpdateVisaRequirementResponse } from '../types/IVisaRequirements'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import AddVisaRequirements from '../pages/Add'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
     startDate: string
     endDate: string
+    countryId: string
 }
 
 //#region ActionMenu
@@ -130,6 +134,7 @@ const ActionMenu = ({ VisaRequirements, onEdit, onDelete, canEdit = true, canDel
 
 const AllVisaRequirementsForm = () => {
     const { menuStatus } = usePermissions()
+    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
@@ -142,49 +147,90 @@ const AllVisaRequirementsForm = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteVisaRequirementsId, setDeleteVisaRequirementsId] = useState<string | null>(null)
 
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
+    const [selectedCountryName, setSelectedCountryName] = useState<string | null>(
+        ""
+    );
 
-    const paginationForm = useForm({
-        defaultValues:
-        {
-            pageSize,
-            pageIndex: currentPage,
-            isPagination: true
-        },
-    })
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
 
     const { data, isLoading, error } = useGetAllVisaRequirement(params)
+
+    const { data: getAllCountry } = useGetAllCountry()
+
+
     const deleteVisaRequirements = useDeleteVisaRequirement()
 
 
-    const VisaRequirementsDetails = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const VisaRequirementsDetails = data?.Items ?? [];
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-        setParams(fullQuery)
+        clearError()
+        try {
+            const queryParams = [
+                formData.countryId
+                    ? `countryId=${encodeURIComponent(formData.countryId)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
 
-    const sortedVisaRequirements = [
-        ...(data?.items ?? []).flatMap(
-            (x) => x.visaRequirementsDTOs ?? []
-        ),
-    ].sort((a, b) => a.step - b.step);
+    // const sortedVisaRequirements = [
+    //     ...(data?.Items ?? []).flatMap(
+    //         (x) => x.visaRequirementsDTOs ?? []
+    //     ),
+    // ].sort((a, b) => a.step - b.step);
 
 
 
@@ -292,6 +338,48 @@ const AllVisaRequirementsForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedCountryName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Country"
+                                        name="countryId"
+                                        form={form}
+                                        options={getAllCountry}
+                                        selected={
+                                            getAllCountry?.find(
+                                                (g) => g.name === selectedCountryName
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedCountryName(group.name || null);
+                                            } else {
+                                                setSelectedCountryName(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.name ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -310,134 +398,112 @@ const AllVisaRequirementsForm = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {VisaRequirementsDetails.map((VisaRequirements, index) => (
-                                    <div
-                                        key={VisaRequirements.id}
-                                        className="
-                                            group relative overflow-hidden
-                                            rounded-3xl
-                                            border border-white/60 dark:border-gray-900
-                                            bg-white dark:bg-[#1e1f24]
-                                            shadow-md shadow-3xl
 
-                                        ">
-                                        {/* Top Gradient */}
-                                        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                                {VisaRequirementsDetails.map((VisaRequirements) => {
 
-                                        <div className="p-5">
-                                            {/* Header */}
-                                            <div className="flex items-start justify-between mb-5">
-                                                <div>
+                                    // ✅ FIX: steps are per item (NO flatMap)
+                                    const sortedSteps = [...(VisaRequirements.visaRequirementsDTOs ?? [])]
+                                        .sort((a, b) => a.step - b.step)
+
+                                    return (
+                                        <div
+                                            key={VisaRequirements.id}
+                                            className="
+                            group relative overflow-hidden
+                            rounded-3xl
+                            border border-white/60 dark:border-gray-900
+                            bg-white dark:bg-[#1e1f24]
+                            shadow-md shadow-3xl
+                        "
+                                        >
+                                            {/* Top Gradient */}
+                                            <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
+                                            <div className="p-5">
+
+                                                {/* Header */}
+                                                <div className="flex items-start justify-between mb-5">
                                                     <span className="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-300">
                                                         🌍 {VisaRequirements.countryName}
                                                     </span>
+
+                                                    <ActionMenu
+                                                        VisaRequirements={VisaRequirements}
+                                                        onEdit={handleEditVisaRequirements}
+                                                        onDelete={handleDeleteVisaRequirements}
+                                                        canEdit={true}
+                                                        canDelete={true}
+                                                    />
                                                 </div>
 
-                                                <ActionMenu
-                                                    VisaRequirements={VisaRequirements}
-                                                    onEdit={handleEditVisaRequirements}
-                                                    onDelete={handleDeleteVisaRequirements}
-                                                    canEdit={true}
-                                                    canDelete={true}
-                                                />
-                                            </div>
+                                                {/* University */}
+                                                <div className="rounded-2xl bg-gradient-to-r from-violet-50 to-white dark:from-violet-900/20 dark:to-gray-800 p-5 border border-gray-100 dark:border-gray-700">
+                                                    <p className="text-xs uppercase tracking-wider text-gray-400 mb-3">
+                                                        University
+                                                    </p>
 
-                                            <div className="md:col-span-3 rounded-2xl bg-gradient-to-r from-violet-50 to-white dark:from-violet-900/20 dark:to-gray-800 p-5 border border-gray-100 dark:border-gray-700">
-                                                <p className="text-xs uppercase tracking-wider text-gray-400 mb-3">
-                                                    University
-                                                </p>
+                                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                        {VisaRequirements.universityName}
+                                                    </h3>
 
-                                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                                    <div className="min-w-0 flex-1">
-                                                        <h3 className="text-sm font-semibold leading-tight text-gray-900 dark:text-white break-words">
-                                                            {VisaRequirements.universityName}
-                                                        </h3>
+                                                    <span className="block mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        {VisaRequirements.universityAddress}
+                                                    </span>
 
-                                                        <span className="block mt-1 text-[11px] text-gray-500 dark:text-gray-400 break-words">
-                                                            {VisaRequirements.universityAddress}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="self-start max-w-full px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-sm border border-blue-100 dark:border-blue-800/30 break-words">
+                                                    <div className="mt-3 inline-block px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-100 dark:border-blue-800/30">
                                                         {VisaRequirements.courseTitle}
                                                     </div>
                                                 </div>
-                                            </div>
 
-
-                                            {/* Description */}
-                                            {/* <div className="mb-4">
-                                                <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">
-                                                    Description
-                                                </p>
-
-                                                <p className="text-sm leading-6 text-gray-600 dark:text-gray-300 line-clamp-4">
-                                                    {VisaRequirements.descriptions || "No description available."}
-                                                </p>
-                                            </div> */}
-
-                                            <div className=" mb-4 mt-4">
-                                                {sortedVisaRequirements.map((item, index) => (
-                                                    <div
-                                                        key={`${item.step}-${item.visaStatusId}`}
-                                                        className="group flex items-center gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-[0_0_0_3px_theme(colors.blue.50)] dark:hover:shadow-[0_0_0_3px_theme(colors.blue.950)] transition-all cursor-default"
-                                                    >
-                                                        {/* Step badge */}
-                                                        <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-medium">
-                                                            {String(item.step).padStart(2, "0")}
-                                                        </div>
-
-                                                        {/* Text info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-0.5">Step {item.step}</p>
-                                                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                                {item.visaStatusName}
-                                                            </p>
-                                                        </div>
-
-                                                        {/* Status badge */}
-                                                        {/* <span className={`flex-shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full
-                                                            ${visaRequirementsType.find(i => i.id === item.visaRequirementStatus)?.name === "Required"
-                                                                ? "bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400"
-                                                                : visaRequirementsType.find(i => i.id === item.visaRequirementStatus)?.name === "Optional"
-                                                                    ? "bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400"
-                                                                    : "bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400"
-                                                            }`}
+                                                {/* ✅ STEPS (FIXED PER ITEM) */}
+                                                <div className="mt-4 space-y-3">
+                                                    {sortedSteps.map((item) => (
+                                                        <div
+                                                            key={item.visaStatusId}
+                                                            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
                                                         >
-                                                            {visaRequirementsType.find(i => i.id === item.visaRequirementStatus)?.name}
-                                                        </span> */}
+                                                            {/* Step */}
+                                                            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-medium">
+                                                                {String(item.step).padStart(2, "0")}
+                                                            </div>
 
-                                                        {/* Arrow */}
-                                                        <svg className="flex-shrink-0 w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                        </svg>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                                            {/* Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-[11px] text-gray-400">
+                                                                    Step {item.step}
+                                                                </p>
+                                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                                    {item.visaStatusName}
+                                                                </p>
+                                                            </div>
 
-                                            {/* Bottom Section */}
-                                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                                                <span className="text-xs text-gray-400">
-                                                    Requirement Record
-                                                </span>
+                                                            {/* Status */}
+                                                            {item.visaRequirementStatus === 1 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-600">
+                                                                    Done
+                                                                </span>
+                                                            )}
 
-                                                <div className="flex items-center gap-1 text-blue-600 font-medium text-sm group-hover:gap-2 transition-all">
-                                                    View Details →
+                                                            {item.visaRequirementStatus === 2 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-yellow-50 text-yellow-600">
+                                                                    Current
+                                                                </span>
+                                                            )}
+
+                                                            {item.visaRequirementStatus === 0 && (
+                                                                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                                                                    Pending
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
                                                 </div>
+
                                             </div>
                                         </div>
+                                    )
+                                })}
 
-                                        {/* Hover Glow */}
-                                        <div
-                                            className="
-                                            absolute inset-0 opacity-0 group-hover:opacity-100
-                                            transition-opacity duration-500
-                                            bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5
-                                            pointer-events-none
-                                        "
-                                        />
-                                    </div>
-                                ))}
                             </div>
                         )}
                     </div>
@@ -445,18 +511,18 @@ const AllVisaRequirementsForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {VisaRequirementsDetails.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

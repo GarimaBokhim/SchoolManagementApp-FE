@@ -54,45 +54,21 @@ const normalizeVisaRequirementPayload = (data: AddVisaRequirementPayload): AddVi
     })),
 });
 
-
-export const useGetAllVisaRequirement = (
-    queryParams?: string,
-    enabled: boolean = true
-) => {
+export const useGetAllVisaRequirement = (queryParams?: string) => {
     return useQuery({
         queryKey: [...VisaRequirementQueryKeys.all, queryParams],
-
-        enabled,
-
         queryFn: async () => {
-            const params = Object.fromEntries(
-                new URLSearchParams(queryParams?.replace(/^&/, "") || "")
-            );
-
+            const url = queryParams
+                ? `${VisaRequirementEndpoints.filter}${queryParams}`
+                : VisaRequirementEndpoints.filter
             const response =
-                await api.get<IPaginationCrmResponse<VisaRequirementResponse>>(
-                    VisaRequirementEndpoints.filter,
-                    { params }
-                );
-
-            return response.data;
+                await api.get<IPaginationCrmResponse<VisaRequirementResponse>>(url)
+            return response.data.Data
         },
-
-        select: (response) => ({
-            items: response?.Data?.Items ?? [],
-            pagination: {
-                totalItems: response?.Data?.TotalItems ?? 0,
-                pageIndex: response?.Data?.PageIndex ?? 1,
-                pageSize: response?.Data?.pageSize ?? 10,
-                totalPages: response?.Data?.TotalPages ?? 1,
-            },
-            message: response?.Message ?? "",
-            statusCode: response?.StatusCode ?? 200,
-        }),
-
         staleTime: 1000 * 60 * 5,
-    });
-};
+        retry: false,
+    })
+}
 
 
 export const useAddVisaRequirement = () => {

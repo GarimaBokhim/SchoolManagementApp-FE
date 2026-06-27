@@ -279,7 +279,6 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                         dropdownPositionClass="absolute"
                                         name={`visaRequirementsDetailsDTOs.${index}.visaRequirementStatus`}
                                         form={form}
-                                        value={visaRequirementStatus}
                                         options={[
                                             { id: 1, name: "Completed" },
                                             { id: 2, name: "Pending" },
@@ -293,11 +292,9 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                                 { id: 2, name: "Pending" },
                                                 { id: 3, name: "Rejected" },
                                                 { id: 4, name: "ActionRequired" },
-                                            ].find((g) => g.id === visaRequirementStatus) || null
+                                            ].find((x) => x.id === visaRequirementStatus) ?? null
                                         }
                                         onSelect={(option) => {
-                                            setVisaRequirementStatus(option?.id ?? null);
-
                                             form.setValue(
                                                 `visaRequirementsDetailsDTOs.${index}.visaRequirementStatus`,
                                                 option?.id ?? 0,
@@ -307,7 +304,7 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                                 }
                                             );
                                         }}
-                                        getLabel={(o) => o?.name || ""}
+                                        getLabel={(o) => o?.name ?? ""}
                                         getValue={(o) => o?.id ?? ""}
                                     />
                                 </div>

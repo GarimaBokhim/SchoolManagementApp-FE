@@ -266,7 +266,7 @@ const UserProfilePopupForm = ({ isOpen, onClose, applicant }: UserProfilePopupPr
                             </div>
 
                             {/* Row 2: Visa Processing Status Card - KEPT AS IS */}
-                            <VisaProcessingStatusForm />
+                            <VisaProcessingStatusForm ApplicantId={applicant?.id ?? ""} />
 
                             {/* Row 3: Tabs with Visa Timeline inside VISA tab */}
                             <ApplicationDetailsForm />

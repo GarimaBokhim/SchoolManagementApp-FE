@@ -12,10 +12,12 @@ export const InstallmentpaymentsEndPoints = {
   delete: '/api/CrmFinance/DeletePayments',
   applicants: '/api/Enrolments/AllApplicant',
   get: '/api/CrmFinance/PaymentsById',
+    filterInvoice: '/api/CrmFinance/FilterInvoice',
 }
 
 
 export const InstallmentpaymentsQueryKey = {
+  invoice:['Invoice'],
   all: ['Installmentpayments'],
   applicants: ['Applicants'],
 }
@@ -51,38 +53,22 @@ export const normalizePayments = (
   }
 
 
-
-export const useGetAllInstallmentPayments = (queryParams?: string) => {
-  return useQuery({
-    queryKey: [...InstallmentpaymentsQueryKey.all, queryParams],
-    queryFn: async () => {
-          const params = Object.fromEntries(
-            new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-          )
-    
-          const response = await api.get<IPaginationCrmResponse<InstallmentPaymentsResponse>>(
-            InstallmentpaymentsEndPoints.filter,
-            { params }
-          )
-    
-          return response.data
-        },
-      select: (response) => ({
-          items: response?.Data?.Items ?? [],
-          pagination: {
-            totalItems: response?.Data?.TotalItems ?? 0,
-            pageIndex: response?.Data?.PageIndex ?? 1,
-            pageSize: response?.Data?.pageSize ?? 10,
-            totalPages: response?.Data?.TotalPages ?? 1,
-          },
-          message: response?.Message ?? '',
-          statusCode: response?.StatusCode ?? 200,
-        }),
-
-        staleTime: 1000 * 60 * 5,
-      })
-}
-
+  export const useGetAllInstallmentPayments = (queryParams?: string) => {
+    return useQuery({
+      queryKey: [...InstallmentpaymentsQueryKey.all, queryParams],
+      queryFn: async () => {
+        const url = queryParams
+          ? `${InstallmentpaymentsEndPoints.filter}${queryParams}`
+          : InstallmentpaymentsEndPoints.filter
+        const response =
+          await api.get<IPaginationCrmResponse<InstallmentPaymentsResponse>>(url)
+        return response.data.Data
+      },
+      staleTime: 1000 * 60 * 5,
+      retry: false,
+    })
+  }
+  
 export const useAddInstallmentPayments = () => {
   const queryClient = useQueryClient()
   
@@ -218,4 +204,26 @@ export const useGetAllApplicants = () => {
   
       staleTime: 1000 * 60 * 5,
     })
+}
+
+
+export const useGetAllInvoice = () => {
+  return useQuery({
+    queryKey: InstallmentpaymentsQueryKey.invoice,
+
+    queryFn: async () => {
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string
+          invoiceNumber: string
+        }>
+      >(InstallmentpaymentsEndPoints.filterInvoice)
+
+      return response.data
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+
+    staleTime: 1000 * 60 * 5,
+  })
 }

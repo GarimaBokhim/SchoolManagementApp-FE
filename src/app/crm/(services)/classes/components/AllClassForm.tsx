@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -15,10 +15,14 @@ import AddInvoice from '../pages/Add'
 import { ClassResponse } from '../types/IClass'
 import { EditButton } from '@/components/Buttons/EditButton'
 import AddClasses from '../pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
     startDate: string
     endDate: string
+    name: string
 }
 
 //#region ActionMenu
@@ -148,19 +152,10 @@ const ActionMenu = ({
     )
 }
 
-// ─── Enrolment Type Badge ────────────────────────────────────────────────────
-const getEnrolmentTypeBadge = (type: number) => {
-    switch (type) {
-        case 1: return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Lead</span>
-        case 2: return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Applicant</span>
-        case 3: return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Student</span>
-        default: return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">Unknown</span>
-    }
-}
-//#endregion
 
 const AllClassForm = () => {
     const { menuStatus } = usePermissions()
+    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
@@ -169,40 +164,79 @@ const AllClassForm = () => {
     const [selectedId, setSelectedId] = useState<string>('')
 
 
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
 
-    const paginationForm = useForm({
-        defaultValues: { pageSize, pageIndex: currentPage, isPagination: true },
-    })
+    const [selectedClassName, setSelectedClassName] = useState<string | null>(
+        ""
+    );
 
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
     const { data, isLoading, error } = useGetAllClass(params)
     const deleteClass = useDeleteClass()
     // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
 
-    const classeDetails = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const classeDetails = data?.Items ?? [];
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-
-        setParams(fullQuery) // 👈 THIS triggers auto refetch
-
-        toast.success(data?.message || 'Data loaded successfully')
+        clearError()
+        try {
+            const queryParams = [
+                formData.name
+                    ? `name=${encodeURIComponent(formData.name)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
 
 
@@ -334,6 +368,48 @@ const AllClassForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedClassName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Class"
+                                        name="name"
+                                        form={form}
+                                        options={data?.Items}
+                                        selected={
+                                            data?.Items?.find(
+                                                (g) => g.name === selectedClassName
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedClassName(group.name || null);
+                                            } else {
+                                                setSelectedClassName(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.name ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -345,6 +421,7 @@ const AllClassForm = () => {
                                 <thead>
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
+                                        <th className="px-4 py-3 text-left">Name</th>
                                         <th className="px-4 py-3 text-left">StartTime</th>
                                         <th className="px-4 py-3 text-left">EndTime</th>
 
@@ -369,8 +446,10 @@ const AllClassForm = () => {
                                                 key={classes.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
-                                                <td className="px-4 py-3 text-gray-500">
-                                                    {(currentPage - 1) * pageSize + index + 1}
+                                                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                                    {classes.name}
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
@@ -431,18 +510,18 @@ const AllClassForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {classeDetails.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

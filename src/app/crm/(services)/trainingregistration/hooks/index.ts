@@ -11,7 +11,7 @@ export const TrainingRegistrationEndpoints = {
   update: '/api/Enrolments/UpdateTrainingRegistration',
   delete: '/api/Enrolments/DeleteTrainingRegistration',
   applicants: '/api/Enrolments/AllApplicant',
-  consultancyClass: '/api/Enrolments/FilterConsultancyClasss',
+  consultancyClass: '/api/Enrolments/FilterConsultancyClasss'
 }
 
 export const TrainingRegistrationQueryKeys = {
@@ -35,39 +35,21 @@ const normalizeTrainingRegistrationPayload = (data: AddTrainingRegistrationPaylo
 })
 
 
-export const useGetAllTrainingRegistration= (queryParams?: string) => {
+export const useGetAllTrainingRegistration = (queryParams?: string) => {
   return useQuery({
     queryKey: [...TrainingRegistrationQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<TrainingRegistrationResponse>>(
-        TrainingRegistrationEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${TrainingRegistrationEndpoints.filter}${queryParams}`
+        : TrainingRegistrationEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<TrainingRegistrationResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
-
 
 export const useAddTrainingRegistration = () => {
   const queryClient = useQueryClient()

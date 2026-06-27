@@ -70,3 +70,25 @@ export interface UpdateApplicantPayload {
     universityId: string
     courseId: string
 }
+
+export interface VisaRequirementByResponse {
+    id: string
+    visaRequirementsDTOs: VisaRequirementsDTOs[]
+}
+
+export interface VisaRequirementsDTOs {
+    step: number
+    visaStatusId: string
+    visaStatusName: string
+    visaRequirementStatus: number
+}
+
+export interface VisaDetailsByApplicant {
+    countryId: string
+    countryName: string
+    universityId: string
+    universityName: string
+    courseId: string
+    courseTitle: string
+
+}

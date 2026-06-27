@@ -51,39 +51,22 @@ const normalizeInvoicePayload = (data: AddInvoicePayload): AddInvoicePayload => 
   })),
 });
 
+
 export const useGetAllInvoice = (queryParams?: string) => {
   return useQuery({
     queryKey: [...InvoiceQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<InvoiceResponse>>(
-        InvoiceEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${InvoiceEndpoints.filter}${queryParams}`
+        : InvoiceEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<InvoiceResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
-
 
 export const useAddInvoice = () => {
   const queryClient = useQueryClient()

@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
-const getInitials = (firstName?: string, lastName?: string, middleName?: string | null) => {
+const getInitials = (
+  firstName?: string,
+  lastName?: string,
+  middleName?: string | null
+) => {
   const first = firstName?.charAt(0) || ''
   const last = lastName?.charAt(0) || ''
   const middle = middleName?.charAt(0) || ''
@@ -28,7 +32,11 @@ const StudentAvatar = ({ student }: { student: any }) => {
           />
         ) : (
           <span className="text-lg font-bold text-white">
-            {getInitials(student.firstName, student.lastName, student.middleName)}
+            {getInitials(
+              student.firstName,
+              student.lastName,
+              student.middleName
+            )}
           </span>
         )}
       </div>
@@ -150,7 +158,9 @@ const StatCard = ({ label, value, icon, iconBg, iconColor }: any) => (
     <div className={`p-2 rounded-full ${iconBg} ${iconColor}`}>{icon}</div>
     <div>
       <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="text-xl font-semibold text-gray-900 dark:text-white">{value}</p>
+      <p className="text-xl font-semibold text-gray-900 dark:text-white">
+        {value}
+      </p>
     </div>
   </div>
 )
@@ -188,16 +198,20 @@ const AllStudentForm = () => {
   const [showStudents, setShowStudents] = useState(false)
   const [showRegistration, setShowRegistration] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
-  const [selectedIdForRegistration, setSelectedIdForRegistration] = useState<string>('')
+  const [selectedIdForRegistration, setSelectedIdForRegistration] =
+    useState<string>('')
   const [addModal, setAddModal] = useState(false)
   const { menuStatus } = usePermissions()
   const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
   const [selectedId, setSelectedId] = useState<string>('')
-  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<IStudent | null>(null)
+  const [selectedStudentForProfile, setSelectedStudentForProfile] =
+    useState<IStudent | null>(null)
   const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
   const [params, setParams] = useState('')
   const { data: allStudent } = useGetAllStudents()
-  const [selectedStudentName, setSelectedStudentName] = useState<string | null>('')
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
+    ''
+  )
   const fullQuery = query + (params || '')
 
   const {
@@ -225,7 +239,6 @@ const AllStudentForm = () => {
   })
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
-  // ✅ Fetches ALL classes from /api/Academics/all-SchoolClass
   const { data: allClasses } = useGetAllClass()
   const { mutateAsync: uploadstudent } = useUploadStudents()
 
@@ -331,13 +344,13 @@ const AllStudentForm = () => {
   const totalStudents = filteredStudent?.TotalItems ?? items.length
   const maleCount = items.filter((s) => s.genderStatus === 1).length
   const femaleCount = items.filter((s) => s.genderStatus === 2).length
-  const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean)).size
+  const uniqueClasses = new Set(items.map((s) => s.classId).filter(Boolean))
+    .size
 
   return (
     <>
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
           {/* Page header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center flex-wrap gap-3">
             <h1 className="text-xl font-semibold">All Students</h1>
@@ -480,114 +493,149 @@ const AllStudentForm = () => {
                   <th className="px-4 py-3 text-left w-16">S.N</th>
                   <th className="px-4 py-3 text-left w-48">Student Details</th>
                   <th className="px-4 py-3 text-left w-32">Reg. No</th>
-                  <th className="px-4 py-3 text-left w-20 hidden md:table-cell">Gender</th>
-                  <th className="px-4 py-3 text-left w-48 hidden lg:table-cell">Email</th>
-                  <th className="px-4 py-3 text-left w-32 hidden lg:table-cell">Class</th>
-                  <th className="px-4 py-3 text-left w-48 hidden xl:table-cell">Address</th>
-                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">Phone</th>
-                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">DOB</th>
+                  <th className="px-4 py-3 text-left w-20 hidden md:table-cell">
+                    Gender
+                  </th>
+                  <th className="px-4 py-3 text-left w-48 hidden lg:table-cell">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left w-32 hidden lg:table-cell">
+                    Class
+                  </th>
+                  <th className="px-4 py-3 text-left w-48 hidden xl:table-cell">
+                    Address
+                  </th>
+                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">
+                    Phone
+                  </th>
+                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">
+                    DOB
+                  </th>
                   <th className="px-4 py-3 text-center w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={11} className="p-4 text-center text-gray-500 dark:text-gray-300">
+                    <td
+                      colSpan={11}
+                      className="p-4 text-center text-gray-500 dark:text-gray-300"
+                    >
                       Loading students...
                     </td>
                   </tr>
                 ) : filteredStudent?.Items?.length ? (
-                  filteredStudent.Items.map((student: IStudent, index: number) => (
-                    <tr
-                      key={student.id || index}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
-                    >
-                      <td className="px-4 py-3 whitespace-nowrap align-top">
-                        {((paginationParams.pageIndex - 1) * paginationParams.pageSize) + index + 1}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <StudentAvatar student={student} />
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap align-middle">
-                        {student.registrationNumber || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap align-middle hidden md:table-cell">
-                        {student.genderStatus === 1
-                          ? 'Male'
-                          : student.genderStatus === 2
-                            ? 'Female'
-                            : 'Other'}
-                      </td>
-                      <td className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell align-middle" title={student.email}>
-                        {student.email || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell align-middle">
-                        {getClassName(student.classId)}
-                      </td>
-                      <td className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell align-middle" title={student.address}>
-                        {student.address || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
-                        {student.phoneNumber || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
-                        {student.dateOfBirth ? (
-                          <DateConverter date={
-                            student.dateOfBirth instanceof Date
-                              ? student.dateOfBirth.toISOString()
-                              : String(student.dateOfBirth)
-                          } />
-                        ) : (
-                          'N/A'
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2">
-                          {canDelete && (
-                            <DeleteButton
-                              onConfirm={() => handleDelete(student.id ? student.id : '')}
-                              headerText={<Trash size={16} />}
-                              content="Are you sure you want to delete this student?"
+                  filteredStudent.Items.map(
+                    (student: IStudent, index: number) => (
+                      <tr
+                        key={student.id || index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap align-top">
+                          {(paginationParams.pageIndex - 1) *
+                            paginationParams.pageSize +
+                            index +
+                            1}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <StudentAvatar student={student} />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap align-middle">
+                          {student.registrationNumber || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap align-middle hidden md:table-cell">
+                          {student.genderStatus === 1
+                            ? 'Male'
+                            : student.genderStatus === 2
+                              ? 'Female'
+                              : 'Other'}
+                        </td>
+                        <td
+                          className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell align-middle"
+                          title={student.email}
+                        >
+                          {student.email || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell align-middle">
+                          {getClassName(student.classId)}
+                        </td>
+                        <td
+                          className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell align-middle"
+                          title={student.address}
+                        >
+                          {student.address || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
+                          {student.phoneNumber || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
+                          {student.dateOfBirth ? (
+                            <DateConverter
+                              date={
+                                student.dateOfBirth instanceof Date
+                                  ? student.dateOfBirth.toISOString()
+                                  : String(student.dateOfBirth)
+                              }
                             />
+                          ) : (
+                            'N/A'
                           )}
-                          {canEdit && (
+                        </td>
+                        <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-2">
+                            {canDelete && (
+                              <DeleteButton
+                                onConfirm={() =>
+                                  handleDelete(student.id ? student.id : '')
+                                }
+                                headerText={<Trash size={16} />}
+                                content="Are you sure you want to delete this student?"
+                              />
+                            )}
+                            {canEdit && (
+                              <EditButton
+                                button={
+                                  <ButtonElement
+                                    icon={<Edit size={14} />}
+                                    type="button"
+                                    text=""
+                                    onClick={() => {
+                                      setShowStudents(true)
+                                      setSelectedId(student.id ?? '')
+                                    }}
+                                    className="!text-xs !bg-teal-500"
+                                  />
+                                }
+                              />
+                            )}
+                            <PrintIDCardButton StudentId={student.id ?? ''} />
                             <EditButton
                               button={
                                 <ButtonElement
-                                  icon={<Edit size={14} />}
+                                  icon={<GraduationCap size={14} />}
                                   type="button"
                                   text=""
                                   onClick={() => {
-                                    setShowStudents(true)
-                                    setSelectedId(student.id ?? '')
+                                    setShowRegistration(true)
+                                    setSelectedIdForRegistration(
+                                      student.id ?? ''
+                                    )
                                   }}
-                                  className="!text-xs !bg-teal-500"
+                                  className="!text-xs !bg-blue-500"
                                 />
                               }
                             />
-                          )}
-                          <PrintIDCardButton StudentId={student.id ?? ''} />
-                          <EditButton
-                            button={
-                              <ButtonElement
-                                icon={<GraduationCap size={14} />}
-                                type="button"
-                                text=""
-                                onClick={() => {
-                                  setShowRegistration(true)
-                                  setSelectedIdForRegistration(student.id ?? '')
-                                }}
-                                className="!text-xs !bg-blue-500"
-                              />
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
-                    <td colSpan={11} className="p-8 text-center text-gray-500 italic">
+                    <td
+                      colSpan={11}
+                      className="p-8 text-center text-gray-500 italic"
+                    >
                       No students found.
                     </td>
                   </tr>

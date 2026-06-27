@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse, DocumentStatusResponse} from '../types/IApplicants'
+import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse, DocumentStatusResponse, VisaRequirementByResponse, VisaDetailsByApplicant} from '../types/IApplicants'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 
 
@@ -13,6 +13,8 @@ export const ApplicantsEndpoints = {
   getById:'/api/Enrolments/ApplicantsById',
   userProfile: '/api/Enrolments/UserProfile',
   documentStatus: '/api/AcademicPrograms/DocumentStatusByApplicant',
+  visaRequirementsByDTOs: '/api/AcademicPrograms/VisaRequirementsByDTOs',
+   visaDetails: '/api/VisaApplication/VisaDetailsByApplicant',
   
 }
 
@@ -45,36 +47,18 @@ const normalizeConvertApplicantsPayload = (data: ConvertApplicantPayload): Conve
 export const useGetAllApplicants = (queryParams?: string) => {
   return useQuery({
     queryKey: [...ApplicantsQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<ApplicantResponse>>(
-        ApplicantsEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${ApplicantsEndpoints.filter}${queryParams}`
+        : ApplicantsEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<ApplicantResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
-
 
 export const useDocumentStatus = ({
   applicantId,
@@ -257,3 +241,51 @@ export const useUserProfileById = (userId: string | null) => {
     refetchOnWindowFocus: true,
   });
 };
+
+
+export const useGetVisaRequirements = (
+  countryId?: string | null,
+  universityId?: string | null,
+  courseId?: string | null
+) => {
+  return useQuery({
+    queryKey: ['visaRequirementsDTOs', countryId, universityId, courseId],
+    queryFn: async () => {
+      const { data } = await api.get<IPaginationCrmResponse<VisaRequirementByResponse>>(
+        `${ApplicantsEndpoints.visaRequirementsByDTOs}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
+        {
+          params: {
+            pageSize: 10,
+            pageIndex: 1,
+            isPagination: false,
+          },
+        }
+      )
+      return data.Data
+    },
+    enabled: Boolean(countryId && universityId && courseId),
+  })
+}
+
+export const useVisaDetailsByApplicant = (ApplicantId: string | null) => {
+  return useQuery({
+    queryKey: ['VisaByApplicantId', ApplicantId],
+
+    queryFn: async (): Promise<VisaDetailsByApplicant> => {
+      if (!ApplicantId) {
+        throw new Error('Id is required to get VisaDetails')
+      }
+
+      const response = await api.get<VisaDetailsByApplicant>(
+        `${ApplicantsEndpoints.visaDetails}/${ApplicantId}`
+      )
+
+      return response.data
+    },
+
+    staleTime: 0,
+    gcTime: 0, //
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  })
+}

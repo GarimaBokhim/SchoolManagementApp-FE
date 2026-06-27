@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -10,15 +10,19 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useGetAllInquiry, useDeleteInquiry } from '../hooks'
+import { useGetAllInquiry, useDeleteInquiry, useGetAllUserProfile } from '../hooks'
 import { InquiryResponse } from '../types/IVisitors'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import AddInquiry from '../pages/Add'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
     startDate: string
     endDate: string
+    userId: string
 }
 
 //#region ActionMenu
@@ -131,6 +135,7 @@ const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = tru
 
 const AllInquiryForm = () => {
     const { menuStatus } = usePermissions()
+    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
@@ -148,42 +153,84 @@ const AllInquiryForm = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteInquiryId, setDeleteInquiryId] = useState<string | null>(null)
 
+    const [paginationParams, setPaginationParams] = useState({
+        pageSize: 10,
+        pageIndex: 1,
+        isPagination: true,
+    })
+
+    type SearchParam = {
+        pageSize: number
+        pageIndex: number
+        isPagination: boolean
+    }
+    const handlePageChange = (params: SearchParam) => {
+        params.pageSize = paginationParams.pageSize
+        setPaginationParams(params)
+    }
+
+    const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
     const [params, setParams] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const fullQuery = query + (params || '')
+
     const formRef = useRef<DateRangeFilterRef>(null)
-    const pageSize = 10
+
 
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
 
-    const paginationForm = useForm({
-        defaultValues:
-        {
-            pageSize,
-            pageIndex: currentPage,
-            isPagination: true
-        },
-    })
+    const [selectedUserName, setSelectedUserName] = useState<string | null>(
+        ""
+    );
+
+    const onClearClick = () => {
+        setParams("");
+        formRef.current?.handleClear();
+        form.reset();
+    };
+
+
 
     const { data, isLoading, error } = useGetAllInquiry(params)
+
+    const { data: getAllUserProfile } = useGetAllUserProfile();
     const deleteInquiry = useDeleteInquiry()
 
 
-    const inquiryDetails = data?.items ?? [];
-    const totalPages = data?.pagination?.totalPages ?? 1;
+    const inquiryDetails = data?.Items ?? [];
 
     const onFilterSubmit = async (formData: FilterFormData) => {
-        const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
-            formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-            formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
-        ]
-            .filter(Boolean)
-            .join('&')
-
-        const fullQuery = queryParams ? `&${queryParams}` : ''
-        setParams(fullQuery)
+        clearError()
+        try {
+            const queryParams = [
+                formData.userId
+                    ? `userId=${encodeURIComponent(formData.userId)}`
+                    : null,
+                formData.startDate
+                    ? `startDate=${encodeURIComponent(formData.startDate)}`
+                    : null,
+                formData.endDate
+                    ? `endDate=${encodeURIComponent(formData.endDate)}`
+                    : null,
+            ]
+                .filter(Boolean)
+                .join('&')
+            const fullQuery = queryParams ? `?${queryParams}` : ''
+            await toast.promise(
+                (async () => {
+                    setParams(fullQuery)
+                })(),
+                {
+                    loading: 'Fetching data...',
+                    success: 'Data fetched successfully!',
+                }
+            )
+        } catch (error) {
+            const errorMsg = handleError(error)
+            Toast.error(errorMsg)
+            console.error('Error during form submission:', error)
+        }
     }
 
 
@@ -285,6 +332,48 @@ const AllInquiryForm = () => {
                                     startDateKey="startDate"
                                     endDateKey="endDate"
                                 />
+
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedUserName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="User"
+                                        name="userId"
+                                        form={form}
+                                        options={data?.Items}
+                                        selected={
+                                            getAllUserProfile?.find(
+                                                (g) => g.fullName === selectedUserName
+                                            ) || null
+                                        }
+                                        onSelect={(group) => {
+                                            if (group) {
+                                                setSelectedUserName(group.fullName || null);
+                                            } else {
+                                                setSelectedUserName(null);
+                                            }
+                                        }}
+                                        getLabel={(g) => g?.fullName ?? ""}
+                                        getValue={(g) => g?.id ?? ""}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearClick}
+                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -320,9 +409,7 @@ const AllInquiryForm = () => {
                                                 key={inquiry.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
                                             >
-                                                <td className="px-4 py-3 text-gray-500">
-                                                    {(currentPage - 1) * pageSize + index + 1}
-                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {inquiry.fullName}
@@ -400,18 +487,18 @@ const AllInquiryForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {inquiryDetails.length > 0 && totalPages > 1 && (
+                {data && data?.Items?.length > 0 && (
                     <div className="mt-4">
                         <Pagination
-                            form={paginationForm}
+                            form={form}
                             pagination={{
-                                currentPage,
-                                firstPage: 1,
-                                lastPage: totalPages,
-                                nextPage: currentPage < totalPages ? currentPage + 1 : currentPage,
-                                previousPage: currentPage > 1 ? currentPage - 1 : 1,
+                                currentPage: data?.PageIndex ?? 1,
+                                firstPage: data?.FirstPage ?? 1,
+                                lastPage: data?.LastPage ?? 1,
+                                nextPage: data?.NextPage ?? 1,
+                                previousPage: data?.PreviousPage ?? 1,
                             }}
-                            handleSearch={(p) => setCurrentPage(p.pageIndex)}
+                            handleSearch={handlePageChange}
                         />
                     </div>
                 )}

@@ -378,8 +378,8 @@ export const AllDocumentsForm = ({ isOpen, onClose, ApplicantId }: DocumentsModa
                 >
 
                     <Toaster position="top-right" />
-                    <div className="p-4 sm:p-6">
-                        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+                    <div className="flex flex-col h-[92vh]">
+                        <div className="bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-y-auto">
 
                             {/* Header */}
                             <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">

@@ -315,7 +315,7 @@ const ApplicantDetailsForm = () => {
                                                     <span className='flex justify-center gap-3'>
 
 
-                                                        <Tooltip text="Documents Form">
+                                                        <Tooltip text="Display Documents">
                                                             <ButtonElement
                                                                 icon={<Eye size={15} />}
                                                                 type="button"

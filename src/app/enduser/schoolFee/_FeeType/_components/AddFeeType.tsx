@@ -1,40 +1,41 @@
-"use client";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
+'use client'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
 
-import { X } from "lucide-react";
-import { IFeeType } from "../types/IFeeType";
-import { useAddFeeType } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { X } from 'lucide-react'
+import { IFeeType } from '../types/IFeeType'
+import { useAddFeeType } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Switch } from '@/components/ui/switch'
 
 type Props = {
-  form: UseFormReturn<IFeeType>;
-  onClose: () => void;
-};
+  form: UseFormReturn<IFeeType>
+  onClose: () => void
+}
 const AddFeeTypeForm = ({ form, onClose }: Props) => {
-  const addFeeType = useAddFeeType();
-  const { handleError, clearError } = useErrorHandler();
+  const addFeeType = useAddFeeType()
+  const { handleError, clearError } = useErrorHandler()
   // const [months, setMonths] = useState(0);
   const handleClose = () => {
-    form.reset();
-    onClose();
-  };
+    form.reset()
+    onClose()
+  }
   const onSubmit: SubmitHandler<IFeeType> = async (data) => {
-    clearError();
+    clearError()
     try {
       await toast.promise(addFeeType.mutateAsync(data), {
-        loading: "Adding FeeType...",
-        success: "Successfully added FeeType",
-      });
-      handleClose();
+        loading: 'Adding FeeType...',
+        success: 'Successfully added FeeType',
+      })
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
 
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
@@ -47,7 +48,7 @@ const AddFeeTypeForm = ({ form, onClose }: Props) => {
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-3xl hover:text-red-500 transition-transform transform hover:scale-110"
+              className="text-red-400 text-3xl cursor-pointer hover:text-red-500 transition-transform transform hover:scale-110"
             >
               <X strokeWidth={3} />
             </button>
@@ -68,20 +69,38 @@ const AddFeeTypeForm = ({ form, onClose }: Props) => {
                 name="description"
                 placeholder="Enter Description"
               />
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Optional
+                </span>
 
+                <Switch
+                  checked={form.watch('isRequired') ?? false}
+                  className="cursor-pointer"
+                  onCheckedChange={(checked) =>
+                    form.setValue('isRequired', checked, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Required
+                </span>
+              </div>
             </div>
             <div className="flex justify-center mt-8">
               <ButtonElement
                 type="submit"
                 text="Submit"
-                className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
+                className="bg-teal-500 hover:bg-teal-600 cursor-pointer text-white px-6 py-2 rounded-lg shadow-md transition-all"
               />
             </div>
           </form>
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddFeeTypeForm;
+export default AddFeeTypeForm

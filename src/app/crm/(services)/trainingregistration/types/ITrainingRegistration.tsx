@@ -8,7 +8,9 @@ export interface AddTrainingRegistrationResponse {
 export interface TrainingRegistrationResponse {
     id: string
     applicantId: string
+    applicantName: string
     consultancyClassId: string
+    consultancyClassName: string
     registeredAt: string
 }
 

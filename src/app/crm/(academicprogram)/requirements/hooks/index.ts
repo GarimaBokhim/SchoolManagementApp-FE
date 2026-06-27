@@ -17,7 +17,8 @@ export const RequirementsEndpoints = {
   filterDocumentType:'/api/AcademicPrograms/FilterDocumentsType',
 
   RequiredDocType:'/api/AcademicPrograms/RequiredDocType',
-  NonRequiredDocType:'/api/AcademicPrograms/NonRequiredDocType'
+  NonRequiredDocType:'/api/AcademicPrograms/NonRequiredDocType',
+    filterCourse: '/api/AcademicPrograms/FilterCourse',
 }
 
 export const RequirementsQueryKeys = {
@@ -25,7 +26,8 @@ export const RequirementsQueryKeys = {
   country: ['Country'],
   course: ['Course'],
   requirementsById: ['InvoiceByIds'],
-  documentType:["DocumentType"]
+  documentType:["DocumentType"],
+  AllCourse:["AllCourse"]
 }
 
 const normalizeUpdateRequirementsPayload = (data: UpdateRequirementsPayload): UpdateRequirementsPayload => ({
@@ -60,36 +62,20 @@ const normallizeNonRequiredDocTypeStatusPayload = (data:RequiredDocTypeStatusPay
 documentCheckListId : String(data.documentCheckListId)
 })
 
+
 export const useGetAllRequirements = (queryParams?: string) => {
   return useQuery({
     queryKey: [...RequirementsQueryKeys.all, queryParams],
-
     queryFn: async () => {
-      const params = Object.fromEntries(
-        new URLSearchParams(queryParams?.replace(/^&/, '') || '')
-      )
-
-      const response = await api.get<IPaginationCrmResponse<RequirementsResponse>>(
-        RequirementsEndpoints.filter,
-        { params }
-      )
-
-      return response.data
+      const url = queryParams
+        ? `${RequirementsEndpoints.filter}${queryParams}`
+        : RequirementsEndpoints.filter
+      const response =
+        await api.get<IPaginationCrmResponse<RequirementsResponse>>(url)
+      return response.data.Data
     },
-
-    select: (response) => ({
-      items: response?.Data?.Items ?? [],
-      pagination: {
-        totalItems: response?.Data?.TotalItems ?? 0,
-        pageIndex: response?.Data?.PageIndex ?? 1,
-        pageSize: response?.Data?.pageSize ?? 10,
-        totalPages: response?.Data?.TotalPages ?? 1,
-      },
-      message: response?.Message ?? '',
-      statusCode: response?.StatusCode ?? 200,
-    }),
-
     staleTime: 1000 * 60 * 5,
+    retry: false,
   })
 }
 
@@ -388,6 +374,33 @@ export const useGetAllDocumentType = () => {
           pageSize: 10,
           pageIndex: 1,
           isPagination: true,
+        },
+      });
+
+      return response.data;
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useGetAllCourse = () => {
+  return useQuery({
+    queryKey: RequirementsQueryKeys.AllCourse,
+
+    queryFn: async () => {
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string
+          title: string
+        }>
+      >(RequirementsEndpoints.filterCourse, {
+        params: {
+          pageSize: 10,
+          pageIndex: 1,
+          isPagination: false,
         },
       });
 
