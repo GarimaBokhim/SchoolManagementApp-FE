@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import { AddVisaRequirementResponse, VisaRequirementResponse, UpdateVisaRequirementPayload } from '../types/IVisaRequirements'
+import { AddVisaRequirementResponse, VisaRequirementResponse, UpdateVisaRequirementPayload, VisaRequirementIdResponse } from '../types/IVisaRequirements'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 import { AddVisaRequirementPayload } from '../types/IVisaRequirements'
 
