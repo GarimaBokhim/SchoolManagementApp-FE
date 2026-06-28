@@ -1,68 +1,65 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/utils/instance";
-import { IPaginationResponse } from "@/types/IPaginationResponse";
-import { IFeeType } from "../types/IFeeType";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+import { IPaginationResponse } from '@/types/IPaginationResponse'
+import { IFeeType } from '../types/IFeeType'
 const FeeTypeEndPoints = {
-  getAllFeeTypes: "/api/Finance/Feetype",
-  createFeeTypes: "/api/Finance/AddFeetype",
-  removeFeeTypes: "/api/Finance/DeleteFeeType",
-  updateFeeTypes: "/api/Finance/UpdateFeeType",
-  filterFeeTypeByDate: "/api/Finance/FilterFeetype",
-};
+  getAllFeeTypes: '/api/Finance/Feetype',
+  createFeeTypes: '/api/Finance/AddFeetype',
+  removeFeeTypes: '/api/Finance/DeleteFeeType',
+  updateFeeTypes: '/api/Finance/UpdateFeeType',
+  filterFeeTypeByDate: '/api/Finance/FilterFeetype',
+}
 
-const queryKey = "FeeTypes";
-const filterQueryKey = "filteredFeeType";
+const queryKey = 'FeeTypes'
+const filterQueryKey = 'filteredFeeType'
 type FeeTypeRequest = {
-  id?: string;
-  name: string;
-  description: string;
-  nameOfMonths: number;
-};
+  id?: string
+  name: string
+  description: string
+  nameOfMonths: number
+}
 
 export const useAddFeeType = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation<IFeeType, Error, FeeTypeRequest>({
     mutationFn: async (formData: FeeTypeRequest): Promise<IFeeType> => {
-      const response = await api.post(
-        FeeTypeEndPoints.createFeeTypes,
-        formData
-      );
-      return response.data;
+      const response = await api.post(FeeTypeEndPoints.createFeeTypes, formData)
+      return response.data
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] })
     },
 
     onError: (error) => {
-      console.error("Error adding FeeType:", error);
+      console.error('Error adding FeeType:', error)
     },
-  });
-};
+  })
+}
 
 export const useRemoveFeeType = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<IFeeType, Error, string | undefined>({
     mutationFn: async (Id: string | undefined): Promise<IFeeType> => {
       if (!Id) {
-        throw new Error("Id is required to remove a FeeType");
+        throw new Error('Id is required to remove a FeeType')
       }
       const response = await api.delete(
         `${FeeTypeEndPoints.removeFeeTypes}/${Id}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
-      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] })
     },
-  });
-};
+  })
+}
 
 export const useEditFeeType = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation<
     IFeeType,
     Error,
@@ -70,20 +67,20 @@ export const useEditFeeType = () => {
   >({
     mutationFn: async ({ id, data }): Promise<IFeeType> => {
       if (!id) {
-        throw new Error("Ïd is required to edit FeeType");
+        throw new Error('Ïd is required to edit FeeType')
       }
       const response = await api.patch(
         `${FeeTypeEndPoints.updateFeeTypes}/${id}`,
         data
-      );
-      return response.data;
+      )
+      return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [filterQueryKey] });
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: [filterQueryKey] })
+      queryClient.invalidateQueries({ queryKey: [queryKey] })
     },
-  });
-};
+  })
+}
 
 export const useGetAllFeeTypes = (params?: string) => {
   return useQuery({
@@ -91,8 +88,8 @@ export const useGetAllFeeTypes = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${FeeTypeEndPoints.getAllFeeTypes}${params}`
-        : `${FeeTypeEndPoints.getAllFeeTypes}`;
-      const response = await api.get<IPaginationResponse<IFeeType>>(url);
+        : `${FeeTypeEndPoints.getAllFeeTypes}`
+      const response = await api.get<IPaginationResponse<IFeeType>>(url)
       return (
         response.data ?? {
           data: [],
@@ -100,10 +97,10 @@ export const useGetAllFeeTypes = (params?: string) => {
           isPagination: 1,
           pageSize: 10,
         }
-      );
+      )
     },
-  });
-};
+  })
+}
 
 export const useFilterFeeTypeByDate = (params?: string) => {
   return useQuery({
@@ -111,26 +108,25 @@ export const useFilterFeeTypeByDate = (params?: string) => {
     queryFn: async () => {
       const url = params
         ? `${FeeTypeEndPoints.filterFeeTypeByDate}?${params}`
-        : FeeTypeEndPoints.filterFeeTypeByDate;
-      const response = await api.get<IPaginationResponse<IFeeType>>(url);
-      return response.data;
+        : FeeTypeEndPoints.filterFeeTypeByDate
+      const response = await api.get<IPaginationResponse<IFeeType>>(url)
+      return response.data
     },
     staleTime: 0,
     retry: false,
-  });
-};
+  })
+}
 export const useGetFeeTypeById = (feeTypeId: string) => {
   return useQuery({
     queryKey: [queryKey, feeTypeId],
     queryFn: async (): Promise<IFeeType> => {
-      if (!feeTypeId) throw new Error("Id is required");
+      if (!feeTypeId) throw new Error('Id is required')
       const response = await api.get<IFeeType>(
         `${FeeTypeEndPoints.getAllFeeTypes}/${feeTypeId}`
-      );
-      return response.data;
+      )
+      return response.data
     },
     enabled: !!feeTypeId,
-    staleTime: 0,
     retry: false,
-  });
-};
+  })
+}

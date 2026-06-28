@@ -2,15 +2,13 @@
 import { SubmitHandler, UseFormReturn } from 'react-hook-form'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
-import { X, Plus, Trash2, AlertCircle, Info, ChevronDown } from 'lucide-react'
+import { X, Plus, Trash2, ChevronDown } from 'lucide-react'
 import { IStudentFee, IStudentFeeDetails } from '../types/IStudentFee'
 import {
   useAddStudentFee,
   useEditStudentFee,
   useGetFeeStructureByClass,
 } from '../hooks'
-import { useGetAllFeeStructure } from '../../_FeeStructure/hooks'
-import { IFeeStructure } from '../../_FeeStructure/types/IFeeStructure'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -26,8 +24,8 @@ import { useGetAllStudentsV2 } from '@/app/enduser/(StudentManagement)/Student/h
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import { useGetAllFeeTypes, useGetFeeTypeById } from '../../_FeeType/hooks'
 import {
-  useGetFeeStructureById,
   mapFeeStructureDTOsToDetails,
+  useGetFeeStructureDTOs,
 } from '../hooks/useGetFeeStructureById'
 import { feeStructureIdToString } from '../utils/studentFeeForm'
 
@@ -121,16 +119,24 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const { data: allStudents } = useGetAllStudentsV2()
   const { data: allClasses } = useGetAllClass()
   const { data: allFeeTypes } = useGetAllFeeTypes()
-  const { data: allFeeStructures } = useGetAllFeeStructure()
 
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [selectedClassId, setSelectedClassId] = useState('')
-  const [selectedFeeStructureId, setSelectedFeeStructureId] = useState('')
+  // Holds ALL fee structure ids that apply to the selected class (or, in edit
+  // mode, the ids on the record being edited) — always an array of strings.
+  const [selectedFeeStructureId, setSelectedFeeStructureId] = useState<
+    string[]
+  >([])
   const [manualRows, setManualRows] = useState<IStudentFeeDetails[]>([])
   const [discountPercentage, setDiscountPercentage] = useState(0)
   const [isFirst, setIsFirst] = useState(false)
   const [selectedMonths, setSelectedMonths] = useState<number[]>([])
   const [isMonthMenuOpen, setIsMonthMenuOpen] = useState(false)
+  // Tracks feeTypeIds of optional (non-required) auto rows the user has
+  // manually removed from the table, keyed by feeTypeId.
+  const [removedAutoRowKeys, setRemovedAutoRowKeys] = useState<Set<string>>(
+    new Set()
+  )
   const monthMenuRef = useRef<HTMLDivElement>(null)
 
   const prevStudentIdRef = useRef<string | null>(null)
@@ -140,7 +146,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     useGetFeeStructureByClass(
       !isEditMode && selectedClassId ? selectedClassId : undefined
     )
-
   const classHasNoFeeStructure = Boolean(
     !isEditMode &&
     selectedClassId &&
@@ -149,16 +154,53 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     (!feeStructureByClass.Items || feeStructureByClass.Items.length === 0)
   )
 
-  const classFeeStructureItem = feeStructureByClass?.Items?.[0] ?? null
-
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
-    useGetFeeStructureById(selectedFeeStructureId)
+    useGetFeeStructureDTOs(selectedStudentId, selectedFeeStructureId)
 
-  const autoRows = useMemo(() => {
+  // Single source of truth: maps each unassigned DTO to its row plus
+  // whether that row is required, computed once.
+  const autoRowsWithMeta = useMemo(() => {
     if (isEditMode) return []
     if (!feeStructureDetail?.feeStructureDTOs?.length) return []
-    return mapFeeStructureDTOsToDetails(feeStructureDetail.feeStructureDTOs, 0)
+    const unassignedDTOs = feeStructureDetail.feeStructureDTOs.filter(
+      (dto) => !dto.isAssigned
+    )
+    if (!unassignedDTOs.length) return []
+    const mapped = mapFeeStructureDTOsToDetails(unassignedDTOs, 0)
+    return mapped.map((row, i) => ({
+      row,
+      isRequired: Boolean(unassignedDTOs[i]?.isRequired),
+    }))
   }, [isEditMode, feeStructureDetail])
+
+  // Visible auto rows: required rows always show; optional rows are hidden
+  // once the user removes them via the X button.
+  const autoRows = useMemo(
+    () =>
+      autoRowsWithMeta
+        .filter(
+          ({ row, isRequired }) =>
+            isRequired || !removedAutoRowKeys.has(row.feeTypeId)
+        )
+        .map(({ row }) => row),
+    [autoRowsWithMeta, removedAutoRowKeys]
+  )
+
+  const autoRowRequiredMap = useMemo(() => {
+    const map = new Map<string, boolean>()
+    autoRowsWithMeta.forEach(({ row, isRequired }) => {
+      map.set(row.feeTypeId, isRequired)
+    })
+    return map
+  }, [autoRowsWithMeta])
+
+  const removeAutoRow = (feeTypeId: string) => {
+    setRemovedAutoRowKeys((prev) => {
+      const next = new Set(prev)
+      next.add(feeTypeId)
+      return next
+    })
+  }
 
   const manualRowsWithTotals = useMemo(
     () =>
@@ -176,27 +218,24 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     if (isEditMode) return
     if (!feeStructureByClass) return
 
-    const item = feeStructureByClass.Items?.[0]
-    const fsId = item?.id?.trim() ?? ''
+    const fsIds = (feeStructureByClass.Items ?? [])
+      .map((item) => item?.id?.trim())
+      .filter((id): id is string => Boolean(id))
 
-    if (fsId) {
-      setSelectedFeeStructureId(fsId)
-      form.setValue('feeStructureId', fsId, { shouldValidate: true })
-    } else {
-      setSelectedFeeStructureId('')
-      form.setValue('feeStructureId', '')
-    }
+    setSelectedFeeStructureId(fsIds)
+    form.setValue('feeStructureId', fsIds, { shouldValidate: true })
   }, [feeStructureByClass, isEditMode, form])
 
   const handleClose = () => {
     form.reset()
     setSelectedStudentId('')
     setSelectedClassId('')
-    setSelectedFeeStructureId('')
+    setSelectedFeeStructureId([])
     setManualRows([])
     setDiscountPercentage(0)
     setIsFirst(false)
     setSelectedMonths([])
+    setRemovedAutoRowKeys(new Set())
     lastHydratedEditIdRef.current = null
     onClose()
   }
@@ -209,10 +248,15 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     if (lastHydratedEditIdRef.current === editRecord.id) return
     lastHydratedEditIdRef.current = editRecord.id
 
-    const fsId = feeStructureIdToString(editRecord.feeStructureId)
     setSelectedStudentId(editRecord.studentId)
     setSelectedClassId(editRecord.classId)
-    setSelectedFeeStructureId(fsId)
+    setSelectedFeeStructureId(
+      Array.isArray(editRecord.feeStructureId)
+        ? editRecord.feeStructureId
+        : editRecord.feeStructureId
+          ? [editRecord.feeStructureId]
+          : []
+    )
     setDiscountPercentage(editRecord.discountPercentage ?? 0)
     prevStudentIdRef.current = editRecord.studentId
     setManualRows(
@@ -375,34 +419,10 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     0
   )
   const grandTotal = autoRowsTotal + manualRowsTotal
-
-  const getFeeStructureLabel = (f: IFeeStructure | null): string => {
-    if (!f) return ''
-    return f.feeCategoryName?.trim() || 'Empty Name'
-  }
-
-  const getSelectedFeeStructure = (): IFeeStructure | null => {
-    if (!selectedFeeStructureId) return null
-
-    if (classFeeStructureItem) {
-      return {
-        id: classFeeStructureItem.id,
-        feeCategoryName: classFeeStructureItem.feeCategoryName,
-      } as unknown as IFeeStructure
-    }
-
-    const found = allFeeStructures?.Items?.find((f) => {
-      const fid = f.id ?? (f as { Id?: string }).Id ?? ''
-      return String(fid) === String(selectedFeeStructureId)
-    })
-
-    return found ?? null
-  }
-
   return (
     <div className="inset-0 flex items-center justify-center w-full h-full">
-      <div className="w-full max-w-5xl h-[100%] bg-white dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
-        <fieldset className="space-y-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+      <div className="w-full max-w-5xl h-[100%] py-8  dark:bg-[#27272a] overflow-auto relative dark:text-white">
+        <fieldset className=" bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
               {isEditMode ? 'Edit Student Fee' : 'Add Student Fee'}
@@ -416,7 +436,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
             </button>
           </div>
 
-          <form onSubmit={handleFormSubmit} className="space-y-8">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               <AppCombobox
                 value={selectedStudentId}
@@ -444,11 +464,12 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                     prevStudentIdRef.current !== newStudentId
                   ) {
                     prevStudentIdRef.current = newStudentId
-                    setSelectedFeeStructureId('')
+                    setSelectedFeeStructureId([])
                     setManualRows([])
                     setDiscountPercentage(0)
                     setIsFirst(false)
                     setSelectedMonths([])
+                    setRemovedAutoRowKeys(new Set())
                     form.setValue('feeStructureId', '')
                     form.setValue('discountPercentage', 0)
                     form.setValue('studentFeeDetailsDTOs', [])
@@ -465,69 +486,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 }}
                 getValue={(s) => s?.id ?? ''}
               />
-
-              <InputElement
-                label="Class"
-                inputType="text"
-                form={form}
-                name="classDisplay"
-                value={
-                  allClasses?.Items?.find((c) => c.id === selectedClassId)
-                    ?.name ?? ''
-                }
-                disabled
-              />
-              <input
-                type="hidden"
-                {...form.register('classId')}
-                value={selectedClassId}
-              />
-
-              <div className="space-y-1">
-                <AppCombobox
-                  value={selectedFeeStructureId}
-                  dropDownWidth="w-full"
-                  dropdownPositionClass="absolute"
-                  label="Fee Structure (Optional)"
-                  name="feeStructureId"
-                  form={form}
-                  options={allFeeStructures?.Items ?? []}
-                  selected={getSelectedFeeStructure()}
-                  onSelect={(f) => {
-                    const id = f?.id ?? (f as { Id?: string }).Id ?? ''
-                    setSelectedFeeStructureId(id)
-                    form.setValue('feeStructureId', id, {
-                      shouldValidate: true,
-                    })
-                    setManualRows([])
-                  }}
-                  getLabel={getFeeStructureLabel}
-                  getValue={(f) => f?.id ?? (f as { Id?: string }).Id ?? ''}
-                />
-
-                {!isEditMode &&
-                  selectedClassId &&
-                  isFeeStructureByClassLoading && (
-                    <p className="flex items-center gap-1.5 text-xs text-gray-400 animate-pulse px-1">
-                      <Info size={12} />
-                      Fetching fee structure for class...
-                    </p>
-                  )}
-
-                {classHasNoFeeStructure && (
-                  <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2 mt-1">
-                    <AlertCircle
-                      size={14}
-                      className="text-amber-500 flex-shrink-0"
-                    />
-                    <p className="text-xs text-amber-700 dark:text-amber-300 leading-tight">
-                      No fee structure is assigned to this class. You can still
-                      add custom fee rows below.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <InputElement
                 label="Discount (%) for Custom Rows"
                 form={form}
@@ -537,7 +495,25 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                 onChange={handleDiscountChange}
               />
             </div>
+            <div className="flex flex-wrap gap-3">
+              {feeStructureByClass?.Items.map((item, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className="text-xs flex items-center gap-1 rounded-full border-2 border-teal-300 bg-teal-50 p-2 px-3 text-teal-700 transition "
+                >
+                  <span className="font-medium">{item.feeCategoryName}</span>
 
+                  <span className="rounded-full bg-teal-600 px-1 py-0.5 text-xs font-semibold text-white">
+                    {
+                      FEE_PAID_TYPE_OPTIONS.find(
+                        (option) => option.value === item.paidTypes
+                      )?.label
+                    }
+                  </span>
+                </button>
+              ))}
+            </div>
             <div className="space-y-3">
               <div className="flex flex-wrap justify-between items-start gap-3">
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
@@ -670,6 +646,8 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                             FEE_PAID_TYPE_OPTIONS.find(
                               (o) => o.value === detail.feePaidType
                             )?.label ?? '—'
+                          const isRowRequired =
+                            autoRowRequiredMap.get(detail.feeTypeId) ?? true
                           return (
                             <tr
                               key={`auto-${index}`}
@@ -699,7 +677,20 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                               <td className="px-3 py-3 text-right font-semibold text-gray-900 dark:text-white">
                                 {detail.totalAmount.toFixed(2)}
                               </td>
-                              <td className="px-3 py-3 text-center" />
+                              <td className="px-3 py-3 text-center">
+                                {!isRowRequired && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeAutoRow(detail.feeTypeId)
+                                    }
+                                    className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                                    title="Remove row"
+                                  >
+                                    <X size={15} strokeWidth={2.5} />
+                                  </button>
+                                )}
+                              </td>
                             </tr>
                           )
                         })}
@@ -789,7 +780,7 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
                                 <button
                                   type="button"
                                   onClick={() => removeManualRow(index)}
-                                  className="text-red-400 hover:text-red-600 transition-colors"
+                                  className="text-red-400 hover:text-red-600 transition-colors "
                                   title="Remove row"
                                 >
                                   <Trash2 size={15} />
