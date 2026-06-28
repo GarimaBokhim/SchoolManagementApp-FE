@@ -21,13 +21,14 @@ export interface IFeeStructureDTO {
   amount: number
   discountAmount: number
   times: number
+  isRequired: boolean | null
+  isAssigned: boolean | null
   totalAmount: number
   feePaidType: number
 }
 
 const queryKey = 'FeeStructureDetail'
 
-/** Backend may return PascalCase JSON; normalize to camelCase DTOs. */
 function normalizeFeeStructureDto(
   raw: Record<string, unknown>
 ): IFeeStructureDTO {
@@ -36,6 +37,8 @@ function normalizeFeeStructureDto(
     amount: Number(raw.amount ?? raw.Amount ?? 0),
     discountAmount: Number(raw.discountAmount ?? raw.DiscountAmount ?? 0),
     times: Number(raw.times ?? raw.Times ?? 1),
+    isAssigned: Boolean(raw.isAssigned ?? raw.isAssigned ?? null),
+    isRequired: Boolean(raw.isRequired ?? raw.isRequired ?? null),
     totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
     feePaidType: Number(raw.feePaidType ?? raw.FeePaidType ?? 1),
   }
@@ -62,17 +65,28 @@ export function normalizeFeeStructureDetailPayload(
   }
 }
 
-export const useGetFeeStructureById = (feeStructureId: string) => {
+export const useGetFeeStructureDTOs = (
+  studentId: string,
+  feeStructureIds: string[]
+) => {
   return useQuery({
-    queryKey: [queryKey, feeStructureId],
+    queryKey: [queryKey, studentId, feeStructureIds],
     queryFn: async (): Promise<IFeeStructureDetail> => {
-      const response = await api.get<unknown>(
-        `/api/Finance/FeeStructure/${feeStructureId}`
-      )
+      const params = new URLSearchParams()
+
+      params.append('studentId', studentId)
+
+      feeStructureIds.forEach((id) => {
+        params.append('FeeStructureIds', id)
+      })
+
+      const response = await api.get('/api/Finance/FeeStructureByDTOs', {
+        params,
+      })
+
       return normalizeFeeStructureDetailPayload(response.data)
     },
-    enabled: !!feeStructureId?.trim(),
-    staleTime: 0,
+    enabled: !!studentId && feeStructureIds.length > 0,
     retry: false,
   })
 }

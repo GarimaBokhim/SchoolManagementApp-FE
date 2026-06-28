@@ -1,43 +1,43 @@
-"use client";
-import { useForm } from "react-hook-form";
-import AddStudentFeeForm from "../_components/AddStudentFee";
-import { IStudentFee } from "../types/IStudentFee";
+'use client'
+import { useForm } from 'react-hook-form'
+import AddStudentFeeForm from '../_components/AddStudentFee'
+import { IStudentFee } from '../types/IStudentFee'
 
 interface Props {
-  visible: boolean;
-  onClose?: () => void;
+  visible: boolean
+  onClose?: () => void
 }
 const AddStudentFee = ({ visible, onClose }: Props) => {
   const form = useForm<IStudentFee>({
     defaultValues: {
-      studentId: "",
-      feeStructureId: "",
-      classId: "",
+      studentId: '',
+      feeStructureId: '',
+      classId: '',
       discountPercentage: 0,
     },
 
     // resolver: yupResolver(StudentValidator),
-  });
+  })
   const handleOnClose = () => {
-    if (onClose) onClose();
-  };
-  if (!visible) return null;
+    if (onClose) onClose()
+  }
+  if (!visible) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center
              bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] 
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
                w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
-               max-h-[95vh] md:max-h-[92vh] h-full 
-               rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
+               max-h-[95vh] md:max-h-[92vh] h-full
+               rounded-lg overflow-auto p-4 md:p-4 shadow-lg"
       >
         <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
         <AddStudentFeeForm form={form} onClose={handleOnClose} />
       </div>
     </div>
-  );
-};
-export default AddStudentFee;
+  )
+}
+export default AddStudentFee

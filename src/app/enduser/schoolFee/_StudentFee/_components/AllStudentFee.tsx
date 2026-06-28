@@ -29,7 +29,7 @@ import { AppCombobox } from '@/components/Input/ComboBox'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import AddStudentFee from '../pages/Add'
-import EditStudentFee from '../pages/Edit'
+// import EditStudentFee from '../pages/Edit'
 import { useGetAllStudents } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { Eye, CreditCard, X } from 'lucide-react'
 import ViewStudentFeeForm from './filterstudentsfeedetail'
@@ -545,16 +545,6 @@ const AllStudentFeeForm = () => {
         )}
 
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
-
-        <EditStudentFee
-          visible={editModal}
-          editRecord={editRecord}
-          onClose={() => {
-            setEditModal(false)
-            setEditRecord(null)
-            refetch()
-          }}
-        />
       </div>
 
       {/* View Student Fee Modal */}
