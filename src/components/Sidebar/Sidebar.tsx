@@ -253,7 +253,7 @@ const Sidebar: React.FC<Props> = ({
     subItems: item.subModulesResponse
       ? [...item.subModulesResponse].sort(sortByRank)
       : [],
-    allowedRoles: item.role,
+    allowedRoles: [item.role],
   }))
 
   const toggleSection = (section: string) => {
