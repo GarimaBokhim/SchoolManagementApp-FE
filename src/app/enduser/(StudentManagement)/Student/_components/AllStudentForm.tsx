@@ -15,14 +15,13 @@ const getInitials = (
   return (first + middle + last).toUpperCase().substring(0, 2) || 'S'
 }
 
-/** Larger avatar used inside the table row with name below */
 const StudentAvatar = ({ student }: { student: any }) => {
   const [imgError, setImgError] = useState(false)
   const imageUrl = student.imageUrl ? `${BASE_URL}/${student.imageUrl}` : null
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-16 h-16 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-md">
+    <div className="flex flex-col items-center gap-1 sm:gap-2">
+      <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-md">
         {imageUrl && !imgError ? (
           <img
             src={imageUrl}
@@ -31,7 +30,7 @@ const StudentAvatar = ({ student }: { student: any }) => {
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="text-lg font-bold text-white">
+          <span className="text-xs sm:text-lg font-bold text-white">
             {getInitials(
               student.firstName,
               student.lastName,
@@ -42,11 +41,10 @@ const StudentAvatar = ({ student }: { student: any }) => {
       </div>
       <button
         onClick={() => {
-          // You'll need to pass a click handler from parent
           const event = new CustomEvent('studentNameClick', { detail: student })
           window.dispatchEvent(event)
         }}
-        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors text-center"
+        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors text-center text-[11px] sm:text-sm leading-tight break-words max-w-[80px] sm:max-w-none"
       >
         {student.firstName} {student.middleName} {student.lastName}
       </button>
@@ -115,7 +113,6 @@ const useExcelPreview = () => {
     setUploadLoading(true)
 
     try {
-      // Parse Excel file and preview data
       setShowPreviewModal(true)
     } catch (error) {
       console.error('Error previewing Excel:', error)
@@ -128,8 +125,6 @@ const useExcelPreview = () => {
   const handleSaveExcel = async () => {
     setUploadLoading(true)
     try {
-      // Upload the file to your server
-      // await uploadstudent(selectedFile)
       toast.success('File uploaded successfully!')
       setShowPreviewModal(false)
     } catch (error) {
@@ -152,13 +147,16 @@ const useExcelPreview = () => {
   }
 }
 
-// StatCard component with improved styling for better distribution
 const StatCard = ({ label, value, icon, iconBg, iconColor }: any) => (
-  <div className="flex items-center gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700 flex-1 min-w-[150px]">
-    <div className={`p-2 rounded-full ${iconBg} ${iconColor}`}>{icon}</div>
+  <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-200 dark:border-gray-700 flex-1 min-w-[130px] sm:min-w-[150px]">
+    <div className={`p-1.5 sm:p-2 rounded-full ${iconBg} ${iconColor}`}>
+      {icon}
+    </div>
     <div>
-      <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="text-xl font-semibold text-gray-900 dark:text-white">
+      <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+        {label}
+      </p>
+      <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
         {value}
       </p>
     </div>
@@ -326,7 +324,7 @@ const AllStudentForm = () => {
     const found = allClasses?.Items?.find((c) => c.id === classId)
     return found?.name || 'N/A'
   }
-  // Listen for custom event from StudentAvatar
+
   useEffect(() => {
     const handleStudentClick = (event: Event) => {
       const customEvent = event as CustomEvent
@@ -349,11 +347,11 @@ const AllStudentForm = () => {
 
   return (
     <>
-      <div className="p-4 sm:p-6">
+      <Toaster position="top-right" />
+      <div className="p-4 sm:p-6 w-full ">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          {/* Page header */}
-          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center flex-wrap gap-3">
-            <h1 className="text-xl font-semibold">All Students</h1>
+          <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
+            <h1 className="text-lg sm:text-xl font-semibold">All Students</h1>
             <div className="flex flex-wrap gap-2 justify-end">
               <ButtonElement
                 type="button"
@@ -371,6 +369,15 @@ const AllStudentForm = () => {
                   className="!font-semibold"
                 />
               )}
+              <ImportButtonForm
+                handleExcelImport={async (file) => {
+                  await toast.promise(uploadstudent(file), {
+                    loading: 'Uploading...',
+                    success: 'Students uploaded successfully!',
+                    error: 'Upload failed! Please Check the format',
+                  })
+                }}
+              />
               <ExportButtonForm
                 file="/template/ledgerTemplate.xlsx"
                 data={
@@ -400,8 +407,7 @@ const AllStudentForm = () => {
             </div>
           </div>
 
-          {/* Stats cards - Now properly distributed across full width */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 pb-4 pt-1">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 px-3 sm:px-4 pb-4 pt-1 not-only:">
             <StatCard
               label="Total Students"
               value={isLoading ? '—' : totalStudents}
@@ -432,9 +438,8 @@ const AllStudentForm = () => {
             />
           </div>
 
-          {/* Filter panel */}
           {openFilter && (
-            <div className="bg-white dark:bg-[#2c2c2c] p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+            <div className="bg-white dark:bg-[#2c2c2c] p-3 sm:p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 mx-3 sm:mx-4">
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="flex flex-col lg:flex-row lg:flex-wrap gap-4"
@@ -445,7 +450,7 @@ const AllStudentForm = () => {
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
-                <div className="flex-1 min-w-[240px]">
+                <div className="flex-1 min-w-0 lg:min-w-[240px]">
                   <AppCombobox
                     value={selectedStudentName}
                     dropDownWidth="w-full"
@@ -485,33 +490,19 @@ const AllStudentForm = () => {
             </div>
           )}
 
-          {/* Table */}
-          <div className="overflow-x-auto bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
-            <table className="min-w-full text-xs sm:text-sm">
+          <div className="hidden md:block bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 dark:bg-[#80878c] text-gray-700 dark:text-white uppercase font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-16">S.N</th>
-                  <th className="px-4 py-3 text-left w-48">Student Details</th>
-                  <th className="px-4 py-3 text-left w-32">Reg. No</th>
-                  <th className="px-4 py-3 text-left w-20 hidden md:table-cell">
-                    Gender
-                  </th>
-                  <th className="px-4 py-3 text-left w-48 hidden lg:table-cell">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left w-32 hidden lg:table-cell">
-                    Class
-                  </th>
-                  <th className="px-4 py-3 text-left w-48 hidden xl:table-cell">
-                    Address
-                  </th>
-                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">
-                    Phone
-                  </th>
-                  <th className="px-4 py-3 text-left w-32 hidden md:table-cell">
-                    DOB
-                  </th>
-                  <th className="px-4 py-3 text-center w-40">Actions</th>
+                <tr className="bg-gray-50 dark:bg-[#80878c] uppercase">
+                  <th className="px-2 py-3 text-left">S.N</th>
+                  <th className="px-2 py-3 text-left">Student</th>
+                  <th className="px-2 py-3 text-left">Reg. No</th>
+                  <th className="px-2 py-3 text-left">Gender</th>
+                  <th className=" py-3 text-left">Email</th>
+                  <th className="px-2 py-3 text-left">Class</th>
+                  <th className="px-2 py-3 text-left">Address</th>
+                  <th className="px-2 py-3 text-left">DOB</th>
+                  <th className="px-2 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -531,19 +522,19 @@ const AllStudentForm = () => {
                         key={student.id || index}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 text-gray-700 dark:text-gray-100"
                       >
-                        <td className="px-4 py-3 whitespace-nowrap align-top">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 align-top">
                           {(paginationParams.pageIndex - 1) *
                             paginationParams.pageSize +
                             index +
                             1}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3">
                           <StudentAvatar student={student} />
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap align-middle">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 align-middle hidden xs:table-cell sm:table-cell truncate">
                           {student.registrationNumber || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap align-middle hidden md:table-cell">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 align-middle hidden md:table-cell">
                           {student.genderStatus === 1
                             ? 'Male'
                             : student.genderStatus === 2
@@ -551,24 +542,24 @@ const AllStudentForm = () => {
                               : 'Other'}
                         </td>
                         <td
-                          className="px-4 py-3 truncate max-w-[200px] hidden lg:table-cell align-middle"
+                          className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden lg:table-cell align-middle"
                           title={student.email}
                         >
                           {student.email || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell align-middle">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden lg:table-cell align-middle">
                           {getClassName(student.classId)}
                         </td>
                         <td
-                          className="px-4 py-3 truncate max-w-[200px] hidden xl:table-cell align-middle"
+                          className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden xl:table-cell align-middle"
                           title={student.address}
                         >
                           {student.address || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden md:table-cell align-middle">
                           {student.phoneNumber || 'N/A'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell align-middle">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden md:table-cell align-middle">
                           {student.dateOfBirth ? (
                             <DateConverter
                               date={
@@ -581,14 +572,14 @@ const AllStudentForm = () => {
                             'N/A'
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-1 py-2 sm:px-4 sm:py-3 text-center align-middle">
+                          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
                             {canDelete && (
                               <DeleteButton
                                 onConfirm={() =>
                                   handleDelete(student.id ? student.id : '')
                                 }
-                                headerText={<Trash size={16} />}
+                                headerText={<Trash size={14} />}
                                 content="Are you sure you want to delete this student?"
                               />
                             )}
@@ -596,14 +587,14 @@ const AllStudentForm = () => {
                               <EditButton
                                 button={
                                   <ButtonElement
-                                    icon={<Edit size={14} />}
+                                    icon={<Edit size={18} />}
                                     type="button"
                                     text=""
                                     onClick={() => {
                                       setShowStudents(true)
                                       setSelectedId(student.id ?? '')
                                     }}
-                                    className="!text-xs !bg-teal-500"
+                                    className="!text-xs !bg-teal-500 "
                                   />
                                 }
                               />
@@ -612,7 +603,7 @@ const AllStudentForm = () => {
                             <EditButton
                               button={
                                 <ButtonElement
-                                  icon={<GraduationCap size={14} />}
+                                  icon={<GraduationCap size={18} />}
                                   type="button"
                                   text=""
                                   onClick={() => {
@@ -621,7 +612,7 @@ const AllStudentForm = () => {
                                       student.id ?? ''
                                     )
                                   }}
-                                  className="!text-xs !bg-blue-500"
+                                  className="!text-xs !bg-blue-500 "
                                 />
                               }
                             />
@@ -645,7 +636,6 @@ const AllStudentForm = () => {
           </div>
         </div>
 
-        {/* Pagination */}
         {filteredStudent && filteredStudent?.Items?.length > 0 && (
           <div className="mt-4">
             <Pagination

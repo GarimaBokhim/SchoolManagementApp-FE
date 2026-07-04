@@ -10,7 +10,7 @@ import { IStudent } from '../types/IStudents'
 import { useAddStudent } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
-import { useDate } from "@/context/auth/PrimaryDateContext";
+import { useDate } from '@/context/auth/PrimaryDateContext'
 import {
   useGetAllProvince,
   useGetDistrictByProvince,
@@ -29,8 +29,12 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { handleError, clearError } = useErrorHandler()
   const { data: allProvince } = useGetAllProvince()
   const { data: allClass } = useGetAllClass()
-  const { data: allFeeCategories } = useFilterFeeCategoryByDate('?IsPagination=false')
-  const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<string | null>(null)
+  const { data: allFeeCategories } = useFilterFeeCategoryByDate(
+    '?IsPagination=false'
+  )
+  const [selectedFeeCategoryId, setSelectedFeeCategoryId] = useState<
+    string | null
+  >(null)
   const [selectedClassId, setSelectedClassId] = useState<string | null>('')
   const [genderStatus, setGenderStatus] = useState<number | null>(null)
   const [selectedProvinceId, setSelectedProvinceId] = useState<
@@ -48,30 +52,36 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
   const { data: filteredMunicipality } =
     useGetMunicipalityByDistrict(selectedDistrictId)
-  console.log('data', filteredMunicipality)
   const handleClose = () => {
     form.reset()
   }
-  const { isPrimaryBS } = useDate();
+  const { isPrimaryBS } = useDate()
   const onSubmit: SubmitHandler<IStudent> = async (data) => {
     clearError()
 
     try {
       const formData = new FormData()
-
-      // Always provide a fallback string for required fields
       formData.append('firstName', data.firstName)
       formData.append('feeCategoryId', data.feeCategoryId ?? '')
       formData.append('middleName', data.middleName ?? '')
       formData.append('lastName', data.lastName)
       formData.append('registrationNumber', data.registrationNumber ?? '')
-      formData.append('genderStatus', String(genderStatus ?? data.genderStatus ?? 0))
+      formData.append(
+        'genderStatus',
+        String(genderStatus ?? data.genderStatus ?? 0)
+      )
       formData.append('studentStatus', String(data.studentStatus ?? 0))
-      formData.append('dateOfBirth', data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : '')
+      formData.append(
+        'dateOfBirth',
+        data.dateOfBirth ? new Date(data.dateOfBirth).toISOString() : ''
+      )
       formData.append('email', data.email ?? '')
       formData.append('phoneNumber', data.phoneNumber ?? '')
       formData.append('address', data.address ?? '')
-      formData.append('enrollmentDate', data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : '')
+      formData.append(
+        'enrollmentDate',
+        data.enrollmentDate ? new Date(data.enrollmentDate).toISOString() : ''
+      )
       formData.append('parentId', data.parentId ?? '')
       formData.append('classId', data.classId ?? '')
       formData.append('classSectionId', data.classSectionId ?? '')
@@ -80,8 +90,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
       formData.append('municipalityId', String(data.municipalityId ?? 0))
       formData.append('vdcId', String(data.vdcid ?? 0)) // API uses vdcId
       formData.append('wardNumber', String(data.wardNumber ?? 0))
-
-      // Only append file if it exists
       if (data.studentImg instanceof File) {
         formData.append('studentImg', data.studentImg)
       }
@@ -332,7 +340,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
               </div>
             </section>
 
-            {/* Educational Details */}
             <section className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 border-b pb-2">
                 Educational Details
@@ -365,13 +372,13 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   isExpiryDate={true}
                 />
                 <AppCombobox
+                  required
                   value={selectedClassId}
                   dropDownWidth="w-full"
                   dropdownPositionClass="absolute"
                   label="Class"
                   name="classId"
                   form={form}
-                  required
                   options={allClass?.Items}
                   selected={
                     allClass?.Items?.find((g) => g.id === selectedClassId) ||
@@ -410,7 +417,6 @@ const AddStudentForm = ({ form, onClose }: Props) => {
               </div>
             </section>
 
-            {/* Submit Button */}
             <div className="flex justify-center mt-8">
               <ButtonElement
                 type="button"

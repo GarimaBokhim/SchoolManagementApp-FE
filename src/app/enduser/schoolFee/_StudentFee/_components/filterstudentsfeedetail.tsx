@@ -71,7 +71,6 @@ const ViewStudentFeeForm = ({
     isLoading,
   } = useGetStudentFeesummary(params)
 
-  // ✅ Direct print function - opens new window and prints content
   const handlePrintDirect = () => {
     if (!componentRef.current) {
       toast.error('No content to print')
@@ -254,8 +253,6 @@ const ViewStudentFeeForm = ({
   return (
     <>
       <Toaster position="top-right" />
-
-      {/* FILTER FORM */}
       <div className="bg-white p-5 rounded-xl border shadow-sm mb-4 flex justify-center">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -371,7 +368,6 @@ const ViewStudentFeeForm = ({
         </form>
       </div>
 
-      {/* DATA TABLE */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100">
@@ -427,8 +423,6 @@ const ViewStudentFeeForm = ({
           </tbody>
         </table>
       </div>
-
-      {/* PRINT PREVIEW MODAL */}
       {showPreview && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">

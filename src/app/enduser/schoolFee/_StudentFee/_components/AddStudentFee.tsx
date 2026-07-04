@@ -38,18 +38,18 @@ const FEE_PAID_TYPE_OPTIONS = [
 ]
 
 const MONTH_OPTIONS = [
-  { label: 'January', value: 1 },
-  { label: 'February', value: 2 },
-  { label: 'March', value: 3 },
-  { label: 'April', value: 4 },
-  { label: 'May', value: 5 },
-  { label: 'June', value: 6 },
-  { label: 'July', value: 7 },
-  { label: 'August', value: 8 },
-  { label: 'September', value: 9 },
-  { label: 'October', value: 10 },
-  { label: 'November', value: 11 },
-  { label: 'December', value: 12 },
+  { label: 'Baisakh', value: 1 },
+  { label: 'Jestha', value: 2 },
+  { label: 'Ashar', value: 3 },
+  { label: 'Shrawan', value: 4 },
+  { label: 'Bhadra', value: 5 },
+  { label: 'Ashoj', value: 6 },
+  { label: 'Kartik', value: 7 },
+  { label: 'Mangsir', value: 8 },
+  { label: 'Poush', value: 9 },
+  { label: 'Magh', value: 10 },
+  { label: 'Falgun', value: 11 },
+  { label: 'Chaitra', value: 12 },
 ]
 
 const getMonthLabel = (value: number): string =>
@@ -70,6 +70,19 @@ const getDefaultTimes = (feePaidType: number): number => {
     default:
       return 1
   }
+}
+
+const normalizeMonths = (raw: unknown): number[] => {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((m) => {
+      if (typeof m === 'number') return m
+      if (m && typeof m === 'object' && 'nameOfMonths' in m) {
+        return Number((m as { nameOfMonths: number }).nameOfMonths)
+      }
+      return NaN
+    })
+    .filter((m) => !Number.isNaN(m))
 }
 
 const calculateRowTotals = (
@@ -122,8 +135,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
 
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [selectedClassId, setSelectedClassId] = useState('')
-  // Holds ALL fee structure ids that apply to the selected class (or, in edit
-  // mode, the ids on the record being edited) — always an array of strings.
   const [selectedFeeStructureId, setSelectedFeeStructureId] = useState<
     string[]
   >([])
@@ -132,8 +143,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const [isFirst, setIsFirst] = useState(false)
   const [selectedMonths, setSelectedMonths] = useState<number[]>([])
   const [isMonthMenuOpen, setIsMonthMenuOpen] = useState(false)
-  // Tracks feeTypeIds of optional (non-required) auto rows the user has
-  // manually removed from the table, keyed by feeTypeId.
   const [removedAutoRowKeys, setRemovedAutoRowKeys] = useState<Set<string>>(
     new Set()
   )
@@ -157,8 +166,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
   const { data: feeStructureDetail, isLoading: isFeeStructureLoading } =
     useGetFeeStructureDTOs(selectedStudentId, selectedFeeStructureId)
 
-  // Single source of truth: maps each unassigned DTO to its row plus
-  // whether that row is required, computed once.
   const autoRowsWithMeta = useMemo(() => {
     if (isEditMode) return []
     if (!feeStructureDetail?.feeStructureDTOs?.length) return []
@@ -173,8 +180,6 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     }))
   }, [isEditMode, feeStructureDetail])
 
-  // Visible auto rows: required rows always show; optional rows are hidden
-  // once the user removes them via the X button.
   const autoRows = useMemo(
     () =>
       autoRowsWithMeta
@@ -193,6 +198,14 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     })
     return map
   }, [autoRowsWithMeta])
+
+  useEffect(() => {
+    if (!isEditMode && feeStructureDetail?.FeeMonthDTOs?.length) {
+      setSelectedMonths((prev) =>
+        prev.length ? prev : normalizeMonths(feeStructureDetail.FeeMonthDTOs)
+      )
+    }
+  }, [feeStructureDetail, isEditMode])
 
   const removeAutoRow = (feeTypeId: string) => {
     setRemovedAutoRowKeys((prev) => {
@@ -260,9 +273,14 @@ const AddStudentFeeForm = ({ form, onClose, editRecord }: Props) => {
     setDiscountPercentage(editRecord.discountPercentage ?? 0)
     prevStudentIdRef.current = editRecord.studentId
     setManualRows(
-      (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({ ...d }))
+      (editRecord.studentFeeDetailsDTOs ?? []).map((d) => ({
+        ...d,
+        NameOfMonths: normalizeMonths(d.NameOfMonths),
+      }))
     )
-    setSelectedMonths(editRecord.studentFeeDetailsDTOs?.[0]?.NameOfMonths ?? [])
+    setSelectedMonths(
+      normalizeMonths(editRecord.studentFeeDetailsDTOs?.[0]?.NameOfMonths)
+    )
   }, [editRecord])
 
   useEffect(() => {

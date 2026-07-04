@@ -1,17 +1,17 @@
-import { JSX, useState } from "react";
-import { X } from "lucide-react";
-import exportFile from "../../../public/assets/export.png";
-import { DownloadTemplateCSV } from "./CSVButton";
-import { ExportExcelButton } from "./ExportExcelbutton";
-import { PdfButton } from "./PdfButton";
+import { JSX, useState } from 'react'
+import { X } from 'lucide-react'
+import exportFile from '../../../public/assets/export.png'
+import { DownloadTemplateCSV } from './CSVButton'
+import { ExportExcelButton } from './ExportExcelbutton'
+import { PdfButton } from './PdfButton'
 type Props = {
-  file?: string;
-  data?: JSX.Element;
-  excelData?: JSX.Element;
-   onExcelExport?: () => void;
-};
+  file?: string
+  data?: JSX.Element
+  excelData?: JSX.Element
+  onExcelExport?: () => void
+}
 const ExportButtonForm = ({ data, excelData, file }: Props) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false)
 
   return (
     <div>
@@ -32,7 +32,7 @@ const ExportButtonForm = ({ data, excelData, file }: Props) => {
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 crusor-pointer"
             >
               <X />
             </button>
@@ -62,7 +62,7 @@ const ExportButtonForm = ({ data, excelData, file }: Props) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ExportButtonForm;
+export default ExportButtonForm

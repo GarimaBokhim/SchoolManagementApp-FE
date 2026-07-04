@@ -1,35 +1,35 @@
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { X } from "lucide-react";
-import { IParent } from "../types/IParents";
-import { useAddParent } from "../hooks";
-import toast from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import { X } from 'lucide-react'
+import { IParent } from '../types/IParents'
+import { useAddParent } from '../hooks'
+import toast from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
 type Props = {
-  form: UseFormReturn<IParent>;
-  onClose: () => void;
-};
+  form: UseFormReturn<IParent>
+  onClose: () => void
+}
 const AddParentForm = ({ form, onClose }: Props) => {
-  const addParent = useAddParent();
-  const { handleError, clearError } = useErrorHandler();
+  const addParent = useAddParent()
+  const { handleError, clearError } = useErrorHandler()
   const handleClose = () => {
-    form.reset();
-  };
+    form.reset()
+  }
   const onSubmit: SubmitHandler<IParent> = async (data) => {
-    clearError();
+    clearError()
     try {
       await toast.promise(addParent.mutateAsync(data), {
-        loading: "Adding Parent...",
-        success: "Successfully added Parent",
-      });
-      handleClose();
+        loading: 'Adding Parent...',
+        success: 'Successfully added Parent',
+      })
+      handleClose()
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
     }
-  };
+  }
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -41,7 +41,7 @@ const AddParentForm = ({ form, onClose }: Props) => {
             <button
               type="button"
               onClick={onClose}
-              className="text-red-400 text-2xl hover:text-red-500 "
+              className="text-red-400 text-2xl hover:text-red-500 cursor-pointer"
             >
               <X strokeWidth={3} />
             </button>
@@ -82,13 +82,13 @@ const AddParentForm = ({ form, onClose }: Props) => {
               />
             </div>
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={"Submit"} />
+              <ButtonElement type="submit" text={'Submit'} />
             </div>
           </form>
         </fieldset>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddParentForm;
+export default AddParentForm

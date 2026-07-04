@@ -75,11 +75,11 @@ export const PrintIDCardButton = ({ StudentId }: { StudentId: string }) => {
       <Toaster position="top-right" />
 
       <ButtonElement
-        icon={<Printer size={14} />}
+        icon={<Printer size={18} />}
         type="button"
         text=""
         onClick={() => setShowModal(true)}
-        className="!text-xs !bg-purple-500 hover:!bg-purple-600"
+        className="!text-xs !bg-purple-500 hover:!bg-purple-600 py-[0.6rem] px-2 pl-3"
       />
 
       {showModal && (

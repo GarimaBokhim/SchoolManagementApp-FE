@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React, { JSX } from "react";
+import React, { JSX } from 'react'
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -11,14 +11,14 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 type Props = {
-  headerText: JSX.Element;
-  content: string;
-  onConfirm: () => void;
-};
+  headerText: JSX.Element
+  content: string
+  onConfirm: () => void
+}
 export default function DeleteButton({
   headerText,
   content,
@@ -27,7 +27,9 @@ export default function DeleteButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">{headerText}</Button>
+        <Button className="cursor-pointer" variant="destructive">
+          {headerText}
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -41,5 +43,5 @@ export default function DeleteButton({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

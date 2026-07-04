@@ -1,24 +1,22 @@
-import { useState } from "react";
-import { Import, X } from "lucide-react";
-import { ImportExcel } from "./importexcelbutton";
+import { useState } from 'react'
+import { Import, X } from 'lucide-react'
+import { ImportExcel } from './importexcelbutton'
 type Props = {
-  handleExcelImport?: (data: File) => Promise<void>;
-};
+  handleExcelImport?: (data: File) => Promise<void>
+}
 const ImportButtonForm = ({ handleExcelImport }: Props) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false)
   const onClose = () => {
-    setShowModal(!showModal);
-  };
+    setShowModal(!showModal)
+  }
   return (
     <div>
-      
-        <button
-          onClick={() => onClose()}
-          className=" text-white rounded-md !text-xs font-bold !bg-teal-500 !p-[0.4rem] "
-        >
-          <Import size={19} />
-        </button>
-    
+      <button
+        onClick={() => onClose()}
+        className=" text-white rounded-md !text-xs font-bold !bg-teal-500 !p-[0.4rem] cursor-pointer"
+      >
+        <Import size={19} />
+      </button>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
@@ -40,9 +38,9 @@ const ImportButtonForm = ({ handleExcelImport }: Props) => {
                   onImport={async (data) => {
                     if (handleExcelImport) {
                       try {
-                        await handleExcelImport(data);
+                        await handleExcelImport(data)
                       } finally {
-                        setShowModal(false);
+                        setShowModal(false)
                       }
                     }
                   }}
@@ -54,7 +52,7 @@ const ImportButtonForm = ({ handleExcelImport }: Props) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ImportButtonForm;
+export default ImportButtonForm
