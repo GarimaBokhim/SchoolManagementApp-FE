@@ -36,8 +36,8 @@ import ViewStudentFeeForm from './filterstudentsfeedetail'
 import PaymentRecordForm from './paymentrecords'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import DueSlipModal from './DueSLipModel'
+import EditStudentFee from '../pages/Edit'
 
-// ─── Row Component ───────────────────────────────────────────────────────────
 type StudentFeeRowProps = {
   StudentFee: IStudentFee
   index: number
@@ -46,6 +46,7 @@ type StudentFeeRowProps = {
   canEdit: boolean
   setPendingEditId: (id: string) => void
   setSelectedStudentFee: (fee: IStudentFee) => void
+  setEditModal: (val: boolean) => void
   setViewModal: (val: boolean) => void
   setViewpaymentModal: (val: boolean) => void
 }
@@ -56,6 +57,7 @@ const StudentFeeRow = ({
   getSerialNumber,
   getStudentName,
   canEdit,
+  setEditModal,
   setPendingEditId,
   setSelectedStudentFee,
   setViewModal,
@@ -86,6 +88,7 @@ const StudentFeeRow = ({
             onClick={() => {
               const rowId = StudentFee.id ?? StudentFee.Id ?? ''
               setPendingEditId(rowId)
+              setEditModal(true)
             }}
             className="!bg-blue-500 hover:!bg-blue-600"
           />
@@ -156,7 +159,6 @@ const AllStudentFeeForm = () => {
     useState<IStudentFee | null>(null)
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
 
-  // State for class chips pagination
   const [classStartIndex, setClassStartIndex] = useState<number>(0)
   const CLASSES_PER_PAGE = 6
 
@@ -172,14 +174,12 @@ const AllStudentFeeForm = () => {
   }, [fullEditRecord, pendingEditId])
 
   const fullQuery = query + (params || '')
-
   const {
     data: filteredStudentFee,
     refetch,
     isLoading,
   } = useFilterStudentFeeByDate(fullQuery)
 
-  // ── Client-side class filter ──
   const clientFilteredItems = selectedClassId
     ? filteredStudentFee?.Items?.filter(
         (fee) => fee.classId === selectedClassId
@@ -252,7 +252,6 @@ const AllStudentFeeForm = () => {
     setSelectedStudentId('')
     form.reset()
   }
-
   const getStudentName = (studentId: string): string => {
     const student = allStudent?.Items?.find(
       (i) => i.id != null && String(i.id) === String(studentId)
@@ -276,10 +275,8 @@ const AllStudentFeeForm = () => {
     setSelectedClassId(classId)
     setSelectedClassName(className)
     setPaginationParams((prev) => ({ ...prev, pageIndex: 1 }))
-    // Reset class start index when selecting a class? No, keep it as is
   }
 
-  // Get visible classes (6 at a time)
   const visibleClasses = useMemo(() => {
     const classes = allClasses?.Items ?? []
     return classes.slice(classStartIndex, classStartIndex + CLASSES_PER_PAGE)
@@ -507,6 +504,7 @@ const AllStudentFeeForm = () => {
                         getStudentName={getStudentName}
                         canEdit={canEdit}
                         setPendingEditId={setPendingEditId}
+                        setEditModal={setEditModal}
                         setSelectedStudentFee={setSelectedStudentFee}
                         setViewModal={setViewModal}
                         setViewpaymentModal={setViewpaymentModal}
@@ -547,7 +545,13 @@ const AllStudentFeeForm = () => {
         <AddStudentFee visible={addModal} onClose={() => setAddModal(false)} />
       </div>
 
-      {/* View Student Fee Modal */}
+      {editModal && selectedStudentFee && editRecord && (
+        <EditStudentFee
+          visible={editModal}
+          onClose={() => setEditModal(false)}
+          editRecord={editRecord}
+        />
+      )}
       {viewModal && selectedStudentFee && (
         <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
@@ -565,17 +569,18 @@ const AllStudentFeeForm = () => {
         </div>
       )}
 
-      {/* Payment Modal */}
       {viewpaymentModal && selectedStudentFee && (
         <div className="fixed inset-0 ml-[16%] bg-white bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-[#353535] w-screen max-w-4xl h-screen max-h-[1000vh] max-w-[88vw] p-6 rounded-xl overflow-auto shadow-lg relative">
             <button
-              className="absolute top-[-6px] right-1 w-10 h-10 flex items-center justify-center text-red-500 hover:text-gray-700"
+              className="absolute cursor-pointer top-[-6px] right-1 w-10 h-10 flex items-center justify-center text-red-500 hover:text-gray-700"
               onClick={() => setViewpaymentModal(false)}
             >
               <X size={24} strokeWidth={2.5} />
             </button>
             <PaymentRecordForm
+              totalAmount={selectedStudentFee.totalAmount}
+              dueAmount={selectedStudentFee.dueAmount}
               studentid={selectedStudentFee?.studentId || ''}
               classid={selectedStudentFee?.classId || ''}
               onClose={() => setViewpaymentModal(false)}

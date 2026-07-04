@@ -39,7 +39,6 @@ const LoginForm = () => {
     )
   }
   const handleSubmit = async (values: ILoginType) => {
-    console.log('Test', values)
     setIsSubmitting(true)
     try {
       const response = await login.mutateAsync(values)
@@ -81,24 +80,26 @@ const LoginForm = () => {
           const parsedUser = JSON.parse(storedUser)
           role = parsedUser.role
         } catch (error) {
-          console.error('Failed to parse user details:', error)
+          console.error('Failed to parse user details:')
         }
       }
 
       const dashboardRoute = roleToDashboardMap[userDetails.role]
-    ? roleToDashboardMap[userDetails.role]
-    : role === 'admin'
-      ? '/admin/dashboard'
-      : role === 'crmadmin'
-        ? '/crmadmin/dashboard'
-        : role === 'demoexpiryrole'
-          ? '/end-user/expired'
-          : role === 'crm'
-            ? '/crm/dashboard'
-            : '/enduser/dashboard';
+        ? roleToDashboardMap[userDetails.role]
+        : role === 'admin'
+          ? '/admin/dashboard'
+          : role === 'crmadmin'
+            ? '/crmadmin/dashboard'
+            : role === 'demoexpiryrole'
+              ? '/end-user/expired'
+              : role === 'crm'
+                ? '/crm/dashboard'
+                : '/enduser/dashboard'
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)
     } catch (error: any) {
-      Toast.error(error.response?.data || error.message || 'Failed to login.')
+      Toast.error(
+        error.response?.data.Message || error.message || 'Failed to login.'
+      )
     } finally {
       setIsSubmitting(false)
     }

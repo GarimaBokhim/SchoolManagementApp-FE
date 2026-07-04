@@ -8,6 +8,7 @@ export interface IFeeStructureDetail {
   feeCategoryName: string
   fyId: string
   feeStructureDTOs: IFeeStructureDTO[]
+  FeeMonthDTOs: FeeMonthDTO[]
   isActive: boolean
   schoolId: string
   createdBy: string
@@ -15,7 +16,10 @@ export interface IFeeStructureDetail {
   modifiedBy: string
   modifiedAt: string
 }
-
+export interface FeeMonthDTO {
+  id?: string
+  nameOfMonths: number
+}
 export interface IFeeStructureDTO {
   feeTypeId: string
   amount: number
