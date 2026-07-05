@@ -1,0 +1,262 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/utils/instance'
+import { IPaginationResponse } from '@/types/IPaginationResponse'
+import {
+    IFiscalYear,
+    ISchool,
+    ISchoolDetails,
+    ISchoolUser,
+} from '../types/ISchool'
+
+const SchoolEndPoints = {
+    getAllSchool: '/api/SetupControllers/all-school',
+    createSchool: '/api/SetupControllers/AddSchool',
+    getSchoolById: '/api/SetupControllers/School',
+    getSchoolByInstitutionId: '/api/SetupControllers/GetSchool',
+    getSchoolDetailsByInstitutionId: '/api/SetupControllers/GetSchoolDetails',
+    removeSchool: '/api/SetupControllers/DeleteSchool',
+    updateSchool: '/api/SetupControllers/UpdateSchool',
+    filterSchoolByDate: '/api/SetupControllers/FilterSchoolByDate',
+    GetSchoolDetails: '/api/SetupControllers/GetSchoolDetails',
+    fiscalYear: '/api/Settings/all-FiscalYear',
+}
+
+const queryKey = 'school'
+const filterSchoolQuery = 'Filtered School'
+const fiscalYearQuery = 'fiscalYear'
+
+enum Status {
+    Manual = 0,
+    Automatic = 1,
+}
+
+export type SchoolRequest = {
+    id: string
+    name: string
+    address: string
+    email: string
+    shortName: string
+    contactNumber: string
+    contactPerson: string
+    pan: string
+    logoUrl?: File | null
+    imageUrl?: string
+    isEnable: boolean
+    billNumberGenerationTypeForPurchase: Status
+    billNumberGenerationTypeForSales: Status
+    isDeleted: boolean
+    institutionId: string
+    fiscalYearId: string
+    academicYearId: string
+    Users: ISchoolUser[]
+}
+
+export const useGetSchoolByInstitutionId = (institutionId: string) => {
+    return useQuery({
+        queryKey: [queryKey + institutionId],
+        queryFn: async () => {
+            const response = await api.get<ISchool[]>(
+                `${SchoolEndPoints.getSchoolByInstitutionId}/${institutionId}`
+            )
+            return response.data
+        },
+        enabled: !!institutionId,
+        staleTime: 0,
+        retry: false,
+    })
+}
+
+export const useGetSchoolDetailsByInstitutionId = (institutionId: string) => {
+    return useQuery({
+        queryKey: [queryKey + institutionId],
+        queryFn: async () => {
+            const response = await api.get<ISchool[]>(
+                `${SchoolEndPoints.getSchoolDetailsByInstitutionId}/${institutionId}`
+            )
+            return response.data
+        },
+        enabled: !!institutionId,
+        staleTime: 0,
+        retry: false,
+    })
+}
+
+export const useGetAllSchool = (params?: string) => {
+    return useQuery({
+        queryKey: [queryKey],
+        queryFn: async () => {
+            const url = params
+                ? `${SchoolEndPoints.getAllSchool}${params}`
+                : SchoolEndPoints.getAllSchool
+
+            const response = await api.get<IPaginationResponse<ISchool>>(url)
+            return response.data
+        },
+    })
+}
+
+export const useGetSchoolById = (id: string | null) => {
+    return useQuery({
+        queryKey: [queryKey, id],
+        queryFn: async () => {
+            const response = await api.get<ISchool>(
+                `${SchoolEndPoints.getSchoolById}/${id}`
+            )
+            return response.data
+        },
+        enabled: !!id,
+        staleTime: 0,
+        retry: false,
+    })
+}
+
+export const useGetSchoolDetailsById = (id: string | null) => {
+    return useQuery({
+        queryKey: [queryKey, id],
+        queryFn: async () => {
+            const response = await api.get<ISchoolDetails[]>(
+                `${SchoolEndPoints.GetSchoolDetails}/${id}`
+            )
+            return response.data
+        },
+        enabled: !!id,
+        staleTime: 0,
+        retry: false,
+    })
+}
+
+/**
+ * FIXED:
+ * This mutation now accepts FormData because AddSchoolForm sends multipart/form-data
+ * for the uploaded school logo.
+ */
+export const useAddSchool = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation<ISchool, Error, FormData>({
+        mutationFn: async (data: FormData): Promise<ISchool> => {
+            const response = await api.post(
+                SchoolEndPoints.createSchool,
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            )
+
+            return response.data
+        },
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [queryKey] })
+            queryClient.refetchQueries({ queryKey: [filterSchoolQuery] })
+        },
+
+        onError: (error: Error) => {
+            console.error('Error adding school:', error)
+        },
+    })
+}
+
+export const useEditSchool = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation<
+        ISchool,
+        Error,
+        { id: string | unknown; data: FormData }
+    >({
+        mutationFn: async ({ id, data }): Promise<ISchool> => {
+            if (!id) {
+                throw new Error('Id is required to edit a school')
+            }
+
+            const response = await api.patch(
+                `${SchoolEndPoints.updateSchool}/${id}`,
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            )
+
+            return response.data
+        },
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [queryKey] })
+            queryClient.refetchQueries({ queryKey: [filterSchoolQuery] })
+        },
+    })
+}
+
+export const useRemoveSchool = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation<ISchool, Error, string | undefined>({
+        mutationFn: async (id: string | undefined): Promise<ISchool> => {
+            if (!id) {
+                throw new Error('Id is required to remove a school')
+            }
+
+            const response = await api.delete(
+                `${SchoolEndPoints.removeSchool}/${id}`
+            )
+
+            return response.data
+        },
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [queryKey] })
+            queryClient.refetchQueries({ queryKey: [filterSchoolQuery] })
+        },
+    })
+}
+
+export const useGetFilterSchoolByDate = (
+    startDate: string,
+    endDate: string,
+    name: string | null
+) => {
+    return useQuery({
+        queryKey: [filterSchoolQuery, queryKey],
+
+        queryFn: async () => {
+            if (!startDate || !endDate || !name) {
+                throw new Error('StartDate, EndDate and Name are required')
+            }
+
+            const queryParams = new URLSearchParams({
+                startDate,
+                endDate,
+                name,
+            })
+
+            const response = await api.get<ISchool[]>(
+                `${SchoolEndPoints.filterSchoolByDate}?${queryParams.toString()}`
+            )
+
+            return response.data
+        },
+
+        staleTime: 0,
+        retry: false,
+    })
+}
+
+export const useGetAllFiscalYear = (params?: string) => {
+    return useQuery({
+        queryKey: [fiscalYearQuery],
+        queryFn: async () => {
+            const url = params
+                ? `${SchoolEndPoints.fiscalYear}${params}`
+                : SchoolEndPoints.fiscalYear
+
+            const response = await api.get<IPaginationResponse<IFiscalYear>>(url)
+
+            return response.data
+        },
+    })
+}

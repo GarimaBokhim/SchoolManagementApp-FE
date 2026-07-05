@@ -49,11 +49,11 @@ const LoginForm = () => {
       const userDetails: ITokenPayloadObject = {
         username:
           tokenPayload[
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'
           ],
         role: NormalizeStringCase(
           tokenPayload[
-            'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+          'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
           ],
           false
         ) as IUserRole,
@@ -86,16 +86,21 @@ const LoginForm = () => {
       }
 
       const dashboardRoute = roleToDashboardMap[userDetails.role]
-    ? roleToDashboardMap[userDetails.role]
-    : role === 'admin'
-      ? '/admin/dashboard'
-      : role === 'crmadmin'
-        ? '/crmadmin/dashboard'
-        : role === 'demoexpiryrole'
-          ? '/end-user/expired'
-          : role === 'crm'
-            ? '/crm/dashboard'
-            : '/enduser/dashboard';
+        ? roleToDashboardMap[userDetails.role]
+        : role === 'admin'
+          ? '/admin/dashboard'
+          : role === 'crmadmin'
+            ? '/crmadmin/dashboard'
+            : role === 'demoexpiryrole'
+              ? '/end-user/expired'
+              : role === 'crm'
+                ? '/crm/dashboard'
+                : role === 'khaneypaniadmin'
+                  ? '/khaneypaniadmin/dashboard'
+                  : '/enduser/dashboard';
+
+
+
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)
     } catch (error: any) {
       Toast.error(error.response?.data || error.message || 'Failed to login.')

@@ -133,10 +133,10 @@ const Sidebar: React.FC<Props> = ({
 
   const staticIcons: {
     [key: string]:
-      | React.ForwardRefExoticComponent<
-          Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
-        >
-      | React.ReactElement
+    | React.ForwardRefExoticComponent<
+      Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
+    >
+    | React.ReactElement
   } = {
     Dashboard: Home,
     Navigation: Navigation,
@@ -165,6 +165,8 @@ const Sidebar: React.FC<Props> = ({
     Applications: NotepadTextDashedIcon,
     'Academic Program': School,
     Services: Package,
+    Consumer: User,
+    Employee: BriefcaseBusiness
   }
 
   const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999)
@@ -263,10 +265,9 @@ const Sidebar: React.FC<Props> = ({
                       : withRolePrefix(item.url)
                   }
                   className={`group relative flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease
-                    ${
-                      active
-                        ? 'font-semibold rounded-l-none'
-                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
+                    ${active
+                      ? 'font-semibold rounded-l-none'
+                      : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
                   style={active ? { backgroundColor: activeBg, color: primaryColor } : {}}
                 >
@@ -297,10 +298,9 @@ const Sidebar: React.FC<Props> = ({
                   data-key={item.key}
                   onClick={() => toggleSection(item.key)}
                   className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all duration-100 ease-in-out
-                    ${
-                      hasActiveChild
-                        ? 'font-semibold rounded-l-none'
-                        : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
+                    ${hasActiveChild
+                      ? 'font-semibold rounded-l-none'
+                      : 'text-gray-600 hover:bg-gray-300 dark:text-white hover:text-gray-800 dark:hover:text-black'
                     }`}
                   style={hasActiveChild ? { backgroundColor: activeBg, color: primaryColor } : {}}
                 >
@@ -352,10 +352,9 @@ const Sidebar: React.FC<Props> = ({
                             handleSelectSubModule(subItem.subModulesId!, subItem.role)
                           }
                           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ml-4 transition-colors
-                            ${
-                              activeSub
-                                ? 'font-medium'
-                                : 'text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black'
+                            ${activeSub
+                              ? 'font-medium'
+                              : 'text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 dark:text-[#e2e2e2] hover:text-gray-800 dark:hover:text-black'
                             }`}
                           style={activeSub ? { backgroundColor: activeSubBg, color: primaryColor } : {}}
                         >
@@ -379,11 +378,10 @@ const Sidebar: React.FC<Props> = ({
                     <div
                       className={`fixed z-[9999] left-[4rem] bg-white shadow-lg border rounded-md min-w-[180px] ${containerClassName}`}
                       style={{
-                        top: `${
-                          document
-                            ?.querySelector(`[data-key='${item.key}']`)
-                            ?.getBoundingClientRect().bottom ?? 0
-                        }px`,
+                        top: `${document
+                          ?.querySelector(`[data-key='${item.key}']`)
+                          ?.getBoundingClientRect().bottom ?? 0
+                          }px`,
                       }}
                       onMouseEnter={() => setActiveSection(item.key)}
                     >
