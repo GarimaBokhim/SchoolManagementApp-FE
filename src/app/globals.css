@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -133,9 +133,7 @@ html.dark body {
   background-color: rgb(45, 45, 45);
 }
 
-
 @media print {
-
   /* Hide everything */
   body * {
     visibility: hidden;
@@ -154,7 +152,33 @@ html.dark body {
     width: 100%;
   }
 
-  /* Hide buttons */
+  .no-print {
+    display: none !important;
+  }
+}
+
+.print-section {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-section,
+  .print-section * {
+    visibility: visible;
+  }
+
+  .print-section {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
   .no-print {
     display: none !important;
   }

@@ -1,92 +1,96 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { IParent, IFilterParentByDate } from "../types/IParents";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Pagination from "@/components/Pagination";
-import React from "react";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import toast, { Toaster } from "react-hot-toast";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { Toast } from "@/components/Toast/toast";
-import { EditButton } from "@/components/Buttons/EditButton";
-import { Edit, Filter, Plus, RotateCcw, Trash } from "lucide-react";
-import EditParent from "../pages/Edit";
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import { IParent, IFilterParentByDate } from '../types/IParents'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import Pagination from '@/components/Pagination'
+import React from 'react'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import toast, { Toaster } from 'react-hot-toast'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
+import { EditButton } from '@/components/Buttons/EditButton'
+import { Edit, Filter, Plus, RotateCcw, Trash } from 'lucide-react'
+import EditParent from '../pages/Edit'
 import DateRangeFilter, {
   DateRangeFilterRef,
-} from "@/components/DateFilter/FilterComponent";
+} from '@/components/DateFilter/FilterComponent'
 import {
   useFilterParentByDate,
   useGetAllParents,
   useRemoveParent,
-} from "../hooks";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { usePermissions } from "@/context/auth/PermissionContext";
-import useMenuPermissionData from "@/app/SuperAdmin/navigation/hooks/useMenuPermissionData";
-import AddParent from "../pages/Add";
-import DeleteButton from "@/components/Buttons/DeleteButton";
-import { PrintButton } from "@/components/Buttons/PrintButton";
-import AllPrintFormForParents from "./PrintAllParentsform";
-import ImportButtonForm from "@/components/Buttons/importbutton";
-import ExportButtonForm from "@/components/Buttons/exportbuttonform";
-import ExcelParentTable from "./Excelprint";
+  useUploadParent,
+} from '../hooks'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { usePermissions } from '@/context/auth/PermissionContext'
+import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
+import AddParent from '../pages/Add'
+import DeleteButton from '@/components/Buttons/DeleteButton'
+// import { PrintButton } from '@/components/Buttons/PrintButton'
+import AllPrintFormForParents from './PrintAllParentsform'
+import ImportButtonForm from '@/components/Buttons/importbutton'
+import ExportButtonForm from '@/components/Buttons/exportbuttonform'
+import ExcelParentTable from './Excelprint'
 
 const AllParentForm = () => {
+  const { mutateAsync: uploadParent } = useUploadParent()
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
     isPagination: true,
-  });
+  })
 
   type SearchParam = {
-    pageSize: number;
-    pageIndex: number;
-    isPagination: boolean;
-  };
+    pageSize: number
+    pageIndex: number
+    isPagination: boolean
+  }
 
   const handleSearch = (params: SearchParam) => {
-    params.pageSize = paginationParams.pageSize;
-    setPaginationParams(params);
-  };
+    params.pageSize = paginationParams.pageSize
+    setPaginationParams(params)
+  }
 
-  const { data: allParents } = useGetAllParents();
-  const [showParents, setShowParents] = useState(false);
-  const [selectedParentName, setSelectedParentName] = useState<string | null>("");
-  const [addModal, setAddModal] = useState(false);
-  const { menuStatus } = usePermissions();
-  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const [params, setParams] = useState("");
+  const { data: allParents } = useGetAllParents()
+  const [showParents, setShowParents] = useState(false)
+  const [selectedParentName, setSelectedParentName] = useState<string | null>(
+    ''
+  )
+  const [addModal, setAddModal] = useState(false)
+  const { menuStatus } = usePermissions()
+  const { canEdit, canDelete, canAdd } = useMenuPermissionData(menuStatus)
+  const [selectedId, setSelectedId] = useState<string>('')
+  const [params, setParams] = useState('')
 
-  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`;
-  const fullQuery = query + (params || "");
+  const query = `?pageSize=${paginationParams.pageSize}&pageIndex=${paginationParams.pageIndex}&IsPagination=${paginationParams.isPagination}`
+  const fullQuery = query + (params || '')
 
   const form = useForm<IFilterParentByDate>({
     defaultValues: {
-      firstName: "",
-      startDate: "",
-      endDate: "",
+      firstName: '',
+      startDate: '',
+      endDate: '',
     },
-  });
+  })
 
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
-  });
+  })
 
   const {
     data: filteredParent,
     refetch,
     isLoading,
-  } = useFilterParentByDate(fullQuery);
+  } = useFilterParentByDate(fullQuery)
 
   useEffect(() => {
-    refetch();
-  }, [paginationParams, refetch]);
+    refetch()
+  }, [paginationParams, refetch])
 
-  const { handleError, clearError } = useErrorHandler();
-  const [openFilter, setOpenFilter] = useState(false);
+  const { handleError, clearError } = useErrorHandler()
+  const [openFilter, setOpenFilter] = useState(false)
 
   const onSubmit: SubmitHandler<IFilterParentByDate> = async (formData) => {
-    clearError();
+    clearError()
     try {
       const queryParams = [
         formData.firstName
@@ -100,81 +104,79 @@ const AllParentForm = () => {
           : null,
       ]
         .filter(Boolean)
-        .join("&");
-      const fullQuery = queryParams ? `&${queryParams}` : "";
+        .join('&')
+      const fullQuery = queryParams ? `&${queryParams}` : ''
       await toast.promise(
         (async () => {
-          setParams(fullQuery);
-          await refetch();
+          setParams(fullQuery)
+          await refetch()
         })(),
         {
-          loading: "Fetching data...",
-          success: "Data fetched successfully!",
+          loading: 'Fetching data...',
+          success: 'Data fetched successfully!',
         }
-      );
+      )
     } catch (error) {
-      const errorMsg = handleError(error);
-      Toast.error(errorMsg);
-      console.error("Error during form submission:", error);
+      const errorMsg = handleError(error)
+      Toast.error(errorMsg)
+      console.error('Error during form submission:', error)
     }
-  };
+  }
 
-  const refForInput = useRef<HTMLInputElement>(null);
+  const refForInput = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    refForInput.current?.focus();
-  }, []);
+    refForInput.current?.focus()
+  }, [])
 
-  const formRef = useRef<DateRangeFilterRef>(null);
-  const deleteParent = useRemoveParent();
+  const formRef = useRef<DateRangeFilterRef>(null)
+  const deleteParent = useRemoveParent()
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteParent.mutateAsync(id);
-      toast.success("User deleted successfully!");
-      refetch();
+      await deleteParent.mutateAsync(id)
+      toast.success('User deleted successfully!')
+      refetch()
     } catch {
-      toast.error("Error deleting user.");
+      toast.error('Error deleting user.')
     }
-  };
+  }
 
   const onClearClick = () => {
-    refetch();
-    setParams("");
-    formRef.current?.handleClear();
-    setSelectedParentName("");
-    form.reset();
-  };
-
+    refetch()
+    setParams('')
+    formRef.current?.handleClear()
+    setSelectedParentName('')
+    form.reset()
+  }
 
   const handleEditSuccess = () => {
-    setShowParents(false);
-    setSelectedId("");
-    refetch();
-  };
-
+    setShowParents(false)
+    setSelectedId('')
+    refetch()
+  }
 
   const getSerialNumber = (index: number) => {
     const pageIndex = Array.isArray(filteredParent)
       ? 1
-      : filteredParent?.PageIndex ?? 1;
-    const pageSize = paginationParams.pageSize;
-    return (pageIndex - 1) * pageSize + index + 1;
-  };
+      : (filteredParent?.PageIndex ?? 1)
+    const pageSize = paginationParams.pageSize
+    return (pageIndex - 1) * pageSize + index + 1
+  }
 
   const buttonElement = (id: string) => {
     return (
       <ButtonElement
-        icon={<Edit size={14} />}
+        icon={<Edit size={18} />}
         type="button"
         text=""
         onClick={() => {
-          setShowParents(true);
-          setSelectedId(id);
+          setShowParents(true)
+          setSelectedId(id)
         }}
-        className="!text-xs font-bold !bg-teal-500"
+        className="!text-xs font-bold !bg-teal-500 "
       />
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -197,30 +199,30 @@ const AllParentForm = () => {
                   type="button"
                   text="Add New Parent"
                   onClick={() => setAddModal(true)}
-                  className="!text-md !font-bold"
+                  className="!text-md !font-bold "
                 />
               )}
               <ImportButtonForm
                 handleExcelImport={async (file) => {
-                  // await toast.promise(importParent(file), {
-                  //   loading: "Uploading...",
-                  //   success: "Parents uploaded successfully!",
-                  //   error: "Upload failed! Please Check the format",
-                  // });
+                  await toast.promise(uploadParent(file), {
+                    loading: 'Uploading...',
+                    success: 'Parents uploaded successfully!',
+                    error: 'Upload failed! Please Check the format',
+                  })
                 }}
               />
               <ExportButtonForm
                 file="/template/ledgerTemplate.xlsx"
                 data={
                   <AllPrintFormForParents
-                    startDate={form.watch("startDate")}
-                    endDate={form.watch("endDate")}
+                    startDate={form.watch('startDate')}
+                    endDate={form.watch('endDate')}
                   />
                 }
                 excelData={
                   <ExcelParentTable
-                    startDate={form.watch("startDate")}
-                    endDate={form.watch("endDate")}
+                    startDate={form.watch('startDate')}
+                    endDate={form.watch('endDate')}
                   />
                 }
               />
@@ -255,13 +257,13 @@ const AllParentForm = () => {
                     }
                     onSelect={(group) => {
                       if (group) {
-                        setSelectedParentName(group.fullName || null);
+                        setSelectedParentName(group.fullName || null)
                       } else {
-                        setSelectedParentName(null);
+                        setSelectedParentName(null)
                       }
                     }}
-                    getLabel={(g) => g?.fullName ?? ""}
-                    getValue={(g) => g?.fullName ?? ""}
+                    getLabel={(g) => g?.fullName ?? ''}
+                    getValue={(g) => g?.fullName ?? ''}
                   />
                 </div>
                 <div className="flex gap-2 ml-auto">
@@ -269,14 +271,14 @@ const AllParentForm = () => {
                     type="submit"
                     text="Filter"
                     icon={<Filter size={14} />}
-                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150"
+                    className="!bg-emerald-600 hover:!bg-emerald-700 transition-all duration-150 crusor-pointer"
                   />
                   <ButtonElement
                     type="button"
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150"
+                    className="!bg-gray-500 hover:!bg-gray-600 transition-all duration-150 crusor-pointer"
                   />
                 </div>
               </form>
@@ -286,15 +288,24 @@ const AllParentForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
-
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left align-middle w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left align-middle">Parent Name</th>
+                  <th className="px-4 py-3 text-left align-middle w-[60px]">
+                    S.N
+                  </th>
+                  <th className="px-4 py-3 text-left align-middle">
+                    Parent Name
+                  </th>
                   <th className="px-4 py-3 text-left align-middle">Email</th>
-                  <th className="px-4 py-3 text-left align-middle">Phone Number</th>
-                  <th className="px-4 py-3 text-left align-middle">Occupation</th>
+                  <th className="px-4 py-3 text-left align-middle">
+                    Phone Number
+                  </th>
+                  <th className="px-4 py-3 text-left align-middle">
+                    Occupation
+                  </th>
                   <th className="px-4 py-3 text-left align-middle">Address</th>
-                  <th className="px-4 py-3 text-center align-middle w-[180px]">Actions</th>
+                  <th className="px-4 py-3 text-center align-middle w-[180px]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -304,40 +315,59 @@ const AllParentForm = () => {
                       Loading Parents...
                     </td>
                   </tr>
-                ) : filteredParent?.Items && filteredParent?.Items.length > 0 ? (
-                  filteredParent?.Items.map((Parent: IParent, index: number) => (
-                    <tr
-                      key={Parent.id ?? index}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                    >
-
-                      <td className="py-3 px-4 align-middle">{getSerialNumber(index)}</td>
-                      <td className="py-3 px-4 align-middle">{Parent.fullName}</td>
-                      <td className="py-3 px-4 align-middle">{Parent.email}</td>
-                      <td className="py-3 px-4 align-middle">{Parent.phoneNumber}</td>
-                      <td className="py-3 px-4 align-middle">{Parent.occupation}</td>
-                      <td className="py-3 px-4 align-middle">{Parent.address}</td>
-                      <td className="py-3 px-4 align-middle">
-                        <div className="flex justify-center items-center gap-2">
-                          {canDelete && (
-                            <DeleteButton
-                              onConfirm={() =>
-                                handleDelete(Parent.id ? Parent.id : "")
-                              }
-                              headerText={<Trash />}
-                              content="Are you sure you want to delete this Parent?"
-                            />
-                          )}
-                          {canEdit && (
-                            <EditButton button={buttonElement(Parent.id ?? "")} />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                ) : filteredParent?.Items &&
+                  filteredParent?.Items.length > 0 ? (
+                  filteredParent?.Items.map(
+                    (Parent: IParent, index: number) => (
+                      <tr
+                        key={Parent.id ?? index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      >
+                        <td className="py-3 px-4 align-middle">
+                          {getSerialNumber(index)}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          {Parent.fullName}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          {Parent.email}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          {Parent.phoneNumber}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          {Parent.occupation}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          {Parent.address}
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          <div className="flex justify-center items-center gap-2">
+                            {canDelete && (
+                              <DeleteButton
+                                onConfirm={() =>
+                                  handleDelete(Parent.id ? Parent.id : '')
+                                }
+                                headerText={<Trash />}
+                                content="Are you sure you want to delete this Parent?"
+                              />
+                            )}
+                            {canEdit && (
+                              <EditButton
+                                button={buttonElement(Parent.id ?? '')}
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-gray-500 italic">
+                    <td
+                      colSpan={7}
+                      className="p-4 text-center text-gray-500 italic"
+                    >
                       No Parents found.
                     </td>
                   </tr>
@@ -366,19 +396,19 @@ const AllParentForm = () => {
               pagination={{
                 currentPage: Array.isArray(filteredParent)
                   ? 1
-                  : filteredParent?.PageIndex ?? 1,
+                  : (filteredParent?.PageIndex ?? 1),
                 firstPage: Array.isArray(filteredParent)
                   ? 1
-                  : filteredParent?.FirstPage ?? 1,
+                  : (filteredParent?.FirstPage ?? 1),
                 lastPage: Array.isArray(filteredParent)
                   ? 1
-                  : filteredParent?.LastPage ?? 1,
+                  : (filteredParent?.LastPage ?? 1),
                 nextPage: Array.isArray(filteredParent)
                   ? 1
-                  : filteredParent?.NextPage ?? 1,
+                  : (filteredParent?.NextPage ?? 1),
                 previousPage: Array.isArray(filteredParent)
                   ? 1
-                  : filteredParent?.PreviousPage ?? 1,
+                  : (filteredParent?.PreviousPage ?? 1),
               }}
               handleSearch={handleSearch}
             />
@@ -386,7 +416,7 @@ const AllParentForm = () => {
         )}
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AllParentForm;
+export default AllParentForm

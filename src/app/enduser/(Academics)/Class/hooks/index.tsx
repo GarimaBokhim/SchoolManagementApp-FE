@@ -13,6 +13,7 @@ const ClassEndPoints = {
 
 const queryKey = 'Class'
 const filteredClassQuery = 'FilteredClass'
+
 type ClassRequest = {
   name: string
   classSymbol: number
@@ -96,7 +97,6 @@ export const useGetClassById = (ClassId: string) => {
       return response.data
     },
     enabled: !!ClassId,
-    staleTime: 0,
     retry: false,
   })
 }
@@ -118,6 +118,8 @@ export const useGetAllClass = (params?: string) => {
         }
       )
     },
+    refetchOnWindowFocus: false,
+    retry: false,
   })
 }
 
@@ -131,7 +133,6 @@ export const useFilterClassByDate = (params?: string) => {
       const response = await api.get<IPaginationResponse<IClass>>(url)
       return response.data
     },
-    staleTime: 0,
     retry: false,
   })
 }
