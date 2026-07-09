@@ -53,13 +53,13 @@ const normalizeStudent = (data: unknown): IStudent => {
     studentStatus: Number(
       raw.studentStatus ?? raw.StudentStatus ?? raw.status ?? raw.Status ?? 0
     ),
-    dateOfBirth: (raw.dateOfBirth ?? raw.DateOfBirth ?? '') as Date,
+    dateOfBirth: (raw.dateOfBirth ?? raw.DateOfBirth ?? '') as string,
     email: String(raw.email ?? raw.Email ?? ''),
     phoneNumber: String(raw.phoneNumber ?? raw.PhoneNumber ?? ''),
     studentImg: (raw.studentImg ?? raw.StudentImg ?? '') as string,
     imageUrl: String(raw.imageUrl ?? raw.ImageUrl ?? ''),
     address: String(raw.address ?? raw.Address ?? ''),
-    enrollmentDate: (raw.enrollmentDate ?? raw.EnrollmentDate ?? '') as Date,
+    enrollmentDate: (raw.enrollmentDate ?? raw.EnrollmentDate ?? '') as string,
     parentId: String(raw.parentId ?? raw.ParentId ?? ''),
     classSectionId: String(raw.classSectionId ?? raw.ClassSectionId ?? ''),
     classId: String(raw.classId ?? raw.ClassId ?? ''),

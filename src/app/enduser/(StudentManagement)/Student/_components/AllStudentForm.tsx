@@ -563,9 +563,9 @@ const AllStudentForm = () => {
                           {student.dateOfBirth ? (
                             <DateConverter
                               date={
-                                student.dateOfBirth instanceof Date
-                                  ? student.dateOfBirth.toISOString()
-                                  : String(student.dateOfBirth)
+                                typeof student.dateOfBirth === 'string'
+                                  ? student.dateOfBirth
+                                  : student.dateOfBirth
                               }
                             />
                           ) : (

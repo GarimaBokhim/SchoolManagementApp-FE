@@ -70,7 +70,7 @@ const AllPrintFormForStudents = ({ startDate, endDate }: Props) => {
               </td>
               <td style={thTd}>{s.phoneNumber}</td>
               <td style={thTd}>
-                {new Date(s.dateOfBirth).toISOString().split("T")[0]}
+                {s.dateOfBirth?.split("T")[0] ?? ""}
               </td>
               <td style={thTd}>{s.address}</td>
             </tr>

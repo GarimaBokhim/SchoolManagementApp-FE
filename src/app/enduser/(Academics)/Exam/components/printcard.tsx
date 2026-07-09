@@ -146,7 +146,7 @@ const PrintAdmitCardsPage = ({ ExamId }: Props) => {
     setSelectedStudents([])
   }
 
-  const getParentForStudent = (parentId: string): IParent | null => {
+  const getParentForStudent = (parentId?: string): IParent | null => {
     return allParents?.Items?.find((p) => p.id === parentId) ?? null
   }
 

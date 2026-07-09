@@ -9,9 +9,9 @@ export interface IStudent {
   admissionNumber?: string;
 
   genderStatus?: number;
-  studentStatus: number;
+  studentStatus?: number;
 
-  dateOfBirth: Date;
+  dateOfBirth?: string;
 
   email?: string;
   phoneNumber?: string;
@@ -21,8 +21,8 @@ export interface IStudent {
 
   address?: string;
 
-  enrollmentDate: Date;
-  parentId: string;
+  enrollmentDate?: string;
+  parentId?: string;
 
   classSectionId?: string | "";
   classId: string;

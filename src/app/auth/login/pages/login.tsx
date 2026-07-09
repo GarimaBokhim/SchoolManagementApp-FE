@@ -85,16 +85,18 @@ const LoginForm = () => {
       }
 
       const dashboardRoute = roleToDashboardMap[userDetails.role]
-        ? roleToDashboardMap[userDetails.role]
-        : role === 'admin'
-          ? '/admin/dashboard'
-          : role === 'crmadmin'
-            ? '/crmadmin/dashboard'
+      ? roleToDashboardMap[userDetails.role]
+      : role === 'admin'
+        ? '/admin/dashboard'
+        : role === 'crmadmin'
+          ? '/crmadmin/dashboard'
+          : role === 'schooladmin'
+            ? '/schooladmin/dashboard'
             : role === 'demoexpiryrole'
               ? '/end-user/expired'
-              : role === 'crm'
+              : role === 'crmuser'
                 ? '/crm/dashboard'
-                : '/enduser/dashboard'
+                : '/enduser/dashboard';
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)
     } catch (error: any) {
       Toast.error(
