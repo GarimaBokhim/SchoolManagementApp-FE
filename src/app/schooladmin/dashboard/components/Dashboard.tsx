@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import {  School, User, UserCog,Shield ,Users,Building2} from "lucide-react";
+import { School, User, UserCog, Shield, Users, Building2 } from "lucide-react";
 import StatCard from "./StatCard";
 import BarChartSection from "./BarChart";
 import PieChartSection from "./PieChart";
@@ -14,7 +14,7 @@ import { useGetAllUsers } from "@/app/SuperAdmin/accessControl/user/hooks";
 import { useGetAllInstitution } from "@/app/SuperAdmin/institutionSetup/Institution/hooks";
 
 const Dashboard: React.FC = () => {
-  const [institutionId, setInstitutionId] = useState("");
+  const [schoolId, setSchoolId] = useState("");
   const navigate = useRouter();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
     if (userDetailsString) {
       try {
         const parsed = JSON.parse(userDetailsString);
-        setInstitutionId(parsed.institutionId || "");
+        setSchoolId(parsed.schoolId || "");
       } catch (e) {
         console.error("Failed to parse userDetails", e);
       }
@@ -38,11 +38,11 @@ const Dashboard: React.FC = () => {
   const { data: roles } = useGetAllRoles();
   const { data: users } = useGetAllUsers();
   const { data: institutions } = useGetAllInstitution();
-  
+
 
   // Build cards dynamically
   const cards = [
- 
+
     {
       cardHead: "Total Role",
       cardStats: String(roles?.TotalItems ?? 0),
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="bg-[#FBFBFB] dark:bg-[#0A0A0A]">
       <div className="px-6 flex flex-col gap-4">
-        <SchoolInfoCard institutionId={institutionId} />
+        {schoolId && <SchoolInfoCard schoolId={schoolId} />}
         <StatCard cards={cards} />
         <div className="lg:w-full flex space-x-6 h-[28rem]">
           <div className="w-[70%]">
