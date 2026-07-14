@@ -161,6 +161,7 @@ const AllHouseHoldsForm = () => {
     const [addModal, setAddModal] = useState(false);
     const [HouseHoldsForm, setHouseHoldsForm] = useState(false);
     const [selectedId, setSelectedId] = useState<string>('')
+    const [selectedQrCode, setSelectedQrCode] = useState<string | null>(null);
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -452,12 +453,23 @@ const AllHouseHoldsForm = () => {
                                                     {HouseHolds.tole}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
+                                                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0 cursor-pointer">
                                                         {HouseHolds?.qrCode ? (
                                                             <img
                                                                 src={`${process.env.NEXT_PUBLIC_API_URL}${HouseHolds.qrCode}`}
                                                                 alt="QR Code"
-                                                                className="w-full h-full object-contain"
+                                                                className="w-full h-full object-contain hover:scale-110 transition-transform duration-200"
+                                                                onClick={() =>
+                                                                    setSelectedQrCode(
+                                                                        `${process.env.NEXT_PUBLIC_API_URL}${HouseHolds.qrCode}`
+                                                                    )
+                                                                }
+                                                                onError={(e) => {
+                                                                    console.log(
+                                                                        "QR Image failed:",
+                                                                        e.currentTarget.src
+                                                                    );
+                                                                }}
                                                             />
                                                         ) : (
                                                             <span className="text-sm font-bold text-gray-700">
@@ -478,6 +490,8 @@ const AllHouseHoldsForm = () => {
                                                         canDelete={canDelete}
                                                     /> */}
                                                 </td>
+
+
                                             </tr>
                                         ))
                                     )}
@@ -506,6 +520,36 @@ const AllHouseHoldsForm = () => {
                 )}
 
             </div>
+
+            {selectedQrCode && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    onClick={() => setSelectedQrCode(null)}
+                >
+                    <div
+                        className="relative bg-white dark:bg-gray-900 rounded-xl p-6 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close Button */}
+                        <button
+                            type="button"
+                            onClick={() => setSelectedQrCode(null)}
+                            className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold hover:bg-red-600"
+                        >
+                            ✕
+                        </button>
+
+                        <img
+                            src={selectedQrCode}
+                            alt="QR Code Preview"
+                            className="w-[450px] h-[450px] object-contain"
+                        />
+                    </div>
+                </div>
+            )}
+
+
+
 
 
             <AddHouseHolds
