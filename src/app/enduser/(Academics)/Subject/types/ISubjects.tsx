@@ -11,8 +11,10 @@ export interface ISubject {
   passMarks: number;
 }
 
+
 export interface IFilterSubjectByDate {
   name: string;
+  classId: string;
   startDate: string;
   endDate: string;
 }

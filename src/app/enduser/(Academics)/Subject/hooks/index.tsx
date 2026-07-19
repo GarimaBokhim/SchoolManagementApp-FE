@@ -21,9 +21,6 @@ type SubjectRequest = {
   creditHours: number;
   description: string;
   classId: string;
-  examId: string;
-  fullMarks: number;
-  passMarks: number;
 };
 
 const normalizeAddSubjectPayload = (data: SubjectRequest): SubjectRequest => ({
@@ -32,9 +29,6 @@ const normalizeAddSubjectPayload = (data: SubjectRequest): SubjectRequest => ({
   creditHours: Number(data.creditHours) || 0,
   description: String(data.description ?? "").trim(),
   classId: String(data.classId ?? "").trim(),
-  examId: String(data.examId ?? "").trim(),
-  fullMarks: Number(data.fullMarks) || 0,
-  passMarks: Number(data.passMarks) || 0,
 });
 
 export const useAddSubject = () => {
@@ -152,6 +146,9 @@ export const useGetAllSubjects = (params?: string) => {
     },
   });
 };
+
+
+
 
 export const useFilterSubjectByDate = (params?: string) => {
   return useQuery({

@@ -12,6 +12,8 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import { useState, useEffect } from "react";
 import { useFilterClassByDate } from "../../Class/hooks";
 import { useGetSubjectByClassId } from "../../Subject/hooks";
+import { validateExamSubjects } from "../validators/examValidation";
+import { useExamValidation } from "../hooks/useExamValidation";
 
 type Props = {
   form: UseFormReturn<IExam>;
@@ -19,6 +21,7 @@ type Props = {
 };
 
 const AddExamForm = ({ form, onClose }: Props) => {
+  useExamValidation(form);
   const addExam = useAddExam();
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useFilterClassByDate("?IsPagination=false");
@@ -32,6 +35,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
     name: "examSubjects",
     control: form.control,
   });
+
 
   // Auto-populate subjects when class changes
   useEffect(() => {
@@ -63,6 +67,13 @@ const AddExamForm = ({ form, onClose }: Props) => {
 
   const onSubmit: SubmitHandler<IExam> = async (data) => {
     clearError();
+
+    const errors = validateExamSubjects(data.examSubjects);
+
+    if (errors.length) {
+      Toast.error(errors[0].message);
+      return;
+    }
 
     const formattedData = {
       name: data.name,
@@ -184,22 +195,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-                  <InputElement
-                    label="Full Marks (Practical)"
-                    form={form}
-                    name={`examSubjects.${index}.fullMarksPr`}
-                    type="number"
-                    placeholder="0"
-                    required
-                  />
-                  <InputElement
-                    label="Pass Marks (Practical)"
-                    form={form}
-                    name={`examSubjects.${index}.passMarksPr`}
-                    type="number"
-                    placeholder="0"
-                    required
-                  />
+
                   <InputElement
                     label="Full Marks (Theory)"
                     form={form}
@@ -212,6 +208,23 @@ const AddExamForm = ({ form, onClose }: Props) => {
                     label="Pass Marks (Theory)"
                     form={form}
                     name={`examSubjects.${index}.passMarksTh`}
+                    type="number"
+                    placeholder="0"
+                    required
+                  />
+
+                  <InputElement
+                    label="Full Marks (Practical)"
+                    form={form}
+                    name={`examSubjects.${index}.fullMarksPr`}
+                    type="number"
+                    placeholder="0"
+                    required
+                  />
+                  <InputElement
+                    label="Pass Marks (Practical)"
+                    form={form}
+                    name={`examSubjects.${index}.passMarksPr`}
                     type="number"
                     placeholder="0"
                     required

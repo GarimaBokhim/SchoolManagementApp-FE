@@ -18,6 +18,7 @@ import {
   useFilterSubjectByDate,
   useGetAllSubjects,
   useDeleteSubject,
+  useGetSubjectByClassId,
 } from "../hooks";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import { usePermissions } from "@/context/auth/PermissionContext";
@@ -74,6 +75,7 @@ const AllSubjectForm = () => {
   const form = useForm<IFilterSubjectByDate>({
     defaultValues: {
       name: "",
+      classId: "",
       startDate: "",
       endDate: "",
     },
@@ -87,8 +89,14 @@ const AllSubjectForm = () => {
     isLoading,
   } = useFilterSubjectByDate(fullQuery);
 
-  const { data: allSubjects } = useGetAllSubjects();
+
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const { data: subjectByClass } = useGetSubjectByClassId(selectedClassId);
   const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(null);
+
+  const { data: allSchoolClass } = useGetAllClass();
+  const [selectedSchoolClassName, setSelectedSchoolClassName] = useState<string | null>(null);
+
 
   useEffect(() => {
     refetch();
@@ -102,6 +110,7 @@ const AllSubjectForm = () => {
     try {
       const queryParams = [
         formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+        formData.classId ? `classId=${encodeURIComponent(formData.classId)}` : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -155,6 +164,7 @@ const AllSubjectForm = () => {
     formRef.current?.handleClear();
     setSelectedSubjectName("");
     form.reset();
+    setSelectedSchoolClassName("");
   };
 
   // Handler for when edit modal closes
@@ -212,7 +222,47 @@ const AllSubjectForm = () => {
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
+
                 <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    dropDownWidth="w-[25rem]"
+                    label="Class Name"
+                    name="classId"
+                    form={form}
+                    dropdownPositionClass="fixed"
+                    value={selectedSchoolClassName}
+                    options={allSchoolClass?.Items ?? []}
+                    selected={
+                      allSchoolClass
+                        ? allSchoolClass?.Items?.find(
+                          (g) => g.name === selectedSchoolClassName
+                        ) ?? null
+                        : null
+                    }
+
+                    onSelect={(item) => {
+                      setSelectedSchoolClassName(item?.name ?? "");
+                      setSelectedClassId(item?.id ?? "");
+
+                      // Update React Hook Form
+                      form.setValue("classId", item?.id ?? "");
+
+                      // Clear previously selected subject
+                      setSelectedSubjectName("");
+                      form.setValue("name", "");
+                    }}
+
+
+                    // onSelect={(user) =>
+                    //   setSelectedSchoolClassName(user?.name ?? "")
+                    // }
+                    getLabel={(g) => g?.name ?? ""}
+                    getValue={(g) => g?.id ?? ""}
+                  />
+                </div>
+
+                <div className="flex-1 min-w-[240px]">
+
                   <AppCombobox
                     dropDownWidth="w-[25rem]"
                     label="Subject Name"
@@ -220,21 +270,23 @@ const AllSubjectForm = () => {
                     form={form}
                     dropdownPositionClass="fixed"
                     value={selectedSubjectName}
-                    options={allSubjects?.Items ?? []}
+                    options={subjectByClass ?? []}
                     selected={
-                      allSubjects
-                        ? allSubjects?.Items?.find(
-                          (g) => g.name === selectedSubjectName
-                        ) ?? null
-                        : null
+                      subjectByClass?.find(
+                        x => x.subjectName === selectedSubjectName
+                      ) ?? null
                     }
-                    onSelect={(user) =>
-                      setSelectedSubjectName(user?.name ?? "")
-                    }
-                    getLabel={(g) => g?.name ?? ""}
-                    getValue={(g) => g?.name ?? ""}
+                    onSelect={(item) => {
+                      setSelectedSubjectName(item?.subjectName ?? "");
+                      form.setValue("name", item?.subjectName ?? "");
+                    }}
+                    getLabel={(g) => g?.subjectName ?? ""}
+                    getValue={(g) => g?.subjectName ?? ""}
                   />
+
                 </div>
+
+
                 <div className="flex gap-2 ml-auto">
                   <ButtonElement
                     type="submit"

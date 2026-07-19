@@ -20,8 +20,6 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
   const addSubject = useAddSubject();
   const { handleError, clearError } = useErrorHandler();
   const { data: allClass } = useGetAllClass();
-  const { data: allExam } = useGetAllExams();
-  const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>("");
   const handleClose = () => {
     form.reset({
@@ -29,13 +27,9 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
       code: "",
       creditHours: 0,
       description: "",
-      classId: "",
-      examId: "",
-      fullMarks: 0,
-      passMarks: 0,
+      classId: ""
     });
     setSelectedClassId(null);
-    setSelectedExamId("");
   };
 
   console.log(onclose);
@@ -43,9 +37,8 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
   const onSubmit: SubmitHandler<ISubject> = async (data) => {
     clearError();
     const classId = String(data.classId ?? "").trim();
-    const examId = String(data.examId ?? "").trim();
-    if (!classId || !examId) {
-      Toast.error("Please select both class and exam.");
+    if (!classId) {
+      Toast.error("Please select a class.");
       return;
     }
     try {
@@ -55,10 +48,7 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
           code: data.code,
           creditHours: data.creditHours,
           description: data.description,
-          classId,
-          examId,
-          fullMarks: data.fullMarks,
-          passMarks: data.passMarks,
+          classId
         }),
         {
           loading: "Adding Subject...",
@@ -148,47 +138,7 @@ const AddSubjectForm = ({ form, onClose }: Props) => {
                 getLabel={(g) => g?.name ?? ""}
                 getValue={(g) => g?.id ?? ""}
               />
-              <AppCombobox
-                value={selectedExamId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Exam"
-                name="examId"
-                form={form}
-                required
-                options={allExam?.Items}
-                selected={
-                  allExam?.Items?.find((g) => g.id === selectedExamId) || null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    const id = group.id ?? "";
-                    setSelectedExamId(id);
-                    form.setValue("examId", id, { shouldValidate: true });
-                  } else {
-                    setSelectedExamId("");
-                    form.setValue("examId", "", { shouldValidate: true });
-                  }
-                }}
-                getLabel={(g) => g?.name ?? ""}
-                getValue={(g) => g?.id ?? ""}
-              />
-              <InputElement
-                label="Full Marks"
-                form={form}
-                name="fullMarks"
-                inputType="number"
-                placeholder="Enter Full Marks"
-                required
-              />
-              <InputElement
-                label="Pass Marks"
-                form={form}
-                inputType="number"
-                name="passMarks"
-                placeholder="Enter Pass Marks"
-                required
-              />
+
             </div>
             <div className="flex justify-center mt-6">
               <ButtonElement type="submit" text={"Submit"} />
