@@ -129,7 +129,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
         const value = Number(e.target.value)
         if (currentFullMarks !== undefined && value > currentFullMarks) {
           alert(`Obtained marks cannot exceed full marks (${currentFullMarks})`)
-          setValue(`marksObtained.${index}.marksObtained`, currentFullMarks)
+          setValue(`marksObtained.${index}.marksObtained` as any, currentFullMarks)
         }
       }
 
@@ -252,7 +252,7 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                         onSelect={(subject: any) => {
                           setValue(`marksObtained.${index}.subjectId`, subject?.id ?? '')
                           setValue(`marksObtained.${index}.fullMarks`, subject?.fullMarks ?? 0)
-                          setValue(`marksObtained.${index}.marksObtained`, 0)
+                          setValue(`marksObtained.${index}.marksObtained` as any, 0)
                         }}
                         getLabel={(s: any) => s.subjectName}
                         getValue={(s: any) => s.id}
