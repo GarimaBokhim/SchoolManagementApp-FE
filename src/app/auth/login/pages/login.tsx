@@ -89,14 +89,15 @@ const LoginForm = () => {
         : role === 'admin'
           ? '/admin/dashboard'
           : role === 'crmadmin'
-            ? '/crmadmin/dashboard'
+            // ? '/crmadmin/dashboard'
+            ? '/crm/dashboard'
             : role === 'schooladmin'
               ? '/schooladmin/dashboard'
               : role === 'khaneypaniadmin'
                 ? '/khaneypaniadmin/dashboard'
                 : role === 'demoexpiryrole'
                   ? '/end-user/expired'
-                  : role === 'crmuser'
+                  : role === 'crm'
                     ? '/crm/dashboard'
                     : '/enduser/dashboard';
       if (dashboardRoute) setTimeout(() => router.push(dashboardRoute), 200)

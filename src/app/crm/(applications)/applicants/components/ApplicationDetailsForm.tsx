@@ -1,7 +1,41 @@
-import { Award, Banknote, BookOpen, Calendar, CheckCircle, Clock, CreditCard, DollarSign, FileCheck, FileSignature, FileText, FileWarning, GraduationCap, Loader2, Mail, MessageSquare, Plane, Send, Stamp, XCircle } from 'lucide-react';
+import { Award, Banknote, BookOpen, Calendar, CheckCircle, Clock, CreditCard, DollarSign, FileCheck, FileSignature, FileText, FileWarning, GraduationCap, Loader2, Mail, MessageSquare, Plane, Send, Stamp, X, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useGetVisaRequirements, useUpdateSingleVisaStatus } from '../hooks';
+import toast from 'react-hot-toast';
+import useErrorHandler from '@/components/helpers/ErrorHandling';
+import { updateSingleVisaStatusPayload } from '../types/IApplicants';
+import { AppCombobox } from '@/components/Input/ComboBox';
 
-const ApplicationDetailsForm = () => {
+
+type Props = {
+    ApplicantId: string;
+};
+const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
+
+    const [selectedStep, setSelectedStep] = useState<any>(null);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState<number>(2);
+    const { handleError, clearError } = useErrorHandler();
+
+    const statusOptions = [
+        { id: 1, name: "Completed" },
+        { id: 2, name: "Pending" },
+        { id: 3, name: "Rejected" },
+    ];
+
+    const handleStepClick = (step: any) => {
+        setSelectedStep(step);
+        setSelectedStatus(step.status);
+        setShowStatusModal(true);
+    };
+
+    const {
+        data: visaRequirementsSteps,
+        isLoading,
+        refetch,
+    } = useGetVisaRequirements(ApplicantId);
+
+    const updateSingleVisaStatus = useUpdateSingleVisaStatus();
 
     const [activeTab, setActiveTab] = useState('visa')
     const TABS = [
@@ -15,86 +49,50 @@ const ApplicationDetailsForm = () => {
         { id: 'smsHistory', label: 'SMS HISTORY', icon: MessageSquare },
     ]
 
-    const visaTimelineSteps = [
-        {
-            label: 'APPLIED FOR OFFER LETTER',
-            completed: true,
-            stepNumber: 1,
-            icon: FileSignature,
-            date: 'March 10, 2026'
-        },
-        {
-            label: 'OFFER LETTER RECEIVED',
-            completed: true,
-            stepNumber: 2,
-            icon: FileCheck,
-            date: 'March 25, 2026'
-        },
-        {
-            label: 'COE RECEIVED',
-            completed: true,
-            stepNumber: 3,
-            icon: CheckCircle,
-            date: 'April 5, 2026'
-        },
-        {
-            label: 'GTE DOCUMENT APPROVAL REQUEST',
-            completed: true,
-            stepNumber: 4,
-            icon: FileWarning,
-            date: 'April 10, 2026'
-        },
-        {
-            label: 'GTE DOCUMENT APPROVED',
-            completed: false,
-            stepNumber: 5,
-            icon: Stamp,
-            date: 'Pending'
-        },
-        {
-            label: 'TUITION FEE PAID',
-            completed: false,
-            stepNumber: 6,
-            icon: Banknote,
-            date: 'Pending'
-        },
-        {
-            label: 'VISA APPLIED',
-            completed: false,
-            stepNumber: 7,
-            icon: Send,
-            date: 'Pending'
-        },
-        {
-            label: 'VISA GRANTED',
-            completed: false,
-            stepNumber: 8,
-            icon: Plane,
-            date: 'Pending'
-        },
-        {
-            label: 'VISA REJECTED',
-            completed: false,
-            stepNumber: 9,
-            icon: XCircle,
-            date: 'N/A',
-            isRejected: true
-        },
-    ]
+    const visaTimelineSteps = (visaRequirementsSteps?.Items ?? [])
+        .flatMap(item => item.visaRequirementsDTOs)
+        .sort((a, b) => a.step - b.step)
+        .map(item => ({
+            label: item.visaStatusName.toUpperCase(),
+            id: item.id,
+            completed: item.visaStatus === 1,
+            rejected: item.visaStatus === 3,
+            stepNumber: item.step,
+            icon: item.visaStatus === 1 ? CheckCircle : FileText,
+            date: item.visaStatus === 1 ? "Completed" : "Pending",
+        }));
+
 
     const VisaTimeline = () => {
         const [hoveredStep, setHoveredStep] = useState<number | null>(null)
         const [isUpdating, setIsUpdating] = useState(false)
         const [isCancelling, setIsCancelling] = useState(false)
 
-        const handleUpdate = () => {
-            setIsUpdating(true)
-            // Simulate API call
-            setTimeout(() => {
-                setIsUpdating(false)
-                alert('Application updated successfully!')
-            }, 1500)
-        }
+        const handleSubmit = async () => {
+            if (!selectedStep) return;
+
+            clearError();
+
+            try {
+                const payload: updateSingleVisaStatusPayload = {
+                    id: selectedStep.id,
+                    status: selectedStatus,
+                };
+
+                // API expects an object with top-level id and a nested payload
+                const promise = updateSingleVisaStatus.mutateAsync({ id: payload.id, payload });
+
+                await toast.promise(promise, {
+                    loading: "Updating visa status...",
+                });
+
+                await refetch();
+
+                setShowStatusModal(false);
+            } catch (error) {
+                const errorMsg = handleError(error);
+            }
+        };
 
         const handleCancel = () => {
             if (confirm('Are you sure you want to cancel this application? This action cannot be undone.')) {
@@ -118,10 +116,12 @@ const ApplicationDetailsForm = () => {
                         {visaTimelineSteps.map((step, idx) => {
                             const Icon = step.icon
                             const isCompleted = step.completed
-                            const isRejected = step.isRejected && !isCompleted
+                            const isRejected = step.rejected && !isCompleted
                             const isCurrent = !isCompleted && !isRejected && idx === visaTimelineSteps.findIndex(s => !s.completed)
 
                             return (
+
+
                                 <div
                                     key={idx}
                                     className="relative flex flex-col items-center group"
@@ -140,10 +140,12 @@ const ApplicationDetailsForm = () => {
                                     )}
 
                                     {/* Icon Circle */}
+                                    {/* Icon Circle */}
                                     <div
+                                        onClick={() => handleStepClick(step)}
                                         className={`
-                        relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 mb-3 cursor-pointer
-                        ${isCompleted
+        relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 mb-3 cursor-pointer
+        ${isCompleted
                                                 ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30'
                                                 : isRejected
                                                     ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30'
@@ -151,20 +153,22 @@ const ApplicationDetailsForm = () => {
                                                         ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30 animate-pulse'
                                                         : 'bg-gray-300 dark:bg-gray-700 border-2 border-gray-400 dark:border-gray-500'
                                             }
-                        ${hoveredStep === idx ? 'scale-110' : 'scale-100'}
-                      `}
+        ${hoveredStep === idx ? 'scale-110' : 'scale-100'}
+    `}
                                     >
                                         {isCompleted ? (
                                             <CheckCircle className="w-7 h-7 text-white" />
                                         ) : (
-                                            <Icon className={`w-6 h-6 ${isRejected ? 'text-white' : isCurrent ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
+                                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                                                {step.stepNumber}
+                                            </span>
                                         )}
                                     </div>
 
                                     {/* Content */}
                                     <div className="w-full text-center">
                                         <div className={`rounded-lg p-3 transition-all duration-300 w-full
-                        ${isCompleted
+                                                ${isCompleted
                                                 ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800'
                                                 : isRejected
                                                     ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
@@ -172,12 +176,12 @@ const ApplicationDetailsForm = () => {
                                                         ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shadow-md'
                                                         : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700'
                                             }
-                        ${hoveredStep === idx ? 'shadow-lg' : ''}
-                      `}>
+                                                ${hoveredStep === idx ? 'shadow-lg' : ''}
+                                            `}>
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-center gap-1 flex-wrap">
                                                     <h5 className={`font-bold text-xs uppercase tracking-wide text-center
-                              ${isCompleted
+                                                    ${isCompleted
                                                             ? 'text-purple-700 dark:text-purple-300'
                                                             : isRejected
                                                                 ? 'text-red-700 dark:text-red-300'
@@ -218,15 +222,7 @@ const ApplicationDetailsForm = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Status message for current/rejected steps */}
-                                            {isCurrent && (
-                                                <div className="mt-2 pt-2 border-t border-amber-200 dark:border-amber-800">
-                                                    <p className="text-[10px] text-amber-700 dark:text-amber-300 flex items-center justify-center gap-1">
-                                                        <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                                        Awaiting...
-                                                    </p>
-                                                </div>
-                                            )}
+
 
                                             {isRejected && (
                                                 <div className="mt-2 pt-2 border-t border-red-200 dark:border-red-800">
@@ -243,74 +239,108 @@ const ApplicationDetailsForm = () => {
                     </div>
                 </div>
 
-                {/* Update and Cancel Buttons - Replacing Summary Card */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
-                                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                {showStatusModal && selectedStep && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
+
+                        <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700">
+
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Update Visa Status
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        Update the current visa processing status.
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowStatusModal(false)}
+                                    className="w-9 h-9 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-800 flex items-center justify-center transition"
+                                >
+                                    <X
+                                        size={18}
+                                        className="text-red-600 dark:text-red-400"
+                                    />
+                                </button>
                             </div>
-                            <div>
-                                <p className="text-sm font-semibold text-gray-800 dark:text-white">Visa Application Status</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                    {visaTimelineSteps.filter(s => s.completed).length} of {visaTimelineSteps.length} steps completed
-                                </p>
+
+                            {/* Body */}
+                            <div className="p-6 space-y-5">
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Step
+                                    </label>
+
+                                    <input
+                                        value={`Step ${selectedStep.stepNumber}`}
+                                        disabled
+                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-4 py-3 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Current Status
+                                    </label>
+
+                                    <input
+                                        value={selectedStep.label}
+                                        disabled
+                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-4 py-3 text-sm"
+                                    />
+                                </div>
+
+                                <AppCombobox
+                                    label="New Status"
+                                    dropdownPositionClass="absolute"
+                                    name="status"
+                                    value={selectedStatus}
+                                    options={statusOptions}
+                                    dropDownWidth="w-full"
+                                    selected={
+                                        statusOptions.find(
+                                            (option) => option.id === selectedStatus
+                                        ) ?? null
+                                    }
+                                    onSelect={(option) => {
+                                        if (option) {
+                                            setSelectedStatus(option.id);
+                                        }
+                                    }}
+                                    getLabel={(option) => option?.name ?? ''}
+                                    getValue={(option) => option?.id ?? ''}
+                                />
+
                             </div>
+
+                            {/* Footer */}
+                            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowStatusModal(false)}
+                                    className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSubmit}
+                                    className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium transition"
+                                >
+                                    Update Status
+                                </button>
+
+                            </div>
+
                         </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleUpdate}
-                                disabled={isUpdating || isCancelling}
-                                className={`
-                    px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                    flex items-center gap-2
-                    ${isUpdating || isCancelling
-                                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
-                                    }
-                  `}
-                            >
-                                {isUpdating ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Updating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FileSignature className="w-4 h-4" />
-                                        Update Application
-                                    </>
-                                )}
-                            </button>
-
-                            <button
-                                onClick={handleCancel}
-                                disabled={isUpdating || isCancelling}
-                                className={`
-                    px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                    flex items-center gap-2
-                    ${isUpdating || isCancelling
-                                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400'
-                                        : 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg'
-                                    }
-                  `}
-                            >
-                                {isCancelling ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Cancelling...
-                                    </>
-                                ) : (
-                                    <>
-                                        <XCircle className="w-4 h-4" />
-                                        Cancel Application
-                                    </>
-                                )}
-                            </button>
-                        </div>
                     </div>
-                </div>
+                )}
             </div>
         )
     }

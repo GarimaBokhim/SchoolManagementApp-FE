@@ -6,8 +6,8 @@ export interface IExamResult {
   remarks?: string
   marksObtained: {
     subjectId: string
-    marksObtained: number 
-    marksObtaineds?: number
+    prMarksObtaineds: number
+    thMarksObtaineds: number
     fullMarks: number
   }[]
 }
