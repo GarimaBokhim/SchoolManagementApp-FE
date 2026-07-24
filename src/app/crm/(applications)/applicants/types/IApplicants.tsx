@@ -59,6 +59,11 @@ export interface UserProfileResponse {
     intakeTitle: string
 }
 
+export interface updateSingleVisaStatusPayload {
+    id: string
+    status: number
+}
+
 
 
 
@@ -77,10 +82,11 @@ export interface VisaRequirementByResponse {
 }
 
 export interface VisaRequirementsDTOs {
+    id: string
     step: number
     visaStatusId: string
     visaStatusName: string
-    visaRequirementStatus: number
+    visaStatus: number
 }
 
 export interface VisaDetailsByApplicant {

@@ -244,11 +244,10 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                       <button
                         type="button"
                         onClick={() => field.onChange(!value)}
-                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${
-                          value
-                            ? 'bg-green-500 justify-end'
-                            : 'bg-gray-300 dark:bg-gray-600 justify-start'
-                        }`}
+                        className={`cursor-pointer relative flex items-center h-7 w-14 rounded-full px-1 transition-colors duration-300 ${value
+                          ? 'bg-green-500 justify-end'
+                          : 'bg-gray-300 dark:bg-gray-600 justify-start'
+                          }`}
                       >
                         <span className="h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300" />
                       </button>

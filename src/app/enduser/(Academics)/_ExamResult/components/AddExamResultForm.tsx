@@ -67,7 +67,8 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
     allSubject.forEach((subject) => {
       append({
         subjectId: subject.id,
-        marksObtained: 0,
+        prMarksObtaineds: 0,
+        thMarksObtaineds: 0,
         fullMarks: subject.fullMarks,
       })
     })
@@ -93,7 +94,8 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
         remarks: data.remarks,
         marksObtained: data.marksObtained.map(item => ({
           subjectId: item.subjectId,
-          marksObtaineds: item.marksObtained,
+          prMarksObtaineds: item.prMarksObtaineds,
+          thMarksObtaineds: item.thMarksObtaineds,
           fullMarks: item.fullMarks
         }))
       }
@@ -210,7 +212,8 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       const fullMarksValue = subject?.fullMarks ?? 0
                       form.setValue(`marksObtained.${index}.subjectId`, id, { shouldValidate: true })
                       form.setValue(`marksObtained.${index}.fullMarks`, fullMarksValue, { shouldValidate: true })
-                      form.setValue(`marksObtained.${index}.marksObtained`, 0, { shouldValidate: true })
+                      form.setValue(`marksObtained.${index}.prMarksObtaineds`, 0, { shouldValidate: true })
+                      form.setValue(`marksObtained.${index}.thMarksObtaineds`, 0, { shouldValidate: true })
                       setSelectedFullMarks((prev) => ({ ...prev, [index]: fullMarksValue }))
                       setSelectedSubjectIds((prev) => ({ ...prev, [index]: id }))
                     }}
@@ -220,18 +223,40 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
 
                   <div className="mt-1">
                     <InputElement
-                      label="Marks Obtained"
+                      label="Theoretical Marks"
                       form={form}
-                      name={`marksObtained.${index}.marksObtained`}
+                      name={`marksObtained.${index}.thMarksObtaineds`}
                       inputType="number"
-                      placeholder="Enter marks"
+                      placeholder="Enter theoretical marks"
                       onBlur={(e: ChangeEvent<HTMLInputElement>) => {
                         const value = Number(e.target.value)
                         const max = selectedFullMarks[index]
                         if (max !== undefined && value > max) {
                           alert(`Obtained marks cannot exceed full marks (${max})`)
                           form.setValue(
-                            `marksObtained.${index}.marksObtained`,
+                            `marksObtained.${index}.thMarksObtaineds`,
+                            max,
+                            { shouldValidate: true }
+                          )
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-1">
+                    <InputElement
+                      label="Practical Marks"
+                      form={form}
+                      name={`marksObtained.${index}.prMarksObtaineds`}
+                      inputType="number"
+                      placeholder="Enter practical marks"
+                      onBlur={(e: ChangeEvent<HTMLInputElement>) => {
+                        const value = Number(e.target.value)
+                        const max = selectedFullMarks[index]
+                        if (max !== undefined && value > max) {
+                          alert(`Obtained marks cannot exceed full marks (${max})`)
+                          form.setValue(
+                            `marksObtained.${index}.prMarksObtaineds`,
                             max,
                             { shouldValidate: true }
                           )
@@ -279,7 +304,8 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                 onClick={() =>
                   append({
                     subjectId: '',
-                    marksObtained: 0,
+                    prMarksObtaineds: 0,
+                    thMarksObtaineds: 0,
                     fullMarks: 0,
                   })
                 }

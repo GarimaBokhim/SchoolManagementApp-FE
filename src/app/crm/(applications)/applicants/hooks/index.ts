@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse, DocumentStatusResponse, VisaRequirementByResponse, VisaDetailsByApplicant} from '../types/IApplicants'
+import {ConvertApplicantPayload,ConvertApplicantResponse,ApplicantResponse,UpdateApplicantPayload, UserProfileResponse, DocumentStatusResponse, VisaRequirementByResponse, VisaDetailsByApplicant, updateSingleVisaStatusPayload} from '../types/IApplicants'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 
 
@@ -15,6 +15,7 @@ export const ApplicantsEndpoints = {
   documentStatus: '/api/AcademicPrograms/DocumentStatusByApplicant',
   visaRequirementsByDTOs: '/api/AcademicPrograms/VisaRequirementsByDTOs',
    visaDetails: '/api/VisaApplication/VisaDetailsByApplicant',
+   UpdateSingleVisaStatus: '/api/VisaApplication/UpdateSingleVisaStatus',
   
 }
 
@@ -24,6 +25,12 @@ export const ApplicantsQueryKeys = {
   appointment: ['Appointment'],
   UserProfile: ['UserProfile']
 }
+
+const normalizeUpdateSingleVisaStatusPayload = (data: updateSingleVisaStatusPayload): updateSingleVisaStatusPayload => ({
+  id: String(data.id ?? '').trim(),
+  status: Number(data.status ?? 0)
+
+});
 
 const normalizeUpdateApplicantsPayload = (data: UpdateApplicantPayload): UpdateApplicantPayload => ({
   id: String(data.id ?? '').trim(),
@@ -161,6 +168,45 @@ export const useDeleteApplicants = () => {
   })
 }
 
+
+export const useUpdateSingleVisaStatus = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string
+      payload: updateSingleVisaStatusPayload  
+    }) => {
+      const response = await api.patch(
+        `${ApplicantsEndpoints.UpdateSingleVisaStatus}/${id}`,
+        normalizeUpdateSingleVisaStatusPayload(payload)
+      )
+
+      return response.data
+    },
+
+    onSuccess: (response) => {
+      Toast.success(response?.Message || 'SingleVisaStatus updated successfully')
+
+      queryClient.invalidateQueries({
+        queryKey: ApplicantsQueryKeys.all,
+      })
+    },
+
+    onError: (error: any) => {
+      Toast.error(
+        error?.response?.data?.Message || 'Failed to update SingleVisaStatus'
+      )
+    },
+  })
+}
+
+
+
+
 export const useUpdateApplicants = () => {
   const queryClient = useQueryClient()
 
@@ -244,15 +290,13 @@ export const useUserProfileById = (userId: string | null) => {
 
 
 export const useGetVisaRequirements = (
-  countryId?: string | null,
-  universityId?: string | null,
-  courseId?: string | null
+  applicantId?: string | null
 ) => {
   return useQuery({
-    queryKey: ['visaRequirementsDTOs', countryId, universityId, courseId],
+    queryKey: ['visaRequirementsDTOs', applicantId],
     queryFn: async () => {
       const { data } = await api.get<IPaginationCrmResponse<VisaRequirementByResponse>>(
-        `${ApplicantsEndpoints.visaRequirementsByDTOs}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
+        `${ApplicantsEndpoints.visaRequirementsByDTOs}?applicantId=${applicantId}`,
         {
           params: {
             pageSize: 10,
@@ -263,7 +307,7 @@ export const useGetVisaRequirements = (
       )
       return data.Data
     },
-    enabled: Boolean(countryId && universityId && courseId),
+    enabled: Boolean(applicantId),
   })
 }
 

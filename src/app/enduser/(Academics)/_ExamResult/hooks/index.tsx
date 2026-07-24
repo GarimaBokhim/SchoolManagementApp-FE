@@ -23,7 +23,8 @@ type ExamResultRequest = {
   remarks?: string
   marksObtained: {
     subjectId: string
-    marksObtaineds: number
+    prMarksObtaineds: number
+    thMarksObtaineds: number
     fullMarks: number
   }[]
 }
@@ -38,7 +39,8 @@ export const useAddExamResult = () => {
         remarks: data.remarks,
         marksObtained: data.marksObtained.map(item => ({
           subjectId: item.subjectId,
-          marksObtaineds: item.marksObtaineds,
+          prMarksObtaineds: item.prMarksObtaineds,
+          thMarksObtaineds: item.thMarksObtaineds,
           fullMarks: item.fullMarks
         }))
       }
@@ -98,7 +100,8 @@ export const useEditExamResult = () => {
         remarks: data.remarks,
         marksObtained: data.marksObtained.map(item => ({
           subjectId: item.subjectId,
-          marksObtaineds: item.marksObtaineds,
+          prMarksObtaineds: item.prMarksObtaineds,
+          thMarksObtaineds: item.thMarksObtaineds,
           fullMarks: item.fullMarks
         }))
       }
@@ -132,7 +135,8 @@ export const useGetExamResultById = (ExamResultId: string) => {
         ...raw,
         marksObtained: (raw.marksObtained ?? []).map((item: any) => ({
           subjectId: item.subjectId,
-          marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
+          prMarksObtaineds: item.prMarksObtaineds ?? 0,
+          thMarksObtaineds: item.thMarksObtaineds ?? 0,
           fullMarks: item.fullMarks ?? 0,
         })),
       }
