@@ -222,47 +222,31 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                   />
 
                   <div className="mt-1">
+
                     <InputElement
                       label="Theoretical Marks"
                       form={form}
                       name={`marksObtained.${index}.thMarksObtaineds`}
-                      inputType="number"
-                      placeholder="Enter theoretical marks"
-                      onBlur={(e: ChangeEvent<HTMLInputElement>) => {
-                        const value = Number(e.target.value)
-                        const max = selectedFullMarks[index]
-                        if (max !== undefined && value > max) {
-                          alert(`Obtained marks cannot exceed full marks (${max})`)
-                          form.setValue(
-                            `marksObtained.${index}.thMarksObtaineds`,
-                            max,
-                            { shouldValidate: true }
-                          )
-                        }
-                      }}
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      placeholder="0.00"
+                      required
                     />
                   </div>
 
                   <div className="mt-1">
+
                     <InputElement
                       label="Practical Marks"
                       form={form}
                       name={`marksObtained.${index}.prMarksObtaineds`}
-                      inputType="number"
-                      placeholder="Enter practical marks"
-                      onBlur={(e: ChangeEvent<HTMLInputElement>) => {
-                        const value = Number(e.target.value)
-                        const max = selectedFullMarks[index]
-                        if (max !== undefined && value > max) {
-                          alert(`Obtained marks cannot exceed full marks (${max})`)
-                          form.setValue(
-                            `marksObtained.${index}.prMarksObtaineds`,
-                            max,
-                            { shouldValidate: true }
-                          )
-                        }
-                      }}
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      placeholder="0.00"
                     />
+
                   </div>
 
                   <div className="mt-1">
@@ -272,6 +256,7 @@ const AddExamResultForm = ({ form, onClose }: Props) => {
                       name={`marksObtained.${index}.fullMarks`}
                       inputType="number"
                       placeholder="Full marks"
+                      step="0.1"
                       readOnly
                     />
                   </div>
