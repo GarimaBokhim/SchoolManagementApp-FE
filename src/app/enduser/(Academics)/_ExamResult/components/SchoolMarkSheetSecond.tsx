@@ -169,7 +169,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
     <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
       <div
         ref={modalRef}
-        className="bg-white w-full sm:w-[90%] max-w-[900px] rounded-md p-4 shadow-xl overflow-none"
+        className="bg-white w-full sm:w-[90%] max-w-[1000px] rounded-md p-4 shadow-xl overflow-y-auto max-h-[95vh]"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Print Marksheet</h2>
@@ -258,41 +258,41 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
                   ? data.MarksWithGrades.map(
-                      (m: ISubjectMark, index: number) => (
-                        <tr key={index} className="text-center">
-                          <td className="border border-sky-500 p-1">
-                            {index + 1}
-                          </td>
-                          <td className="border border-sky-500 p-1 text-left px-2">
-                            <SubjectNameCell subjectId={m.subjectId} />
-                          </td>
-                          <td className="border border-sky-500 p-1">
-                            {m.grade || '-'}
-                          </td>
-                          <td className="border border-sky-500 p-1">
-                            {m.GPA || '-'}
-                          </td>
-                          <td className="border border-sky-500 p-1">
-                            {m.marksObtained}
-                          </td>
-                        </tr>
-                      )
+                    (m: ISubjectMark, index: number) => (
+                      <tr key={index} className="text-center">
+                        <td className="border border-sky-500 p-1">
+                          {index + 1}
+                        </td>
+                        <td className="border border-sky-500 p-1 text-left px-2">
+                          <SubjectNameCell subjectId={m.subjectId} />
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.grade || '-'}
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.GPA || '-'}
+                        </td>
+                        <td className="border border-sky-500 p-1">
+                          {m.marksObtained}
+                        </td>
+                      </tr>
                     )
+                  )
                   : Array(5)
-                      .fill(null)
-                      .map((_, index) => (
-                        <tr key={index} className="text-center">
-                          <td className="border border-sky-500 p-1">
-                            {index + 1}
-                          </td>
-                          <td className="border border-sky-500 p-1 text-left px-2">
-                            -
-                          </td>
-                          <td className="border border-sky-500 p-1">-</td>
-                          <td className="border border-sky-500 p-1">-</td>
-                          <td className="border border-sky-500 p-1">-</td>
-                        </tr>
-                      ))}
+                    .fill(null)
+                    .map((_, index) => (
+                      <tr key={index} className="text-center">
+                        <td className="border border-sky-500 p-1">
+                          {index + 1}
+                        </td>
+                        <td className="border border-sky-500 p-1 text-left px-2">
+                          -
+                        </td>
+                        <td className="border border-sky-500 p-1">-</td>
+                        <td className="border border-sky-500 p-1">-</td>
+                        <td className="border border-sky-500 p-1">-</td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
 

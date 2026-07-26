@@ -8,7 +8,7 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Toast } from '@/components/Toast/toast'
 import { useEffect, useState, ChangeEvent } from 'react'
 import { X } from 'lucide-react'
-import { IExamResult } from '../types/IExamResults'
+import { IExamResult, IExamUpdateResult } from '../types/IExamResults'
 import { useEditExamResult, useGetExamResultById } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
@@ -48,6 +48,13 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
     selectedExamId ?? undefined
   )
 
+  const subjectMap = new Map(
+    (allSubject ?? []).map((subject: any) => [
+      subject.id,
+      subject
+    ])
+  )
+
   const { data: allStudents } = useGetStudentByClass(selectedClassId || '')
 
   const { data: allClass } = useGetAllClass()
@@ -72,18 +79,21 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
 
     const normalizedMarks = (ExamResultData.marksObtained ?? []).map((item: any) => ({
       subjectId: item.subjectId,
-      marksObtained: item.marksObtaineds ?? item.marksObtained ?? 0,
-      fullMarks: item.fullMarks ?? 0,
-      isNew: false,
-    }))
+      prMarksObtaineds: item.practicalMarks,
+      thMarksObtaineds: item.theoreticalMarks,
+      fullMarks: item.fullMarks,
+    }));
+
 
     reset({
       examId: ExamResultData.examId,
       studentId: ExamResultData.studentId,
-      remarks: ExamResultData.remarks || '',
+      remarks: ExamResultData.remarks,
       marksObtained: normalizedMarks,
-    })
+    });
   }, [ExamResultData, allExam, reset])
+
+
 
   // Set selectedStudent from studentData for initial display fallback
   useEffect(() => {
@@ -102,9 +112,11 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
         examId: data.examId,
         studentId: data.studentId,
         remarks: data.remarks,
-        marksObtained: data.marksObtained.map((item: any) => ({
+
+        marksObtained: data.marksObtained.map((item) => ({
           subjectId: item.subjectId,
-          marksObtaineds: item.marksObtained,
+          prMarksObtaineds: item.prMarksObtaineds,
+          thMarksObtaineds: item.thMarksObtaineds,
           fullMarks: item.fullMarks,
         })),
       }
@@ -219,60 +231,70 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
             <h2 className="text-lg font-semibold mb-3">Subject Marks</h2>
 
             {fields.map((field, index) => {
-              const currentSubjectId = watch(`marksObtained.${index}.subjectId`)
-              const currentFullMarks = watch(`marksObtained.${index}.fullMarks`)
-              const isNew = (fields[index] as any).isNew ?? false
+              const currentSubjectId = watch(
+                `marksObtained.${index}.subjectId`
+              )
 
-              const allSelectedIds =
-                watch('marksObtained')?.map((i: any) => i.subjectId)?.filter(Boolean) || []
+              const currentFullMarks = watch(
+                `marksObtained.${index}.fullMarks`
+              )
 
-              const filteredSubjects = (allSubject ?? []).filter((subj: any) => {
-                if (subj.id === currentSubjectId) return true
-                return !allSelectedIds.includes(subj.id)
-              })
+
+              const subject = subjectMap.get(currentSubjectId)
 
               return (
                 <div
                   key={field.id}
                   className="grid grid-cols-12 gap-4 items-center p-2 border rounded-md mb-4"
                 >
+
                   {/* SUBJECT */}
                   <div className="col-span-12 md:col-span-5">
-                    {!isNew ? (
-                      <div className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700">
-                        <SubjectNameDisplay subjectId={currentSubjectId} />
-                      </div>
-                    ) : (
-                      <AppCombobox
-                        label="Subject"
-                        name={`marksObtained.${index}.subjectId`}
-                        form={form}
-                        options={filteredSubjects}
-                        selected={filteredSubjects.find((s: any) => s.id === currentSubjectId) ?? null}
-                        onSelect={(subject: any) => {
-                          setValue(`marksObtained.${index}.subjectId`, subject?.id ?? '')
-                          setValue(`marksObtained.${index}.fullMarks`, subject?.fullMarks ?? 0)
-                          setValue(`marksObtained.${index}.marksObtained` as any, 0)
-                        }}
-                        getLabel={(s: any) => s.subjectName}
-                        getValue={(s: any) => s.id}
-                      />
-                    )}
+
+                    <div className="w-full px-3 py-2 border rounded-md">
+                      {subject?.subjectName}
+                    </div>
+
                   </div>
 
-                  {/* MARKS OBTAINED */}
-                  <div className="col-span-12 md:col-span-3">
+
+                  <div className="mt-1 md:col-span-2">
+
                     <InputElement
-                      label="Marks Obtained"
+                      label="Practical Marks"
                       form={form}
-                      name={`marksObtained.${index}.marksObtained`}
-                      inputType="number"
-                      onBlur={handleMarksBlur(index, currentFullMarks)}
+                      name={`marksObtained.${index}.prMarksObtaineds`}
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      placeholder="0.00"
+                    />
+
+                  </div>
+
+
+                  {/* PRACTICAL MARKS */}
+
+
+                  {/* THEORY MARKS */}
+                  <div className="mt-1 md:col-span-2">
+
+                    <InputElement
+                      label="Theoretical Marks"
+                      form={form}
+                      name={`marksObtained.${index}.thMarksObtaineds`}
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      placeholder="0.00"
+                      required
                     />
                   </div>
 
+
                   {/* FULL MARKS */}
                   <div className="col-span-12 md:col-span-2">
+
                     <InputElement
                       label="Full Marks"
                       form={form}
@@ -280,14 +302,10 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
                       inputType="number"
                       readOnly
                     />
+
                   </div>
 
-                  {/* REMOVE */}
-                  <div className="col-span-12 md:col-span-2 flex justify-center">
-                    <button type="button" onClick={() => remove(index)}>
-                      <X />
-                    </button>
-                  </div>
+
                 </div>
               )
             })}
@@ -298,7 +316,8 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
               onClick={() =>
                 append({
                   subjectId: '',
-                  marksObtained: 0,
+                  prMarksObtaineds: 0,
+                  thMarksObtaineds: 0,
                   fullMarks: 0,
                   isNew: true,
                 } as any)
@@ -318,9 +337,9 @@ const EditExamResultForm = ({ form, onClose, ExamResultId }: Props) => {
   )
 }
 
-const SubjectNameDisplay = ({ subjectId }: { subjectId: string }) => {
-  const { data } = useGetSubjectById(subjectId)
-  return <span>{data?.name}</span>
-}
+// const SubjectNameDisplay = ({ subjectId }: { subjectId: string }) => {
+//   const { data } = useGetSubjectById(subjectId)
+//   return <span>{data?.name}</span>
+// }
 
 export default EditExamResultForm

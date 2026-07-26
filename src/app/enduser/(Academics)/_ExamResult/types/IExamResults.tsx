@@ -12,6 +12,21 @@ export interface IExamResult {
   }[]
 }
 
+
+export interface IExamUpdateResult {
+  id?: string
+  examId: string
+  studentId: string
+  remarks?: string
+
+  marksObtained: {
+    subjectId: string
+    practicalMarks: number
+    theoreticalMarks: number
+    fullMarks: number
+  }[]
+}
+
 export interface IFilterExamResultByDate {
   studentId: string
   subjectId: string

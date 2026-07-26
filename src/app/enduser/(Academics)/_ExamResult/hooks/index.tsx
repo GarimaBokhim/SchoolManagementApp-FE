@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
-import { IExamResult, IMarkSheet } from '../types/IExamResults'
+import { IExamResult, IExamUpdateResult, IMarkSheet } from '../types/IExamResults'
 
 const ExamResultEndPoints = {
   getAllExamResults: '/api/Academics/all-examResult',
@@ -122,11 +122,11 @@ export const useEditExamResult = () => {
 export const useGetExamResultById = (ExamResultId: string) => {
   return useQuery({
     queryKey: [queryKey, ExamResultId],
-    queryFn: async (): Promise<IExamResult> => {
+    queryFn: async (): Promise<IExamUpdateResult> => {
       if (!ExamResultId) {
         throw new Error('Id is required to get a ExamResult')
       }
-      const response = await api.get<IExamResult>(
+      const response = await api.get<IExamUpdateResult>(
         `${ExamResultEndPoints.getExamResultsById}/${ExamResultId}`
       )
 
@@ -135,8 +135,8 @@ export const useGetExamResultById = (ExamResultId: string) => {
         ...raw,
         marksObtained: (raw.marksObtained ?? []).map((item: any) => ({
           subjectId: item.subjectId,
-          prMarksObtaineds: item.prMarksObtaineds ?? 0,
-          thMarksObtaineds: item.thMarksObtaineds ?? 0,
+          practicalMarks: item.practicalMarks ?? item.prMarksObtaineds ?? 0,
+          theoreticalMarks: item.theoreticalMarks ?? item.thMarksObtaineds ?? 0,
           fullMarks: item.fullMarks ?? 0,
         })),
       }

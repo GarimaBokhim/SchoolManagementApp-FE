@@ -31,7 +31,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
   const { data: allSubjects, isLoading: subjectsLoading } =
     useGetSubjectByClassId(selectedClass);
 
-  const { fields, replace } = useFieldArray({
+  const { fields, replace, remove } = useFieldArray({
     name: "examSubjects",
     control: form.control,
   });
@@ -44,6 +44,7 @@ const AddExamForm = ({ form, onClose }: Props) => {
     replace(
       allSubjects.map((subject) => ({
         subjectId: subject.id,
+        subjectName: subject.subjectName,
         fullMarksPr: 0,
         passMarksPr: 0,
         fullMarksTh: 0,
@@ -85,10 +86,10 @@ const AddExamForm = ({ form, onClose }: Props) => {
       schoolId: data.schoolId,
       examSubjects: (data.examSubjects ?? []).map((s) => ({
         subjectId: s.subjectId,
-        passMarksPr: Number(s.passMarksPr),
-        fullMarksPr: Number(s.fullMarksPr),
-        passMarksTh: Number(s.passMarksTh),
-        fullMarksTh: Number(s.fullMarksTh),
+        passMarksPr: parseFloat(String(s.passMarksPr)),
+        fullMarksPr: parseFloat(String(s.fullMarksPr)),
+        passMarksTh: parseFloat(String(s.passMarksTh)),
+        fullMarksTh: parseFloat(String(s.fullMarksTh)),
       })),
     };
 
@@ -188,28 +189,44 @@ const AddExamForm = ({ form, onClose }: Props) => {
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className="border border-gray-200 dark:border-zinc-600 rounded-lg p-4 mb-3"
+                className="relative border border-gray-200 dark:border-zinc-600 rounded-lg p-4 mb-3"
               >
-                <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">
-                  {allSubjects?.[index]?.subjectName ?? `Subject ${index + 1}`}
+                {/* X Button */}
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full
+                 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+
+                <p className="mb-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                  {allSubjects?.find(
+                    (s) => s.id === form.watch(`examSubjects.${index}.subjectId`)
+                  )?.subjectName ?? `Subject ${index + 1}`}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <InputElement
                     label="Full Marks (Theory)"
                     form={form}
                     name={`examSubjects.${index}.fullMarksTh`}
                     type="number"
-                    placeholder="0"
+                    step="0.01"
+                    min={0}
+                    placeholder="0.00"
                     required
                   />
+
                   <InputElement
                     label="Pass Marks (Theory)"
                     form={form}
                     name={`examSubjects.${index}.passMarksTh`}
                     type="number"
-                    placeholder="0"
+                    step="0.01"
+                    min={0}
+                    placeholder="0.00"
                     required
                   />
 
@@ -218,16 +235,19 @@ const AddExamForm = ({ form, onClose }: Props) => {
                     form={form}
                     name={`examSubjects.${index}.fullMarksPr`}
                     type="number"
-                    placeholder="0"
-                    required
+                    step="0.01"
+                    min={0}
+                    placeholder="0.00"
                   />
+
                   <InputElement
                     label="Pass Marks (Practical)"
                     form={form}
                     name={`examSubjects.${index}.passMarksPr`}
                     type="number"
-                    placeholder="0"
-                    required
+                    step="0.01"
+                    min={0}
+                    placeholder="0.00"
                   />
                 </div>
               </div>
