@@ -39,6 +39,7 @@ import {
   NotepadTextDashedIcon,
   Package,
   UserRound,
+  MessageSquare,
 } from 'lucide-react'
 import { ISidebar } from '@/types/ISidebar'
 import { usePermissions } from '@/context/auth/PermissionContext'
@@ -233,7 +234,10 @@ const Sidebar: React.FC<Props> = ({
     'Academic Program': School,
     Services: Package,
     Consumer: UserRound,
-    Employee: UserCog
+    Employee: UserCog,
+    Communication: MessageSquare,
+    SetUp: Settings
+
   }
 
   const sortByRank = (a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999)

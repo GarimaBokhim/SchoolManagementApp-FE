@@ -1,112 +1,109 @@
-// announcements_section.tsx - New component for Announcements
 "use client";
+
 import React from "react";
 import { Bell, Calendar, Clock, Pin } from "lucide-react";
-
-interface Announcement {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  timeAgo: string;
-  isPinned?: boolean;
-  color: string;
-}
+import { useGetAllAnnouncement } from "../hooks";
+import {
+  formatAnnouncementTime,
+  formatTimeAgo,
+} from "@/components/helpers/dateTime";
 
 const AnnouncementsSection: React.FC = () => {
-  const announcements: Announcement[] = [
-    {
-      id: 1,
-      title: "Team Meeting",
-      message: "today meeting at 5pm sharp",
-      time: "Today, 5:00 PM",
-      timeAgo: "2 months ago",
-      isPinned: true,
-      color: "#0A53C3",
-    },
-    {
-      id: 2,
-      title: "Meeting Organization",
-      message: "please organize meeting today",
-      time: "Today",
-      timeAgo: "3 months ago",
-      isPinned: false,
-      color: "#8B5CF6",
-    },
-  ];
+  const { data, isLoading } = useGetAllAnnouncement();
+
+  const announcements = data?.items ?? [];
 
   return (
-    <div className="bg-white dark:bg-[#161B27] rounded-xl shadow-sm border border-gray-200 dark:border-[#1E2A3E] transition-colors duration-300">
+    <div className="bg-white dark:bg-[#161B27] rounded-xl border border-gray-200 dark:border-[#1E2A3E] shadow-sm flex flex-col h-[540px]">
       {/* Header */}
-      <div className="p-5 border-b border-gray-100 dark:border-[#1E2A3E]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: "#0A53C3" }}
-            />
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-              Announcements
-            </h3>
-          </div>
-          <Bell className="h-4 w-4" style={{ color: "#0A53C3" }} />
+      <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b bg-white dark:bg-[#161B27] dark:border-[#1E2A3E] rounded-t-xl">
+        <div className="flex items-center gap-2">
+          <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            Announcements
+          </h3>
         </div>
+
+        <Bell className="w-5 h-5 text-blue-600" />
       </div>
 
-      <div className="divide-y divide-gray-100 dark:divide-[#1E2A3E]">
-        {announcements.map((announcement) => (
-          <div
-            key={announcement.id}
-            className="p-5 hover:bg-gray-50 dark:hover:bg-[#0D1117]/40 transition-colors duration-150"
-          >
-            {/* Announcement Header */}
-            <div className="flex items-start gap-3 mb-2">
-              {announcement.isPinned && (
-                <Pin className="h-3.5 w-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-              )}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {announcement.title}
-                  </h4>
-                  {announcement.isPinned && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                      Pinned
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                  {announcement.message}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-gray-400" />
-                    <span className="text-xs text-gray-400 dark:text-gray-500">
-                      {announcement.time}
-                    </span>
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="space-y-4 p-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="animate-pulse rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+              >
+                <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-700 mb-3" />
+                <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700 mb-2" />
+                <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
+              </div>
+            ))}
+          </div>
+        ) : announcements.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+            No announcements available.
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100 dark:divide-[#1E2A3E]">
+            {announcements.map((announcement) => (
+              <div
+                key={announcement.id}
+                className="p-4 hover:bg-gray-50 dark:hover:bg-[#0D1117] transition-colors"
+              >
+                <div className="flex gap-3">
+                  {/* Pin */}
+                  <div className="mt-1">
+                    {announcement.isPinned === 0 ? (
+                      <Pin className="w-4 h-4 text-red-500 fill-red-500" />
+                    ) : (
+                      <Bell className="w-4 h-4 text-blue-500" />
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-gray-400" />
-                    <span className="text-xs text-gray-400 dark:text-gray-500">
-                      {announcement.timeAgo}
-                    </span>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                        {announcement.title}
+                      </h4>
+
+                      {announcement.isPinned === 0 && (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                          PINNED
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                      {announcement.description.replace(/<[^>]*>/g, "")}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {formatAnnouncementTime(announcement.createdAt)}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {formatTimeAgo(announcement.createdAt)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Footer with View All */}
-      <div className="p-4 border-t border-gray-100 dark:border-[#1E2A3E]">
-        <button
-          className="w-full text-center text-xs font-medium py-1.5 rounded-lg transition-all duration-150 hover:scale-[1.02]"
-          style={{ color: "#0A53C3", backgroundColor: "#EBF1FB" }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#C2D5F5")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#EBF1FB")}
-        >
-          View All Announcements →
+      {/* Footer */}
+      <div className="sticky bottom-0 border-t border-gray-100 dark:border-[#1E2A3E] bg-white dark:bg-[#161B27] p-4 rounded-b-xl">
+        <button className="w-full rounded-lg bg-blue-50 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
+          View All Announcements
         </button>
       </div>
     </div>

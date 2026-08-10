@@ -10,3 +10,10 @@ export interface QuickActionDetailsResponse {
     visaApplicationCounts: Number
     decisionCounts: Number
 }
+
+export interface AddAnnouncementResponse {
+    id: string
+    title: string
+    description: string
+    announcementPriority: number
+}
