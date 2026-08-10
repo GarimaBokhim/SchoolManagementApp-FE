@@ -253,14 +253,6 @@ const AllVisaRequirementsForm = () => {
         }
     }
 
-    const visaRequirementsType = [
-        { id: 1, name: 'Completed' },
-        { id: 2, name: 'Pending' },
-        { id: 3, name: 'Rejected' },
-        { id: 4, name: 'ActionRequired' }
-    ];
-
-
     const handleAddSubmit = () => {
         setAddModal(false);
     };
