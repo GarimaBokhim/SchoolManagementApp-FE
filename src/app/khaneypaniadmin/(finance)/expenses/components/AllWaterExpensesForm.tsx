@@ -456,13 +456,13 @@ const AllWaterExpensesForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {
                                                         paymentMethodsType.find(
-                                                            (s) => s.id === Number(WaterExpenses.paymentMethods)
+                                                            (s) => s.id === Number(WaterExpenses.paymentMethod)
                                                         )?.name
                                                     }
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterExpenses.descriptions}
+                                                    {WaterExpenses.description}
                                                 </td>
 
 

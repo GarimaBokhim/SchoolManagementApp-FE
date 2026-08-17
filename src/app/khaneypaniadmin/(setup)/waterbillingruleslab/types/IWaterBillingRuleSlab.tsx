@@ -8,7 +8,9 @@ export interface AddWaterBillingRuleSlabResponse {
 
 export interface WaterBillingRuleSlabResponse {
     id: string
-    billingRuleId: string
+    waterTariffPlan: string
+    effectiveFrom: string
+    effectiveTo: string
     fromUnit: number
     toUnit: number
     ratePerUnit: number

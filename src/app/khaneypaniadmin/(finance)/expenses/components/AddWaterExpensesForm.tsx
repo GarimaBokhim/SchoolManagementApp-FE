@@ -33,12 +33,12 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
 
     const handleClose = () => {
         form.reset({
-            expensesDate: "",
+            expenseDate: "",
             expenseCategoryId: "",
             amount: 0,
-            paymentMethods: 0,
+            paymentMethod: 0,
             venderName: "",
-            descriptions: ""
+            description: ""
         });
         onClose?.();
     };
@@ -51,12 +51,12 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
 
         try {
             await addWaterExpenses.mutateAsync({
-                expensesDate: data.expensesDate,
+                expenseDate: data.expenseDate,
                 expenseCategoryId: data.expenseCategoryId,
                 amount: data.amount,
-                paymentMethods: data.paymentMethods,
+                paymentMethod: data.paymentMethod,
                 venderName: data.venderName,
-                descriptions: data.descriptions
+                description: data.description
             });
 
             handleClose();
@@ -89,7 +89,7 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
                             <InputElement
                                 label="Date"
                                 form={form}
-                                name="expensesDate"
+                                name="expenseDate"
                                 placeholder="Enter Expenses Date"
                                 inputType="date"
                             />
@@ -171,7 +171,7 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
                                 }
                                 onSelect={(option) => {
                                     setPaymentMethodsType(option?.id ?? null);
-                                    form.setValue('paymentMethods', option?.id ?? 0);
+                                    form.setValue('paymentMethod', option?.id ?? 0);
                                 }}
                                 getLabel={(o) => o?.name || ''}
                                 getValue={(o) => o?.id ?? ''}

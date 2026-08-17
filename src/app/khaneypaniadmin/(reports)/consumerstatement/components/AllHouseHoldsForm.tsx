@@ -298,7 +298,15 @@ const AllHouseHoldsForm = () => {
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
                             />
 
-
+                            {/* {canAdd && (
+                                <ButtonElement
+                                    icon={<Plus size={18} />}
+                                    type="button"
+                                    text="Add New Installments"
+                                    onClick={() => setAddModal(true)}
+                                    className="!font-semibold"
+                                />
+                            )} */}
                         </div>
                     </div>
 

@@ -433,7 +433,7 @@ const AllWaterBillingRuleSlabForm = () => {
                                             >
                                                 <td className="px-4 py-3 text-gray-500">{index + 1}</td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterBillingRuleSlab.billingRuleId}
+                                                    {WaterBillingRuleSlab.waterTariffPlan}({WaterBillingRuleSlab.effectiveFrom} / {WaterBillingRuleSlab.effectiveTo})
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {WaterBillingRuleSlab.fromUnit}

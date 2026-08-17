@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { Toast } from '@/components/Toast/toast'
-import { AddWaterPaymentsResponse, WaterPaymentsResponse, UpdateWaterPaymentsPayload, AddWaterPaymentsPayload } from '../types/IWaterPayments'
+import { AddWaterPaymentsResponse, WaterPaymentsResponse, UpdateWaterPaymentsPayload, AddWaterPaymentsPayload, AddReceiptPayload, AddReceiptResponse } from '../types/IWaterPayments'
 import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 import { WaterIncomeEndpoints } from '../../income/hooks'
 import { WaterIncomeResponse } from '../../income/types/IWaterIncome'
@@ -12,6 +12,7 @@ export const WaterPaymentsEndpoints = {
     add: '/api/KhaneyPaniFinance/AddWaterPayment',
     update: '/api/KhaneyPaniFinance/UpdateWaterPayment',
     delete: '/api/KhaneyPaniFinance/DeleteWaterPayment',
+    addReceipt: '/api/KhaneyPaniFinance/AddWaterReceipt',
     houseHolds: '/api/KhaneyPaniHouseHolds/FilterHouseHolds',
 }
 
@@ -29,6 +30,14 @@ const normalizeWaterPaymentsPayload = (
     paymentMethods: data.paymentMethods ?? 0
 
 });
+
+const normalizeWaterReceiptsPayload = (
+    data: AddReceiptPayload
+): AddReceiptPayload => ({
+    waterPaymentId: String(data.waterPaymentId ?? "").trim()
+
+});
+
 
 
 const normalizeUpdateWaterPaymentsPayload = (
@@ -84,6 +93,38 @@ export const useGetAllWaterPayments = (queryParams?: string) => {
         },
         staleTime: 1000 * 60 * 5,
         retry: false,
+    })
+}
+
+
+export const useAddWaterReceipts = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (payload: AddReceiptPayload) => {
+            const normalizedPayload = normalizeWaterReceiptsPayload(payload)
+
+            const response = await api.post<IPaginationCrmResponse<AddReceiptResponse>>(
+                WaterPaymentsEndpoints.addReceipt,
+                normalizedPayload
+            )
+
+            return response.data
+        },
+
+        onSuccess: (response) => {
+            Toast.success(response?.Message || 'WaterReceipts added successfully')
+
+            queryClient.invalidateQueries({
+                queryKey: WaterPaymentsQueryKeys.all,
+            })
+        },
+
+        onError: (error: any) => {
+            Toast.error(
+                error?.response?.data?.Message || 'Failed to add WaterReceipts'
+            )
+        },
     })
 }
 

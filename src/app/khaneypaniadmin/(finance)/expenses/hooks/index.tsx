@@ -21,12 +21,12 @@ export const WaterExpensesQueryKeys = {
 const normalizeWaterExpensesPayload = (
     data: AddWaterExpensesPayload
 ): AddWaterExpensesPayload => ({
-    expensesDate: String(data.expensesDate ?? "").trim(),
+    expenseDate: String(data.expenseDate ?? "").trim(),
     expenseCategoryId: String(data.expenseCategoryId ?? "").trim(),
     amount: data.amount ?? 0,
-    paymentMethods: data.paymentMethods ?? 0,
+    paymentMethod: data.paymentMethod ?? 0,
     venderName: String(data.venderName ?? "").trim(),
-    descriptions: String(data.descriptions ?? "").trim()
+    description: String(data.description ?? "").trim()
 
 });
 
@@ -38,9 +38,9 @@ const normalizeUpdateWaterExpensesPayload = (
     expensesDate: String(data.expensesDate ?? "").trim(),
     expenseCategoryId: String(data.expenseCategoryId ?? "").trim(),
     amount: data.amount ?? 0,
-    paymentMethods: data.paymentMethods ?? 0,
+    paymentMethod: data.paymentMethod ?? 0,
     venderName: String(data.venderName ?? "").trim(),
-    descriptions: String(data.descriptions ?? "").trim()
+    description: String(data.description ?? "").trim()
 });
 
 

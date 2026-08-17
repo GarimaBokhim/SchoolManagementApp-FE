@@ -7,7 +7,7 @@ import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-h
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddHouseHolds } from "../hooks";
+import { useAddHouseHolds, useGetAllWaterTariffPlan } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -23,6 +23,11 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
 
     const [HouseHoldsType, setHouseHoldsType] = useState<number | null>(null);
 
+    const { data: allwaterTariffPlan } = useGetAllWaterTariffPlan();
+    const [sellectedWaterTariffPlanId, setSelectedWaterTariffPlanId] = useState<
+        string | null
+    >('')
+
 
     const handleClose = () => {
         form.reset({
@@ -35,7 +40,9 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
             municipalityId: 0,
             vdcId: 0,
             wardNumber: 0,
-            houseNumber: "",
+            waterTrrifPlanId: "",
+            latitude: 0,
+            longitude: 0,
             tole: "",
             registrationDate: "",
 
@@ -59,7 +66,9 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
                 municipalityId: data.municipalityId,
                 vdcId: data.vdcId,
                 wardNumber: data.wardNumber,
-                houseNumber: data.houseNumber,
+                waterTrrifPlanId: data.waterTrrifPlanId,
+                latitude: data.latitude,
+                longitude: data.longitude,
                 tole: data.tole,
                 registrationDate: data.registrationDate
             })
@@ -155,11 +164,54 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
                                 inputType="number"
                                 placeholder="Enter Ward Number"
                             />
-                            <InputElement
-                                label="House Number"
+
+
+                            <AppCombobox
+                                value={sellectedWaterTariffPlanId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute z-20"
+                                label="WaterTariff Plan"
+                                name="waterTrrifPlanId"
                                 form={form}
-                                name="houseNumber"
-                                placeholder="Enter House Number"
+                                required
+                                options={allwaterTariffPlan || []}
+                                selected={
+                                    allwaterTariffPlan?.find((g) => g.id === sellectedWaterTariffPlanId) ||
+                                    null
+                                }
+                                onSelect={(group) => {
+                                    if (group) {
+                                        const id = group.id ?? ''
+
+                                        setSelectedWaterTariffPlanId(id || null)
+
+                                        form.setValue('waterTrrifPlanId', id, {
+                                            shouldValidate: true,
+                                        })
+                                    } else {
+                                        setSelectedWaterTariffPlanId(null)
+
+                                        form.setValue('waterTrrifPlanId', '', {
+                                            shouldValidate: true,
+                                        })
+                                    }
+                                }}
+                                getLabel={(g) => g?.name ?? ''}
+                                getValue={(g) => g?.id ?? ''}
+                            />
+
+                            <InputElement
+                                label="Latitude"
+                                form={form}
+                                name="latitude"
+                                placeholder="Enter Latitude"
+                            />
+
+                            <InputElement
+                                label="Longitude"
+                                form={form}
+                                name="longitude"
+                                placeholder="Enter longitude"
                             />
                             <InputElement
                                 label="Tole"

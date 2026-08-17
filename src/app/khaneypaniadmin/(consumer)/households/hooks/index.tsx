@@ -10,6 +10,8 @@ export const HouseHoldsEndpoints = {
     add: '/api/KhaneyPaniHouseHolds/AddHouseHolds',
     update: '/api/KhaneyPaniHouseHolds/UpdateHouseHolds',
     delete: '/api/KhaneyPaniHouseHolds/DeleteHouseHolds',
+
+    filterWaterTariffPlan: '/api/KhaneyPaniSetUp/FilterWaterTariffPlan',
 }
 
 export const HouseHoldsQueryKeys = {
@@ -29,7 +31,9 @@ const normalizeHouseHoldsPayload = (
     municipalityId: Number(data.municipalityId ?? 0),
     vdcId: Number(data.vdcId ?? 0),
     wardNumber: Number(data.wardNumber ?? 0),
-    houseNumber: String(data.houseNumber ?? '').trim(),
+    waterTrrifPlanId: String(data.waterTrrifPlanId ?? '').trim(),
+    latitude: Number(data.latitude ?? 0),
+    longitude: Number(data.longitude ?? 0),
     tole: String(data.tole ?? '').trim(),
     registrationDate: String(data.registrationDate ?? '').trim()
 });
@@ -49,10 +53,42 @@ const normalizeUpdateHouseHoldsPayload = (
     municipalityId: Number(data.municipalityId ?? 0),
     vdcId: Number(data.vdcId ?? 0),
     wardNumber: Number(data.wardNumber ?? 0),
-    houseNumber: String(data.houseNumber ?? '').trim(),
+    waterTrrifPlanId: String(data.waterTrrifPlanId ?? '').trim(),
+    latitude: Number(data.latitude ?? 0),
+    longitude: Number(data.longitude ?? 0),
     tole: String(data.tole ?? '').trim(),
     registrationDate: String(data.registrationDate ?? '').trim()
+
 });
+
+
+export const useGetAllWaterTariffPlan = () => {
+    return useQuery({
+        queryKey: [...HouseHoldsQueryKeys.all],
+
+        queryFn: async () => {
+            const response = await api.get<
+                IPaginationCrmResponse<{
+                    id: string
+                    name: string
+                }>
+            >(HouseHoldsEndpoints.filterWaterTariffPlan, {
+                params: {
+                    pageSize: 10,
+                    pageIndex: 1,
+                    isPagination: true,
+                },
+            })
+
+            return response.data
+        },
+
+        select: (response) => response?.Data.Items ?? [],
+
+        staleTime: 1000 * 60 * 5,
+    })
+}
+
 
 
 export const useGetAllHouseHolds = (queryParams?: string) => {

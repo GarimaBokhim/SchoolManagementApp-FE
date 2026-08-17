@@ -413,7 +413,6 @@ const AllWaterIncomeForm = () => {
                                         <th className="px-4 py-3 text-left">WaterIncomeSource</th>
                                         <th className="px-4 py-3 text-left">Amount</th>
                                         <th className="px-4 py-3 text-left">PaymentMethods</th>
-                                        <th className="px-4 py-3 text-left">ConsumerName</th>
                                         <th className="px-4 py-3 text-left">Description</th>
 
                                         <th className="px-4 py-3 text-center">Actions</th>
@@ -451,9 +450,6 @@ const AllWaterIncomeForm = () => {
                                                     }
                                                 </td>
 
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterIncome.consumerName}
-                                                </td>
 
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">

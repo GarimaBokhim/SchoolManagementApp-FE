@@ -438,8 +438,15 @@ const AllWaterBillingSetUpForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {WaterBillingSetUp.description}
                                                 </td>
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterBillingSetUp.isDefault}
+                                                <td className="px-4 py-3">
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${WaterBillingSetUp.isDefault
+                                                            ? "bg-green-100 text-green-700"
+                                                            : "bg-gray-100 text-gray-600"
+                                                            }`}
+                                                    >
+                                                        {WaterBillingSetUp.isDefault ? "Default" : "Not Default"}
+                                                    </span>
                                                 </td>
 
 

@@ -40,3 +40,27 @@ export interface UpdateWaterPaymentsResponse {
     paidAmount: number
     paymentMethods: number
 }
+
+export interface AddReceiptPayload {
+    waterPaymentId: string | undefined
+}
+
+export interface AddReceiptResponse {
+    Id: string
+    BillNumber: string
+    HouseholdId: string
+    ConsumerId: string
+    ConsumerName: string
+    Address: string
+    ContactNumber: string
+    BillDate: string
+    PreviousReading: number
+    CurrentReading: number
+    Consumption: number
+    TotalAmount: number
+    PaidAmount: number
+    OutstandingAmount: number
+    BillStatus: string
+    CreatedAt: string
+
+}
