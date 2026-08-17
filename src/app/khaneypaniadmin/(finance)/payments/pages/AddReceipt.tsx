@@ -1,18 +1,18 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddWaterReceiptPayload } from "../types/IWaterReceipts";
-import AddWaterReceiptsForm from "../components/AddWaterReceiptForm";
+import { AddReceiptPayload, AddWaterPaymentsPayload } from "../types/IWaterPayments";
+import AddWaterPaymentsForm from "../components/AddWaterPaymentsForm";
+import DisplayReceiptForm from "../components/DisplayReceiptForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    waterPaymentId?: string;
 }
-const AddWaterReceipts = ({ visible, onClose }: Props) => {
-    const form = useForm<AddWaterReceiptPayload>({
+const AddReceipt = ({ visible, waterPaymentId, onClose }: Props) => {
+    const form = useForm<AddReceiptPayload>({
         defaultValues: {
-            waterBillingId: "",
-            receiptDate: "",
-            paymentMethods: 0
+            waterPaymentId: ""
         },
 
         // resolver: yupResolver(SubjectValidator),
@@ -34,9 +34,9 @@ const AddWaterReceipts = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddWaterReceiptsForm form={form} onClose={handleOnClose} />
+                <DisplayReceiptForm waterPaymentId={waterPaymentId} onClose={handleOnClose} />
             </div>
         </div>
     );
 };
-export default AddWaterReceipts;
+export default AddReceipt;

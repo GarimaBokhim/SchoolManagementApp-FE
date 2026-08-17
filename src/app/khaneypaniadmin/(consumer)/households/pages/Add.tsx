@@ -18,7 +18,6 @@ const AddHouseHolds = ({ visible, onClose }: Props) => {
             municipalityId: 0,
             vdcId: 0,
             wardNumber: 0,
-            houseNumber: "",
             tole: "",
             registrationDate: ""
 

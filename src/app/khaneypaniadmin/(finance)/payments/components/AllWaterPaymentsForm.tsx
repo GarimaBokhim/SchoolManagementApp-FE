@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -16,6 +16,8 @@ import AddWaterPayments from '../pages/Add'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DisplayReceiptForm from './DisplayReceiptForm'
+import AddReceipt from '../pages/AddReceipt'
 
 interface FilterFormData {
     name: string
@@ -40,6 +42,7 @@ const ActionMenu = ({
     canEdit = true,
     canDelete = true,
 }: ActionMenuProps) => {
+
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -88,6 +91,8 @@ const ActionMenu = ({
             window.removeEventListener('resize', update)
         }
     }, [open, calculatePosition])
+
+
 
 
 
@@ -156,11 +161,16 @@ const AllWaterPaymentsForm = () => {
     const { menuStatus } = usePermissions()
     const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
-
+    const [open, setOpen] = useState(false)
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
+
+    const [displayReceiptModal, setDisplayReceiptModal] = useState(false);
+
     const [WaterPaymentsForm, setWaterPaymentsForm] = useState(false);
     const [selectedId, setSelectedId] = useState<string>('')
+
+    const [selectedwaterPaymentId, setSelectedwaterPaymentId] = useState<string>('')
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -188,15 +198,6 @@ const AllWaterPaymentsForm = () => {
     const form = useForm<FilterFormData>({
         defaultValues: { startDate: '', endDate: '' },
     })
-
-    const [selectedWaterPaymentsName, setSelectedWaterPaymentsName] = useState<string | null>(
-        ""
-    );
-
-
-
-
-
 
 
 
@@ -304,6 +305,10 @@ const AllWaterPaymentsForm = () => {
         formRef.current?.handleClear();
         form.reset();
     };
+
+    const handleView = () => {
+        alert(`Viewing WaterPayments:`)
+    }
 
     return (
         <>
@@ -448,6 +453,16 @@ const AllWaterPaymentsForm = () => {
 
 
                                                 <td className="py-1 px-4">
+
+                                                    <ButtonElement
+                                                        icon={<Eye size={18} />}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setDisplayReceiptModal(true);
+                                                            setSelectedwaterPaymentId(WaterPayments.id);
+                                                        }}
+                                                        className="!font-semibold"
+                                                    />
                                                     {/* <VisaApplicationActionMenu
                                                         visaApplication={app}  // ✅ Fixed: was `application`, now `app`
                                                         onView={handleView}
@@ -485,7 +500,14 @@ const AllWaterPaymentsForm = () => {
                 )}
 
             </div>
-
+            <AddReceipt
+                visible={displayReceiptModal}
+                waterPaymentId={selectedwaterPaymentId}
+                onClose={() => {
+                    setDisplayReceiptModal(false);
+                    setSelectedwaterPaymentId('');
+                }}
+            />
 
             <AddWaterPayments
                 visible={addModal}

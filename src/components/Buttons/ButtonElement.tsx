@@ -10,8 +10,8 @@ interface PropsT {
   type?: 'submit' | 'reset' | 'button'
   customStyle?: string
   className?: string
-  style?: React.CSSProperties // i have added this for crm styling and it is optional so nothing to worry about for the use in the school management (nimesh)
-  icon?: any
+  style?: React.CSSProperties
+  icon?: React.ReactNode
 }
 
 export const ButtonElement = ({
@@ -27,7 +27,7 @@ export const ButtonElement = ({
   style,
 }: PropsT) => {
   const buttonIcon = isLoading ? (
-    <Spinner key={'circle'} variant={'circle'} />
+    <Spinner key="circle" variant="circle" />
   ) : null
 
   return (
@@ -36,16 +36,17 @@ export const ButtonElement = ({
       type={type}
       onClick={handleClick || onClick}
       style={style}
-      className={`px-2 py-2 cursor-pointer text-sm font-medium text-white rounded-md ${className} ${customStyle} transition ${
-        disabled
-          ? 'bg-gray-400 cursor-not-allowed'
-          : 'bg-[#035BBA] hover:bg-[#4788CD]'
-      }`}
+      className={`px-2 py-2 cursor-pointer text-sm font-medium text-white rounded-md ${className} ${customStyle} transition ${disabled
+        ? 'bg-gray-400 cursor-not-allowed'
+        : 'bg-[#035BBA] hover:bg-[#4788CD]'
+        }`}
     >
-      <div className="flex items-center justify-center ">
-        {icon} &nbsp;
+      <div className="flex items-center justify-center gap-1">
+        {icon}
+
         {buttonIcon}
-        {`${text}`}
+
+        {text && <span>{text}</span>}
       </div>
     </button>
   )

@@ -10,7 +10,6 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { EditButton } from '@/components/Buttons/EditButton'
-import AddWaterReceipts from '../pages/Add'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -251,26 +250,12 @@ const AllWaterReceiptsForm = () => {
     ];
 
 
-    const billStatusType = [
-        { id: 1, name: 'Draft' },
-        { id: 2, name: 'Generated' },
-        { id: 3, name: 'PartiallyPaid' },
-        { id: 4, name: 'Paid' },
-        { id: 5, name: 'OverDue' },
-        { id: 6, name: 'Cancelled' }
-
-    ];
-
 
 
     const handleEditLead = (WaterReceipts: UpdateWaterReceiptResponse) => {
         console.log('Edit WaterReceipts:', WaterReceipts)
     }
 
-    const handleAddWaterReceipts = () => {
-        setWaterReceiptsForm(false);
-        setSelectedId("");
-    };
 
     const handleDelete = async (id: string) => {
         try {
@@ -338,13 +323,7 @@ const AllWaterReceiptsForm = () => {
                                 onClick={() => setOpenFilter(!openFilter)}
                                 className="!bg-emerald-600 hover:!bg-emerald-700"
                             />
-                            <ButtonElement
-                                icon={<Plus size={18} />}
-                                type="button"
-                                text="Add WaterReceipts"
-                                onClick={() => setAddModal(true)}
-                                className="!font-semibold"
-                            />
+
 
 
 
@@ -428,8 +407,7 @@ const AllWaterReceiptsForm = () => {
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
                                         <th className="px-4 py-3 text-left">ReceiptNo</th>
-                                        <th className="px-4 py-3 text-left">Consumption</th>
-                                        <th className="px-4 py-3 text-left">BillStatus</th>
+                                        <th className="px-4 py-3 text-left">PaidAmount</th>
                                         <th className="px-4 py-3 text-left">ReceiptDate</th>
                                         <th className="px-4 py-3 text-left">PaymentMethods</th>
                                         <th className="px-4 py-3 text-center">Actions</th>
@@ -452,16 +430,9 @@ const AllWaterReceiptsForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {WaterReceipts.receiptNo}
                                                 </td>
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterReceipts.consumption}
-                                                </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {
-                                                        billStatusType.find(
-                                                            (s) => s.id === Number(WaterReceipts.billStatus)
-                                                        )?.name
-                                                    }
+                                                    {WaterReceipts.paidAmount}
                                                 </td>
 
 
@@ -519,11 +490,6 @@ const AllWaterReceiptsForm = () => {
 
             </div>
 
-
-            <AddWaterReceipts
-                visible={addModal}
-                onClose={handleAddSubmit}
-            />
         </>
     )
 }

@@ -7,7 +7,6 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 
 export const WaterReceiptEndpoints = {
     filter: '/api/KhaneyPaniFinance/FilterWaterReceipt',
-    add: '/api/KhaneyPaniFinance/AddWaterReceipt',
     update: '/api/KhaneyPaniFinance/UpdateWaterReceipt',
     delete: '/api/KhaneyPaniFinance/DeleteWaterReceipt',
     waterBilling: '/api/KhaneyPaniHouseHolds/FilterWaterBilling',
@@ -18,14 +17,6 @@ export const WaterReceiptQueryKeys = {
 }
 
 
-const normalizeWaterReceiptPayload = (
-    data: AddWaterReceiptPayload
-): AddWaterReceiptPayload => ({
-    waterBillingId: String(data.waterBillingId ?? "").trim(),
-    receiptDate: String(data.receiptDate ?? "").trim(),
-    paymentMethods: data.paymentMethods ?? 0,
-
-});
 
 
 const normalizeUpdateWaterReceiptPayload = (
@@ -81,38 +72,6 @@ export const useGetAllWaterReceipt = (queryParams?: string) => {
         },
         staleTime: 1000 * 60 * 5,
         retry: false,
-    })
-}
-
-
-export const useAddWaterReceipt = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async (payload: AddWaterReceiptPayload) => {
-            const normalizedPayload = normalizeWaterReceiptPayload(payload)
-
-            const response = await api.post<IPaginationCrmResponse<AddWaterReceiptResponse>>(
-                WaterReceiptEndpoints.add,
-                normalizedPayload
-            )
-
-            return response.data
-        },
-
-        onSuccess: (response) => {
-            Toast.success(response?.Message || 'WaterReceipt added successfully')
-
-            queryClient.invalidateQueries({
-                queryKey: WaterReceiptQueryKeys.all,
-            })
-        },
-
-        onError: (error: any) => {
-            Toast.error(
-                error?.response?.data?.Message || 'Failed to add WaterReceipt'
-            )
-        },
     })
 }
 

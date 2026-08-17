@@ -10,12 +10,12 @@ interface Props {
 const AddWaterExpenses = ({ visible, onClose }: Props) => {
     const form = useForm<AddWaterExpensesPayload>({
         defaultValues: {
-            expensesDate: "",
+            expenseDate: "",
             expenseCategoryId: "",
             amount: 0,
-            paymentMethods: 0,
+            paymentMethod: 0,
             venderName: "",
-            descriptions: "",
+            description: "",
 
 
         },

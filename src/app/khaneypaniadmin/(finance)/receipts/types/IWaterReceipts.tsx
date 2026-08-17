@@ -10,8 +10,7 @@ export interface AddWaterReceiptResponse {
 export interface WaterReceiptResponse {
     id: string
     receiptNo: string
-    consumption: string
-    billStatus: number
+    paidAmount: number
     receiptDate: string
     paymentMethods: number
 }
