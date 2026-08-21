@@ -1,25 +1,30 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddHouseHoldsPayload } from "../types/IHouseHolds";
+import { AddHouseHoldsPayload, HouseHoldsResponse } from "../types/IHouseHolds";
 import AddHouseHoldsForm from "../components/AddHouseHoldsForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    household?: HouseHoldsResponse | null;
 }
-const AddHouseHolds = ({ visible, onClose }: Props) => {
+const AddHouseHolds = ({ visible, onClose, household }: Props) => {
     const form = useForm<AddHouseHoldsPayload>({
         defaultValues: {
-            consumerName: "",
-            familyMember: 0,
-            email: "",
-            provinceId: 0,
-            districtId: 0,
-            municipalityId: 0,
-            vdcId: 0,
-            wardNumber: 0,
-            tole: "",
-            registrationDate: ""
+            consumerName: household?.consumerName ?? "",
+            familyMember: household?.familyMember ?? 0,
+            contactNumber: household?.contactNumber ?? "",
+            email: household?.email ?? "",
+            provinceId: household?.provinceId ?? 0,
+            districtId: household?.districtId ?? 0,
+            municipalityId: household?.municipalityId ?? 0,
+            vdcId: household?.vdcId ?? 0,
+            wardNumber: household?.wardNumber ?? 0,
+            waterTrrifPlanId: household?.waterTrrifPlanId ?? "",
+            latitude: household?.latitude ?? 0,
+            longitude: household?.longitude ?? 0,
+            tole: household?.tole ?? "",
+            registrationDate: household?.registrationDate ?? ""
 
         },
 
@@ -42,7 +47,11 @@ const AddHouseHolds = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddHouseHoldsForm form={form} onClose={handleOnClose} />
+                <AddHouseHoldsForm
+                    form={form}
+                    onClose={handleOnClose}
+                    householdId={household?.id}
+                />
             </div>
         </div>
     );

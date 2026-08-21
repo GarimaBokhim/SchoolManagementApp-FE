@@ -1,21 +1,22 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddWaterExpensesPayload } from "../types/IWaterExpenses";
+import { AddWaterExpensesPayload, WaterExpensesResponse } from "../types/IWaterExpenses";
 import AddWaterExpensesForm from "../components/AddWaterExpensesForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    waterExpenses?: WaterExpensesResponse | null;
 }
-const AddWaterExpenses = ({ visible, onClose }: Props) => {
+const AddWaterExpenses = ({ visible, onClose, waterExpenses }: Props) => {
     const form = useForm<AddWaterExpensesPayload>({
         defaultValues: {
-            expenseDate: "",
-            expenseCategoryId: "",
-            amount: 0,
-            paymentMethod: 0,
-            venderName: "",
-            description: "",
+            expenseDate: waterExpenses?.expensesDate ?? "",
+            expenseCategoryId: waterExpenses?.expenseCategoryId ?? "",
+            amount: waterExpenses?.amount ?? 0,
+            paymentMethod: waterExpenses?.paymentMethod ?? 0,
+            venderName: waterExpenses?.venderName ?? "",
+            description: waterExpenses?.description ?? "",
 
 
         },
@@ -39,7 +40,11 @@ const AddWaterExpenses = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddWaterExpensesForm form={form} onClose={handleOnClose} />
+                <AddWaterExpensesForm
+                    form={form}
+                    onClose={handleOnClose}
+                    waterExpenses={waterExpenses}
+                />
             </div>
         </div>
     );

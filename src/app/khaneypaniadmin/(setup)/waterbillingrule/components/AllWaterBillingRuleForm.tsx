@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteWaterBillingRule, useGetAllWaterBillingRule } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateWaterBillingRuleResponse } from '../types/IWaterBillingRule'
+import { WaterBillingRuleResponse } from '../types/IWaterBillingRule'
 import AddWaterBillingRule from '../pages/Add'
+import EditWaterBillingRule from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -25,20 +26,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    WaterBillingRule: UpdateWaterBillingRuleResponse;
+    WaterBillingRule: WaterBillingRuleResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (WaterBillingRule: UpdateWaterBillingRuleResponse) => void;
+    onEdit: (WaterBillingRule: WaterBillingRuleResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     WaterBillingRule,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -159,8 +156,9 @@ const AllWaterBillingRuleForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [WaterBillingRuleForm, setWaterBillingRuleForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedWaterBillingRule, setSelectedWaterBillingRule] = useState<WaterBillingRuleResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -247,13 +245,14 @@ const AllWaterBillingRuleForm = () => {
     ];
 
 
-    const handleEditLead = (WaterBillingRule: UpdateWaterBillingRuleResponse) => {
-        console.log('Edit WaterBillingRule:', WaterBillingRule)
+    const handleEditLead = (WaterBillingRule: WaterBillingRuleResponse) => {
+        setSelectedWaterBillingRule(WaterBillingRule)
+        setEditModal(true)
     }
 
     const handleAddWaterBillingRule = () => {
-        setWaterBillingRuleForm(false);
-        setSelectedId("");
+        setSelectedWaterBillingRule(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -326,7 +325,7 @@ const AllWaterBillingRuleForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add WaterBillingRule"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddWaterBillingRule}
                                 className="!font-semibold"
                             />
 
@@ -445,14 +444,11 @@ const AllWaterBillingRuleForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        WaterBillingRule={WaterBillingRule}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -487,6 +483,22 @@ const AllWaterBillingRuleForm = () => {
             <AddWaterBillingRule
                 visible={addModal}
                 onClose={handleAddSubmit}
+            />
+            <EditWaterBillingRule
+                visible={editModal}
+                waterBillingRule={selectedWaterBillingRule}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedWaterBillingRule(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete water billing rule"
+                description="Are you sure you want to delete this water billing rule? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

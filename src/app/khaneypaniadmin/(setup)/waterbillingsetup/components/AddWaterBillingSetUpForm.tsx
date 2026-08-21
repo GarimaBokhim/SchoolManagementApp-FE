@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddWaterBillingSetUpPayload } from '../types/IWaterBillingSetup'
+import { AddWaterBillingSetUpPayload, WaterBillingSetUpResponse } from '../types/IWaterBillingSetup'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterBillingSetUp } from "../hooks";
+import { useAddWaterBillingSetUp, useUpdateWaterBillingSetUp } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -17,9 +17,11 @@ import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
     form: UseFormReturn<AddWaterBillingSetUpPayload>;
     onClose: () => void;
+    waterBillingSetUp?: WaterBillingSetUpResponse | null;
 };
-const AddWaterBillingSetUpForm = ({ form, onClose }: Props) => {
+const AddWaterBillingSetUpForm = ({ form, onClose, waterBillingSetUp }: Props) => {
     const addWaterBillingSetUp = useAddWaterBillingSetUp();
+    const updateWaterBillingSetUp = useUpdateWaterBillingSetUp();
     const { handleError, clearError } = useErrorHandler();
 
     const { data: rolesResponse } = useGetAllRoles();
@@ -50,12 +52,20 @@ const AddWaterBillingSetUpForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addWaterBillingSetUp.mutateAsync({
+            const payload = {
                 name: data.name,
                 description: data.description,
                 isDefault: data.isDefault
+            };
 
-            });
+            if (waterBillingSetUp) {
+                await updateWaterBillingSetUp.mutateAsync({
+                    id: waterBillingSetUp.id,
+                    payload: { id: waterBillingSetUp.id, ...payload },
+                });
+            } else {
+                await addWaterBillingSetUp.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -69,7 +79,7 @@ const AddWaterBillingSetUpForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add WaterBillingSetUp
+                            {waterBillingSetUp ? "Edit WaterBillingSetUp" : "Add WaterBillingSetUp"}
                         </h1>
                         <button
                             type="button"
@@ -126,7 +136,10 @@ const AddWaterBillingSetUpForm = ({ form, onClose }: Props) => {
                         </div>
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={waterBillingSetUp ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

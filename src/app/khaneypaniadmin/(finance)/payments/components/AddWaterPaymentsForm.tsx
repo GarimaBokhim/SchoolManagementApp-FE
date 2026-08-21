@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddWaterPaymentsPayload } from '../types/IWaterPayments'
+import { AddWaterPaymentsPayload, WaterPaymentsResponse } from '../types/IWaterPayments'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterPayments, useGetAllHouseHolds } from "../hooks";
+import { useAddWaterPayments, useGetAllHouseHolds, useUpdateWaterPayments } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -17,18 +17,22 @@ import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
     form: UseFormReturn<AddWaterPaymentsPayload>;
     onClose: () => void;
+    waterPayment?: WaterPaymentsResponse | null;
 };
-const AddWaterPaymentsForm = ({ form, onClose }: Props) => {
+const AddWaterPaymentsForm = ({ form, onClose, waterPayment }: Props) => {
     const addWaterPayments = useAddWaterPayments();
+    const updateWaterPayments = useUpdateWaterPayments();
     const { handleError, clearError } = useErrorHandler();
 
 
     const { data: allHouseHolds } = useGetAllHouseHolds();
     const [selectedHouseHoldId, setSelectedHouseHoldId] = useState<
         string | null
-    >('')
+    >(waterPayment?.houseHoldId ?? '')
 
-    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(null);
+    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(
+        waterPayment?.paymentMethods ?? null
+    );
 
     const handleClose = () => {
         form.reset({
@@ -47,12 +51,21 @@ const AddWaterPaymentsForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addWaterPayments.mutateAsync({
+            const payload = {
                 houseHoldId: data.houseHoldId,
                 paymentDate: data.paymentDate,
                 paidAmount: data.paidAmount,
                 paymentMethods: data.paymentMethods
-            });
+            };
+
+            if (waterPayment) {
+                await updateWaterPayments.mutateAsync({
+                    id: waterPayment.id,
+                    payload: { id: waterPayment.id, ...payload },
+                });
+            } else {
+                await addWaterPayments.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -66,7 +79,7 @@ const AddWaterPaymentsForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add WaterPayments
+                            {waterPayment ? "Edit WaterPayments" : "Add WaterPayments"}
                         </h1>
                         <button
                             type="button"
@@ -174,7 +187,10 @@ const AddWaterPaymentsForm = ({ form, onClose }: Props) => {
                         </div>
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={waterPayment ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

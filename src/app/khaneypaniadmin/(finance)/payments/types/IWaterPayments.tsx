@@ -13,6 +13,7 @@ export interface WaterPaymentsResponse {
     houseHoldId: string
     paymentDate: string
     paidAmount: number
+    paymentMethods: number
 }
 
 export interface AddWaterPaymentsPayload {

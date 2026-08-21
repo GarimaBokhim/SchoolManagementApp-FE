@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteHouseHolds, useGetAllHouseHolds } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateHouseHoldsResponse } from '../types/IHouseHolds'
+import { HouseHoldsResponse } from '../types/IHouseHolds'
 import AddHouseHolds from '../pages/Add'
+import EditHouseHolds from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -25,20 +26,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    HouseHolds: UpdateHouseHoldsResponse;
+    HouseHolds: HouseHoldsResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (HouseHolds: UpdateHouseHoldsResponse) => void;
+    onEdit: (HouseHolds: HouseHoldsResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     HouseHolds,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -159,8 +156,9 @@ const AllHouseHoldsForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [HouseHoldsForm, setHouseHoldsForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedHousehold, setSelectedHousehold] = useState<HouseHoldsResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
     const [selectedQrCode, setSelectedQrCode] = useState<string | null>(null);
 
     const [paginationParams, setPaginationParams] = useState({
@@ -248,13 +246,14 @@ const AllHouseHoldsForm = () => {
     ];
 
 
-    const handleEditLead = (HouseHolds: UpdateHouseHoldsResponse) => {
-        console.log('Edit HouseHolds:', HouseHolds)
+    const handleEditLead = (HouseHolds: HouseHoldsResponse) => {
+        setSelectedHousehold(HouseHolds)
+        setEditModal(true)
     }
 
     const handleAddHouseHolds = () => {
-        setHouseHoldsForm(false);
-        setSelectedId("");
+        setSelectedHousehold(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -327,7 +326,7 @@ const AllHouseHoldsForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add HouseHolds"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddHouseHolds}
                                 className="!font-semibold"
                             />
 
@@ -481,14 +480,11 @@ const AllHouseHoldsForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        HouseHolds={HouseHolds}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
 
 
@@ -554,7 +550,25 @@ const AllHouseHoldsForm = () => {
 
             <AddHouseHolds
                 visible={addModal}
-                onClose={handleAddSubmit}
+                onClose={() => {
+                    handleAddSubmit()
+                }}
+            />
+            <EditHouseHolds
+                visible={editModal}
+                household={selectedHousehold}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedHousehold(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete household"
+                description="Are you sure you want to delete this household? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

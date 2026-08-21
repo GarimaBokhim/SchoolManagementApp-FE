@@ -7,7 +7,7 @@ import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-h
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddHouseHolds, useGetAllWaterTariffPlan } from "../hooks";
+import { useAddHouseHolds, useGetAllWaterTariffPlan, useUpdateHouseHolds } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -16,9 +16,11 @@ import TextEditor from '@/components/Input/TextEditor';
 type Props = {
     form: UseFormReturn<AddHouseHoldsPayload>;
     onClose: () => void;
+    householdId?: string;
 };
-const AddHouseHoldsForm = ({ form, onClose }: Props) => {
+const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
     const addHouseHolds = useAddHouseHolds();
+    const updateHouseHolds = useUpdateHouseHolds();
     const { handleError, clearError } = useErrorHandler();
 
     const [HouseHoldsType, setHouseHoldsType] = useState<number | null>(null);
@@ -56,7 +58,7 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addHouseHolds.mutateAsync({
+            const payload = {
                 consumerName: data.consumerName,
                 familyMember: data.familyMember,
                 contactNumber: data.contactNumber,
@@ -71,7 +73,16 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
                 longitude: data.longitude,
                 tole: data.tole,
                 registrationDate: data.registrationDate
-            })
+            };
+
+            if (householdId) {
+                await updateHouseHolds.mutateAsync({
+                    id: householdId,
+                    payload: { id: householdId, ...payload },
+                });
+            } else {
+                await addHouseHolds.mutateAsync(payload);
+            }
 
             handleClose()
             onClose()
@@ -85,7 +96,7 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add HouseHolds
+                            {householdId ? "Edit HouseHolds" : "Add HouseHolds"}
                         </h1>
                         <button
                             type="button"
@@ -232,7 +243,10 @@ const AddHouseHoldsForm = ({ form, onClose }: Props) => {
 
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={householdId ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

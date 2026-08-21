@@ -1,19 +1,20 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddWaterBillingRuleSlabPayload } from "../types/IWaterBillingRuleSlab";
+import { AddWaterBillingRuleSlabPayload, WaterBillingRuleSlabResponse } from "../types/IWaterBillingRuleSlab";
 import AddWaterBillingRuleSlabForm from "../components/AddWaterBillingRuleSlabForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    waterBillingRuleSlab?: WaterBillingRuleSlabResponse | null;
 }
-const AddWaterBillingRuleSlab = ({ visible, onClose }: Props) => {
+const AddWaterBillingRuleSlab = ({ visible, onClose, waterBillingRuleSlab }: Props) => {
     const form = useForm<AddWaterBillingRuleSlabPayload>({
         defaultValues: {
-            billingRuleId: "",
-            fromUnit: 0,
-            toUnit: 0,
-            ratePerUnit: 0
+            billingRuleId: waterBillingRuleSlab?.billingRuleId ?? "",
+            fromUnit: waterBillingRuleSlab?.fromUnit ?? 0,
+            toUnit: waterBillingRuleSlab?.toUnit ?? 0,
+            ratePerUnit: waterBillingRuleSlab?.ratePerUnit ?? 0
 
         },
 
@@ -36,7 +37,11 @@ const AddWaterBillingRuleSlab = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddWaterBillingRuleSlabForm form={form} onClose={handleOnClose} />
+                <AddWaterBillingRuleSlabForm
+                    form={form}
+                    onClose={handleOnClose}
+                    waterBillingRuleSlab={waterBillingRuleSlab}
+                />
             </div>
         </div>
     );

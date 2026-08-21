@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteStaff, useGetAllStaff } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateStaffResponse } from '../types/IStaff'
+import { StaffResponse } from '../types/IStaff'
 import AddStaff from '../pages/Add'
+import EditStaff from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -25,20 +26,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    Staff: UpdateStaffResponse;
+    Staff: StaffResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (Staff: UpdateStaffResponse) => void;
+    onEdit: (Staff: StaffResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     Staff,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -159,8 +156,9 @@ const AllStaffForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [StaffForm, setStaffForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedStaff, setSelectedStaff] = useState<StaffResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -247,13 +245,14 @@ const AllStaffForm = () => {
     ];
 
 
-    const handleEditLead = (Staff: UpdateStaffResponse) => {
-        console.log('Edit Staff:', Staff)
+    const handleEditLead = (Staff: StaffResponse) => {
+        setSelectedStaff(Staff)
+        setEditModal(true)
     }
 
     const handleAddStaff = () => {
-        setStaffForm(false);
-        setSelectedId("");
+        setSelectedStaff(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -326,7 +325,7 @@ const AllStaffForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add Staff"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddStaff}
                                 className="!font-semibold"
                             />
 
@@ -463,14 +462,11 @@ const AllStaffForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        Staff={Staff}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -505,6 +501,22 @@ const AllStaffForm = () => {
             <AddStaff
                 visible={addModal}
                 onClose={handleAddSubmit}
+            />
+            <EditStaff
+                visible={editModal}
+                staff={selectedStaff}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedStaff(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete staff"
+                description="Are you sure you want to delete this staff member? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

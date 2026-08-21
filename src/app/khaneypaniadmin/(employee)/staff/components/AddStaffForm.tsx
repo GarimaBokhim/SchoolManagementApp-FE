@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddStaffPayload } from '../types/IStaff'
+import { AddStaffPayload, StaffResponse } from '../types/IStaff'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddStaff } from "../hooks";
+import { useAddStaff, useUpdateStaff } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -17,9 +17,11 @@ import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
     form: UseFormReturn<AddStaffPayload>;
     onClose: () => void;
+    staff?: StaffResponse | null;
 };
-const AddStaffForm = ({ form, onClose }: Props) => {
+const AddStaffForm = ({ form, onClose, staff }: Props) => {
     const addStaff = useAddStaff();
+    const updateStaff = useUpdateStaff();
     const { handleError, clearError } = useErrorHandler();
 
     const { data: rolesResponse } = useGetAllRoles();
@@ -30,8 +32,8 @@ const AddStaffForm = ({ form, onClose }: Props) => {
     }));
 
 
-    const [selectedRoleId, setSelectedRoleId] = useState<string>("");
-    const [genderStatus, setGenderStatus] = useState<number | null>(null);
+    const [selectedRoleId, setSelectedRoleId] = useState<string>(staff?.rolesId?.[0] ?? "");
+    const [genderStatus, setGenderStatus] = useState<number | null>(staff?.gender ?? null);
 
 
     const handleClose = () => {
@@ -58,7 +60,7 @@ const AddStaffForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addStaff.mutateAsync({
+            const payload = {
                 username: data.username,
                 password: data.password,
                 fullName: data.fullName,
@@ -72,7 +74,16 @@ const AddStaffForm = ({ form, onClose }: Props) => {
                 rolesId: Array.isArray(data.rolesId)
                     ? data.rolesId
                     : []
-            });
+            };
+
+            if (staff) {
+                await updateStaff.mutateAsync({
+                    id: staff.id,
+                    payload: { id: staff.id, ...payload },
+                });
+            } else {
+                await addStaff.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -86,7 +97,7 @@ const AddStaffForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add Staff
+                            {staff ? "Edit Staff" : "Add Staff"}
                         </h1>
                         <button
                             type="button"
@@ -229,7 +240,10 @@ const AddStaffForm = ({ form, onClose }: Props) => {
                         </div>
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={staff ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

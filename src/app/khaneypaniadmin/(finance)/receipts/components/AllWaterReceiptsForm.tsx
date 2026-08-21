@@ -9,12 +9,13 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { EditButton } from '@/components/Buttons/EditButton'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useDeleteWaterReceipt, useGetAllWaterReceipt } from '../hooks'
-import { UpdateWaterReceiptResponse } from '../types/IWaterReceipts'
+import { WaterReceiptResponse } from '../types/IWaterReceipts'
+import EditWaterReceipt from '../pages/Edit'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -24,20 +25,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    WaterReceipts: UpdateWaterReceiptResponse;
+    WaterReceipts: WaterReceiptResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (WaterReceipts: UpdateWaterReceiptResponse) => void;
+    onEdit: (WaterReceipts: WaterReceiptResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     WaterReceipts,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -157,9 +154,9 @@ const AllWaterReceiptsForm = () => {
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
-    const [addModal, setAddModal] = useState(false);
-    const [WaterReceiptsForm, setWaterReceiptsForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedWaterReceipt, setSelectedWaterReceipt] = useState<WaterReceiptResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -252,8 +249,9 @@ const AllWaterReceiptsForm = () => {
 
 
 
-    const handleEditLead = (WaterReceipts: UpdateWaterReceiptResponse) => {
-        console.log('Edit WaterReceipts:', WaterReceipts)
+    const handleEditLead = (WaterReceipts: WaterReceiptResponse) => {
+        setSelectedWaterReceipt(WaterReceipts)
+        setEditModal(true)
     }
 
 
@@ -266,10 +264,6 @@ const AllWaterReceiptsForm = () => {
         }
     }
 
-
-    const handleAddSubmit = () => {
-        setAddModal(false);
-    };
 
     if (error) {
         return (
@@ -452,14 +446,11 @@ const AllWaterReceiptsForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        WaterReceipts={WaterReceipts}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -489,6 +480,23 @@ const AllWaterReceiptsForm = () => {
                 )}
 
             </div>
+
+            <EditWaterReceipt
+                visible={editModal}
+                waterReceipt={selectedWaterReceipt}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedWaterReceipt(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete water receipt"
+                description="Are you sure you want to delete this water receipt? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
+            />
 
         </>
     )

@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteWaterExpenses, useGetAllWaterExpenses } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateWaterExpensesResponse } from '../types/IWaterExpenses'
+import { WaterExpensesResponse } from '../types/IWaterExpenses'
 import AddWaterExpenses from '../pages/Add'
+import EditWaterExpenses from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -25,20 +26,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    WaterExpenses: UpdateWaterExpensesResponse;
+    WaterExpenses: WaterExpensesResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (WaterExpenses: UpdateWaterExpensesResponse) => void;
+    onEdit: (WaterExpenses: WaterExpensesResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     WaterExpenses,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -159,8 +156,9 @@ const AllWaterExpensesForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [WaterExpensesForm, setWaterExpensesForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedWaterExpenses, setSelectedWaterExpenses] = useState<WaterExpensesResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -251,13 +249,14 @@ const AllWaterExpensesForm = () => {
     ];
 
 
-    const handleEditLead = (WaterExpenses: UpdateWaterExpensesResponse) => {
-        console.log('Edit WaterExpenses:', WaterExpenses)
+    const handleEditLead = (WaterExpenses: WaterExpensesResponse) => {
+        setSelectedWaterExpenses(WaterExpenses)
+        setEditModal(true)
     }
 
     const handleAddWaterExpenses = () => {
-        setWaterExpensesForm(false);
-        setSelectedId("");
+        setSelectedWaterExpenses(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -330,7 +329,7 @@ const AllWaterExpensesForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add WaterExpenses"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddWaterExpenses}
                                 className="!font-semibold"
                             />
 
@@ -467,14 +466,11 @@ const AllWaterExpensesForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        WaterExpenses={WaterExpenses}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -509,6 +505,22 @@ const AllWaterExpensesForm = () => {
             <AddWaterExpenses
                 visible={addModal}
                 onClose={handleAddSubmit}
+            />
+            <EditWaterExpenses
+                visible={editModal}
+                waterExpenses={selectedWaterExpenses}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedWaterExpenses(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete water expense"
+                description="Are you sure you want to delete this water expense record? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

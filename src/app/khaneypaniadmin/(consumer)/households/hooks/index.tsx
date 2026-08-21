@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const HouseHoldsEndpoints = {
     filter: '/api/KhaneyPaniHouseHolds/FilterHouseHolds',
     add: '/api/KhaneyPaniHouseHolds/AddHouseHolds',
-    update: '/api/KhaneyPaniHouseHolds/UpdateHouseHolds',
-    delete: '/api/KhaneyPaniHouseHolds/DeleteHouseHolds',
+    update: '/api/KhaneyPaniHouseHolds/UpdateHousehold',
+    delete: '/api/KhaneyPaniHouseHolds/DeleteHousehold',
 
     filterWaterTariffPlan: '/api/KhaneyPaniSetUp/FilterWaterTariffPlan',
 }

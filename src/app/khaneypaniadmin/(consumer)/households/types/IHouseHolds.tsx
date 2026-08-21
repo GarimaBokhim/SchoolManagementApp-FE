@@ -23,12 +23,16 @@ export interface HouseHoldsResponse {
     consumerName: string
     meterNumber: string
     familyMember: number
+    contactNumber: string
     email: string
     provinceId: number
     districtId: number
     municipalityId: number
     vdcId: number
     wardNumber: number
+    waterTrrifPlanId: string
+    latitude: number
+    longitude: number
     houseNumber: string
     tole: string
     registrationDate: string

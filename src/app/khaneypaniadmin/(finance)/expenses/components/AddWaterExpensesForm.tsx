@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddWaterExpensesPayload } from '../types/IWaterExpenses'
+import { AddWaterExpensesPayload, WaterExpensesResponse } from '../types/IWaterExpenses'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterExpenses, useGetAllExpensesCategory } from "../hooks";
+import { useAddWaterExpenses, useGetAllExpensesCategory, useUpdateWaterExpenses } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -18,17 +18,21 @@ import { useGetAllVisaStatus } from '@/app/crmadmin/(academicprogram)/visarequir
 type Props = {
     form: UseFormReturn<AddWaterExpensesPayload>;
     onClose: () => void;
+    waterExpenses?: WaterExpensesResponse | null;
 };
-const AddWaterExpensesForm = ({ form, onClose }: Props) => {
+const AddWaterExpensesForm = ({ form, onClose, waterExpenses }: Props) => {
     const addWaterExpenses = useAddWaterExpenses();
+    const updateWaterExpenses = useUpdateWaterExpenses();
     const { handleError, clearError } = useErrorHandler();
 
     const { data: allExpensesCategory } = useGetAllExpensesCategory()
     const [sellectedExpensesCategoryId, setSelectedExpensesCategoryId] = useState<
         string | null
-    >('')
+    >(waterExpenses?.expenseCategoryId ?? '')
 
-    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(null);
+    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(
+        waterExpenses?.paymentMethod ?? null
+    );
 
 
     const handleClose = () => {
@@ -50,14 +54,31 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addWaterExpenses.mutateAsync({
+            const payload = {
                 expenseDate: data.expenseDate,
                 expenseCategoryId: data.expenseCategoryId,
                 amount: data.amount,
                 paymentMethod: data.paymentMethod,
                 venderName: data.venderName,
                 description: data.description
-            });
+            };
+
+            if (waterExpenses) {
+                await updateWaterExpenses.mutateAsync({
+                    id: waterExpenses.id,
+                    payload: {
+                        id: waterExpenses.id,
+                        expensesDate: payload.expenseDate,
+                        expenseCategoryId: payload.expenseCategoryId,
+                        amount: payload.amount,
+                        paymentMethod: payload.paymentMethod,
+                        venderName: payload.venderName,
+                        description: payload.description,
+                    },
+                });
+            } else {
+                await addWaterExpenses.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -71,7 +92,7 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add WaterExpenses
+                            {waterExpenses ? "Edit WaterExpenses" : "Add WaterExpenses"}
                         </h1>
                         <button
                             type="button"
@@ -189,7 +210,7 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
                             <InputElement
                                 label="Descriptions"
                                 form={form}
-                                name="descriptions"
+                                name="description"
                                 placeholder="Enter Descriptions"
                             />
 
@@ -199,7 +220,10 @@ const AddWaterExpensesForm = ({ form, onClose }: Props) => {
 
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={waterExpenses ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

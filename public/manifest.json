@@ -1,0 +1,32 @@
+{
+  "name": "EliteKhaneyPani",
+  "short_name": "EliteKhaneyPani",
+  "description": "EliteKhaneyPani - Manage water supply households and consumers on the go.",
+  "start_url": "/elitekhaneypani",
+  "id": "/elitekhaneypani",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#035BBA",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
