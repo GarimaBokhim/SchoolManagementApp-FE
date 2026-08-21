@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddWaterIncomePayload } from '../types/IWaterIncome'
+import { AddWaterIncomePayload, WaterIncomeResponse } from '../types/IWaterIncome'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterIncome, useGetAllWaterIncomeSource } from "../hooks";
+import { useAddWaterIncome, useGetAllWaterIncomeSource, useUpdateWaterIncome } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -17,19 +17,23 @@ import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
     form: UseFormReturn<AddWaterIncomePayload>;
     onClose: () => void;
+    waterIncome?: WaterIncomeResponse | null;
 };
-const AddWaterIncomeForm = ({ form, onClose }: Props) => {
+const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
     const addWaterIncome = useAddWaterIncome();
+    const updateWaterIncome = useUpdateWaterIncome();
     const { handleError, clearError } = useErrorHandler();
 
     const { data: allIncomeSource } = useGetAllWaterIncomeSource();
     const [sellectedIncomeSourceId, setSelectedIncomeSourceId] = useState<
         string | null
-    >('')
+    >(waterIncome?.waterincomeSourceId ?? '')
 
 
 
-    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(null);
+    const [paymentMethodsType, setPaymentMethodsType] = useState<number | null>(
+        waterIncome?.paymentMethods ?? null
+    );
 
 
     const handleClose = () => {
@@ -50,13 +54,22 @@ const AddWaterIncomeForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addWaterIncome.mutateAsync({
+            const payload = {
                 incomeDate: data.incomeDate,
                 waterincomeSourceId: data.waterincomeSourceId,
                 amount: data.amount,
                 paymentMethods: data.paymentMethods,
                 description: data.description
-            });
+            };
+
+            if (waterIncome) {
+                await updateWaterIncome.mutateAsync({
+                    id: waterIncome.id,
+                    payload: { id: waterIncome.id, ...payload },
+                });
+            } else {
+                await addWaterIncome.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -70,7 +83,7 @@ const AddWaterIncomeForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add WaterIncome
+                            {waterIncome ? "Edit WaterIncome" : "Add WaterIncome"}
                         </h1>
                         <button
                             type="button"
@@ -190,7 +203,10 @@ const AddWaterIncomeForm = ({ form, onClose }: Props) => {
                         </div>
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={waterIncome ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

@@ -1,18 +1,19 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddWaterBillingSetUpPayload } from "../types/IWaterBillingSetup";
+import { AddWaterBillingSetUpPayload, WaterBillingSetUpResponse } from "../types/IWaterBillingSetup";
 import AddWaterBillingSetUpForm from "../components/AddWaterBillingSetUpForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    waterBillingSetUp?: WaterBillingSetUpResponse | null;
 }
-const AddWaterBillingSetUp = ({ visible, onClose }: Props) => {
+const AddWaterBillingSetUp = ({ visible, onClose, waterBillingSetUp }: Props) => {
     const form = useForm<AddWaterBillingSetUpPayload>({
         defaultValues: {
-            name: "",
-            description: "",
-            isDefault: true
+            name: waterBillingSetUp?.name ?? "",
+            description: waterBillingSetUp?.description ?? "",
+            isDefault: waterBillingSetUp?.isDefault ?? true
 
 
         },
@@ -36,7 +37,11 @@ const AddWaterBillingSetUp = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddWaterBillingSetUpForm form={form} onClose={handleOnClose} />
+                <AddWaterBillingSetUpForm
+                    form={form}
+                    onClose={handleOnClose}
+                    waterBillingSetUp={waterBillingSetUp}
+                />
             </div>
         </div>
     );

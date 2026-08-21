@@ -10,14 +10,15 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteWaterPayments, useGetAllWaterPayments } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateWaterPaymentsResponse } from '../types/IWaterPayments'
+import { WaterPaymentsResponse } from '../types/IWaterPayments'
 import AddWaterPayments from '../pages/Add'
+import EditWaterPayments from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import DisplayReceiptForm from './DisplayReceiptForm'
 import AddReceipt from '../pages/AddReceipt'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -27,20 +28,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    WaterPayments: UpdateWaterPaymentsResponse;
+    WaterPayments: WaterPaymentsResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (WaterPayments: UpdateWaterPaymentsResponse) => void;
+    onEdit: (WaterPayments: WaterPaymentsResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     WaterPayments,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
 
     const [open, setOpen] = useState(false)
@@ -166,9 +163,9 @@ const AllWaterPaymentsForm = () => {
     const [addModal, setAddModal] = useState(false);
 
     const [displayReceiptModal, setDisplayReceiptModal] = useState(false);
-
-    const [WaterPaymentsForm, setWaterPaymentsForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedWaterPayment, setSelectedWaterPayment] = useState<WaterPaymentsResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [selectedwaterPaymentId, setSelectedwaterPaymentId] = useState<string>('')
 
@@ -248,13 +245,14 @@ const AllWaterPaymentsForm = () => {
     ];
 
 
-    const handleEditLead = (WaterPayments: UpdateWaterPaymentsResponse) => {
-        console.log('Edit WaterPayments:', WaterPayments)
+    const handleEditLead = (WaterPayments: WaterPaymentsResponse) => {
+        setSelectedWaterPayment(WaterPayments)
+        setEditModal(true)
     }
 
     const handleAddWaterPayments = () => {
-        setWaterPaymentsForm(false);
-        setSelectedId("");
+        setSelectedWaterPayment(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -331,7 +329,7 @@ const AllWaterPaymentsForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add WaterPayments"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddWaterPayments}
                                 className="!font-semibold"
                             />
 
@@ -453,24 +451,22 @@ const AllWaterPaymentsForm = () => {
 
 
                                                 <td className="py-1 px-4">
-
-                                                    <ButtonElement
-                                                        icon={<Eye size={18} />}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setDisplayReceiptModal(true);
-                                                            setSelectedwaterPaymentId(WaterPayments.id);
-                                                        }}
-                                                        className="!font-semibold"
-                                                    />
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <ButtonElement
+                                                            icon={<Eye size={18} />}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setDisplayReceiptModal(true);
+                                                                setSelectedwaterPaymentId(WaterPayments.id);
+                                                            }}
+                                                            className="!font-semibold"
+                                                        />
+                                                        <ActionMenu
+                                                            WaterPayments={WaterPayments}
+                                                            onEdit={handleEditLead}
+                                                            onDelete={setDeleteId}
+                                                        />
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -512,6 +508,22 @@ const AllWaterPaymentsForm = () => {
             <AddWaterPayments
                 visible={addModal}
                 onClose={handleAddSubmit}
+            />
+            <EditWaterPayments
+                visible={editModal}
+                waterPayment={selectedWaterPayment}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedWaterPayment(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete water payment"
+                description="Are you sure you want to delete this water payment? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

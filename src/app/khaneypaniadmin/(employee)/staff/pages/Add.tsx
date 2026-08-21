@@ -1,26 +1,27 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddStaffPayload } from "../types/IStaff";
+import { AddStaffPayload, StaffResponse } from "../types/IStaff";
 import AddStaffForm from "../components/AddStaffForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    staff?: StaffResponse | null;
 }
-const AddStaff = ({ visible, onClose }: Props) => {
+const AddStaff = ({ visible, onClose, staff }: Props) => {
     const form = useForm<AddStaffPayload>({
         defaultValues: {
-            username: "",
-            password: "",
-            fullName: "",
-            gender: 0,
-            dob: "",
-            contactNumber: "",
-            email: "",
-            nid: "",
-            address: "",
-            joiningDate: "",
-            rolesId: []
+            username: staff?.username ?? "",
+            password: staff?.password ?? "",
+            fullName: staff?.fullName ?? "",
+            gender: staff?.gender ?? 0,
+            dob: staff?.dob ?? "",
+            contactNumber: staff?.contactNumber ?? "",
+            email: staff?.email ?? "",
+            nid: staff?.nid ?? "",
+            address: staff?.address ?? "",
+            joiningDate: staff?.joiningDate ?? "",
+            rolesId: staff?.rolesId ?? []
 
         },
 
@@ -43,7 +44,11 @@ const AddStaff = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddStaffForm form={form} onClose={handleOnClose} />
+                <AddStaffForm
+                    form={form}
+                    onClose={handleOnClose}
+                    staff={staff}
+                />
             </div>
         </div>
     );

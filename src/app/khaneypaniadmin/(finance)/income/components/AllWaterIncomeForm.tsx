@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteWaterIncome, useGetAllWaterIncome } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
-import { UpdateWaterIncomeResponse } from '../types/IWaterIncome'
+import { WaterIncomeResponse } from '../types/IWaterIncome'
 import AddWaterIncome from '../pages/Add'
+import EditWaterIncome from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -25,20 +26,16 @@ interface FilterFormData {
 
 //#region ActionMenu
 interface ActionMenuProps {
-    WaterIncome: UpdateWaterIncomeResponse;
+    WaterIncome: WaterIncomeResponse;
     // onView: (Invoice: InvoiceResponse) => void;
-    onEdit: (WaterIncome: UpdateWaterIncomeResponse) => void;
+    onEdit: (WaterIncome: WaterIncomeResponse) => void;
     onDelete: (id: string) => void;
-    canEdit?: boolean;
-    canDelete?: boolean;
 }
 
 const ActionMenu = ({
     WaterIncome,
     onEdit,
     onDelete,
-    canEdit = true,
-    canDelete = true,
 }: ActionMenuProps) => {
     const [open, setOpen] = useState(false)
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
@@ -159,8 +156,9 @@ const AllWaterIncomeForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [WaterIncomeForm, setWaterIncomeForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [editModal, setEditModal] = useState(false);
+    const [selectedWaterIncome, setSelectedWaterIncome] = useState<WaterIncomeResponse | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -245,13 +243,14 @@ const AllWaterIncomeForm = () => {
     ];
 
 
-    const handleEditLead = (WaterIncome: UpdateWaterIncomeResponse) => {
-        console.log('Edit WaterIncome:', WaterIncome)
+    const handleEditLead = (WaterIncome: WaterIncomeResponse) => {
+        setSelectedWaterIncome(WaterIncome)
+        setEditModal(true)
     }
 
     const handleAddWaterIncome = () => {
-        setWaterIncomeForm(false);
-        setSelectedId("");
+        setSelectedWaterIncome(null)
+        setAddModal(true)
     };
 
     const handleDelete = async (id: string) => {
@@ -324,7 +323,7 @@ const AllWaterIncomeForm = () => {
                                 icon={<Plus size={18} />}
                                 type="button"
                                 text="Add WaterIncome"
-                                onClick={() => setAddModal(true)}
+                                onClick={handleAddWaterIncome}
                                 className="!font-semibold"
                             />
 
@@ -458,14 +457,11 @@ const AllWaterIncomeForm = () => {
 
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+                                                    <ActionMenu
+                                                        WaterIncome={WaterIncome}
+                                                        onEdit={handleEditLead}
+                                                        onDelete={setDeleteId}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -500,6 +496,22 @@ const AllWaterIncomeForm = () => {
             <AddWaterIncome
                 visible={addModal}
                 onClose={handleAddSubmit}
+            />
+            <EditWaterIncome
+                visible={editModal}
+                waterIncome={selectedWaterIncome}
+                onClose={() => {
+                    setEditModal(false)
+                    setSelectedWaterIncome(null)
+                }}
+            />
+            <DeleteComponents
+                visible={Boolean(deleteId)}
+                id={deleteId ?? ''}
+                title="Delete water income"
+                description="Are you sure you want to delete this water income record? This action cannot be undone."
+                onClose={() => setDeleteId(null)}
+                onConfirm={handleDelete}
             />
         </>
     )

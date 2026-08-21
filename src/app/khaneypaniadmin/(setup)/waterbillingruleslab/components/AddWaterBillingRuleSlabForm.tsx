@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
-import { AddWaterBillingRuleSlabPayload } from '../types/IWaterBillingRuleSlab'
+import { AddWaterBillingRuleSlabPayload, WaterBillingRuleSlabResponse } from '../types/IWaterBillingRuleSlab'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterBillingRuleSlab } from "../hooks";
+import { useAddWaterBillingRuleSlab, useUpdateWaterBillingRuleSlab } from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -17,9 +17,11 @@ import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 type Props = {
     form: UseFormReturn<AddWaterBillingRuleSlabPayload>;
     onClose: () => void;
+    waterBillingRuleSlab?: WaterBillingRuleSlabResponse | null;
 };
-const AddWaterBillingRuleSlabForm = ({ form, onClose }: Props) => {
+const AddWaterBillingRuleSlabForm = ({ form, onClose, waterBillingRuleSlab }: Props) => {
     const addWaterBillingRuleSlab = useAddWaterBillingRuleSlab();
+    const updateWaterBillingRuleSlab = useUpdateWaterBillingRuleSlab();
     const { handleError, clearError } = useErrorHandler();
 
     const { data: rolesResponse } = useGetAllRoles();
@@ -52,13 +54,21 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose }: Props) => {
         clearError();
 
         try {
-            await addWaterBillingRuleSlab.mutateAsync({
+            const payload = {
                 billingRuleId: data.billingRuleId,
                 fromUnit: data.fromUnit,
                 toUnit: data.toUnit,
                 ratePerUnit: data.ratePerUnit
+            };
 
-            });
+            if (waterBillingRuleSlab) {
+                await updateWaterBillingRuleSlab.mutateAsync({
+                    id: waterBillingRuleSlab.id,
+                    payload: { id: waterBillingRuleSlab.id, ...payload },
+                });
+            } else {
+                await addWaterBillingRuleSlab.mutateAsync(payload);
+            }
 
             handleClose();
             onClose();
@@ -72,7 +82,7 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add WaterBillingRuleSlab
+                            {waterBillingRuleSlab ? "Edit WaterBillingRuleSlab" : "Add WaterBillingRuleSlab"}
                         </h1>
                         <button
                             type="button"
@@ -87,38 +97,12 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            {/* <AppCombobox
-                                value={selectedRoleId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
-                                label="Role"
-                                name=""
+                            <InputElement
+                                label="Billing Rule ID"
                                 form={form}
-                                required
-                                options={roles}
-                                selected={
-                                    roles.find((role) => role.id === selectedRoleId) ?? null
-                                }
-                                onSelect={(role) => {
-                                    const roleId = role?.id ?? "";
-
-                                    console.log("SELECTED ROLE:", roleId);
-
-                                    setSelectedRoleId(roleId);
-
-                                    form.setValue(
-                                        "rolesId",
-                                        roleId ? [roleId] : [],
-                                        {
-                                            shouldDirty: true,
-                                            shouldTouch: true,
-                                            shouldValidate: true,
-                                        }
-                                    );
-                                }}
-                                getLabel={(role) => role?.name ?? ""}
-                                getValue={(role) => role?.id ?? ""}
-                            /> */}
+                                name="billingRuleId"
+                                placeholder="Enter Billing Rule ID"
+                            />
 
                             <InputElement
                                 label="FromUnit"
@@ -150,7 +134,10 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose }: Props) => {
                         </div>
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={waterBillingRuleSlab ? "Update" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

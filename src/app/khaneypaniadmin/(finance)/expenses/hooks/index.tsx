@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const WaterExpensesEndpoints = {
     filter: '/api/KhaneyPaniFinance/FilterWaterExpenses',
     add: '/api/KhaneyPaniFinance/AddWaterExpenses',
-    update: '/api/KhaneyPaniFinance/UpdateWaterExpenses',
-    delete: '/api/KhaneyPaniFinance/DeleteWaterExpenses',
+    update: '/api/KhaneyPaniFinance/UpdateWaterExpense',
+    delete: '/api/KhaneyPaniFinance/DeleteWaterExpense',
     expensesCategory: '/api/KhaneyPaniFinance/FilterWaterExpensesCategory',
 }
 

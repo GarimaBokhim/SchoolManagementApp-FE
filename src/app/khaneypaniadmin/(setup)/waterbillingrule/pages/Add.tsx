@@ -1,18 +1,19 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddWaterBillingRulePayload } from "../types/IWaterBillingRule";
+import { AddWaterBillingRulePayload, WaterBillingRuleResponse } from "../types/IWaterBillingRule";
 import AddWaterBillingRuleForm from "../components/AddWaterBillingRuleForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    waterBillingRule?: WaterBillingRuleResponse | null;
 }
-const AddWaterBillingRule = ({ visible, onClose }: Props) => {
+const AddWaterBillingRule = ({ visible, onClose, waterBillingRule }: Props) => {
     const form = useForm<AddWaterBillingRulePayload>({
         defaultValues: {
-            waterTarifPlanId: "",
-            effectiveFrom: "",
-            effectiveTo: ""
+            waterTarifPlanId: waterBillingRule?.waterTarifPlanId ?? "",
+            effectiveFrom: waterBillingRule?.effectiveFrom ?? "",
+            effectiveTo: waterBillingRule?.effectiveTo ?? ""
 
 
         },
@@ -36,7 +37,11 @@ const AddWaterBillingRule = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddWaterBillingRuleForm form={form} onClose={handleOnClose} />
+                <AddWaterBillingRuleForm
+                    form={form}
+                    onClose={handleOnClose}
+                    waterBillingRule={waterBillingRule}
+                />
             </div>
         </div>
     );
