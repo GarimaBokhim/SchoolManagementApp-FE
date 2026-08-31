@@ -42,13 +42,13 @@ const CollegeCertificate: React.FC<Props> = ({ studentId, onClose, examId }) => 
   )?.districtNameInEnglish
 
   const studentImageUrl = certificateData?.StudentImage
-    ? `https://schoolapp.netraverselabs.com/${certificateData.StudentImage}`
+    ? `http://khaneypaniapp.runasp.net/${certificateData.StudentImage}`
     : StudentData?.studentImg
-      ? `https://schoolapp.netraverselabs.com/${StudentData.studentImg}`
+      ? `http://khaneypaniapp.runasp.net/${StudentData.studentImg}`
       : null
 
   const schoolLogoUrl = school?.imageUrl
-    ? `https://schoolapp.netraverselabs.com/${school.imageUrl}`
+    ? `http://khaneypaniapp.runasp.net/${school.imageUrl}`
     : "/assets/logo.png"
 
   const handlePrint = () => {

@@ -71,7 +71,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
       return null
     }
 
-    const fullUrl = `https://schoolapp.netraverselabs.com/${imageUrl}`
+    const fullUrl = `http://khaneypaniapp.runasp.net/${imageUrl}`
     console.log('Full image URL:', fullUrl)
     return fullUrl
   }
@@ -204,7 +204,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
                     <img
-                      src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                      src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
                       alt="Student Image"
                       className="w-full h-full object-cover"
                     />
