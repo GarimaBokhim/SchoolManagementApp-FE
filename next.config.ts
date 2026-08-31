@@ -4,10 +4,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        //hostname: 'schoolapp.netraverselabs.com',
+        protocol: 'http',
         hostname: 'khaneypaniapp.runasp.net',
-        //port: '80',
         port: '',
         pathname: '/Images/**',
       },
