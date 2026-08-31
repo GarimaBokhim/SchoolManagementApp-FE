@@ -142,15 +142,6 @@ const AllSchoolForm = () => {
                             content="Are you sure you want to delete this company?"
                           />
                           <EditButton button={buttonElement(School.id ?? "")} />
-
-                          {selectedId && selectedId !== "" && (
-                            <EditCompany
-                              visible={modal}
-                              onClose={() => setShowModal(false)}
-                              SchoolId={selectedId}
-                              currentPageIndex={paginationParams.pageIndex}
-                            />
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -167,14 +158,14 @@ const AllSchoolForm = () => {
                     ></td>
                   </tr>
                 )}
-                <Add
-                  visible={addModal}
-                  onClose={() => setAddModal(!addModal)}
-                />
               </tbody>
             </table>
           </div>
         </div>
+        <Add
+          visible={addModal}
+          onClose={() => setAddModal(!addModal)}
+        />
         {allSchool && allSchool?.Items?.length > 0 && (
           <Pagination
             form={handleSubmit}
@@ -192,6 +183,14 @@ const AllSchoolForm = () => {
                 : allSchool?.PreviousPage ?? 1,
             }}
             handleSearch={handleSearch}
+          />
+        )}
+        {selectedId && selectedId !== "" && (
+          <EditCompany
+            visible={modal}
+            onClose={() => setShowModal(false)}
+            SchoolId={selectedId}
+            currentPageIndex={paginationParams.pageIndex}
           />
         )}
       </div>
