@@ -2,7 +2,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, 
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 api.interceptors.request.use(
@@ -18,7 +18,19 @@ api.interceptors.request.use(
     return config;
   },
   (err) => {
-    console.error("API Error:", err.response?.data || err.message);
+    console.error("Request Error:", err.message);
     return Promise.reject(err);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === "ECONNABORTED") {
+      console.error("Request timeout");
+    } else if (!error.response) {
+      console.error("Network error:", error.message);
+    }
+    return Promise.reject(error);
   }
 );
