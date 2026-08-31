@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/api/:path*',
+          destination: `http://khaneypaniapp.runasp.net/api/:path*`,
+        },
+      ],
+    }
+  },
 }
 
 export default nextConfig
