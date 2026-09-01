@@ -1,18 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { AddWaterBillingRulePayload, WaterBillingRuleResponse } from '../types/IWaterBillingRule'
-import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
+import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddWaterBillingRule, useUpdateWaterBillingRule } from "../hooks";
-import toast from "react-hot-toast";
+import { useAddWaterBillingRule, useGetAllWaterTariffPlan, useUpdateWaterBillingRule } from "../hooks";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import TextEditor from '@/components/Input/TextEditor';
-import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 
 type Props = {
     form: UseFormReturn<AddWaterBillingRulePayload>;
@@ -23,17 +20,11 @@ const AddWaterBillingRuleForm = ({ form, onClose, waterBillingRule }: Props) => 
     const addWaterBillingRule = useAddWaterBillingRule();
     const updateWaterBillingRule = useUpdateWaterBillingRule();
     const { handleError, clearError } = useErrorHandler();
+    const { data: allWaterTariffPlan } = useGetAllWaterTariffPlan();
 
-    const { data: rolesResponse } = useGetAllRoles();
-
-    const roles = (rolesResponse?.Items ?? []).map(role => ({
-        id: role.Id,
-        name: role.Name,
-    }));
-
-
-    const [selectedRoleId, setSelectedRoleId] = useState<string>("");
-    const [genderStatus, setGenderStatus] = useState<number | null>(null);
+    const [selectedWaterTariffPlanId, setSelectedWaterTariffPlanId] = useState<string | null>(
+        waterBillingRule?.waterTarifPlanId ?? form.getValues('waterTarifPlanId') ?? null
+    );
 
 
     const handleClose = () => {
@@ -95,11 +86,30 @@ const AddWaterBillingRuleForm = ({ form, onClose, waterBillingRule }: Props) => 
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            <InputElement
-                                label="Water Tariff Plan ID"
-                                form={form}
+                            <AppCombobox
+                                value={selectedWaterTariffPlanId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute z-20"
+                                label="Water Tariff Plan"
                                 name="waterTarifPlanId"
-                                placeholder="Enter Water Tariff Plan ID"
+                                form={form}
+                                required
+                                options={allWaterTariffPlan || []}
+                                selected={
+                                    allWaterTariffPlan?.find((g) => g.id === selectedWaterTariffPlanId) || null
+                                }
+                                onSelect={(group) => {
+                                    const id = group?.id ?? ''
+
+                                    setSelectedWaterTariffPlanId(id || null)
+
+                                    form.setValue('waterTarifPlanId', id, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    })
+                                }}
+                                getLabel={(g) => g?.name ?? ''}
+                                getValue={(g) => g?.id ?? ''}
                             />
 
                             <InputElement
