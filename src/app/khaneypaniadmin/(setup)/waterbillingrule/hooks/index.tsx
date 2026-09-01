@@ -10,6 +10,7 @@ export const WaterBillingRuleEndpoints = {
     add: '/api/KhaneyPaniSetUp/AddWaterBillingRule',
     update: '/api/KhaneyPaniSetUp/UpdateWaterBillingRule',
     delete: '/api/KhaneyPaniSetUp/DeleteWaterBillingRule',
+    filterWaterTariffPlan: '/api/KhaneyPaniSetUp/FilterWaterTariffPlan',
 }
 
 export const WaterBillingRuleQueryKeys = {
@@ -35,6 +36,34 @@ const normalizeUpdateWaterBillingRulePayload = (
     effectiveFrom: String(data.effectiveFrom ?? "").trim(),
     effectiveTo: String(data.effectiveTo ?? "").trim()
 });
+
+
+export const useGetAllWaterTariffPlan = () => {
+    return useQuery({
+        queryKey: [...WaterBillingRuleQueryKeys.all],
+
+        queryFn: async () => {
+            const response = await api.get<
+                IPaginationCrmResponse<{
+                    id: string
+                    name: string
+                }>
+            >(WaterBillingRuleEndpoints.filterWaterTariffPlan, {
+                params: {
+                    pageSize: 10,
+                    pageIndex: 1,
+                    isPagination: true,
+                },
+            })
+
+            return response.data
+        },
+
+        select: (response) => response?.Data.Items ?? [],
+
+        staleTime: 1000 * 60 * 5,
+    })
+}
 
 
 export const useGetAllWaterBillingRule = (queryParams?: string) => {

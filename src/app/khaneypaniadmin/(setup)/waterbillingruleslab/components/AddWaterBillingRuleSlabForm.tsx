@@ -1,18 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { AddWaterBillingRuleSlabPayload, WaterBillingRuleSlabResponse } from '../types/IWaterBillingRuleSlab'
-import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
+import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
 import { useAddWaterBillingRuleSlab, useUpdateWaterBillingRuleSlab } from "../hooks";
-import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
-import TextEditor from '@/components/Input/TextEditor';
-import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+import { useGetAllWaterBillingRule } from '@/app/khaneypaniadmin/(setup)/waterbillingrule/hooks';
 
 type Props = {
     form: UseFormReturn<AddWaterBillingRuleSlabPayload>;
@@ -23,17 +21,11 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose, waterBillingRuleSlab }: Pr
     const addWaterBillingRuleSlab = useAddWaterBillingRuleSlab();
     const updateWaterBillingRuleSlab = useUpdateWaterBillingRuleSlab();
     const { handleError, clearError } = useErrorHandler();
+    const { data: billingRules } = useGetAllWaterBillingRule();
 
-    const { data: rolesResponse } = useGetAllRoles();
-
-    const roles = (rolesResponse?.Items ?? []).map(role => ({
-        id: role.Id,
-        name: role.Name,
-    }));
-
-
-    const [selectedRoleId, setSelectedRoleId] = useState<string>("");
-    const [genderStatus, setGenderStatus] = useState<number | null>(null);
+    const [selectedBillingRuleId, setSelectedBillingRuleId] = useState<string | null>(
+        waterBillingRuleSlab?.billingRuleId ?? form.getValues('billingRuleId') ?? null
+    );
 
 
     const handleClose = () => {
@@ -97,11 +89,38 @@ const AddWaterBillingRuleSlabForm = ({ form, onClose, waterBillingRuleSlab }: Pr
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            <InputElement
-                                label="Billing Rule ID"
-                                form={form}
+                            <AppCombobox
+                                value={selectedBillingRuleId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute z-20"
+                                label="Water Billing Rule"
                                 name="billingRuleId"
-                                placeholder="Enter Billing Rule ID"
+                                form={form}
+                                required
+                                options={billingRules?.Items ?? []}
+                                selected={
+                                    billingRules?.Items?.find((g) => g.id === selectedBillingRuleId) || null
+                                }
+                                onSelect={(group) => {
+                                    const id = group?.id ?? ''
+
+                                    setSelectedBillingRuleId(id || null)
+
+                                    form.setValue('billingRuleId', id, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    })
+                                }}
+                                getLabel={(g) => {
+                                    const planName = g?.waterTarifPlanName || 'Water Tariff Plan';
+                                    const from = g?.effectiveFrom || '';
+                                    const to = g?.effectiveTo || '';
+
+                                    if (from && to) return `${planName} (${from} - ${to})`;
+                                    if (planName) return planName;
+                                    return 'Select billing rule';
+                                }}
+                                getValue={(g) => g?.id ?? ''}
                             />
 
                             <InputElement
