@@ -232,7 +232,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border border-gray-400 flex items-center justify-center overflow-hidden bg-gray-50">
                     <img
-                      src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                      src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
                       alt="Student Image"
                       className="w-full h-full object-cover"
                     />
@@ -359,138 +359,138 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
                   ? data.MarksWithGrades.map(
-                      (m: ISubjectMark, index: number) => {
-                        const gradePoint =
-                          m.GPA !== undefined && m.GPA !== null
-                            ? m.GPA
-                            : getGradePointValue(m.grade)
-                        return (
-                          <tr
-                            key={index}
-                            className="text-center"
-                            style={{ backgroundColor: '#ffffff', color: blue }}
+                    (m: ISubjectMark, index: number) => {
+                      const gradePoint =
+                        m.GPA !== undefined && m.GPA !== null
+                          ? m.GPA
+                          : getGradePointValue(m.grade)
+                      return (
+                        <tr
+                          key={index}
+                          className="text-center"
+                          style={{ backgroundColor: '#ffffff', color: blue }}
+                        >
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
                           >
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {index + 1}
-                            </td>
-                            <td
-                              className="p-2 text-left px-3"
-                              style={{
-                                border: `1px solid ${blue}`,
-                                color: blue,
-                              }}
-                            >
-                              <SubjectNameCell subjectId={m.subjectId} />
-                            </td>
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              4
-                            </td>
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {'-'}
-                            </td>
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {'-'}
-                            </td>
-                            <td
-                              className="p-2 font-medium"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {m.grade || '-'}
-                            </td>
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {gradePoint}
-                            </td>
-                            <td
-                              className="p-2"
-                              style={{ border: `1px solid ${blue}` }}
-                            >
-                              {'-'}
-                            </td>
-                          </tr>
-                        )
-                      }
-                    )
+                            {index + 1}
+                          </td>
+                          <td
+                            className="p-2 text-left px-3"
+                            style={{
+                              border: `1px solid ${blue}`,
+                              color: blue,
+                            }}
+                          >
+                            <SubjectNameCell subjectId={m.subjectId} />
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            4
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {'-'}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {'-'}
+                          </td>
+                          <td
+                            className="p-2 font-medium"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {m.grade || '-'}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {gradePoint}
+                          </td>
+                          <td
+                            className="p-2"
+                            style={{ border: `1px solid ${blue}` }}
+                          >
+                            {'-'}
+                          </td>
+                        </tr>
+                      )
+                    }
+                  )
                   : [
-                      'Nepali',
-                      'English',
-                      'Mathematics',
-                      'Social Studies and Population Education',
-                      'Science and Environment',
-                      'Health and Physical Education',
-                      'Moral Education',
-                      'Occupation, Business & Technology Education',
-                      'Local Subject (Computer)',
-                    ].map((subject, index) => (
-                      <tr
-                        key={index}
-                        className="text-center"
-                        style={{ backgroundColor: '#ffffff', color: blue }}
+                    'Nepali',
+                    'English',
+                    'Mathematics',
+                    'Social Studies and Population Education',
+                    'Science and Environment',
+                    'Health and Physical Education',
+                    'Moral Education',
+                    'Occupation, Business & Technology Education',
+                    'Local Subject (Computer)',
+                  ].map((subject, index) => (
+                    <tr
+                      key={index}
+                      className="text-center"
+                      style={{ backgroundColor: '#ffffff', color: blue }}
+                    >
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
                       >
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          {index + 1}
-                        </td>
-                        <td
-                          className="p-2 text-left px-3"
-                          style={{ border: `1px solid ${blue}`, color: blue }}
-                        >
-                          {subject}
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          4
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                        <td
-                          className="p-2"
-                          style={{ border: `1px solid ${blue}` }}
-                        >
-                          -
-                        </td>
-                      </tr>
-                    ))}
+                        {index + 1}
+                      </td>
+                      <td
+                        className="p-2 text-left px-3"
+                        style={{ border: `1px solid ${blue}`, color: blue }}
+                      >
+                        {subject}
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        4
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        -
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        -
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        -
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        -
+                      </td>
+                      <td
+                        className="p-2"
+                        style={{ border: `1px solid ${blue}` }}
+                      >
+                        -
+                      </td>
+                    </tr>
+                  ))}
 
                 <tr style={{ backgroundColor: headerBg, color: headerColor }}>
                   <td

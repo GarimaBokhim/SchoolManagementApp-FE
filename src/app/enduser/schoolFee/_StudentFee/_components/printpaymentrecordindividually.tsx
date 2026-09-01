@@ -80,7 +80,7 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const getLogoUrl = () => {
     const raw = school?.imageUrl
     if (!raw || raw === '-' || raw === 'string' || raw === '') return ''
-    return `https://schoolapp.netraverselabs.com/${raw}`
+    return `http://khaneypaniapp.runasp.net/${raw}`
   }
 
   const receiptData = {

@@ -54,7 +54,7 @@ const CertificateModal = ({
     if (!SchoolData?.imageUrl) return null
     const imageUrl = SchoolData.imageUrl
     if (imageUrl === '-' || imageUrl === 'string' || imageUrl === '') return null
-    return `https://schoolapp.netraverselabs.com/${imageUrl}`
+    return `http://khaneypaniapp.runasp.net/${imageUrl}`
   }
 
   const schoolLogoUrl = getImageUrl()
@@ -524,7 +524,7 @@ const CertificateModal = ({
 
                   {/* Simple square photo box */}
                   <div className="photo-placeholder">
-                   
+
                   </div>
                 </div>
 

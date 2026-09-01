@@ -186,7 +186,7 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
               {StudentData?.studentImg && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`https://schoolapp.netraverselabs.com/${StudentData.studentImg}`}
+                  src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
                   alt="Student Image"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

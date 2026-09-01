@@ -20,14 +20,14 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
   const schoolId =
     typeof window !== 'undefined'
       ? (() => {
-          try {
-            const storedUser = localStorage.getItem('userDetails')
-            if (!storedUser) return null
-            return JSON.parse(storedUser).schoolId ?? null
-          } catch {
-            return null
-          }
-        })()
+        try {
+          const storedUser = localStorage.getItem('userDetails')
+          if (!storedUser) return null
+          return JSON.parse(storedUser).schoolId ?? null
+        } catch {
+          return null
+        }
+      })()
       : null
 
   const { data: schoolDetail } = useGetSchoolById(schoolId || undefined)
@@ -41,7 +41,7 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
       imageUrl === ''
     )
       return null
-    return `https://schoolapp.netraverselabs.com/${imageUrl}`
+    return `http://khaneypaniapp.runasp.net/${imageUrl}`
   }
   const schoolLogoUrl = getLogoUrl()
 
@@ -335,9 +335,8 @@ const DueSlipModal = ({ classId, className, onClose }: DueSlipModalProps) => {
                                 Due Amount
                               </td>
                               <td
-                                className={`px-4 py-3 text-right font-bold text-base ${
-                                  due > 0 ? 'text-red-600' : 'text-green-600'
-                                }`}
+                                className={`px-4 py-3 text-right font-bold text-base ${due > 0 ? 'text-red-600' : 'text-green-600'
+                                  }`}
                               >
                                 Rs. {due.toLocaleString()}
                               </td>

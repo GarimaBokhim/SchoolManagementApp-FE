@@ -10,7 +10,7 @@ type Props = {
 const resolveImageUrl = (url?: string | null): string | null => {
   if (!url || url === '-' || url === 'string' || url.trim() === '') return null
   if (url.startsWith('http://') || url.startsWith('https://')) return url
-  return `https://schoolapp.netraverselabs.com/${url.replace(/^\//, '')}`
+  return `http://khaneypaniapp.runasp.net/${url.replace(/^\//, '')}`
 }
 
 export default function SchoolInfoCard({ schoolId }: Props) {
