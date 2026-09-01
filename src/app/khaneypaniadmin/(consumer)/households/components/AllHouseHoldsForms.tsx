@@ -149,6 +149,16 @@ const ActionMenu = ({
 }
 
 
+const resolveAssetUrl = (path?: string | null): string | null => {
+    if (!path || path === '-' || path === 'string' || path.trim() === '') return null
+    if (/^https?:\/\//i.test(path)) return path
+
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const cleanPath = path.replace(/^\/+/, '')
+
+    return base ? `${base}/${cleanPath}` : `/${cleanPath}`
+}
+
 const AllHouseHoldsForm = () => {
     const { menuStatus } = usePermissions()
     const { handleError, clearError } = useErrorHandler()
@@ -453,24 +463,29 @@ const AllHouseHoldsForm = () => {
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0 cursor-pointer">
-                                                        {HouseHolds?.qrCode ? (
-                                                            <img
-                                                                src={`${process.env.NEXT_PUBLIC_API_URL}${HouseHolds.qrCode}`}
-                                                                alt="QR Code"
-                                                                className="w-full h-full object-contain hover:scale-110 transition-transform duration-200"
-                                                                onClick={() =>
-                                                                    setSelectedQrCode(
-                                                                        `${process.env.NEXT_PUBLIC_API_URL}${HouseHolds.qrCode}`
-                                                                    )
-                                                                }
-                                                                onError={(e) => {
-                                                                    console.log(
-                                                                        "QR Image failed:",
-                                                                        e.currentTarget.src
-                                                                    );
-                                                                }}
-                                                            />
-                                                        ) : (
+                                                        {HouseHolds?.qrCode ? (() => {
+                                                            const qrUrl = resolveAssetUrl(HouseHolds.qrCode)
+
+                                                            if (!qrUrl) {
+                                                                return (
+                                                                    <span className="text-sm font-bold text-gray-700">
+                                                                        No QR Code
+                                                                    </span>
+                                                                )
+                                                            }
+
+                                                            return (
+                                                                <img
+                                                                    src={qrUrl}
+                                                                    alt="QR Code"
+                                                                    className="w-full h-full object-contain hover:scale-110 transition-transform duration-200"
+                                                                    onClick={() => setSelectedQrCode(qrUrl)}
+                                                                    onError={(e) => {
+                                                                        console.log('QR Image failed:', e.currentTarget.src)
+                                                                    }}
+                                                                />
+                                                            )
+                                                        })() : (
                                                             <span className="text-sm font-bold text-gray-700">
                                                                 No QR Code
                                                             </span>

@@ -7,11 +7,20 @@ type Props = {
   schoolId: string;
 };
 
+const getApiBaseUrl = () => {
+  const envBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '');
+  return envBase || '';
+};
+
 const resolveImageUrl = (url?: string | null): string | null => {
-  if (!url || url === '-' || url === 'string' || url.trim() === '') return null
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  return `http://khaneypaniapp.runasp.net/${url.replace(/^\//, '')}`
-}
+  if (!url || url === '-' || url === 'string' || url.trim() === '') return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+  const cleanPath = url.replace(/^\/+/, '');
+  const base = getApiBaseUrl();
+
+  return base ? `${base}/${cleanPath}` : `/${cleanPath}`;
+};
 
 export default function SchoolInfoCard({ schoolId }: Props) {
   const { data: schoolData, isLoading } = useGetSchoolById(schoolId || null);
@@ -42,11 +51,12 @@ export default function SchoolInfoCard({ schoolId }: Props) {
       <div className="flex gap-4">
         {/* Left: School Logo */}
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
-          {schoolData?.imageUrl ? (
+          {logoUrl ? (
             <img
-              src={`${process.env.NEXT_PUBLIC_API_URL}/${schoolData.imageUrl}`}
+              src={logoUrl}
               alt="School Logo"
               className="w-full h-full object-cover"
+              onError={() => setLogoError(true)}
             />
           ) : (
             <span className="text-sm font-bold text-gray-700">
