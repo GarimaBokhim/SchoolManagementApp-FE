@@ -21,6 +21,20 @@ const nextConfig: NextConfig = {
       ],
     }
   },
+  // Add security headers for API requests
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig
