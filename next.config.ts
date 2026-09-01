@@ -11,6 +11,30 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/api/:path*',
+          destination: `http://khaneypaniapp.runasp.net/api/:path*`,
+        },
+      ],
+    }
+  },
+  // Add security headers for API requests
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig
