@@ -152,7 +152,8 @@ const ActionMenu = ({
 const resolveAssetUrl = (path?: string | null): string | null => {
     if (!path || path === '-' || path === 'string' || path.trim() === '') return null
 
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    // const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const base = "http://khaneypaniapp.runasp.net".replace(/\/+$/, '');
     const raw = path.trim()
 
     try {

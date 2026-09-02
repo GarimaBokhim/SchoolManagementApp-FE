@@ -54,7 +54,11 @@ const CertificateModal = ({
     if (!SchoolData?.imageUrl) return null
     const imageUrl = SchoolData.imageUrl
     if (imageUrl === '-' || imageUrl === 'string' || imageUrl === '') return null
-    return `http://khaneypaniapp.runasp.net/${imageUrl}`
+    const trimmed = imageUrl.trim()
+    if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed)
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const clean = trimmed.replace(/^\/+/, '')
+    return base ? encodeURI(`${base}/${clean}`) : `/${clean}`
   }
 
   const schoolLogoUrl = getImageUrl()
