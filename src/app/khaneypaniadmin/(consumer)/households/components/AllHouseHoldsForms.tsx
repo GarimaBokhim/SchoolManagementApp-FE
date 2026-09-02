@@ -156,7 +156,7 @@ const resolveAssetUrl = (path?: string | null): string | null => {
         return null;
     }
 
-    const base = 'https://khaneypaniapp.runasp.net';
+    const base = 'http://khaneypaniapp.runasp.net';
     let cleanPath = path.trim().replace(/^\/+/, '');
 
     if (!cleanPath.toLowerCase().startsWith('khaneypani/')) {
