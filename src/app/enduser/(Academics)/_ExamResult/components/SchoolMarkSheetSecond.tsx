@@ -11,6 +11,7 @@ import { IClass } from '../../Class/types/IClass'
 import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
 import { ISubjectMark } from '../types/IExamResults'
+import { buildBackendAssetUrl } from '@/utils/backendUrl'
 
 interface Props {
   studentId: string
@@ -71,7 +72,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
       return null
     }
 
-    const fullUrl = `http://khaneypaniapp.runasp.net/${imageUrl}`
+    const fullUrl = buildBackendAssetUrl(imageUrl)
     console.log('Full image URL:', fullUrl)
     return fullUrl
   }
@@ -204,7 +205,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
                     <img
-                      src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
+                      src={buildBackendAssetUrl(StudentData.studentImg) ?? undefined}
                       alt="Student Image"
                       className="w-full h-full object-cover"
                     />
