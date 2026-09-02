@@ -150,32 +150,14 @@ const ActionMenu = ({
 
 
 const resolveAssetUrl = (path?: string | null): string | null => {
-    if (!path || path === '-' || path === 'string' || path.trim() === '') return null
-
-    // const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
-    const base = "http://khaneypaniapp.runasp.net".replace(/\/+$/, '');
-    const raw = path.trim()
-
-    try {
-        if (/^https?:\/\//i.test(raw)) {
-            const parsed = new URL(raw)
-            const pathname = parsed.pathname.replace(/^\/+/, '')
-            const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
-
-            return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
-        } else {
-            const parsed = new URL(raw)
-            const pathname = parsed.pathname.replace(/^\/+/, '')
-            const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
-            return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
-        }
-    } catch {
-        // fall through to relative-path handling below
+    if (!path || path === '-' || path === 'string' || path.trim() === '') {
+        return null;
     }
 
-    const cleanPath = raw.replace(/^\/+/, '').replace(/^khaneypani\/?/i, '')
-    return base ? `${base}/${cleanPath}` : `/${cleanPath}`
-}
+    const base = 'http://khaneypaniapp.runasp.net';
+
+    return `${base}/${path.trim().replace(/^\/+/, '')}`;
+};
 
 const AllHouseHoldsForm = () => {
     const { menuStatus } = usePermissions()
