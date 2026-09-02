@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { useGetAllDistrict, useGetAllProvince } from '@/components/common/hooks'
 import { useGenerateCertificateByStudent } from '../hooks'
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
+import { buildBackendAssetUrl } from '@/utils/backendUrl'
 
 interface Props {
   studentId: string
@@ -186,7 +187,7 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
               {StudentData?.studentImg && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
+                  src={buildBackendAssetUrl(StudentData.studentImg) ?? undefined}
                   alt="Student Image"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

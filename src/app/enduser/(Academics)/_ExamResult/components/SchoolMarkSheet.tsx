@@ -12,6 +12,7 @@ import { IExam } from '../../Exam/types/IExams'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
 import { useGetAllDistricts, useGetAllProvinces } from '../hooks/locationoHooks'
 import { ISubjectMark } from '../types/IExamResults'
+import { buildBackendAssetUrl } from '@/utils/backendUrl'
 
 interface Props {
   studentId: string
@@ -232,7 +233,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border border-gray-400 flex items-center justify-center overflow-hidden bg-gray-50">
                     <img
-                      src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
+                      src={buildBackendAssetUrl(StudentData.studentImg) ?? undefined}
                       alt="Student Image"
                       className="w-full h-full object-cover"
                     />

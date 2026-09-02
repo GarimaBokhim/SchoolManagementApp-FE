@@ -8,6 +8,7 @@ import {
 import { useGenerateCertificateByStudent } from "../hooks";
 import { useGetStudentById } from "@/app/enduser/(StudentManagement)/Student/hooks";
 import { useGetAllSchool } from "@/app/admin/Setup/School/hooks";
+import { buildBackendAssetUrl } from "@/utils/backendUrl";
 
 interface Props {
   studentId: string;
@@ -42,13 +43,13 @@ const CollegeCertificate: React.FC<Props> = ({ studentId, onClose, examId }) => 
   )?.districtNameInEnglish
 
   const studentImageUrl = certificateData?.StudentImage
-    ? `http://khaneypaniapp.runasp.net/${certificateData.StudentImage}`
+    ? buildBackendAssetUrl(certificateData.StudentImage)
     : StudentData?.studentImg
-      ? `http://khaneypaniapp.runasp.net/${StudentData.studentImg}`
+      ? buildBackendAssetUrl(StudentData.studentImg)
       : null
 
   const schoolLogoUrl = school?.imageUrl
-    ? `http://khaneypaniapp.runasp.net/${school.imageUrl}`
+    ? buildBackendAssetUrl(school.imageUrl) ?? "/assets/logo.png"
     : "/assets/logo.png"
 
   const handlePrint = () => {
