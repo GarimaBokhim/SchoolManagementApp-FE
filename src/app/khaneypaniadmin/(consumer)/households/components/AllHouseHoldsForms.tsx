@@ -149,14 +149,21 @@ const ActionMenu = ({
 }
 
 
+
+
 const resolveAssetUrl = (path?: string | null): string | null => {
     if (!path || path === '-' || path === 'string' || path.trim() === '') {
         return null;
     }
 
-    const base = 'http://khaneypaniapp.runasp.net';
+    const base = 'https://khaneypaniapp.runasp.net';
+    let cleanPath = path.trim().replace(/^\/+/, '');
 
-    return `${base}/${path.trim().replace(/^\/+/, '')}`;
+    if (!cleanPath.toLowerCase().startsWith('khaneypani/')) {
+        cleanPath = `khaneypani/${cleanPath}`;
+    }
+
+    return `${base}/${cleanPath}`;
 };
 
 const AllHouseHoldsForm = () => {
