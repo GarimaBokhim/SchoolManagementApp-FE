@@ -232,15 +232,7 @@ const SchoolMarkSheet: React.FC<Props> = ({ studentId, examId, onClose }) => {
                 {StudentData?.studentImg && (
                   <div className="absolute right-0 top-0 w-28 h-[130px] border border-gray-400 flex items-center justify-center overflow-hidden bg-gray-50">
                     <img
-                      src={(() => {
-                        const url = StudentData.studentImg
-                        if (!url || url === '-' || url === 'string' || url.trim() === '') return '/assets/male.jpg'
-                        const trimmed = url.trim()
-                        if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed)
-                        const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
-                        const clean = trimmed.replace(/^\/+/, '')
-                        return base ? encodeURI(`${base}/${clean}`) : `/${clean}`
-                      })()}
+                      src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
                       alt="Student Image"
                       className="w-full h-full object-cover"
                     />
