@@ -473,10 +473,16 @@ const AllHouseHoldsForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0 cursor-pointer">
                                                         {HouseHolds?.qrCode ? (() => {
-                                                            const qrUrl = resolveAssetUrl(HouseHolds.qrCode)?.replace(
-                                                                /^https:\/\//i,
-                                                                'http://'
-                                                            )
+
+                                                            console.log('========== QR DEBUG ==========');
+                                                            console.log('Database QR Code:', HouseHolds.qrCode);
+                                                            console.log('After trim:', HouseHolds.qrCode?.trim());
+
+                                                            const qrUrl = resolveAssetUrl(HouseHolds.qrCode);
+
+                                                            console.log('Resolved QR URL:', qrUrl);
+                                                            console.log('Protocol:', qrUrl?.split('://')[0]);
+                                                            console.log('==============================');
 
                                                             if (!qrUrl) {
                                                                 return (
@@ -488,7 +494,7 @@ const AllHouseHoldsForm = () => {
 
                                                             return (
                                                                 <img
-                                                                    src={qrUrl}
+                                                                    src={qrUrl?.replace(/^https:\/\//, "http://")}
                                                                     alt="QR Code"
                                                                     className="w-full h-full object-contain hover:scale-110 transition-transform duration-200"
                                                                     onClick={() => setSelectedQrCode(qrUrl)}
