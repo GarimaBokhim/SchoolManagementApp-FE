@@ -157,6 +157,7 @@ const resolveAssetUrl = (path?: string | null): string | null => {
     }
 
     const base = 'http://khaneypaniapp.runasp.net';
+
     let cleanPath = path.trim().replace(/^\/+/, '');
 
     if (!cleanPath.toLowerCase().startsWith('khaneypani/')) {
@@ -472,7 +473,10 @@ const AllHouseHoldsForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0 cursor-pointer">
                                                         {HouseHolds?.qrCode ? (() => {
-                                                            const qrUrl = resolveAssetUrl(HouseHolds.qrCode)
+                                                            const qrUrl = resolveAssetUrl(HouseHolds.qrCode)?.replace(
+                                                                /^https:\/\//i,
+                                                                'http://'
+                                                            )
 
                                                             if (!qrUrl) {
                                                                 return (
