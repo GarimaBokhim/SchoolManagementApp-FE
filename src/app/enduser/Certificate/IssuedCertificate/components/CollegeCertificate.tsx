@@ -41,17 +41,15 @@ const CollegeCertificate: React.FC<Props> = ({ studentId, onClose, examId }) => 
     (i) => i.Id === Number(certificateData?.districtId)
   )?.districtNameInEnglish
 
-  const resolveImageUrl = (url?: string | null) => {
-    if (!url || url === '-' || url === 'string' || url.trim() === '') return null
-    const trimmed = url.trim()
-    if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed)
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
-    const clean = trimmed.replace(/^\/+/, '')
-    return base ? encodeURI(`${base}/${clean}`) : `/${clean}`
-  }
+  const studentImageUrl = certificateData?.StudentImage
+    ? `http://khaneypaniapp.runasp.net/${certificateData.StudentImage}`
+    : StudentData?.studentImg
+      ? `http://khaneypaniapp.runasp.net/${StudentData.studentImg}`
+      : null
 
-  const studentImageUrl = resolveImageUrl(certificateData?.StudentImage) ?? resolveImageUrl(StudentData?.studentImg)
-  const schoolLogoUrl = resolveImageUrl(school?.imageUrl) ?? "/assets/logo.png"
+  const schoolLogoUrl = school?.imageUrl
+    ? `http://khaneypaniapp.runasp.net/${school.imageUrl}`
+    : "/assets/logo.png"
 
   const handlePrint = () => {
     const content = document.getElementById("certificate")?.outerHTML
