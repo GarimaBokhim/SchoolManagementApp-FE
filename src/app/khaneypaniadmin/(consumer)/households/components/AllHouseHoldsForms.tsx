@@ -163,6 +163,11 @@ const resolveAssetUrl = (path?: string | null): string | null => {
             const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
 
             return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
+        } else {
+            const parsed = new URL(raw)
+            const pathname = parsed.pathname.replace(/^\/+/, '')
+            const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
+            return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
         }
     } catch {
         // fall through to relative-path handling below
