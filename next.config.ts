@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: '/api/:path*',
-          destination: `https://khaneypaniapp.runasp.net/api/:path*`,
+          destination: `http://khaneypaniapp.runasp.net/api/:path*`,
         },
       ],
     }
