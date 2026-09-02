@@ -1,9 +1,14 @@
 
 import axios from "axios";
 
-const baseURL = (process.env.NEXT_PUBLIC_API_URL ?? "http://khaneypaniapp.runasp.net").replace(/\/+$/, "");
+// Simple approach: Always use empty baseURL
+// Endpoints already have /api prefix (e.g., /api/SetupControllers/all-school)
+// - Locally: rewrites proxy /api/* through next.config.ts
+// - Vercel: rewrites proxy /api/* through next.config.ts
+// No environment checks needed - one config works everywhere
+const baseURL = "";
 
-console.log("[API] Using backend base URL:", baseURL);
+console.log("[API] Using relative paths with rewrites via next.config.ts");
 
 export const api = axios.create({
   baseURL: baseURL,

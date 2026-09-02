@@ -152,20 +152,28 @@ const ActionMenu = ({
 
 
 const resolveAssetUrl = (path?: string | null): string | null => {
-    if (!path || path === '-' || path === 'string' || path.trim() === '') {
-        return null;
+    if (!path || path === '-' || path === 'string' || path.trim() === '') return null
+
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const raw = path.trim()
+
+    try {
+        if (/^https?:\/\//i.test(raw)) {
+            const parsed = new URL(raw)
+            const pathname = parsed.pathname.replace(/^\/+/, '')
+            const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
+
+            if (!normalizedPath) return null
+            return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
+        }
+    } catch {
+        // fall through to relative-path handling below
     }
 
-    const base = 'http://khaneypaniapp.runasp.net';
-
-    let cleanPath = path.trim().replace(/^\/+/, '');
-
-    if (!cleanPath.toLowerCase().startsWith('khaneypani/')) {
-        cleanPath = `khaneypani/${cleanPath}`;
-    }
-
-    return `${base}/${cleanPath}`;
-};
+    const cleanPath = raw.replace(/^\/+/, '').replace(/^khaneypani\/?/i, '')
+    if (!cleanPath) return null
+    return base ? `${base}/${cleanPath}` : `/${cleanPath}`
+}
 
 const AllHouseHoldsForm = () => {
     const { menuStatus } = usePermissions()
