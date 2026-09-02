@@ -186,7 +186,15 @@ const SchoolCertificate: React.FC<Props> = ({ studentId, examId, onClose }) => {
               {StudentData?.studentImg && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`http://khaneypaniapp.runasp.net/${StudentData.studentImg}`}
+                  src={(() => {
+                    const url = StudentData.studentImg
+                    if (!url || url === '-' || url === 'string' || url.trim() === '') return '/assets/male.jpg'
+                    const trimmed = url.trim()
+                    if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed)
+                    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+                    const clean = trimmed.replace(/^\/+/, '')
+                    return base ? encodeURI(`${base}/${clean}`) : `/${clean}`
+                  })()}
                   alt="Student Image"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

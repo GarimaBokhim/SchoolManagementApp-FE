@@ -80,7 +80,11 @@ const PaymentReceiptPrint = ({ data, onReady }: Props) => {
   const getLogoUrl = () => {
     const raw = school?.imageUrl
     if (!raw || raw === '-' || raw === 'string' || raw === '') return ''
-    return `http://khaneypaniapp.runasp.net/${raw}`
+    const trimmed = raw.trim()
+    if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed)
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const clean = trimmed.replace(/^\/+/, '')
+    return base ? encodeURI(`${base}/${clean}`) : `/${clean}`
   }
 
   const receiptData = {
