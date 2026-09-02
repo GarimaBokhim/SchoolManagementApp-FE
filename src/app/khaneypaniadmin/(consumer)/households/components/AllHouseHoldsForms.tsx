@@ -464,8 +464,7 @@ const AllHouseHoldsForm = () => {
                                                     {HouseHolds.meterNumber}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {process.env.NEXT_PUBLIC_API_URL}
-                                                    {/* {HouseHolds.familyMember} */}
+                                                    {HouseHolds.familyMember ?? '-'}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {HouseHolds.email}
