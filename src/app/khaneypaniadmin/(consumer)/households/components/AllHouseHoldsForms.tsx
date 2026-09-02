@@ -474,6 +474,7 @@ const AllHouseHoldsForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {HouseHolds.tole}
                                                 </td>
+
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0 cursor-pointer">
                                                         {HouseHolds?.qrCode ? (() => {
