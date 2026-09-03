@@ -154,7 +154,7 @@ const ActionMenu = ({
 const resolveAssetUrl = (path?: string | null): string | null => {
     if (!path || path === '-' || path === 'string' || path.trim() === '') return null
 
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '')
+    const base = 'http://khaneypaniapp.runasp.net'.replace(/^\/+|\/+$/g, '');
     const raw = path.trim()
 
     try {
@@ -170,7 +170,9 @@ const resolveAssetUrl = (path?: string | null): string | null => {
         // fall through to relative-path handling below
     }
 
-    const cleanPath = raw.replace(/^\/+/, '').replace(/^khaneypani\/?/i, '')
+    //const cleanPath = raw.replace(/^\/+/, '').replace(/^khaneypani\/?/i, '')
+
+    const cleanPath = raw.replace(/^\/+/, '')
     if (!cleanPath) return null
     return base ? `${base}/${cleanPath}` : `/${cleanPath}`
 }

@@ -37,21 +37,16 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   >(null)
   const [selectedClassId, setSelectedClassId] = useState<string | null>('')
   const [genderStatus, setGenderStatus] = useState<number | null>(null)
-  const [selectedProvinceId, setSelectedProvinceId] = useState<
-    number | undefined
-  >(0)
-  const [selectedDistrictId, setSelectedDistrictId] = useState<
-    number | undefined
-  >(0)
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0)
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0)
   const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0)
-  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<
-    number | undefined
-  >(0)
-  const { data: filteredDistrict } =
-    useGetDistrictByProvince(selectedProvinceId)
+  const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | undefined>(0)
+  const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId)
   const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
-  const { data: filteredMunicipality } =
-    useGetMunicipalityByDistrict(selectedDistrictId)
+  const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId)
+
+
+
   const handleClose = () => {
     form.reset()
   }
@@ -307,7 +302,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   onSelect={(group) =>
                     setSelectedMunicipalityId(group?.Id ?? 0)
                   }
-                  getLabel={(g) => g?.MunicipalityNameinNepali ?? ''}
+                  getLabel={(g) => g?.MunicipalityNameinEnglish ?? ''}
                   getValue={(g) => g?.Id ?? ''}
                 />
 

@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
+import { useGetAllProvince, useGetDistrictByProvince, useGetMunicipalityByDistrict, useGetVDCByDistrict } from '@/components/common/hooks';
+import dynamic from 'next/dynamic';
 
 type Props = {
     form: UseFormReturn<AddHouseHoldsPayload>;
@@ -26,9 +28,25 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
     const [HouseHoldsType, setHouseHoldsType] = useState<number | null>(null);
 
     const { data: allwaterTariffPlan } = useGetAllWaterTariffPlan();
-    const [sellectedWaterTariffPlanId, setSelectedWaterTariffPlanId] = useState<
-        string | null
-    >('')
+    const [sellectedWaterTariffPlanId, setSelectedWaterTariffPlanId] = useState<string | null>('')
+
+    const { data: allProvince } = useGetAllProvince()
+    const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0)
+    const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0)
+    const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0)
+    const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | undefined>(0)
+    const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId)
+    const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
+    const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId)
+
+
+    const LocationPicker = dynamic(
+        () => import("@/components/Maps/LocationPicker"),
+        {
+            ssr: false,
+        }
+    );
+
 
 
     const handleClose = () => {
@@ -140,34 +158,91 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                 name="email"
                                 placeholder="Enter Email"
                             />
-                            <InputElement
+
+
+
+
+
+                            <AppCombobox
+                                value={selectedProvinceId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute"
                                 label="Province"
-                                form={form}
                                 name="provinceId"
-                                inputType="number"
-                                placeholder="Enter Province"
+                                form={form}
+                                required
+                                options={allProvince?.Items}
+                                selected={
+                                    allProvince?.Items?.find(
+                                        (g) => g.Id === selectedProvinceId
+                                    ) || null
+                                }
+                                onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
+                                getLabel={(g) => g?.provinceNameInEnglish ?? ''}
+                                getValue={(g) => g?.Id ?? ''}
                             />
-                            <InputElement
+                            <AppCombobox
+                                value={selectedDistrictId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute"
                                 label="District"
-                                form={form}
                                 name="districtId"
-                                inputType="number"
-                                placeholder="Enter District"
+                                form={form}
+                                required
+                                options={filteredDistrict}
+                                selected={
+                                    filteredDistrict?.find(
+                                        (g) => g.Id === selectedDistrictId
+                                    ) || null
+                                }
+                                onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
+                                getLabel={(g) => g?.districtNameInEnglish ?? ''}
+                                getValue={(g) => g?.Id ?? ''}
                             />
-                            <InputElement
+                            <AppCombobox
+                                value={selectedMunicipalityId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute"
+                                disabled={selectedVdcId !== 0 && selectedVdcId !== undefined}
                                 label="Municipality"
-                                form={form}
                                 name="municipalityId"
-                                inputType="number"
-                                placeholder="Enter Municipality"
-                            />
-                            <InputElement
-                                label="VDC"
                                 form={form}
-                                name="vdcId"
-                                inputType="number"
-                                placeholder="Enter VDC"
+                                options={filteredMunicipality}
+                                selected={
+                                    filteredMunicipality?.find(
+                                        (g) => g.Id === selectedMunicipalityId
+                                    ) || null
+                                }
+                                onSelect={(group) =>
+                                    setSelectedMunicipalityId(group?.Id ?? 0)
+                                }
+                                getLabel={(g) => g?.MunicipalityNameinEnglish ?? ''}
+                                getValue={(g) => g?.Id ?? ''}
                             />
+
+                            <AppCombobox
+                                value={selectedVdcId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute"
+                                label="VDC"
+                                disabled={
+                                    selectedMunicipalityId !== 0 &&
+                                    selectedMunicipalityId !== undefined
+                                }
+                                name="vdcid"
+                                form={form}
+                                options={filteredVdc}
+                                selected={
+                                    filteredVdc?.find((g) => g.Id === selectedVdcId) || null
+                                }
+                                onSelect={(group) => setSelectedVdcId(group?.Id ?? 0)}
+                                getLabel={(g) => g?.VdcNameInNepali ?? ''}
+                                getValue={(g) => g?.Id ?? ''}
+                            />
+
+
+
+
                             <InputElement
                                 label="Ward Number"
                                 form={form}
@@ -211,19 +286,31 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                 getValue={(g) => g?.id ?? ''}
                             />
 
-                            <InputElement
-                                label="Latitude"
-                                form={form}
-                                name="latitude"
-                                placeholder="Enter Latitude"
-                            />
+                            <div className="lg:col-span-3">
+                                <LocationPicker
+                                    latitude={form.watch("latitude")}
+                                    longitude={form.watch("longitude")}
+                                    onLocationChange={(latitude, longitude) => {
+                                        form.setValue(
+                                            "latitude",
+                                            latitude,
+                                            {
+                                                shouldValidate: true,
+                                                shouldDirty: true,
+                                            }
+                                        );
 
-                            <InputElement
-                                label="Longitude"
-                                form={form}
-                                name="longitude"
-                                placeholder="Enter longitude"
-                            />
+                                        form.setValue(
+                                            "longitude",
+                                            longitude,
+                                            {
+                                                shouldValidate: true,
+                                                shouldDirty: true,
+                                            }
+                                        );
+                                    }}
+                                />
+                            </div>
                             <InputElement
                                 label="Tole"
                                 form={form}
