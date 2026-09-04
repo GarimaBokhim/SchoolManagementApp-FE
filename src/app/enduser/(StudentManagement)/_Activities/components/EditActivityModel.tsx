@@ -4,13 +4,18 @@ import { useEffect } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { X } from 'lucide-react'
-import { Activity, AddActivityPayload } from '../types/IActivities'
-import { useUpdateActivity, useGetAllEvents, useGetAllClasses } from '../hooks'
+import { AddActivityPayload } from '../types/IActivities'
+import {
+  useUpdateActivity,
+  useGetAllEvents,
+  useGetAllClasses,
+  useGetActivityById,
+} from '../hooks'
 
 interface Props {
   visible: boolean
-  activity: Activity | null
   onClose: () => void
+  activityId: string
   onSuccess: () => void
 }
 
@@ -27,11 +32,16 @@ const ACTIVITY_CATEGORY_OPTIONS = [
 
 type FormValues = AddActivityPayload
 
-const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => {
+const EditActivityModal = ({
+  visible,
+  activityId,
+  onClose,
+  onSuccess,
+}: Props) => {
   const { mutateAsync: updateActivity, isPending } = useUpdateActivity()
   const { data: events = [] } = useGetAllEvents()
   const { data: classes = [] } = useGetAllClasses()
-
+  const { data: activity } = useGetActivityById(activityId)
   const {
     register,
     handleSubmit,
@@ -48,11 +58,9 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
         activityCategory: activity.activityCategory,
         eventId: activity.eventId,
         classIds: activity.classIds ?? [],
-        // startTime, endTime, activityDate are not in Activity type
-        // so we leave them empty for user to fill
-        startTime: '',
-        endTime: '',
-        activityDate: '',
+        startTime: activity.startTime,
+        endTime: activity.endTime,
+        activityDate: activity.activityDate,
       })
     }
   }, [activity, reset])
@@ -60,26 +68,23 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
   if (!visible || !activity) return null
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    await toast.promise(
-      updateActivity({ ...data, id: activity.id }),
-      {
-        loading: 'Updating activity...',
-        success: 'Activity updated successfully!',
-        error: 'Failed to update activity.',
-      }
-    )
+    await toast.promise(updateActivity({ ...data, id: activity.id }), {
+      loading: 'Updating activity...',
+      success: 'Activity updated successfully!',
+      error: 'Failed to update activity.',
+    })
     onSuccess()
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center
              bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
     >
       <div
-        className="bg-[#FBFBFB] dark:bg-[#27272a] 
+        className="bg-[#FBFBFB] dark:bg-[#27272a]
                w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
-               max-h-[95vh] md:max-h-[92vh] h-full 
+               max-h-[95vh] md:max-h-[92vh] h-full
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
       >
         <fieldset>
@@ -98,7 +103,6 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1 text-left text-gray-700 dark:text-gray-300">
@@ -109,7 +113,9 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -147,7 +153,9 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                   ))}
                 </select>
                 {errors.eventId && (
-                  <p className="text-red-500 text-xs mt-1">{errors.eventId.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.eventId.message}
+                  </p>
                 )}
               </div>
 
@@ -170,11 +178,15 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                 </label>
                 <input
                   type="date"
-                  {...register('activityDate', { required: 'Date is required' })}
+                  {...register('activityDate', {
+                    required: 'Date is required',
+                  })}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.activityDate && (
-                  <p className="text-red-500 text-xs mt-1">{errors.activityDate.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.activityDate.message}
+                  </p>
                 )}
               </div>
 
@@ -185,11 +197,15 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                 </label>
                 <input
                   type="time"
-                  {...register('startTime', { required: 'Start time is required' })}
+                  {...register('startTime', {
+                    required: 'Start time is required',
+                  })}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.startTime && (
-                  <p className="text-red-500 text-xs mt-1">{errors.startTime.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.startTime.message}
+                  </p>
                 )}
               </div>
 
@@ -204,7 +220,9 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.endTime && (
-                  <p className="text-red-500 text-xs mt-1">{errors.endTime.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.endTime.message}
+                  </p>
                 )}
               </div>
 
@@ -225,10 +243,8 @@ const EditActivityModal = ({ visible, activity, onClose, onSuccess }: Props) => 
                       </option>
                     ))}
                   </select>
-
                 </div>
               )}
-
             </div>
 
             {/* Actions */}
