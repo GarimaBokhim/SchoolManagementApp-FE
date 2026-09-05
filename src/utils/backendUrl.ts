@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_URL = 'http://khaneypaniapp.runasp.net'
+const DEFAULT_BACKEND_URL = 'https://elitespacenepal.premiumasp.net'
 
 export const getBackendBaseUrl = () =>
   (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_BACKEND_URL).replace(/\/+$/, '')
