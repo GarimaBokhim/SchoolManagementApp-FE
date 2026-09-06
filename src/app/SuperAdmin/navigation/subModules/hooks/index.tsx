@@ -10,8 +10,8 @@ const subModulesEndPoints = {
   getAllSubModules: "/api/RoleModuleControllers/all-submodules",
   removeSubModules: "/api/RoleModuleControllers/DeleteSubModules",
   updateSubModules: "/api/RoleModuleControllers/UpdateSubModules",
-  getSubModulesById: "api/RoleModuleControllers/SubModules",
-  getSubModulesByRoleId: "api/RoleModuleControllers/GetSubModulesByRoleId",
+  getSubModulesById: "/api/RoleModuleControllers/SubModules",
+  getSubModulesByRoleId: "/api/RoleModuleControllers/GetSubModulesByRoleId",
   filterSubModulesByDate: "/api/RoleModuleControllers/FilterSubModulesByDate",
 };
 const queryKey = "subModules";
@@ -166,8 +166,7 @@ export const useGetFilterSubModulesByDate = (
       });
 
       const response = await api.get<ISubModules[]>(
-        `${
-          subModulesEndPoints.filterSubModulesByDate
+        `${subModulesEndPoints.filterSubModulesByDate
         }?${queryParams.toString()}`
       );
 
