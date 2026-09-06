@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
     MapContainer,
     Marker,
@@ -82,9 +82,19 @@ export default function LocationPicker({
         longitude ?? 85.324,
     ];
 
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
     return (
         <div className="space-y-4">
-            <div className="h-[400px] w-full overflow-hidden rounded-lg border">
+            <div
+                ref={(node) => {
+                    if (node && (node as any)._leaflet_id) {
+                        (node as any)._leaflet_id = null;
+                    }
+                    containerRef.current = node;
+                }}
+                className="h-[400px] w-full overflow-hidden rounded-lg border"
+            >
                 <MapContainer
                     center={defaultPosition}
                     zoom={13}
@@ -95,7 +105,6 @@ export default function LocationPicker({
                         attribution="&copy; OpenStreetMap contributors"
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-
                     <MapClickHandler
                         latitude={latitude}
                         longitude={longitude}

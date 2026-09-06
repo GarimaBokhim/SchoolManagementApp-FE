@@ -20,6 +20,13 @@ type Props = {
     onClose: () => void;
     householdId?: string;
 };
+const LocationPicker = dynamic(
+    () => import("@/components/Maps/LocationPicker"),
+    {
+        ssr: false,
+    }
+);
+
 const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
     const addHouseHolds = useAddHouseHolds();
     const updateHouseHolds = useUpdateHouseHolds();
@@ -40,12 +47,6 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
     const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId)
 
 
-    const LocationPicker = dynamic(
-        () => import("@/components/Maps/LocationPicker"),
-        {
-            ssr: false,
-        }
-    );
 
 
 
@@ -285,7 +286,18 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                 getLabel={(g) => g?.name ?? ''}
                                 getValue={(g) => g?.id ?? ''}
                             />
-
+                            <InputElement
+                                label="Tole"
+                                form={form}
+                                name="tole"
+                                placeholder="Enter Tole"
+                            />
+                            <InputElement
+                                label="Registration Date"
+                                form={form}
+                                name="registrationDate"
+                                placeholder="Enter Registration Date"
+                            />
                             <div className="lg:col-span-3">
                                 <LocationPicker
                                     latitude={form.watch("latitude")}
@@ -311,18 +323,7 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                     }}
                                 />
                             </div>
-                            <InputElement
-                                label="Tole"
-                                form={form}
-                                name="tole"
-                                placeholder="Enter Tole"
-                            />
-                            <InputElement
-                                label="Registration Date"
-                                form={form}
-                                name="registrationDate"
-                                placeholder="Enter Registration Date"
-                            />
+
 
 
 
