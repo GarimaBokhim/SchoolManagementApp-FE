@@ -24,10 +24,10 @@ const resolveImageUrl = (url?: string | null): string | null => {
 
 export default function SchoolInfoCard({ schoolId }: Props) {
     const { data: schoolData, isLoading } = useGetSchoolById(schoolId || null);
-    const [logoError, setLogoError] = useState(false);
 
+    console.log(schoolData?.imageUrl)
     const logoUrl = resolveImageUrl(schoolData?.imageUrl);
-
+    console.log(logoUrl)
     if (isLoading) {
         return (
             <div className="relative bg-green-700  text-white rounded-lg shadow-md overflow-hidden p-6">
@@ -49,7 +49,6 @@ export default function SchoolInfoCard({ schoolId }: Props) {
     return (
         <div className="relative bg-gradient-to-r from-[#1877F2] to-[#0A66FF] dark:from-[#0A0A0A] dark:to-[#111] text-white rounded-lg shadow-md overflow-hidden p-6">
             <div className="flex gap-4">
-                {/* Left: School Logo */}
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
                     {logoUrl ? (
                         <img

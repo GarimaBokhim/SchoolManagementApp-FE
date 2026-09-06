@@ -4,6 +4,9 @@ export interface Activity {
   descriptions: string
   activityCategory: number
   eventId: string
+  activityDate: string
+  startTime: string
+  endTime: string
   classIds: string[]
   isActive: boolean
   schoolId: string

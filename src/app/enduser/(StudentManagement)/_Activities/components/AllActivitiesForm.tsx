@@ -5,7 +5,9 @@ import { Filter, Plus, RotateCcw, Edit, Trash } from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
-import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
+import DateRangeFilter, {
+  DateRangeFilterRef,
+} from '@/components/DateFilter/FilterComponent'
 import toast, { Toaster } from 'react-hot-toast'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
@@ -52,7 +54,7 @@ const AllActivityForm = () => {
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
   const [editModal, setEditModal] = useState(false)
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
+  const [selectedActivityId, setSelectedActivityId] = useState<string>('')
   const [params, setParams] = useState('')
   const formRef = useRef<DateRangeFilterRef>(null)
   const { handleError, clearError } = useErrorHandler()
@@ -66,7 +68,11 @@ const AllActivityForm = () => {
 
   const handleSubmitForm = useForm<SearchParam>({ defaultValues: {} })
 
-  const { data: filteredActivity, refetch, isLoading } = useFilterActivity(fullQuery)
+  const {
+    data: filteredActivity,
+    refetch,
+    isLoading,
+  } = useFilterActivity(fullQuery)
   const { data: events = [] } = useGetAllEvents()
   const { mutateAsync: deleteActivity } = useDeleteActivity()
 
@@ -76,8 +82,12 @@ const AllActivityForm = () => {
     clearError()
     try {
       const queryParams = [
-        formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
-        formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
+        formData.startDate
+          ? `startDate=${encodeURIComponent(formData.startDate)}`
+          : null,
+        formData.endDate
+          ? `endDate=${encodeURIComponent(formData.endDate)}`
+          : null,
       ]
         .filter(Boolean)
         .join('&')
@@ -103,18 +113,15 @@ const AllActivityForm = () => {
   }
 
   const handleDelete = async (id: string) => {
-    await toast.promise(
-      deleteActivity(id),
-      {
-        loading: 'Deleting activity...',
-        success: 'Activity deleted successfully!',
-        error: 'Error deleting activity.',
-      }
-    )
+    await toast.promise(deleteActivity(id), {
+      loading: 'Deleting activity...',
+      success: 'Activity deleted successfully!',
+      error: 'Error deleting activity.',
+    })
   }
 
-  const handleEditClick = (activity: Activity) => {
-    setSelectedActivity(activity)
+  const handleEditClick = (activityId: string) => {
+    setSelectedActivityId(activityId)
     setEditModal(true)
   }
 
@@ -123,7 +130,6 @@ const AllActivityForm = () => {
       <Toaster position="top-right" />
       <div className="p-4 sm:p-6">
         <div className="bg-white dark:bg-[#353535] border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-
           {/* Header */}
           <div className="flex w-full justify-between p-3 px-4 pt-4 items-center">
             <h1 className="text-xl font-semibold">All Activities</h1>
@@ -136,13 +142,13 @@ const AllActivityForm = () => {
                 className="!bg-emerald-600 hover:!bg-emerald-700"
               />
               {/* {canAdd && ( */}
-                <ButtonElement
-                  icon={<Plus size={24} />}
-                  type="button"
-                  text="Add New Activity"
-                  onClick={() => setAddModal(true)}
-                  className="!text-md !font-bold"
-                />
+              <ButtonElement
+                icon={<Plus size={24} />}
+                type="button"
+                text="Add New Activity"
+                onClick={() => setAddModal(true)}
+                className="!text-md !font-bold"
+              />
               {/* )} */}
             </div>
           </div>
@@ -186,71 +192,91 @@ const AllActivityForm = () => {
                 <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
                   <th className="px-4 py-3 text-left w-[60px]">S.N</th>
                   <th className="px-4 py-3 text-left">Activity Name</th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">Category</th>
-                  <th className="px-4 py-3 text-left hidden lg:table-cell">Event</th>
+                  <th className="px-4 py-3 text-left hidden md:table-cell">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-left hidden lg:table-cell">
+                    Event
+                  </th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-center w-[100px]">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500">
+                    <td
+                      colSpan={6}
+                      className="px-4 py-3 text-center text-gray-500"
+                    >
                       Loading Activities...
                     </td>
                   </tr>
-                ) : filteredActivity?.Items && filteredActivity.Items.length > 0 ? (
-                  filteredActivity.Items.map((activity: Activity, index: number) => (
-                    <tr
-                      key={activity.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
-                    >
-                      <td className="px-4 py-3 text-left">
-                        {((filteredActivity?.PageIndex - 1) * paginationParams.pageSize) + index + 1}
-                      </td>
-                      <td className="px-4 py-3 text-left font-medium">
-                        {activity.name}
-                      </td>
-                      <td className="px-4 py-3 text-left hidden md:table-cell">
-                        {ACTIVITY_CATEGORY_LABELS[activity.activityCategory] ?? activity.activityCategory}
-                      </td>
-                      <td className="px-4 py-3 text-left hidden lg:table-cell">
-                        {eventMap[activity.eventId] ?? activity.eventId}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          activity.isActive
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                        }`}>
-                          {activity.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center items-center gap-2">
-                          {/* {canEdit && ( */}
+                ) : filteredActivity?.Items &&
+                  filteredActivity.Items.length > 0 ? (
+                  filteredActivity.Items.map(
+                    (activity: Activity, index: number) => (
+                      <tr
+                        key={activity.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-b border-gray-100 dark:text-gray-100 text-gray-700"
+                      >
+                        <td className="px-4 py-3 text-left">
+                          {(filteredActivity?.PageIndex - 1) *
+                            paginationParams.pageSize +
+                            index +
+                            1}
+                        </td>
+                        <td className="px-4 py-3 text-left font-medium">
+                          {activity.name}
+                        </td>
+                        <td className="px-4 py-3 text-left hidden md:table-cell">
+                          {ACTIVITY_CATEGORY_LABELS[
+                            activity.activityCategory
+                          ] ?? activity.activityCategory}
+                        </td>
+                        <td className="px-4 py-3 text-left hidden lg:table-cell">
+                          {eventMap[activity.eventId] ?? activity.eventId}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              activity.isActive
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}
+                          >
+                            {activity.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex justify-center items-center gap-2">
+                            {/* {canEdit && ( */}
                             <ButtonElement
                               type="button"
                               text=""
                               icon={<Edit size={14} />}
-                              onClick={() => handleEditClick(activity)}
+                              onClick={() => handleEditClick(activity.id)}
                               className="!text-xs !font-bold !bg-teal-500 hover:!bg-teal-600"
                             />
-                          {/* )} */}
-                          {/* {canDelete && ( */}
+                            {/* )} */}
+                            {/* {canDelete && ( */}
                             <DeleteButton
                               onConfirm={() => handleDelete(activity.id ?? '')}
                               headerText={<Trash size={14} />}
                               content="Are you sure you want to delete this activity?"
                             />
-                          {/* )} */}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {/* )} */}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-3 text-center text-gray-500 italic">
+                    <td
+                      colSpan={6}
+                      className="px-4 py-3 text-center text-gray-500 italic"
+                    >
                       No activities found.
                     </td>
                   </tr>
@@ -291,14 +317,14 @@ const AllActivityForm = () => {
       {/* Edit Modal */}
       <EditActivityModal
         visible={editModal}
-        activity={selectedActivity}
+        activityId={selectedActivityId}
         onClose={() => {
           setEditModal(false)
-          setSelectedActivity(null)
+          setSelectedActivityId('')
         }}
         onSuccess={() => {
           setEditModal(false)
-          setSelectedActivity(null)
+          setSelectedActivityId('')
           refetch()
         }}
       />
