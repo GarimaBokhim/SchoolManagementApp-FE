@@ -55,7 +55,6 @@ export default function SchoolInfoCard({ schoolId }: Props) {
                             src={logoUrl}
                             alt="School Logo"
                             className="w-full h-full object-cover"
-                            onError={() => setLogoError(true)}
                         />
                     ) : (
                         <span className="text-sm font-bold text-gray-700">
