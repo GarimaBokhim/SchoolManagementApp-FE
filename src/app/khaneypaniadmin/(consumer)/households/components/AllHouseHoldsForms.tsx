@@ -154,7 +154,7 @@ const ActionMenu = ({
 const resolveAssetUrl = (path?: string | null): string | null => {
     if (!path || path === '-' || path === 'string' || path.trim() === '') return null
 
-    const base = 'http://khaneypaniapp.runasp.net'.replace(/^\/+|\/+$/g, '');
+    const base = 'https://elitespacenepal.premiumasp.net'.replace(/^\/+|\/+$/g, '');
     const raw = path.trim()
 
     try {

@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'khaneypaniapp.runasp.net',
+        hostname: 'https://elitespacenepal.premiumasp.net',
         port: '',
         pathname: '/Images/**',
       },
@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: '/api/:path*',
-          destination: `http://khaneypaniapp.runasp.net/api/:path*`,
+          destination: `https://elitespacenepal.premiumasp.net/api/:path*`,
         },
       ],
     }
