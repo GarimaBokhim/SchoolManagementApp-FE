@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'khaneypaniapp.runasp.net',
+        hostname: 'https://elitespacenepal.premiumasp.net',
         port: '',
         pathname: '/Images/**',
       },
