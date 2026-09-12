@@ -10,6 +10,7 @@ import { Toast } from "@/components/Toast/toast";
 import { useAddWaterBillingRule, useGetAllWaterTariffPlan, useUpdateWaterBillingRule } from "../hooks";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
+import { NepaliDatePicker } from '@/components/DatePicker/NepaliDatePicker';
 
 type Props = {
     form: UseFormReturn<AddWaterBillingRulePayload>;
@@ -112,23 +113,17 @@ const AddWaterBillingRuleForm = ({ form, onClose, waterBillingRule }: Props) => 
                                 getValue={(g) => g?.id ?? ''}
                             />
 
-                            <InputElement
-                                label="EffectiveFrom"
+                            <NepaliDatePicker
                                 form={form}
                                 name="effectiveFrom"
-                                inputType="date"
-                                placeholder="Enter Date"
+                                value={form.watch("effectiveFrom")}
                             />
 
-                            <InputElement
-                                label="EffectiveTo"
+                            <NepaliDatePicker
                                 form={form}
                                 name="effectiveTo"
-                                inputType="date"
-                                placeholder="Enter Date"
+                                value={form.watch("effectiveTo")}
                             />
-
-
 
 
                         </div>

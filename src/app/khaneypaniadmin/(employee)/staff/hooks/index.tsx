@@ -20,7 +20,6 @@ export const StaffQueryKeys = {
 const normalizeStaffPayload = (
     data: AddStaffPayload
 ): AddStaffPayload => ({
-    username: String(data.username ?? "").trim(),
     password: String(data.password ?? "").trim(),
     fullName: String(data.fullName ?? "").trim(),
     gender: Number(data.gender ?? 0),
@@ -30,7 +29,7 @@ const normalizeStaffPayload = (
     nid: data.nid ? String(data.nid).trim() : null,
     address: String(data.address ?? "").trim(),
     joiningDate: String(data.joiningDate ?? "").trim(),
-    rolesId: data.rolesId ?? [],
+    roleId: data.roleId ?? "",
 });
 
 
@@ -38,7 +37,6 @@ const normalizeUpdateStaffPayload = (
     data: UpdateStaffPayload
 ): UpdateStaffPayload => ({
     id: String(data.id ?? "").trim(),
-    username: String(data.username ?? "").trim(),
     password: String(data.password ?? "").trim(),
     fullName: String(data.fullName ?? "").trim(),
     gender: Number(data.gender ?? 0),
@@ -48,7 +46,7 @@ const normalizeUpdateStaffPayload = (
     nid: data.nid ? String(data.nid).trim() : null,
     address: String(data.address ?? "").trim(),
     joiningDate: String(data.joiningDate ?? "").trim(),
-    rolesId: (data.rolesId ?? []).filter(Boolean),
+    roleId: (data.roleId ?? "").trim(),
 });
 
 

@@ -12,6 +12,8 @@ interface Props {
 const EditStaff = ({ visible, onClose, staff }: Props) => {
     if (!staff) return null;
 
+    console.log("STAFF", staff);
+
     return <AddStaff visible={visible} onClose={onClose} staff={staff} />;
 };
 

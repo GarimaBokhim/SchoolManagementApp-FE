@@ -8,7 +8,7 @@ import {
     useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+// import "leaflet/dist/leaflet.css";
 
 interface LocationPickerProps {
     latitude?: number;

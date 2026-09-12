@@ -35,7 +35,7 @@ const normalizeUpdateWaterExpensesPayload = (
     data: UpdateWaterExpensesPayload
 ): UpdateWaterExpensesPayload => ({
     id: String(data.id ?? "").trim(),
-    expensesDate: String(data.expensesDate ?? "").trim(),
+    expenseDate: String(data.expenseDate ?? "").trim(),
     expenseCategoryId: String(data.expenseCategoryId ?? "").trim(),
     amount: data.amount ?? 0,
     paymentMethod: data.paymentMethod ?? 0,

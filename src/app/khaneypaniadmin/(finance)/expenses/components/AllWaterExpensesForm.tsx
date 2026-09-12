@@ -443,7 +443,7 @@ const AllWaterExpensesForm = () => {
                                                     {WaterExpenses.expensesNo}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {WaterExpenses.expensesDate}
+                                                    {WaterExpenses.expenseDate}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {WaterExpenses.expensesCategory}

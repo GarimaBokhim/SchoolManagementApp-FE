@@ -12,7 +12,7 @@ const AddWaterIncome = ({ visible, onClose, waterIncome }: Props) => {
     const form = useForm<AddWaterIncomePayload>({
         defaultValues: {
             incomeDate: waterIncome?.incomeDate ?? "",
-            waterincomeSourceId: waterIncome?.waterincomeSourceId ?? "",
+            waterIncomeSourceId: waterIncome?.waterIncomeSourceId ?? "",
             amount: waterIncome?.amount ?? 0,
             paymentMethods: waterIncome?.paymentMethods ?? 0,
             description: waterIncome?.description ?? "",

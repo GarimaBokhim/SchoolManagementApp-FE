@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { AddStaffPayload, StaffResponse } from '../types/IStaff'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
@@ -13,11 +13,23 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
 import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+import { NepaliDatePicker } from '@/components/DatePicker/NepaliDatePicker';
 
 type Props = {
     form: UseFormReturn<AddStaffPayload>;
     onClose: () => void;
     staff?: StaffResponse | null;
+};
+
+const formatDateForInput = (date?: string | null): string => {
+    if (!date) return "";
+
+    // If API returns: 2083-05-25
+    // Returns:        2083-05-25
+    //
+    // If API returns: 2083-05-25T00:00:00
+    // Returns:        2083-05-25
+    return date.split("T")[0];
 };
 const AddStaffForm = ({ form, onClose, staff }: Props) => {
     const addStaff = useAddStaff();
@@ -32,13 +44,13 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
     }));
 
 
-    const [selectedRoleId, setSelectedRoleId] = useState<string>(staff?.rolesId?.[0] ?? "");
+
+    const [selectedRoleId, setSelectedRoleId] = useState<string>(staff?.roleId ?? "");
     const [genderStatus, setGenderStatus] = useState<number | null>(staff?.gender ?? null);
 
 
     const handleClose = () => {
         form.reset({
-            username: "",
             password: "",
             fullName: "",
             gender: 0,
@@ -48,7 +60,7 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
             nid: "",
             address: "",
             joiningDate: "",
-            rolesId: [],
+            roleId: "",
         });
         onClose?.();
     };
@@ -61,19 +73,16 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
 
         try {
             const payload = {
-                username: data.username,
                 password: data.password,
                 fullName: data.fullName,
                 gender: data.gender,
-                dob: data.dob,
+                dob: formatDateForInput(data?.dob),
                 contactNumber: data.contactNumber,
                 email: data.email,
                 nid: data.nid,
                 address: data.address,
-                joiningDate: data.joiningDate,
-                rolesId: Array.isArray(data.rolesId)
-                    ? data.rolesId
-                    : []
+                joiningDate: formatDateForInput(data?.joiningDate),
+                roleId: data.roleId
             };
 
             if (staff) {
@@ -112,12 +121,6 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            <InputElement
-                                label="Username"
-                                form={form}
-                                name="username"
-                                placeholder="Enter Username"
-                            />
 
                             <InputElement
                                 label="Password"
@@ -161,12 +164,13 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
                                 getValue={(o) => o?.id ?? ''}
                             />
 
-                            <InputElement
-                                label="Date of Birth"
+                            <NepaliDatePicker
                                 form={form}
                                 name="dob"
-                                inputType="date"
+                                label="Date of Birth"
+                                value={form.watch("dob")}
                             />
+
 
                             <InputElement
                                 label="Contact Number"
@@ -197,11 +201,13 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
                                 placeholder="Enter Address"
                             />
 
-                            <InputElement
-                                label="Joining Date"
+
+
+                            <NepaliDatePicker
                                 form={form}
                                 name="joiningDate"
-                                inputType="date"
+                                label="Joining Date"
+                                value={form.watch("joiningDate")}
                             />
 
                             <AppCombobox
@@ -224,8 +230,8 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
                                     setSelectedRoleId(roleId);
 
                                     form.setValue(
-                                        "rolesId",
-                                        roleId ? [roleId] : [],
+                                        "roleId",
+                                        roleId,
                                         {
                                             shouldDirty: true,
                                             shouldTouch: true,
