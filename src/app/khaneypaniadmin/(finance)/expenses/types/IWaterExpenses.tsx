@@ -13,7 +13,7 @@ export interface AddWaterExpensesResponse {
 export interface WaterExpensesResponse {
     id: string
     expensesNo: string
-    expensesDate: string
+    expenseDate: string
     expenseCategoryId: string
     expensesCategory: string
     amount: number
@@ -35,7 +35,7 @@ export interface AddWaterExpensesPayload {
 
 export interface UpdateWaterExpensesPayload {
     id: string
-    expensesDate: string
+    expenseDate: string
     expenseCategoryId: string
     paymentMethod: number
     amount: number
@@ -45,7 +45,7 @@ export interface UpdateWaterExpensesPayload {
 
 export interface UpdateWaterExpensesResponse {
     id: string
-    expensesDate: string
+    expenseDate: string
     expenseCategoryId: string
     amount: number
     paymentMethod: number

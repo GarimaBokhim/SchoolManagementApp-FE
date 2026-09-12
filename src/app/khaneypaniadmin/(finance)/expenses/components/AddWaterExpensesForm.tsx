@@ -14,6 +14,7 @@ import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
 import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
 import { useGetAllVisaStatus } from '@/app/crmadmin/(academicprogram)/visarequirements/hooks';
+import { NepaliDatePicker } from '@/components/DatePicker/NepaliDatePicker';
 
 type Props = {
     form: UseFormReturn<AddWaterExpensesPayload>;
@@ -68,7 +69,7 @@ const AddWaterExpensesForm = ({ form, onClose, waterExpenses }: Props) => {
                     id: waterExpenses.id,
                     payload: {
                         id: waterExpenses.id,
-                        expensesDate: payload.expenseDate,
+                        expenseDate: payload.expenseDate,
                         expenseCategoryId: payload.expenseCategoryId,
                         amount: payload.amount,
                         paymentMethod: payload.paymentMethod,
@@ -107,12 +108,12 @@ const AddWaterExpensesForm = ({ form, onClose, waterExpenses }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            <InputElement
-                                label="Date"
+
+
+                            <NepaliDatePicker
                                 form={form}
                                 name="expenseDate"
-                                placeholder="Enter Expenses Date"
-                                inputType="date"
+                                value={form.watch("expenseDate")}
                             />
 
 

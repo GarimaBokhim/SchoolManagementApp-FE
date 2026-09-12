@@ -8,10 +8,11 @@ interface Props {
     onClose?: () => void;
     staff?: StaffResponse | null;
 }
+
+
 const AddStaff = ({ visible, onClose, staff }: Props) => {
     const form = useForm<AddStaffPayload>({
         defaultValues: {
-            username: staff?.username ?? "",
             password: staff?.password ?? "",
             fullName: staff?.fullName ?? "",
             gender: staff?.gender ?? 0,
@@ -21,16 +22,20 @@ const AddStaff = ({ visible, onClose, staff }: Props) => {
             nid: staff?.nid ?? "",
             address: staff?.address ?? "",
             joiningDate: staff?.joiningDate ?? "",
-            rolesId: staff?.rolesId ?? []
+            roleId: staff?.roleId ?? "",
 
         },
 
         // resolver: yupResolver(SubjectValidator),
     });
+
+
     const handleOnClose = () => {
         if (onClose) onClose();
     };
     if (!visible) return null;
+
+
 
     return (
         <div

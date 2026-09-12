@@ -9,6 +9,8 @@ interface Props {
     waterPayment?: WaterPaymentsResponse | null;
 }
 const AddWaterPayments = ({ visible, onClose, waterPayment }: Props) => {
+
+    console.log("PAYMENTS", waterPayment)
     const form = useForm<AddWaterPaymentsPayload>({
         defaultValues: {
             houseHoldId: waterPayment?.houseHoldId ?? "",

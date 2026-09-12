@@ -13,6 +13,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
 import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+import { NepaliDatePicker } from '@/components/DatePicker/NepaliDatePicker';
 
 type Props = {
     form: UseFormReturn<AddWaterPaymentsPayload>;
@@ -130,14 +131,13 @@ const AddWaterPaymentsForm = ({ form, onClose, waterPayment }: Props) => {
                                 getValue={(g) => g?.id ?? ''}
                             />
 
-
-                            <InputElement
-                                label="PaymentDate"
+                            <NepaliDatePicker
                                 form={form}
                                 name="paymentDate"
-                                inputType="date"
-                                placeholder="Enter PaymentDate"
+                                value={form.watch("paymentDate")}
                             />
+
+
 
                             <InputElement
                                 label="PaidAmount"

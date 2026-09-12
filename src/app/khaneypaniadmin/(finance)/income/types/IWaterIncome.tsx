@@ -2,7 +2,7 @@ export interface AddWaterIncomeResponse {
     id: string
     voucherNo: string
     incomeDate: string
-    waterincomeSourceId: string
+    waterIncomeSourceId: string
     amount: number
     paymentMethods: number
     description: string
@@ -12,7 +12,7 @@ export interface WaterIncomeResponse {
     id: string
     voucherNo: string
     incomeDate: string
-    waterincomeSourceId: string
+    waterIncomeSourceId: string
     waterincomeSourceName: string
     amount: number
     paymentMethods: number
@@ -22,7 +22,7 @@ export interface WaterIncomeResponse {
 
 export interface AddWaterIncomePayload {
     incomeDate: string
-    waterincomeSourceId: string
+    waterIncomeSourceId: string
     amount: number
     paymentMethods: number
     description: string
@@ -33,7 +33,7 @@ export interface AddWaterIncomePayload {
 export interface UpdateWaterIncomePayload {
     id: string
     incomeDate: string
-    waterincomeSourceId: string
+    waterIncomeSourceId: string
     amount: number
     paymentMethods: number
     description: string
@@ -42,7 +42,7 @@ export interface UpdateWaterIncomePayload {
 export interface UpdateWaterIncomeResponse {
     id: string
     incomeDate: string
-    waterincomeSourceId: string
+    waterIncomeSourceId: string
     amount: number
     paymentMethods: number
     description: string

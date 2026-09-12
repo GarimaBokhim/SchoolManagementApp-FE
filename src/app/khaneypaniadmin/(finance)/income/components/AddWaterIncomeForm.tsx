@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { AddWaterIncomePayload, WaterIncomeResponse } from '../types/IWaterIncome'
 import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-hook-form";
@@ -13,6 +13,7 @@ import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 import TextEditor from '@/components/Input/TextEditor';
 import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
+import { NepaliDatePicker } from '@/components/DatePicker/NepaliDatePicker';
 
 type Props = {
     form: UseFormReturn<AddWaterIncomePayload>;
@@ -20,6 +21,7 @@ type Props = {
     waterIncome?: WaterIncomeResponse | null;
 };
 const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
+
     const addWaterIncome = useAddWaterIncome();
     const updateWaterIncome = useUpdateWaterIncome();
     const { handleError, clearError } = useErrorHandler();
@@ -27,7 +29,7 @@ const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
     const { data: allIncomeSource } = useGetAllWaterIncomeSource();
     const [sellectedIncomeSourceId, setSelectedIncomeSourceId] = useState<
         string | null
-    >(waterIncome?.waterincomeSourceId ?? '')
+    >(waterIncome?.waterIncomeSourceId ?? '')
 
 
 
@@ -39,7 +41,7 @@ const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
     const handleClose = () => {
         form.reset({
             incomeDate: "",
-            waterincomeSourceId: "",
+            waterIncomeSourceId: "",
             amount: 0,
             paymentMethods: 0,
             description: ""
@@ -56,7 +58,7 @@ const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
         try {
             const payload = {
                 incomeDate: data.incomeDate,
-                waterincomeSourceId: data.waterincomeSourceId,
+                waterIncomeSourceId: data.waterIncomeSourceId,
                 amount: data.amount,
                 paymentMethods: data.paymentMethods,
                 description: data.description
@@ -98,48 +100,57 @@ const AddWaterIncomeForm = ({ form, onClose, waterIncome }: Props) => {
                     </div>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                            <InputElement
-                                label="Date"
+
+
+                            <NepaliDatePicker
                                 form={form}
                                 name="incomeDate"
-                                placeholder="Enter Income Date"
-                                inputType="date"
+                                value={form.watch("incomeDate")}
                             />
 
 
 
                             <AppCombobox
-                                value={sellectedIncomeSourceId}
-                                dropDownWidth="w-full"
-                                dropdownPositionClass="absolute z-20"
                                 label="Income Source"
-                                name="waterincomeSourceId"
+                                name="waterIncomeSourceId"
                                 form={form}
                                 required
-                                options={allIncomeSource || []}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute z-20"
+                                options={allIncomeSource ?? []}
+
                                 selected={
-                                    allIncomeSource?.find((g) => g.id === sellectedIncomeSourceId) ||
-                                    null
+                                    allIncomeSource?.find(
+                                        (source) =>
+                                            source.id === form.watch("waterIncomeSourceId")
+                                    ) ?? null
                                 }
-                                onSelect={(group) => {
-                                    if (group) {
-                                        const id = group.id ?? ''
 
-                                        setSelectedIncomeSourceId(id || null)
+                                onSelect={(source) => {
+                                    const id = source?.id ?? ""
 
-                                        form.setValue('waterincomeSourceId', id, {
+                                    setSelectedIncomeSourceId(
+                                        id || null
+                                    )
+
+                                    form.setValue(
+                                        "waterIncomeSourceId",
+                                        id,
+                                        {
+                                            shouldDirty: true,
+                                            shouldTouch: true,
                                             shouldValidate: true,
-                                        })
-                                    } else {
-                                        setSelectedIncomeSourceId(null)
-
-                                        form.setValue('waterincomeSourceId', '', {
-                                            shouldValidate: true,
-                                        })
-                                    }
+                                        }
+                                    )
                                 }}
-                                getLabel={(g) => g?.name ?? ''}
-                                getValue={(g) => g?.id ?? ''}
+
+                                getLabel={(source) =>
+                                    source?.name ?? ""
+                                }
+
+                                getValue={(source) =>
+                                    source?.id ?? ""
+                                }
                             />
 
                             <InputElement

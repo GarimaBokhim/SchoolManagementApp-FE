@@ -11,7 +11,7 @@ interface Props {
 const AddWaterExpenses = ({ visible, onClose, waterExpenses }: Props) => {
     const form = useForm<AddWaterExpensesPayload>({
         defaultValues: {
-            expenseDate: waterExpenses?.expensesDate ?? "",
+            expenseDate: waterExpenses?.expenseDate ?? "",
             expenseCategoryId: waterExpenses?.expenseCategoryId ?? "",
             amount: waterExpenses?.amount ?? 0,
             paymentMethod: waterExpenses?.paymentMethod ?? 0,

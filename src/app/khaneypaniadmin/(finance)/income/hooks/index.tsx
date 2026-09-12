@@ -22,7 +22,7 @@ const normalizeWaterIncomePayload = (
     data: AddWaterIncomePayload
 ): AddWaterIncomePayload => ({
     incomeDate: String(data.incomeDate ?? "").trim(),
-    waterincomeSourceId: String(data.waterincomeSourceId ?? "").trim(),
+    waterIncomeSourceId: String(data.waterIncomeSourceId ?? "").trim(),
     amount: data.amount ?? 0,
     paymentMethods: data.paymentMethods ?? 0,
     description: String(data.description ?? "").trim()
@@ -35,7 +35,7 @@ const normalizeUpdateWaterIncomePayload = (
 ): UpdateWaterIncomePayload => ({
     id: String(data.id ?? "").trim(),
     incomeDate: String(data.incomeDate ?? "").trim(),
-    waterincomeSourceId: String(data.waterincomeSourceId ?? "").trim(),
+    waterIncomeSourceId: String(data.waterIncomeSourceId ?? "").trim(),
     amount: data.amount ?? 0,
     paymentMethods: data.paymentMethods ?? 0,
     description: String(data.description ?? "").trim()
