@@ -168,7 +168,7 @@ const AddStaffForm = ({ form, onClose, staff }: Props) => {
                                 form={form}
                                 name="dob"
                                 label="Date of Birth"
-                                value={form.watch("dob")}
+                                value={form.watch("dob") ?? undefined}
                             />
 
 

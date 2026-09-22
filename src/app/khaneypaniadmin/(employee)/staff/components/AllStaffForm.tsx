@@ -411,7 +411,6 @@ const AllStaffForm = () => {
                                     <tr className="bg-gray-50 dark:bg-[#80878c] uppercase font-semibold border-b">
                                         <th className="px-4 py-3 text-left">S.N</th>
                                         <th className="px-4 py-3 text-left">FullName</th>
-                                        <th className="px-4 py-3 text-left">Username</th>
                                         <th className="px-4 py-3 text-left">Password</th>
                                         <th className="px-4 py-3 text-left">Email</th>
                                         <th className="px-4 py-3 text-left">ContactNumber</th>
@@ -424,7 +423,7 @@ const AllStaffForm = () => {
                                 <tbody>
                                     {StaffDetails.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
+                                            <td colSpan={8} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
                                                 No Staff found.
                                             </td>
                                         </tr>
@@ -437,9 +436,6 @@ const AllStaffForm = () => {
                                                 <td className="px-4 py-3 text-gray-500">{index + 1}</td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Staff.fullName}
-                                                </td>
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-                                                    {Staff.username}
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Staff.password}

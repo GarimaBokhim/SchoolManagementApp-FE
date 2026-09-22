@@ -30,7 +30,7 @@ export interface AddStaffPayload {
     password: string;
     fullName: string;
     gender: number;
-    dob?: string;
+    dob?: string | null;
     contactNumber: string;
     email?: string | null;
     nid?: string | null;
@@ -44,7 +44,7 @@ export interface UpdateStaffPayload {
     password: string;
     fullName: string;
     gender: number;
-    dob?: string;
+    dob?: string | null;
     contactNumber: string;
     email?: string | null;
     nid?: string | null;
