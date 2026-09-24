@@ -438,9 +438,9 @@ const AllStaffForm = () => {
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Staff.fullName}
                                                 </td>
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                                {/* <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Staff.username}
-                                                </td>
+                                                </td> */}
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {Staff.password}
                                                 </td>
