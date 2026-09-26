@@ -20,12 +20,14 @@ const AddVisaRequirement = ({ visible, onClose }: Props) => {
             courseId: "",
             visaRequirementsDetailsDTOs: [
                 {
-                    step: 0,
+                    step: 1,
                     visaStatusId: "",
                     visaRequirementStatus: 0
                 },
             ],
         },
+
+
 
         // resolver: yupResolver(VisaRequirementSchema),
         // mode: "onChange", // important for real-time validation

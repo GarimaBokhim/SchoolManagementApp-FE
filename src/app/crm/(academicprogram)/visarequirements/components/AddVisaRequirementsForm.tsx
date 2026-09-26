@@ -16,7 +16,7 @@ import {
 } from '../hooks';
 
 import useErrorHandler from '@/components/helpers/ErrorHandling';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Props = {
     form: UseFormReturn<AddVisaRequirementPayload>;
@@ -46,6 +46,19 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
         name: 'visaRequirementsDetailsDTOs',
     });
 
+    useEffect(() => {
+        fields.forEach((_, index) => {
+            form.setValue(
+                `visaRequirementsDetailsDTOs.${index}.step`,
+                index + 1,
+                {
+                    shouldDirty: false,
+                    shouldValidate: false,
+                }
+            );
+        });
+    }, [fields, form]);
+
     const handleClose = () => {
         form.reset({
             countryId: '',
@@ -53,14 +66,17 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
             courseId: '',
             visaRequirementsDetailsDTOs: [
                 {
-                    step: 0,
-                    visaStatusId: '',
-                    visaRequirementStatus: 0
-                }
-            ],
+                    step: 1,
+                    visaStatusId: "",
+                    visaRequirementStatus: 0,
+                },
+            ]
         });
+
         onClose();
     };
+
+
 
     const onSubmit: SubmitHandler<AddVisaRequirementPayload> = async () => {
         clearError();
@@ -72,7 +88,7 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
             courseId: values.courseId,
             visaRequirementsDetailsDTOs: (values.visaRequirementsDetailsDTOs ?? []).map(
                 (item) => ({
-                    step: item.step,
+                    step: Number(item.step),
                     visaStatusId: item.visaStatusId,
                     visaRequirementStatus: item.visaRequirementStatus
                 })
@@ -182,22 +198,6 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                 <div className="mt-8">
                     <h2 className="font-semibold mb-4">Visa Requirements Details</h2>
 
-                    {fields.length === 0 && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                append({
-                                    step: 0,
-                                    visaStatusId: "",
-                                    visaRequirementStatus: 0,
-                                })
-                            }
-                            className="px-4 py-2 bg-black text-white rounded"
-                        >
-                            Add Item
-                        </button>
-                    )}
-
                     {fields.map((field, index) => {
                         const visaStatusValue = form.watch(
                             `visaRequirementsDetailsDTOs.${index}.visaStatusId`
@@ -213,11 +213,12 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                     <span>Item {index + 1}</span>
 
                                     <div className="flex gap-2">
+                                        {/* ADD NEXT ITEM */}
                                         <button
                                             type="button"
                                             onClick={() =>
                                                 append({
-                                                    step: 0,
+                                                    step: fields.length + 1,
                                                     visaStatusId: "",
                                                     visaRequirementStatus: 0,
                                                 })
@@ -226,6 +227,7 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                             <Plus size={18} />
                                         </button>
 
+                                        {/* REMOVE ITEM */}
                                         <button
                                             type="button"
                                             onClick={() => remove(index)}
@@ -236,44 +238,43 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                     </div>
                                 </div>
 
-                                {/* SINGLE ROW FIELDS */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+
                                     <InputElement
                                         label="Step"
                                         name={`visaRequirementsDetailsDTOs.${index}.step`}
                                         form={form}
+                                        readOnly
                                     />
 
-                                    <div className='relative'>
-                                        <AppCombobox
-                                            value={visaStatusValue}
-                                            label="Visa Status"
-                                            dropdownPositionClass="absolute z-50"
-                                            name={`visaRequirementsDetailsDTOs.${index}.visaStatusId`}
-                                            form={form}
-                                            options={visaStatus || []}
-                                            selected={
-                                                visaStatus?.find(
-                                                    (x) => x.id === visaStatusValue
-                                                ) || null
-                                            }
-                                            onSelect={(item) => {
-                                                form.setValue(
-                                                    `visaRequirementsDetailsDTOs.${index}.visaStatusId`,
-                                                    item?.id ?? "",
-                                                    {
-                                                        shouldValidate: true,
-                                                        shouldDirty: true,
-                                                    }
-                                                );
-                                            }}
-                                            getLabel={(i) => i?.name ?? ""}
-                                            getValue={(i) => i?.id ?? ""}
-                                        />
-                                    </div>
+                                    {/* Visa Status */}
+                                    <AppCombobox
+                                        value={visaStatusValue}
+                                        label="Visa Status"
+                                        dropdownPositionClass="absolute z-50"
+                                        name={`visaRequirementsDetailsDTOs.${index}.visaStatusId`}
+                                        form={form}
+                                        options={visaStatus || []}
+                                        selected={
+                                            visaStatus?.find(
+                                                (x) => x.id === visaStatusValue
+                                            ) || null
+                                        }
+                                        onSelect={(item) => {
+                                            form.setValue(
+                                                `visaRequirementsDetailsDTOs.${index}.visaStatusId`,
+                                                item?.id ?? "",
+                                                {
+                                                    shouldValidate: true,
+                                                    shouldDirty: true,
+                                                }
+                                            );
+                                        }}
+                                        getLabel={(i) => i?.name ?? ""}
+                                        getValue={(i) => i?.id ?? ""}
+                                    />
 
-
-
+                                    {/* Status */}
                                     <AppCombobox
                                         label="Status"
                                         dropdownPositionClass="absolute"
@@ -292,7 +293,9 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                                 { id: 2, name: "Pending" },
                                                 { id: 3, name: "Rejected" },
                                                 { id: 4, name: "ActionRequired" },
-                                            ].find((x) => x.id === visaRequirementStatus) ?? null
+                                            ].find(
+                                                (x) => x.id === visaRequirementStatus
+                                            ) ?? null
                                         }
                                         onSelect={(option) => {
                                             form.setValue(
