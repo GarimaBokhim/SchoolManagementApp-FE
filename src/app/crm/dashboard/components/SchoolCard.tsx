@@ -96,14 +96,21 @@ export default function SchoolInfoCard({ schoolId }: Props) {
     return (
         <div className="relative bg-gradient-to-r from-[#1877F2] to-[#0A66FF] dark:from-[#0A0A0A] dark:to-[#111] text-white rounded-lg shadow-md overflow-hidden p-6">
             <div className="flex gap-4">
-                {/* Left: School Logo */}
+                {/* School Logo */}
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
                     {logoUrl ? (
                         <img
                             src={logoUrl}
                             alt="School Logo"
                             className="w-full h-full object-cover"
-                            onError={() => setLogoError(true)}
+                            onError={(e) => {
+                                console.error(
+                                    "Failed to load school logo:",
+                                    logoUrl
+                                );
+
+                                e.currentTarget.style.display = "none";
+                            }}
                         />
                     ) : (
                         <span className="text-sm font-bold text-gray-700">
@@ -112,27 +119,36 @@ export default function SchoolInfoCard({ schoolId }: Props) {
                     )}
                 </div>
 
-                {/* Right: School Name and Information Column */}
+                {/* School Information */}
                 <div className="flex-1 space-y-3">
-                    {/* School Name with Estd Year */}
                     <h2 className="text-2xl font-bold">
                         {schoolData?.name ?? "—"}
-                        <span className="text-xs font-normal pl-2">(Estd 2065 BS)</span>
+
+                        <span className="text-xs font-normal pl-2">
+                            (Estd 2065 BS)
+                        </span>
                     </h2>
 
-                    {/* School Information Row */}
                     <div className="flex flex-wrap gap-6 text-sm">
                         <div className="flex items-center">
                             <LocateIcon className="mr-2 shrink-0 w-4 h-4" />
-                            <span>{schoolData?.address ?? "—"}</span>
+                            <span>
+                                {schoolData?.address ?? "—"}
+                            </span>
                         </div>
+
                         <div className="flex items-center">
                             <Mail className="mr-2 shrink-0 w-4 h-4" />
-                            <span>{schoolData?.email ?? "—"}</span>
+                            <span>
+                                {schoolData?.email ?? "—"}
+                            </span>
                         </div>
+
                         <div className="flex items-center">
                             <Phone className="mr-2 shrink-0 w-4 h-4" />
-                            <span>{schoolData?.contactNumber ?? "—"}</span>
+                            <span>
+                                {schoolData?.contactNumber ?? "—"}
+                            </span>
                         </div>
                     </div>
                 </div>
