@@ -6,7 +6,7 @@ import AllVisaRequirements from '../../visarequirements/pages/All'
 import AllVisaStatus from '@/app/crm/(services)/visastatus/pages/All'
 const AllRequirementsDetails = () => {
     const tabs = [
-        { id: 'requirements', label: 'Requirements' },
+        { id: 'requirements', label: 'Doc Requirements' },
         { id: 'visastatus', label: 'VisaStatus' },
         { id: 'visarequirements', label: 'VisaRequirements' },
     ]

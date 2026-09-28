@@ -54,6 +54,10 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
     }
 
     const onSubmit: SubmitHandler<AddRequirementsPayload> = async () => {
+
+        if (addRequirements.isPending) {
+            return;
+        }
         clearError()
         const values = form.getValues()
 
@@ -239,7 +243,11 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
                 </div>
 
                 <div className="flex justify-center mt-6">
-                    <ButtonElement type="submit" text="Submit" />
+                    <ButtonElement
+                        type="submit"
+                        text={addRequirements.isPending ? "Saving..." : "Submit"}
+                        disabled={addRequirements.isPending}
+                    />
                 </div>
             </form>
         </div>
