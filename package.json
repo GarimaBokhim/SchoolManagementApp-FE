@@ -61,6 +61,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "firebase": "^12.19.0",
     "geist": "^1.7.0",
     "html-docx": "link:html-docx-js/dist/html-docx",
     "html-docx-js": "^0.3.1",
