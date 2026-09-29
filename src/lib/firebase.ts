@@ -1,14 +1,15 @@
-// Firebase bootstrap for the khaneypaniadmin chat.
+// Firebase bootstrap for the chat features.
 //
-// Points at the same `water-bill-manager-dev` project the Flutter app uses, so
-// a thread started on the web is the same document the mobile client reads.
-// See src/app/khaneypaniadmin/chat/types/IChat.tsx for the shared data contract.
+// Supports both:
+// 1. School Management / EndUser (project: elite-space-school)
+// 2. Khaneypani Admin (project: water-bill-manager-dev)
 
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app'
 import { Auth, getAuth, signInAnonymously } from 'firebase/auth'
 import { Firestore, getFirestore } from 'firebase/firestore'
 
-const firebaseConfig = {
+// Default / General config (used by Khaneypani)
+const generalFirebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -17,57 +18,68 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-/** False when the NEXT_PUBLIC_FIREBASE_* vars are missing, so the chat page can
- *  say so plainly instead of throwing an opaque Firebase error on mount. */
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId
-)
-
-// getApps() guard: Next's fast refresh re-runs this module, and a second
-// initializeApp with the same name throws.
-const app: FirebaseApp | null = isFirebaseConfigured
-  ? getApps().length
-    ? getApp()
-    : initializeApp(firebaseConfig)
-  : null
-
-export const firebaseApp = app
-export const db: Firestore | null = app ? getFirestore(app) : null
-export const firebaseAuth: Auth | null = app ? getAuth(app) : null
-
-/**
- * Signs in anonymously if there is no Firebase user yet.
- *
- * The web app authenticates against the ASP.NET API, not Firebase, so there is
- * no Firebase identity until one is made here. Firestore rules only reason
- * about `request.auth`, and the deployed rules require `request.auth != null`
- * for every chat read and write — without this call every query fails with
- * permission-denied. This mirrors ChatRepository.ensureSignedIn in the Flutter
- * app (lib/app/app_core/features/chat/data/chat_repository.dart).
- *
- * The anonymous uid has NO relation to the app's user id, so it proves only
- * "some client", never "this user". Identity still travels as plain document
- * data (`senderId`, `participants`). Closing that gap needs a backend endpoint
- * minting a Firebase custom token via the Admin SDK with uid = the JWT `sub`;
- * then this becomes signInWithCustomToken and the participant-scoped rules
- * already commented into firestore.rules can be switched on.
- */
-export const ensureSignedIn = async (): Promise<void> => {
-  if (!firebaseAuth) {
-    throw new Error(
-      'Firebase is not configured. Set the NEXT_PUBLIC_FIREBASE_* variables in .env'
-    )
-  }
-  if (firebaseAuth.currentUser) return
-  await signInAnonymously(firebaseAuth)
+// School-specific config (used by EndUser School Management)
+const schoolFirebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-/** Drops the Firebase identity on logout so the next user on a shared machine
- *  does not inherit the previous one's listeners. */
-export const signOutFirebase = async (): Promise<void> => {
+export const isFirebaseConfigured = Boolean(
+  generalFirebaseConfig.apiKey && generalFirebaseConfig.projectId && generalFirebaseConfig.appId
+)
+
+export const isSchoolFirebaseConfigured = Boolean(
+  schoolFirebaseConfig.apiKey && schoolFirebaseConfig.projectId && schoolFirebaseConfig.appId
+)
+
+const initApp = (name: string, config: typeof generalFirebaseConfig): FirebaseApp | null => {
+  if (!config.apiKey || !config.projectId || !config.appId) return null
   try {
-    if (firebaseAuth?.currentUser) await firebaseAuth.signOut()
+    const existing = getApps().find((a) => a.name === name)
+    if (existing) return existing
+    return initializeApp(config, name === '[DEFAULT]' ? undefined : name)
+  } catch (err) {
+    console.error(`[Firebase] Error initializing ${name}:`, err)
+    return null
+  }
+}
+
+// Default app (Khaneypani)
+export const firebaseApp = isFirebaseConfigured
+  ? getApps().length
+    ? getApp()
+    : initializeApp(generalFirebaseConfig)
+  : null
+
+export const db: Firestore | null = firebaseApp ? getFirestore(firebaseApp) : null
+export const firebaseAuth: Auth | null = firebaseApp ? getAuth(firebaseApp) : null
+
+// School App / DB (EndUser)
+export const schoolFirebaseApp = process.env.NEXT_PUBLIC_SCHOOL_FIREBASE_PROJECT_ID
+  ? initApp('schoolApp', schoolFirebaseConfig)
+  : firebaseApp
+
+export const schoolDb: Firestore | null = schoolFirebaseApp ? getFirestore(schoolFirebaseApp) : db
+
+export const ensureSignedIn = async (authInstance: Auth | null = firebaseAuth): Promise<void> => {
+  if (!authInstance) return
+  if (authInstance.currentUser) return
+  try {
+    await signInAnonymously(authInstance)
+  } catch (err) {
+    // If anonymous sign-in is not enabled or fails, don't crash if rules don't require it
+    console.warn('[Firebase] Anonymous sign-in attempt warning:', (err as Error)?.message)
+  }
+}
+
+export const signOutFirebase = async (authInstance: Auth | null = firebaseAuth): Promise<void> => {
+  try {
+    if (authInstance?.currentUser) await authInstance.signOut()
   } catch {
-    // Never block logout on Firebase.
+    // Ignore
   }
 }
