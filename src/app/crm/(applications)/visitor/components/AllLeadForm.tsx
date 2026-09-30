@@ -233,6 +233,22 @@ const AllInquiryForm = () => {
         }
     }
 
+    const EnrollmentTypes = [
+        { id: 1, name: 'Lead' },
+        { id: 2, name: 'Applicant' },
+        { id: 3, name: 'Student' },
+        { id: 4, name: 'Counseling' },
+        { id: 5, name: 'Qualified' },
+        { id: 6, name: 'Rejected' },
+        { id: 7, name: 'New' },
+    ]
+
+    const EducationLevel = [
+        { id: 1, name: 'PlusTwoIntermediate' },
+        { id: 2, name: 'Bachelors' },
+        { id: 3, name: 'Masters' }
+    ]
+
 
 
     const handleEditInquiry = (Inquiry: InquiryResponse) => {
@@ -389,7 +405,6 @@ const AllInquiryForm = () => {
                                         <th className="px-4 py-3 text-left">Email</th>
                                         <th className="px-4 py-3 text-left">Phone</th>
 
-                                        <th className="px-4 py-3 text-left hidden md:table-cell">Source</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">EducationLevel</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">Completion Year</th>
                                         <th className="px-4 py-3 text-left hidden md:table-cell">Enrollment Type</th>
@@ -422,17 +437,18 @@ const AllInquiryForm = () => {
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
-                                                    {inquiry.phone}
+                                                    {inquiry.contactNumber}
                                                 </td>
+
+
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
-                                                    {inquiry.source}
-                                                </td>
-
-                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
-
-                                                    {inquiry.educationLevel}
+                                                    {
+                                                        EducationLevel.find(
+                                                            (s) => s.id === Number(inquiry.educationLevel)
+                                                        )?.name
+                                                    }
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
@@ -442,7 +458,11 @@ const AllInquiryForm = () => {
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
 
-                                                    {inquiry.enrolmentType}
+                                                    {
+                                                        EnrollmentTypes.find(
+                                                            (s) => s.id === Number(inquiry.enrolmentType)
+                                                        )?.name
+                                                    }
                                                 </td>
 
                                                 <td className="px-4 py-3">
