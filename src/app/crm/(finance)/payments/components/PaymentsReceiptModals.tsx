@@ -70,6 +70,60 @@ export const PaymentsReceiptDetailsModal = ({ isOpen, onClose, PaymentsId, Schoo
         window.print();
     };
 
+    const getApiBaseUrl = (): string => {
+        const envBase = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+        if (!envBase) {
+            return "";
+        }
+
+        try {
+            const url = new URL(envBase);
+
+            // Remove Swagger path
+            url.pathname = "";
+            url.search = "";
+            url.hash = "";
+
+            return url.toString().replace(/\/$/, "");
+        } catch {
+            return envBase
+                .replace(/\/swagger\/index\.html\/?$/i, "")
+                .replace(/\/+$/, "");
+        }
+    };
+
+    const resolveImageUrl = (
+        url?: string | null
+    ): string | null => {
+        if (
+            !url ||
+            url === "-" ||
+            url === "string" ||
+            url.trim() === ""
+        ) {
+            return null;
+        }
+
+        const value = url.trim();
+
+        // Already absolute URL
+        if (/^https?:\/\//i.test(value)) {
+            return value;
+        }
+
+        // Remove leading slash
+        const cleanPath = value.replace(/^\/+/, "");
+
+        const base = getApiBaseUrl();
+
+        if (!base) {
+            return `/${cleanPath}`;
+        }
+
+        return `${base}/${cleanPath}`;
+    };
+
     const invoiceDetails = [
         {
             id: 1,
@@ -112,9 +166,21 @@ export const PaymentsReceiptDetailsModal = ({ isOpen, onClose, PaymentsId, Schoo
                             <div className="w-12 h-12 rounded-lg border border-gray-500 overflow-hidden bg-white flex items-center justify-center">
                                 {school?.imageUrl ? (
                                     <img
-                                        src={`${process.env.NEXT_PUBLIC_API_URL}/${school.imageUrl}`}
+                                        src={resolveImageUrl(school.imageUrl) ?? ""}
                                         alt="School Logo"
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const imageUrl = resolveImageUrl(
+                                                school.imageUrl
+                                            );
+
+                                            console.error(
+                                                "Failed to load school logo:",
+                                                imageUrl
+                                            );
+
+                                            e.currentTarget.style.display = "none";
+                                        }}
                                     />
                                 ) : (
                                     <span className="text-sm font-bold text-gray-700">

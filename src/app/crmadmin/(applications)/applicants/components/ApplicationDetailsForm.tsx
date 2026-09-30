@@ -5,13 +5,7 @@ import toast from 'react-hot-toast';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import { updateSingleVisaStatusPayload } from '../types/IApplicants';
 import { AppCombobox } from '@/components/Input/ComboBox';
-import { useForm } from "react-hook-form";
 
-
-interface UpdateVisaStatusForm {
-    status: number;
-    emailContent: string;
-}
 
 type Props = {
     ApplicantId: string;
@@ -27,6 +21,7 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         { id: 1, name: "Completed" },
         { id: 2, name: "Pending" },
         { id: 3, name: "Rejected" },
+        { id: 4, name: "Action Required" }
     ];
 
     const handleStepClick = (step: any) => {
@@ -41,12 +36,15 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         refetch,
     } = useGetVisaRequirements(ApplicantId);
 
-    const updateSingleVisaStatus = useUpdateSingleVisaStatus();
+    const updateSingleVisaStatus = useUpdateSingleVisaStatus({
+        ApplicantId,
+    });
 
-    const [activeTab, setActiveTab] = useState('visa')
+    const [activeTab, setActiveTab] = useState('scores')
     const TABS = [
-        { id: 'visa', label: 'VISA', icon: CreditCard },
+
         { id: 'scores', label: 'SCORES', icon: Award },
+        { id: 'visa', label: 'VISA', icon: CreditCard },
         { id: 'academics', label: 'ACADEMICS', icon: BookOpen },
         { id: 'testDates', label: 'TEST DATES', icon: Calendar },
         { id: 'payments', label: 'PAYMENTS', icon: DollarSign },
@@ -74,14 +72,7 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         const [isUpdating, setIsUpdating] = useState(false)
         const [isCancelling, setIsCancelling] = useState(false)
 
-        const form = useForm<UpdateVisaStatusForm>({
-            defaultValues: {
-                status: 0,
-                emailContent: "",
-            },
-        });
-
-        const onSubmit = form.handleSubmit(async (values) => {
+        const handleSubmit = async () => {
             if (!selectedStep) return;
 
             clearError();
@@ -89,29 +80,24 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
             try {
                 const payload: updateSingleVisaStatusPayload = {
                     id: selectedStep.id,
-                    status: values.status,
-                    emailContent: values.emailContent,
+                    status: selectedStatus,
+                    applicantId: ApplicantId,
                 };
 
-                const promise = updateSingleVisaStatus.mutateAsync({
-                    id: payload.id,
-                    payload,
-                });
+                // API expects an object with top-level id and a nested payload
+                const promise = updateSingleVisaStatus.mutateAsync({ id: payload.id, payload });
 
                 await toast.promise(promise, {
                     loading: "Updating visa status...",
-                    success: "Visa status updated successfully.",
-                    error: "Failed to update visa status.",
                 });
 
                 await refetch();
 
                 setShowStatusModal(false);
             } catch (error) {
-                handleError(error);
+                const errorMsg = handleError(error);
             }
-        });
-
+        };
 
         const handleCancel = () => {
             if (confirm('Are you sure you want to cancel this application? This action cannot be undone.')) {
@@ -163,8 +149,8 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                                     <div
                                         onClick={() => handleStepClick(step)}
                                         className={`
-                                            relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 mb-3 cursor-pointer
-                                            ${isCompleted
+        relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 mb-3 cursor-pointer
+        ${isCompleted
                                                 ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30'
                                                 : isRejected
                                                     ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30'
@@ -172,8 +158,8 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                                                         ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30 animate-pulse'
                                                         : 'bg-gray-300 dark:bg-gray-700 border-2 border-gray-400 dark:border-gray-500'
                                             }
-                                    ${hoveredStep === idx ? 'scale-110' : 'scale-100'}
-                                `}
+        ${hoveredStep === idx ? 'scale-110' : 'scale-100'}
+    `}
                                     >
                                         {isCompleted ? (
                                             <CheckCircle className="w-7 h-7 text-white" />
@@ -312,64 +298,47 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                                     />
                                 </div>
 
-                                <div className="md:col-span-2">
-                                    <AppCombobox
-                                        label="New Status"
-                                        name="status"
-                                        value={form.watch("status")}
-                                        options={statusOptions}
-                                        selected={
-                                            statusOptions.find(
-                                                x => x.id === form.watch("status")
-                                            ) ?? null
-                                        }
-                                        onSelect={(option) =>
-                                            form.setValue("status", option?.id ?? 0, {
-                                                shouldDirty: true,
-                                                shouldValidate: true,
-                                            })
-                                        }
-                                        getLabel={(option) => option?.name ?? ""}
-                                        getValue={(option) => option?.id ?? ""}
-                                    />
-                                </div>
-
-
-                                <textarea
-                                    value={form.watch("emailContent")}
-                                    onChange={(e) =>
-                                        form.setValue("emailContent", e.target.value)
+                                <AppCombobox
+                                    label="New Status"
+                                    dropdownPositionClass="absolute"
+                                    name="status"
+                                    value={selectedStatus}
+                                    options={statusOptions}
+                                    dropDownWidth="w-full"
+                                    selected={
+                                        statusOptions.find(
+                                            (option) => option.id === selectedStatus
+                                        ) ?? null
                                     }
-                                    className="w-full border p-4"
+                                    onSelect={(option) => {
+                                        if (option) {
+                                            setSelectedStatus(option.id);
+                                        }
+                                    }}
+                                    getLabel={(option) => option?.name ?? ''}
+                                    getValue={(option) => option?.id ?? ''}
                                 />
 
                             </div>
 
                             {/* Footer */}
-                            <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-
-
+                            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
 
                                 <button
                                     type="button"
                                     onClick={() => setShowStatusModal(false)}
-                                    className="px-5 py-2.5 rounded-xl border"
+                                    className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                                 >
                                     Cancel
                                 </button>
 
                                 <button
                                     type="button"
-                                    disabled={updateSingleVisaStatus.isPending}
-                                    onClick={onSubmit}
-                                    className="px-5 py-2.5 rounded-xl bg-purple-600 text-white disabled:opacity-50"
+                                    onClick={handleSubmit}
+                                    className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium transition"
                                 >
-                                    {updateSingleVisaStatus.isPending
-                                        ? "Updating..."
-                                        : "Update Status"}
+                                    Update Status
                                 </button>
-
-
 
                             </div>
 
@@ -455,7 +424,15 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                 </div>
             </div>
 
-
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end pt-2">
+                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+                    Message
+                </button>
+                <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+                    Schedule Appointment
+                </button>
+            </div>
         </>
 
     );

@@ -16,7 +16,7 @@ export const ApplicantsEndpoints = {
   visaRequirementsByDTOs: '/api/AcademicPrograms/VisaRequirementsByDTOs',
    visaDetails: '/api/VisaApplication/VisaDetailsByApplicant',
    UpdateSingleVisaStatus: '/api/VisaApplication/UpdateSingleVisaStatus',
-      getalluserprofile:'/api/Enrolments/GetAllUserProfile'
+     userprofile:'/api/Enrolments/GetAllUserProfile'
   
 }
 
@@ -24,14 +24,14 @@ export const ApplicantsQueryKeys = {
   all: ['Applicants'],
   documentStatus: ['DocumentStatus'],
   appointment: ['Appointment'],
-  UserProfile: ['UserProfile'],
-  Getalluserprofile: ['Getalluserprofile']
+  UserProfile: ['UserProfile']
 }
 
 const normalizeUpdateSingleVisaStatusPayload = (data: updateSingleVisaStatusPayload): updateSingleVisaStatusPayload => ({
   id: String(data.id ?? '').trim(),
   status: Number(data.status ?? 0),
-  emailContent:String(data.emailContent ?? '').trim(),
+  applicantId: String(data.applicantId ?? '').trim()
+
 
 });
 
@@ -171,8 +171,39 @@ export const useDeleteApplicants = () => {
   })
 }
 
+export const useGetAllUserProfile = () => {
+  return useQuery({
+    queryKey: ApplicantsQueryKeys.UserProfile,
 
-export const useUpdateSingleVisaStatus = () => {
+    queryFn: async () => {
+      const response = await api.get<
+        IPaginationCrmResponse<{
+          id: string
+          fullName: string
+        }>
+      >(ApplicantsEndpoints.userprofile, {
+        params: {
+          pageSize: 10,
+          pageIndex: 1,
+          isPagination: false,
+        },
+      });
+
+      return response.data;
+    },
+
+    select: (response) => response?.Data.Items ?? [],
+
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+type Props = {
+    ApplicantId: string;
+};
+
+
+export const useUpdateSingleVisaStatus =  ({ ApplicantId }: Props) => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -183,9 +214,13 @@ export const useUpdateSingleVisaStatus = () => {
       id: string
       payload: updateSingleVisaStatusPayload  
     }) => {
+      const requestPayload = {
+        ...normalizeUpdateSingleVisaStatusPayload(payload),
+        applicantId: String(ApplicantId).trim(),
+      }
       const response = await api.patch(
         `${ApplicantsEndpoints.UpdateSingleVisaStatus}/${id}`,
-        normalizeUpdateSingleVisaStatusPayload(payload)
+        requestPayload
       )
 
       return response.data
@@ -288,33 +323,6 @@ export const useUserProfileById = (userId: string | null) => {
     gcTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-  });
-};
-
-export const useGetAllUserProfile = () => {
-  return useQuery({
-    queryKey: ApplicantsQueryKeys.Getalluserprofile,
-
-    queryFn: async () => {
-      const response = await api.get<
-        IPaginationCrmResponse<{
-          id: string
-          fullName: string
-        }>
-      >(ApplicantsEndpoints.getalluserprofile, {
-        params: {
-          pageSize: 10,
-          pageIndex: 1,
-          isPagination: false,
-        },
-      });
-
-      return response.data;
-    },
-
-    select: (response) => response?.Data.Items ?? [],
-
-    staleTime: 1000 * 60 * 5,
   });
 };
 
