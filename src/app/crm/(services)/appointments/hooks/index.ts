@@ -610,7 +610,7 @@ export const useGetAllUserProfile = () => {
 
 export const useGetAllFollowUp = (queryParams?: string) => {
   return useQuery({
-    queryKey: [...AppointmentQueryKeys.all, queryParams],
+    queryKey: [...AppointmentQueryKeys.followUp, queryParams],
     queryFn: async () => {
       const url = queryParams
         ? `${AppointmentEndpoints.filterFollowUps}${queryParams}`

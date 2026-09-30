@@ -62,7 +62,7 @@ export interface UserProfileResponse {
 export interface updateSingleVisaStatusPayload {
     id: string
     status: number
-    emailContent: string
+    applicantId: string
 }
 
 

@@ -40,7 +40,7 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         ApplicantId,
     });
 
-    const [activeTab, setActiveTab] = useState('visa')
+    const [activeTab, setActiveTab] = useState('scores')
     const TABS = [
 
         { id: 'scores', label: 'SCORES', icon: Award },
