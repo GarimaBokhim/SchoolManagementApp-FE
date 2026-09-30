@@ -61,7 +61,6 @@ export interface InquiryResponse {
     userId: string,
     fullName: string,
     email: string,
-    phone: string
     enrolmentType: number,
     dateOfBirth: string,
     gender: number,
