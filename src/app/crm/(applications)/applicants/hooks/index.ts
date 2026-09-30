@@ -28,7 +28,9 @@ export const ApplicantsQueryKeys = {
 
 const normalizeUpdateSingleVisaStatusPayload = (data: updateSingleVisaStatusPayload): updateSingleVisaStatusPayload => ({
   id: String(data.id ?? '').trim(),
-  status: Number(data.status ?? 0)
+  status: Number(data.status ?? 0),
+  applicantId: String(data.applicantId ?? '').trim()
+
 
 });
 
@@ -168,8 +170,12 @@ export const useDeleteApplicants = () => {
   })
 }
 
+type Props = {
+    ApplicantId: string;
+};
 
-export const useUpdateSingleVisaStatus = () => {
+
+export const useUpdateSingleVisaStatus =  ({ ApplicantId }: Props) => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -180,9 +186,13 @@ export const useUpdateSingleVisaStatus = () => {
       id: string
       payload: updateSingleVisaStatusPayload  
     }) => {
+      const requestPayload = {
+        ...normalizeUpdateSingleVisaStatusPayload(payload),
+        applicantId: String(ApplicantId).trim(),
+      }
       const response = await api.patch(
         `${ApplicantsEndpoints.UpdateSingleVisaStatus}/${id}`,
-        normalizeUpdateSingleVisaStatusPayload(payload)
+        requestPayload
       )
 
       return response.data

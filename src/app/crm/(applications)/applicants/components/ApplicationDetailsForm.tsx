@@ -21,6 +21,7 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         { id: 1, name: "Completed" },
         { id: 2, name: "Pending" },
         { id: 3, name: "Rejected" },
+        { id: 4, name: "Action Required" }
     ];
 
     const handleStepClick = (step: any) => {
@@ -35,12 +36,15 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
         refetch,
     } = useGetVisaRequirements(ApplicantId);
 
-    const updateSingleVisaStatus = useUpdateSingleVisaStatus();
+    const updateSingleVisaStatus = useUpdateSingleVisaStatus({
+        ApplicantId,
+    });
 
     const [activeTab, setActiveTab] = useState('visa')
     const TABS = [
-        { id: 'visa', label: 'VISA', icon: CreditCard },
+
         { id: 'scores', label: 'SCORES', icon: Award },
+        { id: 'visa', label: 'VISA', icon: CreditCard },
         { id: 'academics', label: 'ACADEMICS', icon: BookOpen },
         { id: 'testDates', label: 'TEST DATES', icon: Calendar },
         { id: 'payments', label: 'PAYMENTS', icon: DollarSign },
@@ -77,6 +81,7 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                 const payload: updateSingleVisaStatusPayload = {
                     id: selectedStep.id,
                     status: selectedStatus,
+                    applicantId: ApplicantId,
                 };
 
                 // API expects an object with top-level id and a nested payload
