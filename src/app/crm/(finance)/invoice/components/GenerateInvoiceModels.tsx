@@ -35,15 +35,9 @@ export const GenerateInvoiceModels = ({
             const url = new URL(envBase);
 
             // Remove Swagger path
-            url.pathname = "";
-            url.search = "";
-            url.hash = "";
-
-            return url.toString().replace(/\/$/, "");
+            url.pathname = url.pathname.replace(/\/swagger\/index\.html\/?$/i, "").replace(/\/swagger\/?$/i, ""); url.search = ""; url.hash = ""; return url.toString().replace(/\/+$/, "");
         } catch {
-            return envBase
-                .replace(/\/swagger\/index\.html\/?$/i, "")
-                .replace(/\/+$/, "");
+            return envBase.replace(/\/swagger\/index\.html\/?$/i, "").replace(/\/swagger\/?$/i, "").replace(/\/+$/, "");
         }
     };
 
@@ -60,6 +54,8 @@ export const GenerateInvoiceModels = ({
         }
 
         const value = url.trim();
+
+        if (!value || value === "-" || value === "string" || value.toLowerCase() === "null" || value.toLowerCase() === "undefined") { return null; }
 
         // Already absolute URL
         if (/^https?:\/\//i.test(value)) {
