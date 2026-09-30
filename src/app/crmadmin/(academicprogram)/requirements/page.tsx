@@ -4,7 +4,7 @@ import AllRequirementsDetails from "./pages/CommonPages"
 
 export default function RequirementsPage() {
     return (
-        <LayoutWrapper title="Installments">
+        <LayoutWrapper title="Requirements">
             <AllRequirementsDetails />
         </LayoutWrapper>
     )

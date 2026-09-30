@@ -9,8 +9,8 @@ import { useDashboardStats } from '../data/mock_data'
 import DestinationsPieChart from './destinatinoPiechart'
 import ConversionsSection from './conversationSection'
 import AnnouncementsSection from './announcementSection'
-import SchoolInfoCard from '../../../enduser/dashboard/components/SchoolCard'
 import { useRouter } from 'next/navigation'
+import SchoolInfoCard from './SchoolCard'
 
 const Dashboard: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false)

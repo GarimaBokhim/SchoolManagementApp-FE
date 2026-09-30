@@ -424,18 +424,24 @@ export const useGetIntake = (
   return useQuery({
     queryKey: ['intakeByDTOs', countryId, universityId, courseId],
     queryFn: async () => {
-      const { data } = await api.get<IPaginationCrmResponse<IntakeDTOs>>(
-        `${VisaApplicationEndpoints.IntakeDTOs}?countryId=${countryId}&universityId=${universityId}&courseId=${courseId}`,
-        {
-          params: {
-            pageSize: 10,
-            pageIndex: 1,
-            isPagination: false,
-          },
-        }
-      )
-      return data.Data.Items
+      const { data } = await api.get<
+        IPaginationCrmResponse<IntakeDTOs>
+      >(VisaApplicationEndpoints.IntakeDTOs, {
+        params: {
+          countryId,
+          universityId,
+          courseId,
+          pageSize: 10,
+          pageIndex: 1,
+          isPagination: false,
+        },
+      })
+
+      return data?.Data?.Items ?? []
     },
     enabled: Boolean(countryId && universityId && courseId),
+    staleTime: 1000 * 60 * 5,
+
+    placeholderData: (previousData) => previousData,
   })
 }

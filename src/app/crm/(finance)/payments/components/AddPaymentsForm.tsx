@@ -122,12 +122,12 @@ const AddPaymentsForms = ({ form, onClose, onSuccess, invoiceId }: Props) => {
                                 form={form}
                                 value={paymentMethod}
                                 options={[
-                                    { id: 0, name: 'Cash' },
-                                    { id: 1, name: 'CreditCard' },
-                                    { id: 2, name: 'DebitCard' },
-                                    { id: 3, name: 'BankTransfer' },
-                                    { id: 4, name: 'MobilePayment' },
-                                    { id: 5, name: 'Check' },
+                                    { id: 1, name: 'Cash' },
+                                    { id: 2, name: 'CreditCard' },
+                                    { id: 3, name: 'DebitCard' },
+                                    { id: 4, name: 'BankTransfer' },
+                                    { id: 5, name: 'MobilePayment' },
+                                    { id: 6, name: 'Check' },
                                 ]}
                                 dropDownWidth="w-full"
                                 selected={

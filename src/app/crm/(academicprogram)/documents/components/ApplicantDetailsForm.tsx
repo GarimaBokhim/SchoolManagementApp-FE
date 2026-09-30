@@ -319,7 +319,7 @@ const ApplicantDetailsForm = () => {
                                                             <ButtonElement
                                                                 icon={<Eye size={15} />}
                                                                 type="button"
-                                                                text=""
+                                                                text="view"
                                                                 onClick={() => {
                                                                     setShowDocumentForm(true)
                                                                     setSelectedApplicantId(Applicants.id ?? '')
@@ -330,7 +330,7 @@ const ApplicantDetailsForm = () => {
                                                         </Tooltip>
 
 
-                                                        <Tooltip text="Documents Form">
+                                                        {/* <Tooltip text="Documents Form">
 
                                                             <ButtonElement
                                                                 icon={<PlusCircle size={15} />}
@@ -344,7 +344,7 @@ const ApplicantDetailsForm = () => {
                                                                 className="!text-xs"
                                                             />
 
-                                                        </Tooltip>
+                                                        </Tooltip> */}
 
                                                         {/* <ActionMenu
                                                             Applicants={Applicants}

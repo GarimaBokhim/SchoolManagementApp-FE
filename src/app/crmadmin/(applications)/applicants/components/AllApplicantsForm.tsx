@@ -22,7 +22,7 @@ import DateRangeFilter, {
 } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteApplicants, useDocumentStatus, useGetAllApplicants } from '../hooks'
+import { useDeleteApplicants, useGetAllUserProfile, useGetAllApplicants } from '../hooks'
 import { ApplicantResponse } from '../types/IApplicants'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
@@ -31,7 +31,6 @@ import UserProfilePopupForm from './UserprofilePopUpForm'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
-import { useGetAllUserProfile } from '../hooks'
 
 interface FilterFormData {
   startDate: string

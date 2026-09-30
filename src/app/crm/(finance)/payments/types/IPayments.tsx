@@ -30,7 +30,7 @@ export interface SchoolResponse {
     address: string
     email: string
     panNo: number
-    imageUrl: number
+    imageUrl: string
     shortName: string
 }
 

@@ -175,12 +175,22 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 name="intakeId"
                 dropDownWidth="w-full"
                 form={form}
-                value={sellectedIntakeId}
+                value={form.watch('intakeId')}
                 options={intakeDetails || []}
-                selected={intakeDetails?.find((x) => x.id === intakeId) || null}
+                selected={
+                  intakeDetails?.find(
+                    (x) => x.id === form.watch('intakeId')
+                  ) || null
+                }
                 onSelect={(option) => {
-                  setSelectedIntakeId(option?.id ?? null)
-                  form.setValue('intakeId', option?.id ?? '')
+                  form.setValue(
+                    'intakeId',
+                    option?.id ?? '',
+                    {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    }
+                  )
                 }}
                 getLabel={(o) => o?.intakeName || ''}
                 getValue={(o) => o?.id || ''}
