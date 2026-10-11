@@ -1,44 +1,48 @@
 'use client'
-import { useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
-import { AddCountryPayload } from '../types/ICountry'
-import { SubmitHandler, useFieldArray, UseFormReturn } from "react-hook-form";
+import { X } from 'lucide-react'
+import { AddCountryPayload, UpdateCountryPayload } from '../types/ICountry'
+import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { useAddCountry, useGetAllUniversity } from "../hooks";
+import { useAddCountry, useUpdateCountry } from "../hooks";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { AppCombobox } from "@/components/Input/ComboBox";
 
 type Props = {
-    form: UseFormReturn<AddCountryPayload>;
+    form: UseFormReturn<UpdateCountryPayload>;
     onClose: () => void;
+    countryId?: string;
 };
-const AddCountryForm = ({ form, onClose }: Props) => {
+const AddCountryForm = ({ form, onClose, countryId }: Props) => {
     const addCountry = useAddCountry();
+    const updateCountry = useUpdateCountry();
     const { handleError, clearError } = useErrorHandler();
-    const { data: university } = useGetAllUniversity();
-
+    const isEditing = Boolean(countryId);
 
     const handleClose = () => {
-        form.reset({
-            name: ""
-        });
+        form.reset({ id: "", name: "" });
         onClose()
     };
 
 
-    const onSubmit: SubmitHandler<AddCountryPayload> = async () => {
+    const onSubmit: SubmitHandler<UpdateCountryPayload> = async (data) => {
         clearError();
-        const values = form.getValues();
-
-        const payload = {
-            name: values.name
-        };
-
-        await addCountry.mutateAsync(payload);
-        handleClose();
-        onClose();
+        try {
+            if (countryId) {
+                await updateCountry.mutateAsync({
+                    id: countryId,
+                    payload: {
+                        id: countryId,
+                        name: data.name,
+                    },
+                });
+            } else {
+                const payload: AddCountryPayload = { name: data.name };
+                await addCountry.mutateAsync(payload);
+            }
+            handleClose();
+        } catch (error) {
+            handleError(error);
+        }
     };
     return (
         <div className="inset-0 flex items-center justify-center w-full h-full -ml-5">
@@ -46,15 +50,13 @@ const AddCountryForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add Country
+                            {isEditing ? "Update Country" : "Add Country"}
                         </h1>
                         <button
                             type="button"
-                            onClick={() => {
-                                handleClose();
-                                onClose();
-                            }}
+                            onClick={handleClose}
                             className="text-red-400 text-2xl hover:text-red-500"
+                            aria-label="Close"
                         >
                             <X strokeWidth={3} />
                         </button>
@@ -73,7 +75,10 @@ const AddCountryForm = ({ form, onClose }: Props) => {
 
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={isEditing ? "Update Country" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

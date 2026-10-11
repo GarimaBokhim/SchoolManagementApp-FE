@@ -11,13 +11,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteClass, useGetAllClass } from '../hooks'
-import AddInvoice from '../pages/Add'
 import { ClassResponse } from '../types/IClass'
-import { EditButton } from '@/components/Buttons/EditButton'
 import AddClasses from '../pages/Add'
+import EditClass from '../pages/Edit'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     startDate: string
@@ -159,9 +159,10 @@ const AllClassForm = () => {
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
-    const [addModal, setAddModal] = useState(false);
-    const [showPaymentForm, setShowPaymentForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [addModal, setAddModal] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteClassId, setDeleteClassId] = useState<string | null>(null)
+    const [editClass, setEditClass] = useState<ClassResponse | null>(null)
 
 
     const [paginationParams, setPaginationParams] = useState({
@@ -262,28 +263,26 @@ const AllClassForm = () => {
     }
 
     const handleEditLead = (Class: ClassResponse) => {
-        console.log('Edit Class:', Class)
+        setEditClass(Class)
     }
 
-    const handlepayment = () => {
-        setShowPaymentForm(false);
-        setSelectedId("");
-    };
+    const handleAddSubmit = () => {
+        setAddModal(false)
+        setEditClass(null)
+    }
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
+        setDeleteClassId(id)
+        setShowDeleteModal(true)
+    }
+
+    const onDelete = async (id: string) => {
         try {
-            console.error("Id", id)
             await deleteClass.mutateAsync(id)
         } catch (error) {
             console.error(error)
         }
     }
-
-
-    const handleAddSubmit = () => {
-        setAddModal(false);
-        // Refresh the list after add modal closes
-    };
 
     if (error) {
         return (
@@ -475,19 +474,12 @@ const AllClassForm = () => {
 
                                                 <td className="px-4 py-3">
                                                     <span className='flex justify-center gap-3'>
-                                                        <EditButton
-                                                            button={
-                                                                <ButtonElement
-                                                                    icon={<Edit size={15} />}
-                                                                    type="button"
-                                                                    text=""
-                                                                    onClick={() => {
-                                                                        setShowPaymentForm(true)
-                                                                        setSelectedId(classes.id ?? '')
-                                                                    }}
-                                                                    className="!text-xs !bg-green-500"
-                                                                />
-                                                            }
+                                                        <ButtonElement
+                                                            icon={<Edit size={15} />}
+                                                            type="button"
+                                                            text=""
+                                                            onClick={() => handleEditLead(classes)}
+                                                            className="!text-xs !bg-green-500"
                                                         />
 
                                                         <ActionMenu
@@ -527,19 +519,31 @@ const AllClassForm = () => {
                 )}
             </div>
 
-            {/* {showPaymentForm && selectedId && (
-                <AddPayments
-                    invoiceId={selectedId}
-                    visible={showPaymentForm}
-                    onClose={() => setShowPaymentForm(false)}
-                    onSuccess={handlepayment}
+            {showDeleteModal && deleteClassId && (
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false)
+                        setDeleteClassId(null)
+                    }}
+                    onConfirm={onDelete}
+                    id={deleteClassId}
+                    title="Delete Class"
+                    description="Are you sure you want to delete this class?"
                 />
-            )} */}
+            )}
 
             <AddClasses
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
+            {editClass && (
+                <EditClass
+                    visible={Boolean(editClass)}
+                    onClose={() => setEditClass(null)}
+                    classItem={editClass}
+                />
+            )}
         </>
     )
 }

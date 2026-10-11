@@ -1,23 +1,24 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddVisaApplicationPayload } from "../types/IVisaApplication";
+import { AddVisaApplicationPayload, VisaApplicationResponse } from "../types/IVisaApplication";
 //import { SubjectValidator } from "../validators/index";
 import AddVisaApplicationForm from "../components/AddVisaApplicationForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    visaApplication?: VisaApplicationResponse | null;
 }
-const AddVisaApplication = ({ visible, onClose }: Props) => {
+const AddVisaApplication = ({ visible, onClose, visaApplication }: Props) => {
     const form = useForm<AddVisaApplicationPayload>({
         defaultValues: {
-            applicantId: "",
-            intakeId: "",
-            appliedDate: "",
-            visaStatusId: "",
-            visaDetails: "",
-            emailSent: false,
-            emailContent: "",
+            applicantId: visaApplication?.applicantId ?? "",
+            intakeId: visaApplication?.intakeId ?? "",
+            appliedDate: visaApplication?.appliedDate?.split("T")[0] ?? "",
+            visaStatusId: visaApplication?.visaStatusId ?? "",
+            visaDetails: visaApplication?.visaDetails ?? "",
+            emailSent: visaApplication?.emailSent ?? false,
+            emailContent: visaApplication?.emailContent ?? "",
 
         },
 
@@ -40,7 +41,11 @@ const AddVisaApplication = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddVisaApplicationForm form={form} onClose={handleOnClose} />
+                <AddVisaApplicationForm
+                    form={form}
+                    onClose={handleOnClose}
+                    visaApplication={visaApplication}
+                />
             </div>
         </div>
     );

@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const CourseEndpoints = {
   filter: '/api/AcademicPrograms/FilterCourse',
   add: '/api/AcademicPrograms/AddCourse',
-  update: '/api/AcademicPrograms/UpdateFollowUp',
-  delete: '/api/AcademicPrograms/DeleteFollowUp',
+  update: '/api/AcademicPrograms/UpdateCourse',
+  delete: '/api/AcademicPrograms/DeleteCourse',
   getById:'/api/AcademicPrograms/CourseById',
    university:'/api/AcademicPrograms/FilterUniversity'
   
@@ -125,6 +125,9 @@ export const useDeleteCourse = () => {
       queryClient.invalidateQueries({
         queryKey: CourseQueryKeys.all,
       })
+      queryClient.invalidateQueries({
+        queryKey: CourseQueryKeys.university,
+      })
     },
 
     onError: (error: any) => {
@@ -159,6 +162,9 @@ export const useUpdateCourse = () => {
 
       queryClient.invalidateQueries({
         queryKey: CourseQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: CourseQueryKeys.university,
       })
     },
 
@@ -219,5 +225,4 @@ export const useGetAllUniversity = () => {
     staleTime: 1000 * 60 * 5,
   });
 };
-
 

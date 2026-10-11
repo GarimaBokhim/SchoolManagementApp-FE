@@ -1,285 +1,879 @@
 'use client'
-import { useMemo, useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
-import { AddInquiryPayload } from '../types/IVisitors'
-import { SubmitHandler, useFieldArray, UseFormReturn } from "react-hook-form";
-import { InputElement } from "@/components/Input/InputElement";
-import { ButtonElement } from "@/components/Buttons/ButtonElement";
-import { Toast } from "@/components/Toast/toast";
-import { useAddInquiry, useGetAllCountry, useGetCourseByUniversity, useGetUniversityByCountry } from "../hooks";
-import useErrorHandler from "@/components/helpers/ErrorHandling";
-import { AppCombobox } from "@/components/Input/ComboBox";
-import { useQueries } from '@tanstack/react-query';
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import {
+    AddInquiryPayload,
+    InquiryResponse,
+    UpdateInquiryPayload,
+} from '../types/IVisitors'
+import { SubmitHandler, UseFormReturn } from 'react-hook-form'
+import { InputElement } from '@/components/Input/InputElement'
+import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { Toast } from '@/components/Toast/toast'
+import {
+    useAddInquiry,
+    useGetAllCountry,
+    useGetCourseByUniversity,
+    useGetUniversityByCountry,
+    useUpdateInquiry,
+} from '../hooks'
+import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import { useQueries } from '@tanstack/react-query'
 
 type Props = {
-    form: UseFormReturn<AddInquiryPayload>;
-    onClose: () => void;
-};
-const AddInquiryForm = ({ form, onClose }: Props) => {
-    const addInquiry = useAddInquiry();
-    const { handleError, clearError } = useErrorHandler();
-    const [gender, setGender] = useState<number | null>(null);
-    const [educationLevel, setEducationLevel] = useState<number | null>(null);
-    const [englishProficiency, setEnglishProficiency] = useState<number | null>(null);
-    const [countrySelections, setCountrySelections] = useState<any[]>([]);
-    const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-    const { data: countries = [] } = useGetAllCountry();
+    form: UseFormReturn<AddInquiryPayload>
+    onClose: () => void
+    inquiry?: InquiryResponse
+    inquiryId?: string
+}
+
+type CountrySelection = {
+    country: any
+    universities: any[]
+    coursesMap: Record<string, any[]>
+}
+
+const AddInquiryForm = ({
+    form,
+    onClose,
+    inquiry,
+    inquiryId,
+}: Props) => {
+    const addInquiry = useAddInquiry()
+    const updateInquiry = useUpdateInquiry()
+
+    const { handleError, clearError } = useErrorHandler()
+
+    const gender = form.watch('gender')
+    const educationLevel = form.watch('educationLevel')
+    const englishProficiency = form.watch('englishProficiency')
+
+    const [countrySelections, setCountrySelections] = useState<
+        CountrySelection[]
+    >([])
+
+    const [selectedCountries, setSelectedCountries] = useState<string[]>([])
+
+    const { data: countries = [] } = useGetAllCountry()
+
+    const initializedInquiryId = useRef<string | null>(null)
+
+    // ============================================================
+    // GET UNIVERSITIES FOR SELECTED COUNTRIES
+    // ============================================================
 
     const universityResults = useQueries({
         queries: selectedCountries.map((countryId) => ({
-            queryKey: ["universities", countryId],
+            queryKey: ['universities', countryId],
             queryFn: async () => {
-                const items = await useGetUniversityByCountry(countryId);
+                const items = await useGetUniversityByCountry(countryId)
 
                 return {
                     countryId,
-                    items,
-                };
+                    items: items ?? [],
+                }
             },
+            enabled: !!countryId,
         })),
-    });
+    })
 
-
+    // ============================================================
+    // UNIVERSITY MAP
+    // ============================================================
 
     const universitiesMap = useMemo(() => {
-        const map: Record<string, any[]> = {};
+        const map: Record<string, any[]> = {}
 
         universityResults.forEach((result: any) => {
-            if (!result.data) return;
+            if (!result.data) return
 
-            map[result.data.countryId] = result.data.items;
-        });
+            map[result.data.countryId] = result.data.items ?? []
+        })
 
-        return map;
-    }, [universityResults]);
+        return map
+    }, [universityResults])
+
+    // ============================================================
+    // ALL UNIVERSITIES
+    // ============================================================
 
     const allUniversities = useMemo(() => {
-        return Object.values(universitiesMap).flat();
-    }, [universitiesMap]);
+        const universities = Object.values(universitiesMap).flat()
 
+        const uniqueUniversities = new Map<string, any>()
+
+        universities.forEach((university: any) => {
+            if (!university?.id) return
+
+            if (!uniqueUniversities.has(university.id)) {
+                uniqueUniversities.set(university.id, university)
+            }
+        })
+
+        return Array.from(uniqueUniversities.values())
+    }, [universitiesMap])
+
+    // ============================================================
+    // GET COURSES FOR UNIVERSITIES
+    // ============================================================
 
     const courseResults = useQueries({
-        queries: allUniversities.map((uni: any) => ({
-            queryKey: ["courses", uni.id],
+        queries: allUniversities.map((university: any) => ({
+            queryKey: ['courses', university.id],
             queryFn: async () => {
-                const items = await useGetCourseByUniversity(uni.id);
+                const items = await useGetCourseByUniversity(
+                    university.id
+                )
 
                 return {
-                    universityId: uni.id,
-                    items,
-                };
+                    universityId: university.id,
+                    items: items ?? [],
+                }
             },
-            enabled: !!uni.id,
+            enabled: !!university.id,
         })),
-    });
+    })
+
+    // ============================================================
+    // COURSES MAP
+    // ============================================================
+
     const coursesByUniversity = useMemo(() => {
-        const map: Record<string, any[]> = {};
+        const map: Record<string, any[]> = {}
 
         courseResults.forEach((result: any) => {
-            if (!result.data) return;
+            if (!result.data) return
 
-            map[result.data.universityId] = result.data.items;
-        });
+            map[result.data.universityId] =
+                result.data.items ?? []
+        })
 
-        return map;
-    }, [courseResults]);
+        return map
+    }, [courseResults])
 
+    // ============================================================
+    // INITIALIZE SELECTED COUNTRIES WHEN EDITING
+    // ============================================================
 
+    useEffect(() => {
+        if (!inquiry) return
+
+        if (initializedInquiryId.current === inquiry.id) {
+            return
+        }
+
+        const countryIds = Array.from(
+            new Set(
+                (inquiry.countries ?? [])
+                    .map((country) => country.countryId)
+                    .filter(Boolean)
+            )
+        )
+
+        setSelectedCountries(countryIds)
+    }, [inquiry])
+
+    // ============================================================
+    // INITIALIZE COUNTRY / UNIVERSITY / COURSE SELECTIONS
+    // ============================================================
+
+    useEffect(() => {
+        if (!inquiry) return
+
+        if (initializedInquiryId.current === inquiry.id) {
+            return
+        }
+
+        const inquiryCountries = inquiry.countries ?? []
+
+        const expectedCountryIds = inquiryCountries
+            .map((country) => country.countryId)
+            .filter(Boolean)
+
+        /*
+         * Wait until all university requests are finished.
+         */
+        if (
+            universityResults.some(
+                (result: any) =>
+                    result.isPending || result.isLoading
+            )
+        ) {
+            return
+        }
+
+        /*
+         * Wait until all course requests are finished.
+         */
+        if (
+            courseResults.some(
+                (result: any) =>
+                    result.isPending || result.isLoading
+            )
+        ) {
+            return
+        }
+
+        /*
+         * Make sure countries are loaded.
+         */
+        if (!countries || countries.length === 0) {
+            return
+        }
+
+        /*
+         * If inquiry has countries, wait until selected countries
+         * are available.
+         */
+        if (
+            expectedCountryIds.length > 0 &&
+            selectedCountries.length !== expectedCountryIds.length
+        ) {
+            return
+        }
+
+        const selections: CountrySelection[] =
+            inquiryCountries.map((countryDto) => {
+                const country =
+                    countries.find(
+                        (item: any) =>
+                            item.id === countryDto.countryId
+                    ) ?? {
+                        id: countryDto.countryId,
+                        name: countryDto.countryId,
+                    }
+
+                const availableUniversities =
+                    universitiesMap[countryDto.countryId] ?? []
+
+                const selectedUniversities =
+                    (countryDto.universities ?? [])
+                        .filter(
+                            (universityDto: any) =>
+                                universityDto?.universityId
+                        )
+                        .map((universityDto: any) => {
+                            return (
+                                availableUniversities.find(
+                                    (item: any) =>
+                                        item.id ===
+                                        universityDto.universityId
+                                ) ?? {
+                                    id: universityDto.universityId,
+                                    name: universityDto.universityId,
+                                }
+                            )
+                        })
+
+                const coursesMap: Record<string, any[]> = {}
+
+                    ; (countryDto.universities ?? []).forEach(
+                        (universityDto: any) => {
+                            const universityId =
+                                universityDto.universityId
+
+                            if (!universityId) return
+
+                            const availableCourses =
+                                coursesByUniversity[
+                                universityId
+                                ] ?? []
+
+                            /*
+                             * IMPORTANT:
+                             *
+                             * Even if courseIds is empty, keep the
+                             * university key with an empty array.
+                             *
+                             * This allows:
+                             *
+                             * courseIds: []
+                             *
+                             * to be sent during update.
+                             */
+                            coursesMap[universityId] = (
+                                universityDto.courseIds ?? []
+                            )
+                                .filter(Boolean)
+                                .map((courseId: string) => {
+                                    return (
+                                        availableCourses.find(
+                                            (course: any) =>
+                                                course.id ===
+                                                courseId
+                                        ) ?? {
+                                            id: courseId,
+                                            title: courseId,
+                                        }
+                                    )
+                                })
+                        }
+                    )
+
+                return {
+                    country,
+                    universities: selectedUniversities,
+                    coursesMap,
+                }
+            })
+
+        setCountrySelections(selections)
+
+        initializedInquiryId.current = inquiry.id
+    }, [
+        inquiry,
+        countries,
+        selectedCountries.length,
+        universitiesMap,
+        coursesByUniversity,
+        universityResults,
+        courseResults,
+    ])
+
+    // ============================================================
+    // RESET FORM
+    // ============================================================
 
     const handleClose = () => {
         form.reset({
-            fullName: "",
-            email: "",
-            dateOfBirth: "",
+            fullName: '',
+            email: '',
+            dateOfBirth: '',
             gender: 0,
-            contactNumber: "",
-            permanentAddress: "",
+            contactNumber: '',
+            permanentAddress: '',
             educationLevel: 0,
             englishProficiency: 0,
             bandScore: 0,
-            languageRemarks: "",
+            languageRemarks: '',
 
-            skillOrTrainingName: "",
-            institutionName: "",
-            trainingRemarks: "",
-            trainingStartDate: "",
-            trainingEndDate: "",
+            skillOrTrainingName: '',
+            institutionName: '',
+            trainingRemarks: '',
+            trainingStartDate: '',
+            trainingEndDate: '',
 
-            completionYear: "",
-            currentGpa: "",
-            previousAcademicQualification: "",
-            source: "",
-            feedBackOrSuggestion: "",
+            completionYear: '',
+            currentGpa: '',
+            previousAcademicQualification: '',
+            source: '',
+            feedBackOrSuggestion: '',
 
             countries: [
                 {
-                    countryId: "",
+                    countryId: '',
                     universities: [
                         {
-                            universityId: "",
-                            courseIds: [""]
-                        }
-                    ]
-                }
-            ]
-        });
-        setSelectedCountries([]);
-        setCountrySelections([]);
-        onClose();
-    };
+                            universityId: '',
+                            courseIds: [],
+                        },
+                    ],
+                },
+            ],
+        })
 
-    // ================= COUNTRY TOGGLE =================
+        setSelectedCountries([])
+        setCountrySelections([])
+
+        initializedInquiryId.current = null
+
+        onClose()
+    }
+
+    // ============================================================
+    // COUNTRY TOGGLE
+    // ============================================================
+
     const handleCountryToggle = (country: any) => {
-        const exists = selectedCountries.includes(country.id);
+        if (!country?.id) return
+
+        const countryId = country.id
+
+        const exists = selectedCountries.includes(countryId)
 
         if (exists) {
-            setSelectedCountries(prev =>
-                prev.filter(id => id !== country.id)
-            );
+            /*
+             * Remove country from selected countries.
+             */
+            setSelectedCountries((prev) =>
+                prev.filter((id) => id !== countryId)
+            )
 
-            setCountrySelections(prev =>
-                prev.filter(x => x.country.id !== country.id)
-            );
+            /*
+             * Remove complete country selection.
+             *
+             * This means the payload will no longer contain
+             * this country.
+             */
+            setCountrySelections((prev) =>
+                prev.filter(
+                    (item) =>
+                        item.country.id !== countryId
+                )
+            )
 
-            return;
+            return
         }
 
-        setSelectedCountries(prev => [...prev, country.id]);
+        /*
+         * Add country.
+         */
+        setSelectedCountries((prev) => [
+            ...prev,
+            countryId,
+        ])
 
-        setCountrySelections(prev => [
+        /*
+         * Add country with no universities/courses.
+         */
+        setCountrySelections((prev) => [
             ...prev,
             {
                 country,
                 universities: [],
                 coursesMap: {},
             },
-        ]);
-    };
+        ])
+    }
 
-    // ================= REMOVE COUNTRY =================
+    // ============================================================
+    // REMOVE COUNTRY
+    // ============================================================
+
     const handleRemoveCountry = (countryId: string) => {
-        setSelectedCountries(prev => prev.filter(id => id !== countryId));
-        setCountrySelections(prev =>
-            prev.filter(x => x.country.id !== countryId)
-        );
-    };
+        setSelectedCountries((prev) =>
+            prev.filter((id) => id !== countryId)
+        )
 
-    // ================= UNIVERSITY TOGGLE =================
+        setCountrySelections((prev) =>
+            prev.filter(
+                (item) =>
+                    item.country.id !== countryId
+            )
+        )
+    }
+
+    // ============================================================
+    // UNIVERSITY TOGGLE
+    // ============================================================
+
     const handleUniversityToggle = (
         countryId: string,
         university: any
     ) => {
-        setCountrySelections(prev =>
-            prev.map(item => {
-                if (item.country.id !== countryId) return item;
+        if (!countryId || !university?.id) return
 
-                const exists = item.universities.some(
-                    (u: any) => u.id === university.id
-                );
-
-                const updatedUniversities = exists
-                    ? item.universities.filter(
-                        (u: any) => u.id !== university.id
-                    )
-                    : [...item.universities, university];
-
-                const updatedCoursesMap = { ...item.coursesMap };
-
-                if (exists) {
-                    delete updatedCoursesMap[university.id];
+        setCountrySelections((prev) =>
+            prev.map((item) => {
+                if (item.country.id !== countryId) {
+                    return item
                 }
 
+                const universityId = university.id
+
+                const exists =
+                    item.universities.some(
+                        (u: any) =>
+                            u.id === universityId
+                    )
+
+                /*
+                 * University is being unchecked.
+                 */
+                if (exists) {
+                    const updatedUniversities =
+                        item.universities.filter(
+                            (u: any) =>
+                                u.id !== universityId
+                        )
+
+                    const updatedCoursesMap = {
+                        ...item.coursesMap,
+                    }
+
+                    /*
+                     * Remove courses belonging to the
+                     * unchecked university.
+                     */
+                    delete updatedCoursesMap[
+                        universityId
+                    ]
+
+                    return {
+                        ...item,
+                        universities:
+                            updatedUniversities,
+                        coursesMap:
+                            updatedCoursesMap,
+                    }
+                }
+
+                /*
+                 * University is being checked.
+                 *
+                 * Keep an empty course array.
+                 *
+                 * This is important because:
+                 *
+                 * {
+                 *    universityId: "...",
+                 *    courseIds: []
+                 * }
+                 *
+                 * means the university exists but has
+                 * no selected courses.
+                 */
                 return {
                     ...item,
-                    universities: updatedUniversities,
-                    coursesMap: updatedCoursesMap,
-                };
+                    universities: [
+                        ...item.universities,
+                        university,
+                    ],
+                    coursesMap: {
+                        ...item.coursesMap,
+                        [universityId]:
+                            item.coursesMap?.[
+                            universityId
+                            ] ?? [],
+                    },
+                }
             })
-        );
-    };
+        )
+    }
 
-    // ================= COURSE TOGGLE =================
+    // ============================================================
+    // COURSE TOGGLE
+    // ============================================================
+
     const handleCourseToggle = (
         countryId: string,
         universityId: string,
         course: any
     ) => {
-        setCountrySelections(prev =>
-            prev.map(item => {
-                if (item.country.id !== countryId) return item;
+        if (
+            !countryId ||
+            !universityId ||
+            !course?.id
+        ) {
+            return
+        }
 
-                const existing =
-                    item.coursesMap?.[universityId] || [];
+        setCountrySelections((prev) =>
+            prev.map((item) => {
+                if (item.country.id !== countryId) {
+                    return item
+                }
 
-                const exists = existing.some(
-                    (c: any) => c.id === course.id
-                );
+                const existingCourses =
+                    item.coursesMap?.[
+                    universityId
+                    ] ?? []
 
-                const updatedCourses = exists
-                    ? existing.filter(
-                        (c: any) => c.id !== course.id
-                    )
-                    : [...existing, course];
+                const exists = existingCourses.some(
+                    (c: any) =>
+                        c.id === course.id
+                )
+
+                let updatedCourses: any[]
+
+                if (exists) {
+                    /*
+                     * Course unchecked.
+                     *
+                     * If this is the last course,
+                     * updatedCourses becomes [].
+                     *
+                     * We DO NOT delete the university
+                     * from coursesMap.
+                     *
+                     * This ensures payload sends:
+                     *
+                     * courseIds: []
+                     */
+                    updatedCourses =
+                        existingCourses.filter(
+                            (c: any) =>
+                                c.id !== course.id
+                        )
+                } else {
+                    /*
+                     * Course checked.
+                     */
+                    updatedCourses = [
+                        ...existingCourses,
+                        course,
+                    ]
+                }
+
+                /*
+                 * Remove accidental duplicate course IDs
+                 * from frontend state.
+                 */
+                const uniqueCourses = Array.from(
+                    new Map(
+                        updatedCourses.map(
+                            (course: any) => [
+                                course.id,
+                                course,
+                            ]
+                        )
+                    ).values()
+                )
 
                 return {
                     ...item,
                     coursesMap: {
                         ...item.coursesMap,
-                        [universityId]: updatedCourses,
+                        [universityId]:
+                            uniqueCourses,
                     },
-                };
+                }
             })
-        );
-    };
+        )
+    }
 
-    const onSubmit: SubmitHandler<AddInquiryPayload> = async () => {
-        clearError();
-        const values = form.getValues();
+    // ============================================================
+    // CREATE CLEAN COUNTRIES PAYLOAD
+    // ============================================================
+
+    const countriesPayload = useMemo(() => {
+        return countrySelections
+            .filter(
+                (item) =>
+                    item?.country?.id
+            )
+            .map((item) => {
+                const uniqueUniversities =
+                    new Map<string, any>()
+
+                /*
+                 * Remove duplicate universities.
+                 */
+                item.universities.forEach(
+                    (university: any) => {
+                        if (!university?.id) {
+                            return
+                        }
+
+                        if (
+                            !uniqueUniversities.has(
+                                university.id
+                            )
+                        ) {
+                            uniqueUniversities.set(
+                                university.id,
+                                university
+                            )
+                        }
+                    }
+                )
+
+                return {
+                    countryId:
+                        item.country.id,
+
+                    universities:
+                        Array.from(
+                            uniqueUniversities.values()
+                        ).map(
+                            (university: any) => {
+                                const courses =
+                                    item.coursesMap?.[
+                                    university.id
+                                    ] ?? []
+
+                                /*
+                                 * Remove duplicate courses.
+                                 */
+                                const uniqueCourseIds =
+                                    Array.from(
+                                        new Set(
+                                            courses
+                                                .filter(
+                                                    (course: any) =>
+                                                        course?.id
+                                                )
+                                                .map(
+                                                    (course: any) =>
+                                                        course.id
+                                                )
+                                        )
+                                    )
+
+                                return {
+                                    universityId:
+                                        university.id,
+
+                                    /*
+                                     * IMPORTANT:
+                                     *
+                                     * Always send an array.
+                                     *
+                                     * If all courses are unchecked:
+                                     *
+                                     * courseIds: []
+                                     *
+                                     * Backend will delete existing
+                                     * courses.
+                                     */
+                                    courseIds:
+                                        uniqueCourseIds,
+                                }
+                            }
+                        ),
+                }
+            })
+    }, [countrySelections])
+
+    // ============================================================
+    // SUBMIT
+    // ============================================================
+
+    const onSubmit: SubmitHandler<
+        AddInquiryPayload
+    > = async () => {
+        clearError()
+
+        const values = form.getValues()
 
         const payload: AddInquiryPayload = {
             ...values,
-            countries: countrySelections.map(item => ({
-                countryId: item.country.id,
-                universities: item.universities.map((u: any) => ({
-                    universityId: u.id,
-                    courseIds: item.coursesMap?.[u.id]?.map((c: any) => c.id) || []
-                }))
-            }))
-        };
+            countries: countriesPayload,
+        }
 
-        await addInquiry.mutateAsync(payload);
-        handleClose();
-        onClose();
-    };
+        try {
+            // ====================================================
+            // UPDATE
+            // ====================================================
 
+            if (inquiry) {
+                const id =
+                    inquiryId?.trim() ||
+                    inquiry.id?.trim()
+
+                if (!id) {
+                    Toast.error(
+                        'Inquiry ID is missing. Close and reopen the inquiry before updating.'
+                    )
+                    return
+                }
+
+                const updatePayload:
+                    UpdateInquiryPayload = {
+                    ...payload,
+                    id,
+                }
+
+                await updateInquiry.mutateAsync({
+                    id,
+                    payload: updatePayload,
+                })
+            }
+
+            // ====================================================
+            // CREATE
+            // ====================================================
+
+            else {
+                await addInquiry.mutateAsync(
+                    payload
+                )
+            }
+
+            handleClose()
+        } catch (error) {
+            Toast.error(handleError(error))
+        }
+    }
+
+    // ============================================================
+    // OPTIONS
+    // ============================================================
+
+    const genderOptions = [
+        { id: 1, name: 'Male' },
+        { id: 2, name: 'Female' },
+        { id: 3, name: 'Others' },
+    ]
+
+    const educationOptions = [
+        {
+            id: 1,
+            name: 'PlusTwoIntermediate',
+        },
+        {
+            id: 2,
+            name: 'Bachelors',
+        },
+        {
+            id: 3,
+            name: 'Masters',
+        },
+    ]
+
+    const englishOptions = [
+        { id: 1, name: 'IELTS' },
+        { id: 2, name: 'TOEFL' },
+        { id: 3, name: 'PTE' },
+        { id: 4, name: 'DET' },
+        { id: 5, name: 'TOEIC' },
+        { id: 6, name: 'CELPIP' },
+        { id: 7, name: 'OET' },
+        { id: 8, name: 'FCE' },
+        { id: 9, name: 'CAE' },
+        { id: 10, name: 'CPE' },
+    ]
+
+    // ============================================================
+    // UI
+    // ============================================================
 
     return (
-        <div className=" inset-0 flex items-center justify-center  w-full h-full">
-            <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
-                <fieldset className="">
+        <div className="inset-0 flex items-center justify-center w-full h-full">
+            <div className="w-full h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white">
+                <fieldset>
+                    {/* ====================================================
+                        HEADER
+                    ==================================================== */}
+
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add Inquiry
+                            {inquiry
+                                ? 'Edit Inquiry'
+                                : 'Add Inquiry'}
                         </h1>
+
                         <button
                             type="button"
-                            onClick={() => {
-                                handleClose();
-                                onClose();
-                            }}
+                            onClick={handleClose}
                             className="text-red-400 text-2xl hover:text-red-500"
                         >
                             <X strokeWidth={3} />
                         </button>
                     </div>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
 
+                    {/* ====================================================
+                        FORM
+                    ==================================================== */}
+
+                    <form
+                        onSubmit={form.handleSubmit(
+                            onSubmit
+                        )}
+                    >
+                        {/* ====================================================
+                            BASIC INFORMATION
+                        ==================================================== */}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
                             <div className="col-span-full">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     Basic Information
                                 </h3>
                             </div>
+
                             <InputElement
                                 label="Full Name"
                                 form={form}
@@ -310,27 +904,31 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 name="gender"
                                 form={form}
                                 value={gender}
-                                options={[
-                                    { id: 1, name: 'Male' },
-                                    { id: 2, name: 'Female' },
-                                    { id: 3, name: 'Others' }
-                                ]}
+                                options={
+                                    genderOptions
+                                }
                                 dropDownWidth="w-full"
                                 selected={
-                                    [
-                                        { id: 1, name: 'Male' },
-                                        { id: 2, name: 'Female' },
-                                        { id: 3, name: 'Others' }
-                                    ].find((g) => g.id === gender) || null
+                                    genderOptions.find(
+                                        (item) =>
+                                            item.id ===
+                                            gender
+                                    ) || null
                                 }
                                 onSelect={(option) => {
-                                    setGender(option?.id ?? null);
-                                    form.setValue('gender', option?.id ?? 0);
+                                    form.setValue(
+                                        'gender',
+                                        option?.id ??
+                                        0
+                                    )
                                 }}
-                                getLabel={(o) => o?.name || ''}
-                                getValue={(o) => o?.id ?? ''}
+                                getLabel={(o) =>
+                                    o?.name || ''
+                                }
+                                getValue={(o) =>
+                                    o?.id ?? ''
+                                }
                             />
-
 
                             <InputElement
                                 label="Contact Number"
@@ -348,39 +946,48 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 required
                             />
 
+                            {/* ====================================================
+                                ACADEMIC
+                            ==================================================== */}
+
                             <div className="col-span-full">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    AcademicInfo
+                                    Academic Info
                                 </h3>
                             </div>
-
-                            {/* ================= ACADEMIC INFO ================= */}
 
                             <AppCombobox
                                 label="Education Level"
                                 dropdownPositionClass="absolute"
                                 name="educationLevel"
                                 form={form}
-                                value={educationLevel}
-                                options={[
-                                    { id: 1, name: 'PlusTwoIntermediate' },
-                                    { id: 2, name: 'Bachelors' },
-                                    { id: 3, name: 'Masters' }
-                                ]}
+                                value={
+                                    educationLevel
+                                }
+                                options={
+                                    educationOptions
+                                }
                                 dropDownWidth="w-full"
                                 selected={
-                                    [
-                                        { id: 1, name: 'PlusTwoIntermediate' },
-                                        { id: 2, name: 'Bachelors' },
-                                        { id: 3, name: 'Masters' }
-                                    ].find((g) => g.id === educationLevel) || null
+                                    educationOptions.find(
+                                        (item) =>
+                                            item.id ===
+                                            educationLevel
+                                    ) || null
                                 }
                                 onSelect={(option) => {
-                                    setEducationLevel(option?.id ?? null);
-                                    form.setValue('educationLevel', option?.id ?? 0);
+                                    form.setValue(
+                                        'educationLevel',
+                                        option?.id ??
+                                        0
+                                    )
                                 }}
-                                getLabel={(o) => o?.name || ''}
-                                getValue={(o) => o?.id ?? ''}
+                                getLabel={(o) =>
+                                    o?.name || ''
+                                }
+                                getValue={(o) =>
+                                    o?.id ?? ''
+                                }
                             />
 
                             <InputElement
@@ -407,7 +1014,9 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 required
                             />
 
-                            {/* ================= ENGLISH PROFICIENCY ================= */}
+                            {/* ====================================================
+                                LANGUAGE
+                            ==================================================== */}
 
                             <div className="col-span-full">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -420,40 +1029,33 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 dropdownPositionClass="absolute"
                                 name="englishProficiency"
                                 form={form}
-                                value={englishProficiency}
-                                options={[
-                                    { id: 1, name: 'IELTS' },
-                                    { id: 2, name: 'TOEFL' },
-                                    { id: 3, name: 'PTE' },
-                                    { id: 4, name: 'DET' },
-                                    { id: 5, name: 'TOEIC' },
-                                    { id: 6, name: 'CELPIP' },
-                                    { id: 7, name: 'OET' },
-                                    { id: 8, name: 'FCE' },
-                                    { id: 9, name: 'CAE' },
-                                    { id: 10, name: 'CPE' }
-                                ]}
+                                value={
+                                    englishProficiency
+                                }
+                                options={
+                                    englishOptions
+                                }
                                 dropDownWidth="w-full"
                                 selected={
-                                    [
-                                        { id: 1, name: 'IELTS' },
-                                        { id: 2, name: 'TOEFL' },
-                                        { id: 3, name: 'PTE' },
-                                        { id: 4, name: 'DET' },
-                                        { id: 5, name: 'TOEIC' },
-                                        { id: 6, name: 'CELPIP' },
-                                        { id: 7, name: 'OET' },
-                                        { id: 8, name: 'FCE' },
-                                        { id: 9, name: 'CAE' },
-                                        { id: 10, name: 'CPE' }
-                                    ].find((g) => g.id === englishProficiency) || null
+                                    englishOptions.find(
+                                        (item) =>
+                                            item.id ===
+                                            englishProficiency
+                                    ) || null
                                 }
                                 onSelect={(option) => {
-                                    setEnglishProficiency(option?.id ?? null);
-                                    form.setValue('englishProficiency', option?.id ?? 0);
+                                    form.setValue(
+                                        'englishProficiency',
+                                        option?.id ??
+                                        0
+                                    )
                                 }}
-                                getLabel={(o) => o?.name || ''}
-                                getValue={(o) => o?.id ?? ''}
+                                getLabel={(o) =>
+                                    o?.name || ''
+                                }
+                                getValue={(o) =>
+                                    o?.id ?? ''
+                                }
                             />
 
                             <InputElement
@@ -472,7 +1074,10 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 placeholder="Enter remarks"
                             />
 
-                            {/* ================= SKILLS / TRAINING ================= */}
+                            {/* ====================================================
+                                SKILLS / TRAINING
+                            ==================================================== */}
+
                             <InputElement
                                 label="Skill / Training Name"
                                 form={form}
@@ -507,133 +1112,231 @@ const AddInquiryForm = ({ form, onClose }: Props) => {
                                 name="trainingRemarks"
                                 placeholder="Enter training remarks"
                             />
-
                         </div>
 
-                        {/* ================= INTERESTED PROGRAM SECTION ================= */}
+                        {/* ====================================================
+                            INTERESTED PROGRAM
+                        ==================================================== */}
+
                         <div className="mt-8">
                             <h2 className="font-semibold text-lg mb-3">
                                 Interested Program
                             </h2>
 
                             <div className="border rounded-xl overflow-hidden">
+                                {/* HEADER */}
 
-                                {/* Header */}
                                 <div className="grid grid-cols-3 bg-gray-100 dark:bg-gray-800 font-semibold">
-                                    <div className="p-3 border-r">Country</div>
-                                    <div className="p-3 border-r">University</div>
-                                    <div className="p-3">Course</div>
+                                    <div className="p-3 border-r">
+                                        Country
+                                    </div>
+
+                                    <div className="p-3 border-r">
+                                        University
+                                    </div>
+
+                                    <div className="p-3">
+                                        Course
+                                    </div>
                                 </div>
 
-                                {countries.map((country: any) => {
-                                    const selection = countrySelections.find(
-                                        (x: any) => x.country.id === country.id
-                                    );
+                                {/* COUNTRIES */}
 
-                                    return (
-                                        <div
-                                            key={country.id}
-                                            className="grid grid-cols-3 border-t min-h-[80px]"
-                                        >
-                                            {/* COUNTRY COLUMN */}
-                                            <div className="p-3 border-r">
-                                                <label className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedCountries.includes(
-                                                            country.id
+                                {countries.map(
+                                    (
+                                        country: any
+                                    ) => {
+                                        const selection =
+                                            countrySelections.find(
+                                                (
+                                                    item
+                                                ) =>
+                                                    item
+                                                        .country
+                                                        .id ===
+                                                    country.id
+                                            )
+
+                                        return (
+                                            <div
+                                                key={
+                                                    country.id
+                                                }
+                                                className="grid grid-cols-3 border-t min-h-[80px]"
+                                            >
+                                                {/* ====================================================
+                                                    COUNTRY
+                                                ==================================================== */}
+
+                                                <div className="p-3 border-r">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedCountries.includes(
+                                                                country.id
+                                                            )}
+                                                            onChange={() =>
+                                                                handleCountryToggle(
+                                                                    country
+                                                                )
+                                                            }
+                                                        />
+
+                                                        <span>
+                                                            {
+                                                                country.name
+                                                            }
+                                                        </span>
+                                                    </label>
+                                                </div>
+
+                                                {/* ====================================================
+                                                    UNIVERSITY
+                                                ==================================================== */}
+
+                                                <div className="p-3 border-r space-y-2">
+                                                    {selectedCountries.includes(
+                                                        country.id
+                                                    ) &&
+                                                        (
+                                                            universitiesMap?.[
+                                                            country
+                                                                .id
+                                                            ] ??
+                                                            []
+                                                        ).map(
+                                                            (
+                                                                university: any
+                                                            ) => {
+                                                                const isSelected =
+                                                                    selection?.universities?.some(
+                                                                        (
+                                                                            item: any
+                                                                        ) =>
+                                                                            item.id ===
+                                                                            university.id
+                                                                    ) ??
+                                                                    false
+
+                                                                return (
+                                                                    <label
+                                                                        key={
+                                                                            university.id
+                                                                        }
+                                                                        className="flex items-center gap-2 cursor-pointer"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={
+                                                                                isSelected
+                                                                            }
+                                                                            onChange={() =>
+                                                                                handleUniversityToggle(
+                                                                                    country.id,
+                                                                                    university
+                                                                                )
+                                                                            }
+                                                                        />
+
+                                                                        <span>
+                                                                            {
+                                                                                university.name
+                                                                            }
+                                                                        </span>
+                                                                    </label>
+                                                                )
+                                                            }
                                                         )}
-                                                        onChange={() =>
-                                                            handleCountryToggle(country)
-                                                        }
-                                                    />
-                                                    <span>{country.name}</span>
-                                                </label>
-                                            </div>
+                                                </div>
 
-                                            {/* UNIVERSITY COLUMN */}
-                                            <div className="p-3 border-r space-y-2">
-                                                {selectedCountries.includes(country.id) &&
-                                                    (universitiesMap?.[country.id] || []).map(
-                                                        (uni: any) => (
-                                                            <label
-                                                                key={uni.id}
-                                                                className="flex items-center gap-2"
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={
-                                                                        selection?.universities?.some(
-                                                                            (u: any) =>
-                                                                                u.id === uni.id
-                                                                        ) || false
-                                                                    }
-                                                                    onChange={() =>
-                                                                        handleUniversityToggle(
-                                                                            country.id,
-                                                                            uni
-                                                                        )
-                                                                    }
-                                                                />
-                                                                <span>{uni.name}</span>
-                                                            </label>
-                                                        )
-                                                    )}
-                                            </div>
+                                                {/* ====================================================
+                                                    COURSE
+                                                ==================================================== */}
 
-                                            {/* COURSE COLUMN */}
-                                            <div className="p-3 space-y-2">
-                                                {selection?.universities?.flatMap(
-                                                    (uni: any) =>
-                                                        (coursesByUniversity?.[
-                                                            uni.id
-                                                        ] || []).map((course: any) => (
-                                                            <label
-                                                                key={course.id}
-                                                                className="flex items-center gap-2"
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={
-                                                                        selection?.coursesMap?.[
-                                                                            uni.id
+                                                <div className="p-3 space-y-2">
+                                                    {selection?.universities?.flatMap(
+                                                        (
+                                                            university: any
+                                                        ) =>
+                                                            (
+                                                                coursesByUniversity?.[
+                                                                university
+                                                                    .id
+                                                                ] ??
+                                                                []
+                                                            ).map(
+                                                                (
+                                                                    course: any
+                                                                ) => {
+                                                                    const isSelected =
+                                                                        selection
+                                                                            ?.coursesMap?.[
+                                                                            university
+                                                                                .id
                                                                         ]?.some(
-                                                                            (c: any) =>
-                                                                                c.id ===
+                                                                            (
+                                                                                selectedCourse: any
+                                                                            ) =>
+                                                                                selectedCourse.id ===
                                                                                 course.id
-                                                                        ) || false
-                                                                    }
-                                                                    onChange={() =>
-                                                                        handleCourseToggle(
-                                                                            country.id,
-                                                                            uni.id,
-                                                                            course
-                                                                        )
-                                                                    }
-                                                                />
-                                                                <span>
-                                                                    {course.title ||
-                                                                        course.name}
-                                                                </span>
-                                                            </label>
-                                                        ))
-                                                )}
+                                                                        ) ??
+                                                                        false
+
+                                                                    return (
+                                                                        <label
+                                                                            key={`${university.id}-${course.id}`}
+                                                                            className="flex items-center gap-2 cursor-pointer"
+                                                                        >
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={
+                                                                                    isSelected
+                                                                                }
+                                                                                onChange={() =>
+                                                                                    handleCourseToggle(
+                                                                                        country.id,
+                                                                                        university.id,
+                                                                                        course
+                                                                                    )
+                                                                                }
+                                                                            />
+
+                                                                            <span>
+                                                                                {course.title ||
+                                                                                    course.name}
+                                                                            </span>
+                                                                        </label>
+                                                                    )
+                                                                }
+                                                            )
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        )
+                                    }
+                                )}
                             </div>
                         </div>
 
+                        {/* ====================================================
+                            SUBMIT
+                        ==================================================== */}
 
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={
+                                    inquiry
+                                        ? 'Update Inquiry'
+                                        : 'Submit'
+                                }
+                            />
                         </div>
                     </form>
                 </fieldset>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default AddInquiryForm;
+export default AddInquiryForm

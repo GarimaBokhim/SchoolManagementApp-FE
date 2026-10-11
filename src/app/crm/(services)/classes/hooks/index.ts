@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const ClassEndpoints = {
   filter: '/api/Enrolments/FilterConsultancyClasss',
   add: '/api/Enrolments/AddConsultancyClass',
-  update: '/api/Enrolments/UpdateInvoice',
-  delete: '/api/Enrolments/DeleteInvoice'
+  update: '/api/Enrolments/UpdateConsultancyClass',
+  delete: '/api/Enrolments/DeleteConsultancyClass'
 }
 
 export const ClassQueryKeys = {

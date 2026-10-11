@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const CountryEndpoints = {
   filter: '/api/AcademicPrograms/FilterCountry',
   add: '/api/AcademicPrograms/AddCountry',
-  update: '/api/AcademicPrograms/UpdateFollowUp',
-  delete: '/api/AcademicPrograms/DeleteFollowUp',
+  update: '/api/AcademicPrograms/UpdateCountry',
+  delete: '/api/AcademicPrograms/DeleteCountry',
   getById:'/api/AcademicPrograms/CountryById',
    university:'/api/AcademicPrograms/FilterUniversity'
   
@@ -205,5 +205,4 @@ export const useGetAllUniversity = () => {
     staleTime: 1000 * 60 * 5,
   });
 };
-
 

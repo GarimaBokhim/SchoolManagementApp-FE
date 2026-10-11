@@ -14,7 +14,11 @@ interface Props {
 }
 
 const EditUniversity = ({ visible, onClose, UniversityId }: Props) => {
-    const { data: UniversityData } = useUniversityById(UniversityId);
+    const {
+        data: UniversityData,
+        isLoading,
+        error,
+    } = useUniversityById(UniversityId);
 
     const form = useForm<UpdateUniversityPayload>({
         defaultValues: {
@@ -46,6 +50,29 @@ const EditUniversity = ({ visible, onClose, UniversityId }: Props) => {
     }, [UniversityData, reset]);
 
     if (!visible) return null;
+
+    if (isLoading) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 ml-12 md:ml-64 sm:ml-16">
+                <div className="rounded-lg bg-white p-6 dark:bg-[#27272a]">
+                    Loading university...
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !UniversityData) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 ml-12 md:ml-64 sm:ml-16">
+                <div className="rounded-lg bg-white p-6 dark:bg-[#27272a]">
+                    <p className="mb-4">Unable to load university details.</p>
+                    <button type="button" onClick={onClose} className="text-blue-600">
+                        Close
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <EditUniversityForm

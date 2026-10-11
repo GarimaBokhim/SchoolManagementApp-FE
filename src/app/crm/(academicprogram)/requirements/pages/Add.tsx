@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { AddRequirementsPayload } from "../types/IRequirements";
+import { RequirementsFormPayload } from "../types/IRequirements";
 import AddRequirementsForm from "../components/AddRequirementsForm";
 import { RequirementsSchema } from "../valuators/requirements.schema";
 
@@ -13,7 +13,7 @@ interface Props {
 
 const AddRequirements = ({ visible, onClose }: Props) => {
 
-    const form = useForm<AddRequirementsPayload>({
+    const form = useForm<RequirementsFormPayload>({
         defaultValues: {
             title: "",
             descriptions: "",
@@ -22,7 +22,9 @@ const AddRequirements = ({ visible, onClose }: Props) => {
             courseId: "",
             documentsCheckListDTOs: [
                 {
+                    id: "",
                     documenteTypeId: "",
+                    isRequired: false,
                 },
             ],
         },

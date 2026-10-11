@@ -1,23 +1,23 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddTrainingRegistrationPayload } from "../types/ITrainingRegistration";
-//import { SubjectValidator } from "../validators/index";
+import {
+  AddTrainingRegistrationPayload,
+  TrainingRegistrationResponse,
+} from "../types/ITrainingRegistration";
 import AddTrainingRegistrationForm from "../components/AddTrainingRegistrationForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    trainingRegistration?: TrainingRegistrationResponse | null;
 }
-const AddTrainingRegistration = ({ visible, onClose }: Props) => {
+const AddTrainingRegistration = ({ visible, onClose, trainingRegistration }: Props) => {
     const form = useForm<AddTrainingRegistrationPayload>({
         defaultValues: {
-            applicantId: "",
-            consultancyClassId: "",
-            registeredAt: ""
-
+            applicantId: trainingRegistration?.applicantId ?? "",
+            consultancyClassId: trainingRegistration?.consultancyClassId ?? "",
+            registeredAt: trainingRegistration?.registeredAt ?? "",
         },
-
-        // resolver: yupResolver(SubjectValidator),
     });
     const handleOnClose = () => {
         if (onClose) onClose();
@@ -36,7 +36,11 @@ const AddTrainingRegistration = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddTrainingRegistrationForm form={form} onClose={handleOnClose} />
+                <AddTrainingRegistrationForm
+                    form={form}
+                    onClose={handleOnClose}
+                    trainingRegistration={trainingRegistration}
+                />
             </div>
         </div>
     );

@@ -29,10 +29,10 @@ export interface IntakeResponse {
     month: number
     deadline: string
     isOpen: boolean
-    country: string
+    countryId: string
     countryName: string
     universityId: string
-    universityName: number
+    universityName: string
     courseId: string
     courseName: string
 }

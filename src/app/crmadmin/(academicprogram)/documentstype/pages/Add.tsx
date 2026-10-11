@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddDocumentsTypePayload } from "../types/IDocumentsType";
+import { UpdateDocumentsTypePayload } from "../types/IDocumentsType";
 import AddDocumentsTypeForm from "../components/AddDocumentsTypeForm";
 
 interface Props {
@@ -8,8 +8,9 @@ interface Props {
     onClose?: () => void;
 }
 const AddDocumentsType = ({ visible, onClose }: Props) => {
-    const form = useForm<AddDocumentsTypePayload>({
+    const form = useForm<UpdateDocumentsTypePayload>({
         defaultValues: {
+            id: "",
             name: ""
         },
 

@@ -67,11 +67,20 @@ export interface InquiryResponse {
     contactNumber: string,
     permanentAddress: string,
     educationLevel: number,
+    englishProficiency?: number,
+    bandScore?: number,
+    languageRemarks?: string,
+    skillOrTrainingName?: string,
+    institutionName?: string,
+    trainingRemarks?: string,
+    trainingStartDate?: string,
+    trainingEndDate?: string,
     completionYear: string,
     currentGpa: string,
     previousAcademicQualification: string,
     source: string,
-    feedBackOrSuggestion: string
+    feedBackOrSuggestion: string,
+    countries?: LeadCountryDto[]
 }
 
 

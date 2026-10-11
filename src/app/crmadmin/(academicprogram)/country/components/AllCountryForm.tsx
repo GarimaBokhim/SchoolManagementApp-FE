@@ -15,6 +15,7 @@ import { CountryResponse } from '../types/ICountry'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import AddCountry from '../pages/Add'
+import EditCountry from '../pages/Edit'
 import AddUniversity from '../../university/pages/Add'
 
 interface FilterFormData {
@@ -189,8 +190,8 @@ const AllCountryForm = () => {
     }
 
 
-    const handleEditCountry = (FollowUp: CountryResponse) => {
-        setEditCountryId(FollowUp.id)
+    const handleEditCountry = (country: CountryResponse) => {
+        setEditCountryId(country.id)
         setShowEditModal(true)
     }
 
@@ -454,16 +455,14 @@ const AllCountryForm = () => {
 
 
 
-            {/* {showEditModal && editCountryId && (
+            {showEditModal && editCountryId && (
 
                 <EditCountry
-
                     CountryId={editCountryId}
                     visible={showEditModal}
                     onClose={() => setShowEditModal(false)}
-
                 />
-            )} */}
+            )}
 
             <AddCountry
                 visible={addModal}
