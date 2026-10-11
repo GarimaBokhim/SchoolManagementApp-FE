@@ -23,7 +23,7 @@ const AddIntakeForm = ({ form, onClose, intakeId }: Props) => {
     const countryId = form.watch("countryId");
     const universityId = form.watch("universityId");
     const courseId = form.watch("courseId");
-    const month = form.watch("month") ?? 0;
+    const month = Number(form.watch("month") ?? 0);
     const isOpen = form.watch("isOpen");
     const { data: universityByCountry } = useGetUniversityByCountry(countryId || null);
     const { data: courseByUniversity } = useGetCourseByUniversity(universityId || null);
