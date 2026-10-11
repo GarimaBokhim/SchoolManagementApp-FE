@@ -15,6 +15,7 @@ import { UpdateVisaApplicationResponse } from '../types/IVisaApplication'
 import AddVisaApplication from '../pages/Add'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
   startDate: string
@@ -183,6 +184,8 @@ const AllVisaApplicationForm = () => {
 
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteVisaApplicationId, setDeleteVisaApplicationId] = useState<string | null>(null)
   const [visaApplicationForm, setVisaApplicationForm] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
 
@@ -243,9 +246,13 @@ const AllVisaApplicationForm = () => {
     { id: 11, name: 'November' },
     { id: 12, name: 'MDecembery' },
   ]
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setDeleteVisaApplicationId(id)
+    setShowDeleteModal(true)
+  }
+
+  const onDelete = async (id: string) => {
     try {
-      console.error('Id', id)
       await deleteVisaApplication.mutateAsync(id)
     } catch (error) {
       console.error(error)
@@ -484,6 +491,19 @@ const AllVisaApplicationForm = () => {
       </div>
 
       <AddVisaApplication visible={addModal} onClose={handleAddSubmit} />
+      {showDeleteModal && deleteVisaApplicationId && (
+        <DeleteComponents
+          visible={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setDeleteVisaApplicationId(null)
+          }}
+          onConfirm={onDelete}
+          id={deleteVisaApplicationId}
+          title="Delete Visa Application"
+          description="Are you sure you want to delete this Visa Application?"
+        />
+      )}
     </>
   )
 }

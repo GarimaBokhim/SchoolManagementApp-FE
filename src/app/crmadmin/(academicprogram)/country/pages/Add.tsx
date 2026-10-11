@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddCountryPayload } from "../types/ICountry";
+import { UpdateCountryPayload } from "../types/ICountry";
 //import { SubjectValidator } from "../validators/index";
 import AddCountryForm from "../components/AddCountryForm";
 
@@ -9,8 +9,9 @@ interface Props {
     onClose?: () => void;
 }
 const AddCountry = ({ visible, onClose }: Props) => {
-    const form = useForm<AddCountryPayload>({
+    const form = useForm<UpdateCountryPayload>({
         defaultValues: {
+            id: "",
             name: ""
         },
 

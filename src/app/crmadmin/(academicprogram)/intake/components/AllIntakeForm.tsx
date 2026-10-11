@@ -15,6 +15,8 @@ import AddInvoice from '../pages/Add'
 import { IntakeResponse } from '../types/IIntake'
 import { EditButton } from '@/components/Buttons/EditButton'
 import AddIntakees from '../pages/Add'
+import EditIntake from '../pages/Edit'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     startDate: string
@@ -158,6 +160,10 @@ const AllIntakeForm = () => {
     const [addModal, setAddModal] = useState(false);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [selectedId, setSelectedId] = useState<string>('')
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editIntakeId, setEditIntakeId] = useState<string | null>(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteIntakeId, setDeleteIntakeId] = useState<string | null>(null)
 
 
     const [params, setParams] = useState('')
@@ -221,13 +227,17 @@ const AllIntakeForm = () => {
     }
 
     const handleEditIntake = (Intake: IntakeResponse) => {
-        console.log('Edit Intake:', Intake)
+        setEditIntakeId(Intake.id)
+        setShowEditModal(true)
     }
 
+    const handleDeleteIntake = (id: string) => {
+        setDeleteIntakeId(id)
+        setShowDeleteModal(true)
+    }
 
-    const handleDeleteIntake = async (id: string) => {
+    const onDelete = async (id: string) => {
         try {
-            console.error("Id", id)
             await deleteIntake.mutateAsync(id)
         } catch (error) {
             console.error(error)
@@ -403,7 +413,7 @@ const AllIntakeForm = () => {
 
                                                 <td className="px-4 py-3">
                                                     <span className='flex justify-center gap-3'>
-                                                        <EditButton
+                                                        {/* <EditButton
                                                             button={
                                                                 <ButtonElement
                                                                     icon={<Edit size={15} />}
@@ -416,7 +426,7 @@ const AllIntakeForm = () => {
                                                                     className="!text-xs !bg-green-500"
                                                                 />
                                                             }
-                                                        />
+                                                        /> */}
 
                                                         <ActionMenu
                                                             Intake={Intakees}
@@ -468,6 +478,25 @@ const AllIntakeForm = () => {
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
+
+            {showEditModal && editIntakeId && (
+                <EditIntake
+                    IntakeId={editIntakeId}
+                    visible={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                />
+            )}
+
+            {showDeleteModal && deleteIntakeId && (
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={onDelete}
+                    id={deleteIntakeId}
+                    title="Delete Intake"
+                    description="Are you sure you want to delete this intake?"
+                />
+            )}
         </>
     )
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddIntakePayload } from "../types/IIntake";
+import { UpdateIntakePayload } from "../types/IIntake";
 //import { SubjectValidator } from "../validators/index";
 import AddIntakeForm from "../components/AddIntakeForm";
 
@@ -9,8 +9,9 @@ interface Props {
     onClose?: () => void;
 }
 const AddIntake = ({ visible, onClose }: Props) => {
-    const form = useForm<AddIntakePayload>({
+    const form = useForm<UpdateIntakePayload>({
         defaultValues: {
+            id: "",
             intakeName: "",
             month: 0,
             deadline: "",

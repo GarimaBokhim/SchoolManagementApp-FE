@@ -1,28 +1,41 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
-import { AddClassPayload } from '../types/IClass'
+import { AddClassPayload, ClassResponse } from '../types/IClass'
 import { SubmitHandler, UseFormReturn } from 'react-hook-form'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Toast } from '@/components/Toast/toast'
-import { useAddClass, useGetAllClass } from '../hooks'
-import toast from 'react-hot-toast'
+import { useAddClass, useUpdateClass } from '../hooks'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { AppCombobox } from '@/components/Input/ComboBox'
 
 type Props = {
   form: UseFormReturn<AddClassPayload>
   onClose: () => void
+  classItem?: ClassResponse | null
 }
-const AddClassForm = ({ form, onClose }: Props) => {
+
+const AddClassForm = ({ form, onClose, classItem }: Props) => {
   const addClass = useAddClass()
+  const updateClass = useUpdateClass()
   const { handleError, clearError } = useErrorHandler()
 
   const [englishProficiency, setEnglishProficiency] = useState<number | null>(
-    null
+    classItem?.englishProficiency ?? null
   )
+
+  useEffect(() => {
+    if (classItem) {
+      setEnglishProficiency(classItem.englishProficiency)
+      form.setValue('name', classItem.name)
+      form.setValue('startTime', classItem.startTime)
+      form.setValue('endTime', classItem.endTime)
+      form.setValue('batch', classItem.batch)
+      form.setValue('englishProficiency', classItem.englishProficiency)
+    }
+  }, [classItem, form])
 
   const handleClose = () => {
     form.reset({
@@ -32,18 +45,32 @@ const AddClassForm = ({ form, onClose }: Props) => {
       batch: '',
       englishProficiency: 0,
     })
+    setEnglishProficiency(null)
   }
 
   const onSubmit: SubmitHandler<AddClassPayload> = async (data) => {
     clearError()
     try {
-      await addClass.mutateAsync({
-        name: data.name,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        batch: data.batch,
-        englishProficiency: data.englishProficiency,
-      })
+      if (classItem) {
+        await updateClass.mutateAsync({
+          id: classItem.id,
+          payload: {
+            name: data.name,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            batch: data.batch,
+            englishProficiency: data.englishProficiency,
+          },
+        })
+      } else {
+        await addClass.mutateAsync({
+          name: data.name,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          batch: data.batch,
+          englishProficiency: data.englishProficiency,
+        })
+      }
 
       handleClose()
       onClose()
@@ -51,13 +78,27 @@ const AddClassForm = ({ form, onClose }: Props) => {
       Toast.error(handleError(error))
     }
   }
+
+  const proficiencyOptions = [
+    { id: 1, name: 'IELTS' },
+    { id: 2, name: 'TOEFL' },
+    { id: 3, name: 'PTE' },
+    { id: 4, name: 'DET' },
+    { id: 5, name: 'TOEIC' },
+    { id: 6, name: 'CELPIP' },
+    { id: 7, name: 'OET' },
+    { id: 8, name: 'FCE' },
+    { id: 9, name: 'CAE' },
+    { id: 10, name: 'CPE' },
+  ]
+
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
         <fieldset className="">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add Class
+              {classItem ? 'Edit Class' : 'Add Class'}
             </h1>
             <button
               type="button"
@@ -107,37 +148,15 @@ const AddClassForm = ({ form, onClose }: Props) => {
               />
 
               <AppCombobox
-                label="Payment Method"
+                label="English Proficiency"
                 dropdownPositionClass="absolute"
                 name="englishProficiency"
                 form={form}
                 value={englishProficiency}
-                options={[
-                  { id: 0, name: 'IELTS' },
-                  { id: 1, name: 'TOEFL' },
-                  { id: 2, name: 'PTE' },
-                  { id: 3, name: 'DET' },
-                  { id: 4, name: 'TOEIC' },
-                  { id: 5, name: 'CELPIP' },
-                  { id: 5, name: 'OET' },
-                  { id: 5, name: 'FCE' },
-                  { id: 5, name: 'CAE' },
-                  { id: 5, name: 'CPE' },
-                ]}
+                options={proficiencyOptions}
                 dropDownWidth="w-full"
                 selected={
-                  [
-                    { id: 0, name: 'IELTS' },
-                    { id: 1, name: 'TOEFL' },
-                    { id: 2, name: 'PTE' },
-                    { id: 3, name: 'DET' },
-                    { id: 4, name: 'TOEIC' },
-                    { id: 5, name: 'CELPIP' },
-                    { id: 5, name: 'OET' },
-                    { id: 5, name: 'FCE' },
-                    { id: 5, name: 'CAE' },
-                    { id: 5, name: 'CPE' },
-                  ].find((g) => g.id === englishProficiency) || null
+                  proficiencyOptions.find((g) => g.id === englishProficiency) || null
                 }
                 onSelect={(option) => {
                   setEnglishProficiency(option?.id ?? null)
@@ -148,7 +167,7 @@ const AddClassForm = ({ form, onClose }: Props) => {
               />
             </div>
             <div className="flex justify-center mt-6">
-              <ButtonElement type="submit" text={'Submit'} />
+              <ButtonElement type="submit" text={classItem ? 'Update' : 'Submit'} />
             </div>
           </form>
         </fieldset>

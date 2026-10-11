@@ -2,7 +2,7 @@
 
 import { Plus, Trash2, X } from 'lucide-react'
 import { SubmitHandler, useFieldArray, UseFormReturn } from 'react-hook-form'
-import { AddRequirementsPayload } from '../types/IRequirements'
+import { AddRequirementsPayload, RequirementsFormPayload } from '../types/IRequirements'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -13,18 +13,23 @@ import {
     useGetCourseByUniversity,
     useGetUniversityByCountry,
     useGetAllDocumentType,
+    useUpdateRequirements,
 } from '../hooks'
 
 import useErrorHandler from '@/components/helpers/ErrorHandling'
+import { Toast } from '@/components/Toast/toast'
 
 type Props = {
-    form: UseFormReturn<AddRequirementsPayload>
+    form: UseFormReturn<RequirementsFormPayload>
     onClose: () => void
+    requirementsId?: string
 }
 
-const AddRequirementsForm = ({ form, onClose }: Props) => {
+const AddRequirementsForm = ({ form, onClose, requirementsId }: Props) => {
     const addRequirements = useAddRequirements()
+    const updateRequirements = useUpdateRequirements()
     const { handleError, clearError } = useErrorHandler()
+    const isEditing = Boolean(requirementsId)
 
     const { data: country } = useGetAllCountry()
     const { data: documentType } = useGetAllDocumentType()
@@ -48,20 +53,18 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
             universityId: '',
             countryId: '',
             courseId: '',
-            documentsCheckListDTOs: [{ documenteTypeId: '' }],
+            documentsCheckListDTOs: [{ id: '', documenteTypeId: '', isRequired: false }],
         })
         onClose()
     }
 
-    const onSubmit: SubmitHandler<AddRequirementsPayload> = async () => {
-
-        if (addRequirements.isPending) {
+    const onSubmit: SubmitHandler<RequirementsFormPayload> = async (values) => {
+        if (addRequirements.isPending || updateRequirements.isPending) {
             return;
         }
         clearError()
-        const values = form.getValues()
 
-        const payload = {
+        const payload: AddRequirementsPayload = {
             title: values.title,
             descriptions: values.descriptions,
             universityId: values.universityId,
@@ -74,14 +77,38 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
             ),
         }
 
-        await addRequirements.mutateAsync(payload)
-        handleClose()
+        try {
+            if (requirementsId) {
+                await updateRequirements.mutateAsync({
+                    id: requirementsId,
+                    payload: {
+                        id: requirementsId,
+                        title: values.title,
+                        descriptions: values.descriptions,
+                        universityId: values.universityId,
+                        countryId: values.countryId,
+                        courseId: values.courseId,
+                        documentsCheckListDTOs: values.documentsCheckListDTOs.map((item) => ({
+                            id: item.id ?? '',
+                            documenteTypeId: item.documenteTypeId,
+                            isRequired: item.isRequired ?? false,
+                        })),
+                    },
+                })
+            } else {
+                await addRequirements.mutateAsync(payload)
+            }
+
+            handleClose()
+        } catch (error) {
+            Toast.error(handleError(error))
+        }
     }
 
     return (
         <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-xl font-semibold">Add Requirements</h1>
+                <h1 className="text-xl font-semibold">{isEditing ? 'Update Requirements' : 'Add Requirements'}</h1>
 
                 <button type="button" onClick={handleClose} className="text-red-500">
                     <X />
@@ -176,7 +203,7 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
                     {fields.length === 0 && (
                         <button
                             type="button"
-                            onClick={() => append({ documenteTypeId: '' })}
+                            onClick={() => append({ id: '', documenteTypeId: '', isRequired: false })}
                             className="px-4 py-2 bg-black text-white rounded"
                         >
                             Add Item
@@ -197,9 +224,7 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                append({
-                                                    documenteTypeId: '',
-                                                })
+                                                append({ id: '', documenteTypeId: '', isRequired: false })
                                             }
                                         >
                                             <Plus size={18} />
@@ -237,6 +262,22 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
                                     getLabel={(i) => i?.name ?? ''}
                                     getValue={(i) => i?.id ?? ''}
                                 />
+                                {isEditing && (
+                                    <label className="mt-3 flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={form.watch(`documentsCheckListDTOs.${index}.isRequired`) ?? false}
+                                            onChange={(event) =>
+                                                form.setValue(
+                                                    `documentsCheckListDTOs.${index}.isRequired`,
+                                                    event.target.checked,
+                                                    { shouldDirty: true }
+                                                )
+                                            }
+                                        />
+                                        Required
+                                    </label>
+                                )}
                             </div>
                         )
                     })}
@@ -245,8 +286,14 @@ const AddRequirementsForm = ({ form, onClose }: Props) => {
                 <div className="flex justify-center mt-6">
                     <ButtonElement
                         type="submit"
-                        text={addRequirements.isPending ? "Saving..." : "Submit"}
-                        disabled={addRequirements.isPending}
+                        text={
+                            addRequirements.isPending || updateRequirements.isPending
+                                ? "Saving..."
+                                : isEditing
+                                    ? "Update Requirements"
+                                    : "Submit"
+                        }
+                        disabled={addRequirements.isPending || updateRequirements.isPending}
                     />
                 </div>
             </form>

@@ -13,6 +13,9 @@ export interface VisaApplicationResponse {
     appliedDate: string
     visaStatusId: string
     visaStatusName: string
+    visaDetails?: string
+    emailSent?: boolean
+    emailContent?: string
 }
 
 export interface AddVisaApplicationResponse {

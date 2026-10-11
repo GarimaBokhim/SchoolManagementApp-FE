@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const InquiryEndpoints = {
   filter: '/api/Enrolments/FilterInquery',
   add: '/api/Enrolments/AddInquiry',
-  update: '/api/CrmFinance/UpdateInvoice',
-  delete: '/api/CrmFinance/DeleteInvoice',
+  update: '/api/Enrolments/UpdateInquiry',
+  delete: '/api/Enrolments/DeleteInquiry',
   getInquiryById:'/api/Enrolments/Inquiry',
   filterDocumentType:'/api/AcademicPrograms/FilterDocumentsType',
 
@@ -29,6 +29,7 @@ export const InquiryEndpoints = {
 
 export const InquiryQueryKeys = {
   all: ['Inquiry'],
+  byId: ['InquiryId'],
   country: ['Country'],
   course: ['Course'],
   UserProfile: ['UserProfile'],
@@ -233,8 +234,13 @@ export const useUpdateInquiry = () => {
       id: string
       payload: UpdateInquiryPayload
     }) => {
+      const inquiryId = id.trim()
+      if (!inquiryId) {
+        throw new Error('Inquiry ID is required to update an inquiry')
+      }
+
       const response = await api.patch(
-        `${InquiryEndpoints.update}/${id}`,
+        `${InquiryEndpoints.update}/${inquiryId}`,
         normalizeUpdateInquiryPayload(payload)
       )
 
@@ -242,10 +248,22 @@ export const useUpdateInquiry = () => {
     },
 
     onSuccess: (response) => {
-      Toast.success(response?.Message || 'Inquiry updated successfully')
+      if (response === false) {
+        Toast.error('Failed to update Inquiry')
+        return
+      }
+
+      Toast.success(
+        response === true
+          ? 'Inquiry updated successfully'
+          : response?.Message || 'Inquiry updated successfully'
+      )
 
       queryClient.invalidateQueries({
         queryKey: InquiryQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: InquiryQueryKeys.byId,
       })
     },
 
@@ -260,7 +278,8 @@ export const useUpdateInquiry = () => {
 
 export const useInquiryById = (InquiryId: string) => {
   return useQuery({
-    queryKey: ["InquiryId", InquiryId],
+    queryKey: [...InquiryQueryKeys.byId, InquiryId],
+    enabled: !!InquiryId,
 
     queryFn: async (): Promise<InquiryResponse> => {
       if (!InquiryId) {
@@ -421,4 +440,3 @@ export const useGetUniversityByCountry = async (CountryId?: string | null) => {
 
       return response.data?.Data?.Items ?? [];
 };
-

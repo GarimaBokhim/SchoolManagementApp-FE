@@ -10,12 +10,13 @@ import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/Fil
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteVisaStatus, useGetAllVisaStatus } from '../hooks'
-import { EditButton } from '@/components/Buttons/EditButton'
 import { UpdateVisaStatusResponse } from '../types/IVisaStatus'
 import AddVisaStatus from '../pages/Add'
+import EditVisaStatus from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     name: string
@@ -159,8 +160,9 @@ const AllVisaStatusForm = () => {
 
     const [openFilter, setOpenFilter] = useState(false)
     const [addModal, setAddModal] = useState(false);
-    const [visaStatusForm, setVisaStatusForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteVisaStatusId, setDeleteVisaStatusId] = useState<string | null>(null)
+    const [editVisaStatus, setEditVisaStatus] = useState<UpdateVisaStatusResponse | null>(null)
 
     const [paginationParams, setPaginationParams] = useState({
         pageSize: 10,
@@ -186,7 +188,7 @@ const AllVisaStatusForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { name: '', startDate: '', endDate: '' },
     })
 
     const [selectedVisaStatusName, setSelectedVisaStatusName] = useState<string | null>(
@@ -247,24 +249,26 @@ const AllVisaStatusForm = () => {
     ];
 
 
-    const handleEditLead = (VisaStatus: UpdateVisaStatusResponse) => {
-        console.log('Edit VisaStatus:', VisaStatus)
+    const handleEdit = (visaStatus: UpdateVisaStatusResponse) => {
+        setEditVisaStatus(visaStatus)
     }
 
-    const handleAddVisaStatus = () => {
-        setVisaStatusForm(false);
-        setSelectedId("");
-    };
+    const handleEditSubmit = () => {
+        setEditVisaStatus(null)
+    }
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
+        setDeleteVisaStatusId(id)
+        setShowDeleteModal(true)
+    }
+
+    const onDelete = async (id: string) => {
         try {
-            console.error("Id", id)
             await deleteVisaStatus.mutateAsync(id)
         } catch (error) {
             console.error(error)
         }
     }
-
 
     const handleAddSubmit = () => {
         setAddModal(false);
@@ -300,10 +304,11 @@ const AllVisaStatusForm = () => {
     }
 
     const onClearClick = () => {
-        setParams("");
-        formRef.current?.handleClear();
-        form.reset();
-    };
+        setParams('')
+        setSelectedVisaStatusName(null)
+        formRef.current?.handleClear()
+        form.reset({ name: '', startDate: '', endDate: '' })
+    }
 
     return (
         <>
@@ -442,14 +447,13 @@ const AllVisaStatusForm = () => {
                                                 </td>
 
                                                 <td className="py-1 px-4">
-                                                    {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
+                                                    <ActionMenu
+                                                        visaStatus={visaStatus}
                                                         onEdit={handleEdit}
                                                         onDelete={handleDelete}
                                                         canEdit={canEdit}
                                                         canDelete={canDelete}
-                                                    /> */}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))
@@ -485,6 +489,26 @@ const AllVisaStatusForm = () => {
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
+            {showDeleteModal && deleteVisaStatusId && (
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false)
+                        setDeleteVisaStatusId(null)
+                    }}
+                    onConfirm={onDelete}
+                    id={deleteVisaStatusId}
+                    title="Delete Visa Status"
+                    description="Are you sure you want to delete this Visa Status?"
+                />
+            )}
+            {editVisaStatus && (
+                <EditVisaStatus
+                    visible={Boolean(editVisaStatus)}
+                    visaStatus={editVisaStatus}
+                    onClose={handleEditSubmit}
+                />
+            )}
         </>
     )
 }

@@ -1,6 +1,15 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Filter, MoreVertical, Plus, Trash } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  BookOpen,
+  Edit,
+  Filter,
+  MoreVertical,
+  Plus,
+  RotateCcw,
+  Trash,
+} from 'lucide-react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import toast, { Toaster } from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
@@ -10,146 +19,168 @@ import DateRangeFilter, {
 } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
-import { useDeleteVisaApplication, useGetAllVisaApplication } from '../hooks'
-import { UpdateVisaApplicationResponse } from '../types/IVisaApplication'
+import {
+  useDeleteVisaApplication,
+  useGetAllVisaApplication,
+  useGetAllVisaStatus,
+} from '../hooks'
+import { VisaApplicationResponse } from '../types/IVisaApplication'
 import AddVisaApplication from '../pages/Add'
+import EditVisaApplication from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
+import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
+  name: string
   startDate: string
   endDate: string
 }
 
 interface ActionMenuProps {
-  Invoice: UpdateVisaApplicationResponse
-  onEdit: (visaApplication: UpdateVisaApplicationResponse) => void
+  visaApplication: VisaApplicationResponse
+  onEdit: (visaApplication: VisaApplicationResponse) => void
   onDelete: (id: string) => void
   canEdit?: boolean
   canDelete?: boolean
 }
 
 const ActionMenu = ({
-  Invoice,
+  visaApplication,
   onEdit,
   onDelete,
   canEdit = true,
   canDelete = true,
 }: ActionMenuProps) => {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const calculatePosition = useCallback(() => {
-    if (!buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    const menuHeight = 160
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const calculatePosition = () => {
+    const button = buttonRef.current
+    if (!button) return
+
+    const rect = button.getBoundingClientRect()
     const menuWidth = 180
+    const menuHeight = (canEdit ? 40 : 0) + (canDelete ? 40 : 0) || 40
     const spaceBelow = window.innerHeight - rect.bottom
     const openUpward = spaceBelow < menuHeight + 8
+
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8
+    )
+
     setMenuStyle({
       position: 'fixed',
-      right: window.innerWidth - rect.right,
-      top: openUpward ? rect.top - menuHeight - 4 : rect.bottom + 4,
+      left,
+      top: openUpward
+        ? Math.max(8, rect.top - menuHeight - 4)
+        : rect.bottom + 4,
       width: menuWidth,
-      zIndex: 9999,
+      zIndex: 99999,
     })
-  }, [])
+  }
 
   const toggle = () => {
     if (!open) calculatePosition()
-    setOpen((prev) => !prev)
+    setOpen((previous) => !previous)
   }
 
   useEffect(() => {
     if (!open) return
-    const handle = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      )
-        setOpen(false)
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [open])
 
-  useEffect(() => {
-    if (!open) return
-    const update = () => calculatePosition()
-    window.addEventListener('scroll', update, true)
-    window.addEventListener('resize', update)
-    return () => {
-      window.removeEventListener('scroll', update, true)
-      window.removeEventListener('resize', update)
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (
+        !menuRef.current?.contains(target) &&
+        !buttonRef.current?.contains(target)
+      ) {
+        setOpen(false)
+      }
     }
-  }, [open, calculatePosition])
+
+    const updatePosition = () => calculatePosition()
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [open, canEdit, canDelete])
 
   return (
     <div className="flex justify-center">
       <button
         ref={buttonRef}
+        type="button"
         onClick={toggle}
-        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+        aria-label="Open actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="rounded-full p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
         title="Actions"
       >
         <MoreVertical size={18} className="text-gray-600 dark:text-gray-300" />
       </button>
 
-      {open && (
-        <div
-          ref={menuRef}
-          style={menuStyle}
-          className="bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1"
-        >
-          <button
-            onClick={() => {
-              onEdit(Invoice)
-              setOpen(false)
-            }}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+      {open && mounted &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={menuStyle}
+            className="rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
           >
-            <Edit size={14} /> Edit
-          </button>
-          <button
-            onClick={() => {
-              onDelete(Invoice.id)
-              setOpen(false)
-            }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-          >
-            <Trash size={14} /> Delete
-          </button>
+            {canEdit && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  onEdit(visaApplication)
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                <Edit size={14} />
+                Edit
+              </button>
+            )}
 
-          {/* {canEdit && (
-                        <button
-                            onClick={() => { onEdit(InstallmentInvoice); setOpen(false) }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                        >
-                            <Edit size={14} /> Edit
-                        </button>
-                    )} */}
-          {/*
-                    <button
-                        onClick={() => { onConvert(InstallmentInvoice); setOpen(false) }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                    >
-                        <User size={14} /> Convert to Applicant
-                    </button> */}
+            {canDelete && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  onDelete(visaApplication.id)
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+              >
+                <Trash size={14} />
+                Delete
+              </button>
+            )}
 
-          {/* {canDelete && (
-                        <button
-                            onClick={() => { onDelete(Invoice.id); setOpen(false) }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                        >
-                            <Trash size={14} /> Delete
-                        </button>
-                    )} */}
-        </div>
-      )}
+            {!canEdit && !canDelete && (
+              <div className="px-4 py-2 text-sm text-gray-500">
+                No actions available
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
@@ -158,6 +189,7 @@ const ActionMenu = ({
 const AllVisaApplicationForm = () => {
   const { menuStatus } = usePermissions()
   const { handleError, clearError } = useErrorHandler()
+  //const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
   const [paginationParams, setPaginationParams] = useState({
     pageSize: 10,
     pageIndex: 1,
@@ -178,18 +210,26 @@ const AllVisaApplicationForm = () => {
   const [params, setParams] = useState('')
   const fullQuery = query + (params || '')
   const { data, isLoading, error } = useGetAllVisaApplication(fullQuery)
+  const { data: visaStatusOptions = [] } = useGetAllVisaStatus()
 
-  const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
+  //const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
   const [openFilter, setOpenFilter] = useState(false)
   const [addModal, setAddModal] = useState(false)
-  const [visaApplicationForm, setVisaApplicationForm] = useState(false)
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteVisaApplicationId, setDeleteVisaApplicationId] = useState<
+    string | null
+  >(null)
+  const [editVisaApplication, setEditVisaApplication] =
+    useState<VisaApplicationResponse | null>(null)
+  const [selectedVisaStatusName, setSelectedVisaStatusName] = useState<
+    string | null
+  >('')
 
   const formRef = useRef<DateRangeFilterRef>(null)
 
   const form = useForm<FilterFormData>({
-    defaultValues: { startDate: '', endDate: '' },
+    defaultValues: { name: '', startDate: '', endDate: '' },
   })
 
   const deleteVisaApplication = useDeleteVisaApplication()
@@ -200,9 +240,7 @@ const AllVisaApplicationForm = () => {
     clearError()
     try {
       const queryParams = [
-        // formData.name
-        //   ? `name=${encodeURIComponent(formData.name)}`
-        //   : null,
+        formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
           : null,
@@ -229,6 +267,13 @@ const AllVisaApplicationForm = () => {
     }
   }
 
+  const onClearClick = () => {
+    setParams('')
+    setSelectedVisaStatusName(null)
+    formRef.current?.handleClear()
+    form.reset({ name: '', startDate: '', endDate: '' })
+  }
+
   const monthType = [
     { id: 1, name: 'January' },
     { id: 2, name: 'February' },
@@ -243,9 +288,13 @@ const AllVisaApplicationForm = () => {
     { id: 11, name: 'November' },
     { id: 12, name: 'MDecembery' },
   ]
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setDeleteVisaApplicationId(id)
+    setShowDeleteModal(true)
+  }
+
+  const onDelete = async (id: string) => {
     try {
-      console.error('Id', id)
       await deleteVisaApplication.mutateAsync(id)
     } catch (error) {
       console.error(error)
@@ -254,6 +303,10 @@ const AllVisaApplicationForm = () => {
 
   const handleAddSubmit = () => {
     setAddModal(false)
+  }
+
+  const handleEdit = (visaApplication: VisaApplicationResponse) => {
+    setEditVisaApplication(visaApplication)
   }
 
   if (error) {
@@ -339,27 +392,29 @@ const AllVisaApplicationForm = () => {
                   startDateKey="startDate"
                   endDateKey="endDate"
                 />
-                {/*<div className="flex-1 min-w-[240px]">
+
+                <div className="flex-1 min-w-[240px]">
                   <AppCombobox
-                    value={selectedStudentName}
+                    value={selectedVisaStatusName}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Parent Name"
-                    name="firstName"
+                    label="Visa Status"
+                    name="name"
                     form={form}
-                    options={allStudent?.Items}
+                    options={visaStatusOptions}
                     selected={
-                      allStudent?.Items?.find(
-                        (g) => g.firstName === selectedStudentName
-                      ) || null
+                      visaStatusOptions.find(
+                        (g) => g.name === selectedVisaStatusName
+                      ) ?? null
                     }
                     onSelect={(group) => {
-                      setSelectedStudentName(group ? group.firstName : null)
+                      setSelectedVisaStatusName(group ? group.name : null)
                     }}
-                    getLabel={(g) => g?.firstName ?? ''}
-                    getValue={(g) => g?.firstName ?? ''}
+                    getLabel={(g) => g?.name ?? ''}
+                    getValue={(g) => g?.name ?? ''}
                   />
                 </div>
+
                 <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
                   <ButtonElement
                     type="submit"
@@ -374,7 +429,7 @@ const AllVisaApplicationForm = () => {
                     onClick={onClearClick}
                     className="!bg-gray-500 hover:!bg-gray-600"
                   />
-                </div>*/}
+                </div>
               </form>
             </div>
           )}
@@ -447,16 +502,17 @@ const AllVisaApplicationForm = () => {
                         <td className="px-4 py-3 text-center">
                           {visaApplication.visaStatusName}
                         </td>
-                        <td className="py-1 px-4">
-                          {/* <VisaApplicationActionMenu
-                                                        visaApplication={app}  // ✅ Fixed: was `application`, now `app`
-                                                        onView={handleView}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                        canEdit={canEdit}
-                                                        canDelete={canDelete}
-                                                    /> */}
+
+                        <td className="px-4 py-3 text-center">
+                          <ActionMenu
+                            visaApplication={visaApplication}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            canEdit={true}
+                            canDelete={true}
+                          />
                         </td>
+
                       </tr>
                     ))
                   )}
@@ -484,6 +540,26 @@ const AllVisaApplicationForm = () => {
       </div>
 
       <AddVisaApplication visible={addModal} onClose={handleAddSubmit} />
+      {showDeleteModal && deleteVisaApplicationId && (
+        <DeleteComponents
+          visible={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setDeleteVisaApplicationId(null)
+          }}
+          onConfirm={onDelete}
+          id={deleteVisaApplicationId}
+          title="Delete Visa Application"
+          description="Are you sure you want to delete this Visa Application?"
+        />
+      )}
+      {editVisaApplication && (
+        <EditVisaApplication
+          visible={Boolean(editVisaApplication)}
+          visaApplication={editVisaApplication}
+          onClose={() => setEditVisaApplication(null)}
+        />
+      )}
     </>
   )
 }

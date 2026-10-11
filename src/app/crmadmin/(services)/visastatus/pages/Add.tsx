@@ -1,42 +1,46 @@
 "use client";
-import { useForm } from "react-hook-form";
-import { AddVisaStatusPayload } from "../types/IVisaStatus";
-import AddVisaStatusForm from "../components/AddVisaStatus";
+import { useForm } from 'react-hook-form';
+import {
+  AddVisaStatusPayload,
+  UpdateVisaStatusResponse,
+} from '../types/IVisaStatus';
+import AddVisaStatusForm from '../components/AddVisaStatus';
 
 interface Props {
-    visible: boolean;
-    onClose?: () => void;
+  visible: boolean;
+  onClose?: () => void;
+  visaStatus?: UpdateVisaStatusResponse | null;
 }
-const AddVisaStatus = ({ visible, onClose }: Props) => {
-    const form = useForm<AddVisaStatusPayload>({
-        defaultValues: {
-            name: "",
-            visaStatusType: 0
 
-        },
+const AddVisaStatus = ({ visible, onClose, visaStatus }: Props) => {
+  const form = useForm<AddVisaStatusPayload>({
+    defaultValues: {
+      name: visaStatus?.name ?? '',
+      visaStatusType: visaStatus?.visaStatusType ?? 0,
+    },
+  });
 
-        // resolver: yupResolver(SubjectValidator),
-    });
-    const handleOnClose = () => {
-        if (onClose) onClose();
-    };
-    if (!visible) return null;
+  const handleOnClose = () => {
+    if (onClose) onClose();
+  };
 
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
              bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
-        >
-            <div
-                className="bg-[#FBFBFB] dark:bg-[#27272a] 
+    >
+      <div
+        className="bg-[#FBFBFB] dark:bg-[#27272a] 
                w-full max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[70vw]
                max-h-[95vh] md:max-h-[92vh] h-full 
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
-            >
-                <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddVisaStatusForm form={form} onClose={handleOnClose} />
-            </div>
-        </div>
-    );
+      >
+        <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
+        <AddVisaStatusForm form={form} onClose={handleOnClose} visaStatus={visaStatus} />
+      </div>
+    </div>
+  );
 };
 export default AddVisaStatus;

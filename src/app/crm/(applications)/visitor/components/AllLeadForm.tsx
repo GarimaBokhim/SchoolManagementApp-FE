@@ -15,6 +15,7 @@ import { InquiryResponse } from '../types/IVisitors'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import AddInquiry from '../pages/Add'
+import EditInquiry from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -540,16 +541,16 @@ const AllInquiryForm = () => {
 
 
 
-            {/* {showEditModal && editInquiryId && (
-
-                <EditFollowUp
-
-                    FollowUpId={editInquiryId}
+            {showEditModal && editInquiryId && (
+                <EditInquiry
+                    InquiryId={editInquiryId}
                     visible={showEditModal}
-                    onClose={() => setShowEditModal(false)}
-
+                    onClose={() => {
+                        setShowEditModal(false)
+                        setEditInquiryId(null)
+                    }}
                 />
-            )} */}
+            )}
 
             <AddInquiry
                 visible={addModal}

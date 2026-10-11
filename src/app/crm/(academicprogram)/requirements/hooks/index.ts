@@ -8,12 +8,12 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const RequirementsEndpoints = {
   filter: '/api/AcademicPrograms/FilterRequirements',
   add: '/api/AcademicPrograms/AddRequirements',
-  update: '/api/CrmFinance/UpdateInvoice',
-  delete: '/api/CrmFinance/DeleteInvoice',
+  update: '/api/AcademicPrograms/UpdateRequirements',
+  delete: '/api/AcademicPrograms/DeleteRequirements',
   country: '/api/AcademicPrograms/GetAllCountry',
    CourseByUniversity: '/api/AcademicPrograms/CourseByUniversity',
    UniversityByCountry: '/api/AcademicPrograms/UniversityByCountry',
-  invoiceById:'/api/CrmFinance/Invoice',
+  requirementsById:'/api/AcademicPrograms/RequirementsById',
   filterDocumentType:'/api/AcademicPrograms/FilterDocumentsType',
 
   RequiredDocType:'/api/AcademicPrograms/RequiredDocType',
@@ -25,19 +25,22 @@ export const RequirementsQueryKeys = {
   all: ['Requirements'],
   country: ['Country'],
   course: ['Course'],
-  requirementsById: ['InvoiceByIds'],
+  requirementsById: ['RequirementsById'],
   documentType:["DocumentType"],
   AllCourse:["AllCourse"]
 }
 
 const normalizeUpdateRequirementsPayload = (data: UpdateRequirementsPayload): UpdateRequirementsPayload => ({
   id: String(data.id ?? '').trim(),
+  title: String(data.title ?? '').trim(),
   descriptions: String(data.descriptions ?? '').trim(),
+  universityId: String(data.universityId ?? '').trim(),
   countryId: String(data.countryId ?? '').trim(),
   courseId: String(data.courseId ?? '').trim(),
-  updatedocumentsCheckListDTOs: (data.updatedocumentsCheckListDTOs ?? []).map(item => ({
-    id:String(item.id ?? '').trim(),
-    documenteTypeId: String(item.documenteTypeId ?? '').trim()
+  documentsCheckListDTOs: (data.documentsCheckListDTOs ?? []).map(item => ({
+    id: String(item.id ?? '').trim(),
+    documenteTypeId: String(item.documenteTypeId ?? '').trim(),
+    isRequired: Boolean(item.isRequired),
   })),
 });
 
@@ -251,7 +254,7 @@ export const useRequirementsById = (RequirementsId: string) => {
       }
 
       const response = await api.get<RequirementsResponse>(
-        `${RequirementsEndpoints.invoiceById}/${RequirementsId}`
+        `${RequirementsEndpoints.requirementsById}/${RequirementsId}`
       );
 
       return response.data;

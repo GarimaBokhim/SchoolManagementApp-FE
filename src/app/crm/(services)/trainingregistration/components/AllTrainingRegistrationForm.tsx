@@ -12,11 +12,12 @@ import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import { useDeleteTrainingRegistration, useGetAllApplicants, useGetAllConsultancyClass, useGetAllTrainingRegistration } from '../hooks'
 import { TrainingRegistrationResponse } from '../types/ITrainingRegistration'
-import { EditButton } from '@/components/Buttons/EditButton'
 import AddTrainingRegistration from '../pages/Add'
+import EditTrainingRegistration from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
     startDate: string
@@ -168,9 +169,10 @@ const AllTrainingRegistrationForm = () => {
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
-    const [addModal, setAddModal] = useState(false);
-    const [showPaymentForm, setShowPaymentForm] = useState(false);
-    const [selectedId, setSelectedId] = useState<string>('')
+    const [addModal, setAddModal] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteTrainingRegistrationId, setDeleteTrainingRegistrationId] = useState<string | null>(null)
+    const [editTrainingRegistration, setEditTrainingRegistration] = useState<TrainingRegistrationResponse | null>(null)
 
 
     const [paginationParams, setPaginationParams] = useState({
@@ -261,28 +263,26 @@ const AllTrainingRegistrationForm = () => {
     }
 
     const handleEditLead = (TrainingRegistration: TrainingRegistrationResponse) => {
-        console.log('Edit TrainingRegistration:', TrainingRegistration)
+        setEditTrainingRegistration(TrainingRegistration)
     }
 
-    const handlepayment = () => {
-        setShowPaymentForm(false);
-        setSelectedId("");
-    };
+    const handleDelete = (id: string) => {
+        setDeleteTrainingRegistrationId(id)
+        setShowDeleteModal(true)
+    }
 
-    const handleDelete = async (id: string) => {
+    const onDelete = async (id: string) => {
         try {
-            console.error("Id", id)
             await deleteTrainingRegistration.mutateAsync(id)
         } catch (error) {
             console.error(error)
         }
     }
 
-
     const handleAddSubmit = () => {
-        setAddModal(false);
-        // Refresh the list after add modal closes
-    };
+        setAddModal(false)
+        setEditTrainingRegistration(null)
+    }
 
     if (error) {
         return (
@@ -460,20 +460,13 @@ const AllTrainingRegistrationForm = () => {
 
                                                 <td className="px-4 py-3">
                                                     <span className='flex justify-center gap-3'>
-                                                        {/* <EditButton
-                                                            button={
-                                                                <ButtonElement
-                                                                    icon={<Edit size={15} />}
-                                                                    type="button"
-                                                                    text=""
-                                                                    onClick={() => {
-                                                                        setShowPaymentForm(true)
-                                                                        setSelectedId(trainingRegistration.id ?? '')
-                                                                    }}
-                                                                    className="!text-xs !bg-green-500"
-                                                                />
-                                                            }
-                                                        /> */}
+                                                        <ButtonElement
+                                                            icon={<Edit size={15} />}
+                                                            type="button"
+                                                            text=""
+                                                            onClick={() => handleEditLead(trainingRegistration)}
+                                                            className="!text-xs !bg-green-500"
+                                                        />
 
                                                         <ActionMenu
                                                             TrainingRegistration={trainingRegistration}
@@ -512,19 +505,31 @@ const AllTrainingRegistrationForm = () => {
                 )}
             </div>
 
-            {/* {showPaymentForm && selectedId && (
-                <AddPayments
-                    invoiceId={selectedId}
-                    visible={showPaymentForm}
-                    onClose={() => setShowPaymentForm(false)}
-                    onSuccess={handlepayment}
+            {showDeleteModal && deleteTrainingRegistrationId && (
+                <DeleteComponents
+                    visible={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false)
+                        setDeleteTrainingRegistrationId(null)
+                    }}
+                    onConfirm={onDelete}
+                    id={deleteTrainingRegistrationId}
+                    title="Delete Training Registration"
+                    description="Are you sure you want to delete this training registration?"
                 />
-            )} */}
+            )}
 
             <AddTrainingRegistration
                 visible={addModal}
                 onClose={handleAddSubmit}
             />
+            {editTrainingRegistration && (
+                <EditTrainingRegistration
+                    visible={Boolean(editTrainingRegistration)}
+                    onClose={() => setEditTrainingRegistration(null)}
+                    trainingRegistration={editTrainingRegistration}
+                />
+            )}
         </>
     )
 }

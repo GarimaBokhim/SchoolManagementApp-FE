@@ -1,25 +1,22 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { AddClassPayload } from "../types/IClass";
-//import { SubjectValidator } from "../validators/index";
+import { AddClassPayload, ClassResponse } from "../types/IClass";
 import AddClassForm from "../components/AddClassForm";
 
 interface Props {
     visible: boolean;
     onClose?: () => void;
+    classItem?: ClassResponse | null;
 }
-const AddClasses = ({ visible, onClose }: Props) => {
+const AddClasses = ({ visible, onClose, classItem }: Props) => {
     const form = useForm<AddClassPayload>({
         defaultValues: {
-            name: "",
-            startTime: "",
-            endTime: "",
-            batch: "",
-            englishProficiency: 0
-
+            name: classItem?.name ?? "",
+            startTime: classItem?.startTime ?? "",
+            endTime: classItem?.endTime ?? "",
+            batch: classItem?.batch ?? "",
+            englishProficiency: classItem?.englishProficiency ?? 0,
         },
-
-        // resolver: yupResolver(SubjectValidator),
     });
     const handleOnClose = () => {
         if (onClose) onClose();
@@ -38,7 +35,7 @@ const AddClasses = ({ visible, onClose }: Props) => {
                rounded-lg overflow-auto p-6 md:p-8 shadow-lg"
             >
                 <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"></button>
-                <AddClassForm form={form} onClose={handleOnClose} />
+                <AddClassForm form={form} onClose={handleOnClose} classItem={classItem} />
             </div>
         </div>
     );

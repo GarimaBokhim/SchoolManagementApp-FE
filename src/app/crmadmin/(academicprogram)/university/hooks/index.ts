@@ -8,8 +8,8 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 export const UniversityEndpoints = {
   filter: '/api/AcademicPrograms/FilterUniversity',
   add: '/api/AcademicPrograms/AddUniversity',
-  update: '/api/AcademicPrograms/UpdateFollowUp',
-  delete: '/api/AcademicPrograms/DeleteFollowUp',
+  update: '/api/AcademicPrograms/UpdateUniversity',
+  delete: '/api/AcademicPrograms/DeleteUniversity',
   getById:'/api/AcademicPrograms/UniversityById',
    country:'/api/AcademicPrograms/GetAllCountry'
   
@@ -93,7 +93,6 @@ export const useAddUniversity = () => {
       queryClient.invalidateQueries({
         queryKey: UniversityQueryKeys.all,
       })
-
       queryClient.invalidateQueries({
         queryKey: UniversityQueryKeys.country,
       })
@@ -124,6 +123,9 @@ export const useDeleteUniversity = () => {
 
       queryClient.invalidateQueries({
         queryKey: UniversityQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: UniversityQueryKeys.country,
       })
     },
 
@@ -159,6 +161,9 @@ export const useUpdateUniversity = () => {
 
       queryClient.invalidateQueries({
         queryKey: UniversityQueryKeys.all,
+      })
+      queryClient.invalidateQueries({
+        queryKey: UniversityQueryKeys.country,
       })
     },
 
@@ -219,5 +224,3 @@ export const useGetAllCountry = () => {
     staleTime: 1000 * 60 * 5,
   });
 };
-
-

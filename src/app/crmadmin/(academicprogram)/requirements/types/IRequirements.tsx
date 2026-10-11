@@ -8,6 +8,22 @@ export interface AddRequirementsPayload {
     documentsCheckListDTOs: DocumentsCheckListDTOs[]
 }
 
+export interface RequirementsFormPayload {
+    title: string
+    descriptions: string
+    universityId: string
+    countryId: string
+    courseId: string
+    documentsCheckListDTOs: RequirementsFormDocument[]
+}
+
+export interface RequirementsFormDocument {
+    id?: string
+    documenteTypeId: string
+    isRequired?: boolean
+}
+
+
 export interface DocumentsCheckListDTOs {
 
     documenteTypeId: string
@@ -41,6 +57,7 @@ export interface RequirementsResponse {
     courseName: string
     countryId: string
     countryName: string
+    universityId: string
     DocumentsCheckListDTOs: DocCheckListResponseDTOs[]
 }
 
@@ -54,13 +71,16 @@ export interface DocCheckListResponseDTOs {
 
 export interface UpdateRequirementsPayload {
     id: string
+    title: string
     descriptions: string
+    universityId: string
     countryId: string
     courseId: string
-    updatedocumentsCheckListDTOs: UpdateDocumentsCheckListDTOs[]
+    documentsCheckListDTOs: UpdateDocumentsCheckListDTOs[]
 }
 
 export interface UpdateDocumentsCheckListDTOs {
     id: string
     documenteTypeId: string
+    isRequired: boolean
 }

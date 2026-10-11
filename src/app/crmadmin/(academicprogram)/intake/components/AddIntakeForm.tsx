@@ -1,36 +1,38 @@
 'use client'
 
-import { useState } from 'react'
 import { X } from 'lucide-react'
-import { AddIntakePayload } from '../types/IIntake'
+import { AddIntakePayload, UpdateIntakePayload } from '../types/IIntake'
 import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddIntake, useGetAllCountry, useGetCourseByUniversity, useGetAllIntake, useGetUniversityByCountry } from "../hooks";
-import toast from "react-hot-toast";
+import { useAddIntake, useGetAllCountry, useGetCourseByUniversity, useGetUniversityByCountry, useUpdateIntake } from "../hooks";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
 
 type Props = {
-    form: UseFormReturn<AddIntakePayload>;
+    form: UseFormReturn<UpdateIntakePayload>;
     onClose: () => void;
+    intakeId?: string;
 };
-const AddIntakeForm = ({ form, onClose }: Props) => {
+const AddIntakeForm = ({ form, onClose, intakeId }: Props) => {
     const addIntake = useAddIntake();
+    const updateIntake = useUpdateIntake();
     const { handleError, clearError } = useErrorHandler();
     const { data: country } = useGetAllCountry();
-    const [sellectedCountryId, setSelectedCountryId] = useState<string | null>("");
-    const [sellectedUniversityId, setSelectedUniversityId] = useState<string | null>("");
-    const [sellectedCourseId, setSelectedCourseId] = useState<string | null>("");
-    const { data: universityByCountry } = useGetUniversityByCountry(sellectedCountryId);
-    const { data: courseByUniversity } = useGetCourseByUniversity(sellectedUniversityId);
-    const [isOpen, setIsOpen] = useState(true);
-
-    const [month, setMonth] = useState<number | null>(null);
+    const countryId = form.watch("countryId");
+    const universityId = form.watch("universityId");
+    const courseId = form.watch("courseId");
+    const month = Number(form.watch("month") ?? 0);
+    const isOpen = form.watch("isOpen");
+    const { data: universityByCountry } = useGetUniversityByCountry(countryId || null);
+    const { data: courseByUniversity } = useGetCourseByUniversity(universityId || null);
+    const isEditing = Boolean(intakeId);
 
     const handleClose = () => {
         form.reset({
+            id: "",
+            intakeName: "",
             month: 0,
             deadline: "",
             isOpen: true,
@@ -39,16 +41,14 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
             courseId: ""
 
         });
-        setSelectedCountryId(null)
-        setSelectedUniversityId(null)
-        setSelectedCourseId(null)
         onClose()
     };
 
-    const onSubmit: SubmitHandler<AddIntakePayload> = async (data) => {
+    const onSubmit: SubmitHandler<UpdateIntakePayload> = async (data) => {
         clearError();
         try {
-            await addIntake.mutateAsync({
+            const payload = {
+                id: intakeId ?? "",
                 intakeName: data.intakeName,
                 month: data.month,
                 deadline: data.deadline,
@@ -56,10 +56,24 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                 countryId: data.countryId,
                 universityId: data.universityId,
                 courseId: data.courseId,
-            })
+            };
+
+            if (intakeId) {
+                await updateIntake.mutateAsync({ id: intakeId, payload });
+            } else {
+                const addPayload: AddIntakePayload = {
+                    intakeName: payload.intakeName,
+                    month: payload.month,
+                    deadline: payload.deadline,
+                    isOpen: payload.isOpen,
+                    countryId: payload.countryId,
+                    universityId: payload.universityId,
+                    courseId: payload.courseId,
+                };
+                await addIntake.mutateAsync(addPayload);
+            }
 
             handleClose()
-            onClose()
         } catch (error) {
             Toast.error(handleError(error))
         }
@@ -70,15 +84,13 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                 <fieldset className="">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-                            Add Intake
+                            {isEditing ? "Update Intake" : "Add Intake"}
                         </h1>
                         <button
                             type="button"
-                            onClick={() => {
-                                handleClose();
-                                onClose();
-                            }}
+                            onClick={handleClose}
                             className="text-red-400 text-2xl hover:text-red-500"
+                            aria-label="Close"
                         >
                             <X strokeWidth={3} />
                         </button>
@@ -131,8 +143,10 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                                     ].find((g) => g.id === month) || null
                                 }
                                 onSelect={(option) => {
-                                    setMonth(option?.id ?? null);
-                                    form.setValue('month', option?.id ?? 0);
+                                    form.setValue('month', option?.id ?? 0, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    });
                                 }}
                                 getLabel={(o) => o?.name || ''}
                                 getValue={(o) => o?.id ?? ''}
@@ -148,7 +162,9 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
 
                             <button
                                 type="button"
-                                onClick={() => setIsOpen(!isOpen)}
+                                onClick={() => form.setValue("isOpen", !isOpen, {
+                                    shouldDirty: true,
+                                })}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${isOpen ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
                                     }`}
                             >
@@ -160,7 +176,7 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
 
 
                             <AppCombobox
-                                value={sellectedCountryId}
+                                value={countryId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute z-20"
                                 label="Country"
@@ -170,20 +186,17 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                                 options={country || []}
                                 selected={
                                     country?.find(
-                                        (item) => item.id === sellectedCountryId
+                                        (item) => item.id === countryId
                                     ) || null
                                 }
                                 onSelect={(item) => {
-                                    const countryId = item?.id ?? "";
-
-                                    setSelectedCountryId(countryId || null);
-                                    setSelectedUniversityId(null);
-
-                                    form.setValue("countryId", countryId, {
+                                    const selectedCountryId = item?.id ?? "";
+                                    form.setValue("countryId", selectedCountryId, {
                                         shouldValidate: true,
                                         shouldDirty: true,
                                     });
-
+                                    form.setValue("universityId", "", { shouldDirty: true });
+                                    form.setValue("courseId", "", { shouldDirty: true });
                                 }}
                                 getLabel={(item) => item?.name ?? ""}
                                 getValue={(item) => item?.id ?? ""}
@@ -191,7 +204,7 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
 
 
                             <AppCombobox
-                                value={sellectedUniversityId}
+                                value={universityId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute z-20"
                                 label="University"
@@ -201,20 +214,16 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                                 options={universityByCountry || []}
                                 selected={
                                     universityByCountry?.find(
-                                        (item) => item.id === sellectedUniversityId
+                                        (item) => item.id === universityId
                                     ) || null
                                 }
                                 onSelect={(item) => {
-                                    const universityId = item?.id ?? "";
-
-                                    setSelectedUniversityId(universityId || null);
-                                    setSelectedCourseId(null);
-
-
-                                    form.setValue("universityId", universityId, {
+                                    const selectedUniversityId = item?.id ?? "";
+                                    form.setValue("universityId", selectedUniversityId, {
                                         shouldValidate: true,
                                         shouldDirty: true,
                                     });
+                                    form.setValue("courseId", "", { shouldDirty: true });
 
 
 
@@ -226,7 +235,7 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
 
 
                             <AppCombobox
-                                value={sellectedCourseId}
+                                value={courseId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute z-20"
                                 label="Course"
@@ -236,24 +245,19 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
                                 options={courseByUniversity || []}
                                 selected={
                                     courseByUniversity?.find(
-                                        (g) => g.id === sellectedCourseId
+                                        (g) => g.id === courseId
                                     ) || null
                                 }
                                 onSelect={(group) => {
                                     if (group) {
-                                        const courseId = group.id ?? "";
-
-                                        setSelectedCourseId(courseId || null);
-
-                                        form.setValue("courseId", courseId, {
+                                        form.setValue("courseId", group.id ?? "", {
                                             shouldValidate: true,
+                                            shouldDirty: true,
                                         });
                                     } else {
-                                        setSelectedCourseId(null);
-
-
                                         form.setValue("courseId", "", {
                                             shouldValidate: true,
+                                            shouldDirty: true,
                                         });
                                     }
                                 }}
@@ -266,7 +270,10 @@ const AddIntakeForm = ({ form, onClose }: Props) => {
 
                         </div>
                         <div className="flex justify-center mt-6">
-                            <ButtonElement type="submit" text={"Submit"} />
+                            <ButtonElement
+                                type="submit"
+                                text={isEditing ? "Update Intake" : "Submit"}
+                            />
                         </div>
                     </form>
                 </fieldset>

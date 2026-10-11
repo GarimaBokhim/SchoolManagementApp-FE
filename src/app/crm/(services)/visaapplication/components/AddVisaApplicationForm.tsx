@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { X, Paperclip, Check } from 'lucide-react'
-import { AddVisaApplicationPayload } from '../types/IVisaApplication'
+import { AddVisaApplicationPayload, VisaApplicationResponse } from '../types/IVisaApplication'
 import { Controller, SubmitHandler, UseFormReturn } from 'react-hook-form'
 import { InputElement } from '@/components/Input/InputElement'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import {
   useAddVisaApplication,
+  useUpdateVisaApplication,
   useGetAllApplicants,
   useGetAllVisaStatus,
   useGetDocumentsByApplication,
@@ -23,9 +24,11 @@ import { useAddDocuments } from '@/app/crm/(academicprogram)/documents/hooks'
 type Props = {
   form: UseFormReturn<AddVisaApplicationPayload>
   onClose: () => void
+  visaApplication?: VisaApplicationResponse | null
 }
-const AddVisaApplicationForm = ({ form, onClose }: Props) => {
+const AddVisaApplicationForm = ({ form, onClose, visaApplication }: Props) => {
   const addVisaApplication = useAddVisaApplication()
+  const updateVisaApplication = useUpdateVisaApplication()
   const addDocuments = useAddDocuments()
   const { clearError } = useErrorHandler()
   const { data: allapplicant } = useGetAllApplicants()
@@ -33,16 +36,9 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
   const emailSent = form.watch('emailSent')
 
-  const [sellectedApplicantId, setSelectedApplicantId] = useState<
-    string | null
-  >('')
-  const [sellectedIntakeId, setSelectedIntakeId] = useState<string | null>('')
-  const [sellectedVisaStatusId, setSelectedVisaStatusId] = useState<
-    string | null
-  >('')
-
   const intakeId = form.watch('intakeId')
   const applicantId = form.watch('applicantId')
+  const visaStatusId = form.watch('visaStatusId')
 
   const { data: visaDetails } = useVisaDetailsByApplicant(applicantId)
 
@@ -78,7 +74,6 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
       emailSent: false,
       emailContent: '',
     })
-    setSelectedApplicantId(null)
     setAttachedDocuments([])
   }
 
@@ -87,7 +82,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
 
     const values = form.getValues()
 
-    const payload = {
+    const payload: AddVisaApplicationPayload = {
       applicantId: values.applicantId,
       intakeId: values.intakeId,
       appliedDate: values.appliedDate,
@@ -95,22 +90,27 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
       emailSent: values.emailSent,
       visaDetails: values.visaDetails,
       emailContent: values.emailContent,
-      documents: attachedDocuments
-        .filter((doc) => doc.file)
-        .map((doc) => ({
-          documentsId: doc.documentsId,
-          file: doc.file,
-        })),
     }
-    const documentPayload = {
-      applicantId: values.applicantId,
-      documentsDTOs: (payload.documents ?? []).map((item) => ({
-        documentTypeId: item.documentsId,
-        docFile: item.file,
-      })),
+
+    if (visaApplication) {
+      await updateVisaApplication.mutateAsync({
+        id: visaApplication.id,
+        payload,
+      })
+    } else {
+      const documentPayload = {
+        applicantId: values.applicantId,
+        documentsDTOs: attachedDocuments
+          .filter((doc) => doc.file)
+          .map((doc) => ({
+            documentTypeId: doc.documentsId,
+            docFile: doc.file,
+          })),
+      }
+      await addDocuments.mutateAsync(documentPayload)
+      await addVisaApplication.mutateAsync(payload)
     }
-    await addDocuments.mutateAsync(documentPayload)
-    await addVisaApplication.mutateAsync(payload)
+
     handleClose()
     onClose()
   }
@@ -120,7 +120,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
         <fieldset className="">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
-              Add Visa Application
+              {visaApplication ? 'Edit Visa Application' : 'Add Visa Application'}
             </h1>
             <button
               type="button"
@@ -136,7 +136,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               <AppCombobox
-                value={sellectedApplicantId}
+                value={applicantId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute z-20"
                 label="Applicant"
@@ -145,21 +145,17 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 required
                 options={allapplicant || []}
                 selected={
-                  allapplicant?.find((g) => g.id === sellectedApplicantId) ||
+                  allapplicant?.find((g) => g.id === applicantId) ||
                   null
                 }
                 onSelect={(group) => {
                   if (group) {
                     const id = group.id ?? ''
 
-                    setSelectedApplicantId(id || null)
-
                     form.setValue('applicantId', id, {
                       shouldValidate: true,
                     })
                   } else {
-                    setSelectedApplicantId(null)
-
                     form.setValue('applicantId', '', {
                       shouldValidate: true,
                     })
@@ -175,11 +171,11 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 name="intakeId"
                 dropDownWidth="w-full"
                 form={form}
-                value={form.watch('intakeId')}
+                value={intakeId}
                 options={intakeDetails || []}
                 selected={
                   intakeDetails?.find(
-                    (x) => x.id === form.watch('intakeId')
+                    (x) =>                     x.id === intakeId
                   ) || null
                 }
                 onSelect={(option) => {
@@ -197,7 +193,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
               />
 
               <AppCombobox
-                value={sellectedVisaStatusId}
+                value={visaStatusId}
                 dropDownWidth="w-full"
                 dropdownPositionClass="absolute z-20"
                 label="Visa Status"
@@ -206,21 +202,17 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
                 required
                 options={allVisaStatus || []}
                 selected={
-                  allVisaStatus?.find((g) => g.id === sellectedVisaStatusId) ||
+                  allVisaStatus?.find((g) => g.id === visaStatusId) ||
                   null
                 }
                 onSelect={(group) => {
                   if (group) {
                     const id = group.id ?? ''
 
-                    setSelectedVisaStatusId(id || null)
-
                     form.setValue('visaStatusId', id, {
                       shouldValidate: true,
                     })
                   } else {
-                    setSelectedVisaStatusId(null)
-
                     form.setValue('visaStatusId', '', {
                       shouldValidate: true,
                     })
@@ -319,7 +311,7 @@ const AddVisaApplicationForm = ({ form, onClose }: Props) => {
             <div className="flex justify-center mt-6">
               <ButtonElement
                 type="submit"
-                text={'Submit'}
+                text={visaApplication ? 'Update Visa Application' : 'Submit'}
                 className="cursor-pointer"
               />
             </div>

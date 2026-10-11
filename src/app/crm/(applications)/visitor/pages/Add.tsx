@@ -2,7 +2,6 @@
 import { useForm } from "react-hook-form";
 import { AddInquiryPayload } from "../types/IVisitors";
 //import { SubjectValidator } from "../validators/index";
-import AddLeadForm from "../components/AddInquiryForm";
 import AddInquiryForm from "../components/AddInquiryForm";
 
 interface Props {
