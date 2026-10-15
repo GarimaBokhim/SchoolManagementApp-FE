@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -17,8 +17,10 @@ import { EditButton } from '@/components/Buttons/EditButton'
 import AddIntakees from '../pages/Add'
 import EditIntake from '../pages/Edit'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    month: number | ''
     startDate: string
     endDate: string
 }
@@ -168,11 +170,12 @@ const AllIntakeForm = () => {
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { month: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -188,7 +191,7 @@ const AllIntakeForm = () => {
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+            formData.month ? `month=${formData.month}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -200,6 +203,11 @@ const AllIntakeForm = () => {
         setParams(fullQuery) // 👈 THIS triggers auto refetch
 
         toast.success(data?.message || 'Data loaded successfully')
+    }
+
+    const onClearFilters = () => {
+        formRef.current?.handleClear()
+        setSelectedMonth(null)
     }
 
 
@@ -219,12 +227,6 @@ const AllIntakeForm = () => {
     ];
 
 
-
-    const handleClearFilters = () => {
-        form.reset({ startDate: '', endDate: '' })
-        setParams('')
-        formRef.current?.handleClear()
-    }
 
     const handleEditIntake = (Intake: IntakeResponse) => {
         setEditIntakeId(Intake.id)
@@ -332,7 +334,45 @@ const AllIntakeForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedMonth}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Month"
+                                        name="month"
+                                        form={form}
+                                        options={monthType}
+                                        selected={
+                                            monthType.find(
+                                                (month) => month.id === selectedMonth
+                                            ) || undefined
+                                        }
+                                        onSelect={(month) => {
+                                            setSelectedMonth(month?.id ?? null)
+                                        }}
+                                        getLabel={(month) => month.name}
+                                        getValue={(month) => month.id}
+                                        placeholder="Search month"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilters}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}

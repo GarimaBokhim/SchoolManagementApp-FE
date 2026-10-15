@@ -171,16 +171,13 @@ const AllRequirementsForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { courseId: '', startDate: '', endDate: '' },
     })
-    const [selectedCourseName, setSelectedCourseName] = useState<string | null>(
-        ""
-    );
+    const [selectedCourseName, setSelectedCourseName] = useState<string | null>(null)
 
     const onClearClick = () => {
-        setParams("");
-        formRef.current?.handleClear();
-        form.reset();
+        formRef.current?.handleClear()
+        setSelectedCourseName(null)
     };
 
 
@@ -332,6 +329,7 @@ const AllRequirementsForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
@@ -344,23 +342,20 @@ const AllRequirementsForm = () => {
                                         form={form}
                                         options={getallCourse}
                                         selected={
-                                            data?.Items?.find(
+                                            getallCourse?.find(
                                                 (g) => g.title === selectedCourseName
                                             ) || null
                                         }
                                         onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedCourseName(group.title || null);
-                                            } else {
-                                                setSelectedCourseName(null);
-                                            }
+                                            setSelectedCourseName(group?.title ?? null)
                                         }}
                                         getLabel={(g) => g?.title ?? ""}
                                         getValue={(g) => g?.id ?? ""}
+                                        placeholder="Search course"
                                     />
                                 </div>
 
-                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                <div className="flex items-center gap-2">
                                     <ButtonElement
                                         type="submit"
                                         text="Filter"
@@ -372,7 +367,7 @@ const AllRequirementsForm = () => {
                                         text="Clear"
                                         icon={<RotateCcw size={14} />}
                                         onClick={onClearClick}
-                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                        className="!bg-red-600 hover:!bg-red-700"
                                     />
                                 </div>
                             </form>

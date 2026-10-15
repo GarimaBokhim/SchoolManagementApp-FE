@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
-import toast from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
@@ -199,20 +198,22 @@ const AllTrainingRegistrationForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { applicantId: '', startDate: '', endDate: '' },
     })
 
     const [selectedApplicantName, setSelectedApplicantName] = useState<string | null>(
-        ""
+        null
     );
 
     const onClearClick = () => {
         setParams("");
+        setPaginationParams((current) => ({ ...current, pageIndex: 1 }));
         formRef.current?.handleClear();
-        form.reset();
+        form.reset({ applicantId: '', startDate: '', endDate: '' });
+        setSelectedApplicantName(null);
     };
 
-    const { data, isLoading, error } = useGetAllTrainingRegistration(params)
+    const { data, isLoading, error } = useGetAllTrainingRegistration(fullQuery)
 
     const { data: getAllApplicant } = useGetAllApplicants();
     const deleteTrainingRegistration = useDeleteTrainingRegistration()
@@ -223,6 +224,7 @@ const AllTrainingRegistrationForm = () => {
     const onFilterSubmit = async (formData: FilterFormData) => {
         clearError()
         try {
+            setPaginationParams((current) => ({ ...current, pageIndex: 1 }));
             const queryParams = [
                 formData.applicantId
                     ? `applicantId=${encodeURIComponent(formData.applicantId)}`
@@ -236,16 +238,8 @@ const AllTrainingRegistrationForm = () => {
             ]
                 .filter(Boolean)
                 .join('&')
-            const fullQuery = queryParams ? `?${queryParams}` : ''
-            await toast.promise(
-                (async () => {
-                    setParams(fullQuery)
-                })(),
-                {
-                    loading: 'Fetching data...',
-                    success: 'Data fetched successfully!',
-                }
-            )
+            setParams(queryParams ? `&${queryParams}` : '')
+            Toast.info('Filter applied')
         } catch (error) {
             const errorMsg = handleError(error)
             Toast.error(errorMsg)
@@ -257,8 +251,10 @@ const AllTrainingRegistrationForm = () => {
 
 
     const handleClearFilters = () => {
-        form.reset({ startDate: '', endDate: '' })
+        form.reset({ applicantId: '', startDate: '', endDate: '' })
         setParams('')
+        setSelectedApplicantName(null)
+        setPaginationParams((current) => ({ ...current, pageIndex: 1 }))
         formRef.current?.handleClear()
     }
 
@@ -366,6 +362,7 @@ const AllTrainingRegistrationForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
@@ -383,18 +380,15 @@ const AllTrainingRegistrationForm = () => {
                                             ) || null
                                         }
                                         onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedApplicantName(group.fullName || null);
-                                            } else {
-                                                setSelectedApplicantName(null);
-                                            }
+                                            setSelectedApplicantName(group?.fullName ?? null);
                                         }}
                                         getLabel={(g) => g?.fullName ?? ""}
                                         getValue={(g) => g?.id ?? ""}
+                                        placeholder="Search applicant"
                                     />
                                 </div>
 
-                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                <div className="flex items-center gap-2">
                                     <ButtonElement
                                         type="submit"
                                         text="Filter"
@@ -406,7 +400,7 @@ const AllTrainingRegistrationForm = () => {
                                         text="Clear"
                                         icon={<RotateCcw size={14} />}
                                         onClick={onClearClick}
-                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                        className="!bg-red-600 hover:!bg-red-700"
                                     />
                                 </div>
                             </form>

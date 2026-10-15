@@ -12,24 +12,25 @@ import {
     useGetAllCountry,
     useGetAllVisaStatus,
     useGetCourseByUniversity,
+    useUpdateVisaRequirement,
     useGetUniversityByCountry
 } from '../hooks';
 
 import useErrorHandler from '@/components/helpers/ErrorHandling';
-import { useEffect, useState } from 'react';
+import { Toast } from '@/components/Toast/toast';
+import { useEffect } from 'react';
 
 type Props = {
     form: UseFormReturn<AddVisaRequirementPayload>;
     onClose: () => void;
+    visaRequirementId?: string;
 };
 
-const AddVisaRequirementForm = ({ form, onClose }: Props) => {
+const AddVisaRequirementForm = ({ form, onClose, visaRequirementId }: Props) => {
     const addVisaRequirement = useAddVisaRequirement();
+    const updateVisaRequirement = useUpdateVisaRequirement();
     const { handleError, clearError } = useErrorHandler();
-
-    const [visaRequirementStatus, setVisaRequirementStatus] = useState<number | null>(
-        null
-    )
+    const isEditing = Boolean(visaRequirementId);
 
     const { data: country } = useGetAllCountry();
     const { data: visaStatus } = useGetAllVisaStatus();
@@ -47,6 +48,8 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
     });
 
     useEffect(() => {
+        if (isEditing) return;
+
         fields.forEach((_, index) => {
             form.setValue(
                 `visaRequirementsDetailsDTOs.${index}.step`,
@@ -57,7 +60,7 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                 }
             );
         });
-    }, [fields, form]);
+    }, [fields, form, isEditing]);
 
     const handleClose = () => {
         form.reset({
@@ -78,31 +81,57 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
 
 
 
-    const onSubmit: SubmitHandler<AddVisaRequirementPayload> = async () => {
+    const onSubmit: SubmitHandler<AddVisaRequirementPayload> = async (values) => {
+        if (addVisaRequirement.isPending || updateVisaRequirement.isPending) return;
+
         clearError();
-        const values = form.getValues();
+        try {
+            if (visaRequirementId) {
+                await updateVisaRequirement.mutateAsync({
+                    id: visaRequirementId,
+                    payload: {
+                        id: visaRequirementId,
+                        countryId: values.countryId,
+                        universityId: values.universityId,
+                        courseId: values.courseId,
+                        visaRequirementsDetailsDTOs: (values.visaRequirementsDetailsDTOs ?? []).map(
+                            (item) => ({
+                                id: item.id ?? '',
+                                step: Number(item.step),
+                                visaStatusId: item.visaStatusId,
+                                visaRequirementsId: visaRequirementId,
+                                visaRequirementStatus: item.visaRequirementStatus,
+                            })
+                        ),
+                    },
+                });
+            } else {
+                await addVisaRequirement.mutateAsync({
+                    countryId: values.countryId,
+                    universityId: values.universityId,
+                    courseId: values.courseId,
+                    visaRequirementsDetailsDTOs: (values.visaRequirementsDetailsDTOs ?? []).map(
+                        (item) => ({
+                            step: Number(item.step),
+                            visaStatusId: item.visaStatusId,
+                            visaRequirementStatus: item.visaRequirementStatus,
+                        })
+                    ),
+                });
+            }
 
-        const payload = {
-            countryId: values.countryId,
-            universityId: values.universityId,
-            courseId: values.courseId,
-            visaRequirementsDetailsDTOs: (values.visaRequirementsDetailsDTOs ?? []).map(
-                (item) => ({
-                    step: Number(item.step),
-                    visaStatusId: item.visaStatusId,
-                    visaRequirementStatus: item.visaRequirementStatus
-                })
-            ),
-        };
-
-        await addVisaRequirement.mutateAsync(payload);
-        handleClose();
+            handleClose();
+        } catch (error) {
+            Toast.error(handleError(error));
+        }
     };
 
     return (
         <div className="w-full h-full bg-white dark:bg-[#27272a] p-4 overflow-auto relative">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-xl font-semibold">Add VisaRequirement</h1>
+                <h1 className="text-xl font-semibold">
+                    {isEditing ? 'Update Visa Requirement' : 'Add VisaRequirement'}
+                </h1>
 
                 <button
                     type="button"
@@ -202,6 +231,15 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                         const visaStatusValue = form.watch(
                             `visaRequirementsDetailsDTOs.${index}.visaStatusId`
                         );
+                        const visaRequirementStatusValue = form.watch(
+                            `visaRequirementsDetailsDTOs.${index}.visaRequirementStatus`
+                        );
+                        const visaRequirementStatusOptions = [
+                            { id: 1, name: "Completed" },
+                            { id: 2, name: "Pending" },
+                            { id: 3, name: "Rejected" },
+                            { id: 4, name: "ActionRequired" },
+                        ];
 
                         return (
                             <div
@@ -218,7 +256,17 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                             type="button"
                                             onClick={() =>
                                                 append({
-                                                    step: fields.length + 1,
+                                                    step:
+                                                        Math.max(
+                                                            0,
+                                                            ...fields.map((item, fieldIndex) =>
+                                                                Number(
+                                                                    form.getValues(
+                                                                        `visaRequirementsDetailsDTOs.${fieldIndex}.step`
+                                                                    )
+                                                                )
+                                                            )
+                                                        ) + 1,
                                                     visaStatusId: "",
                                                     visaRequirementStatus: 0,
                                                 })
@@ -280,21 +328,12 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                                         dropdownPositionClass="absolute"
                                         name={`visaRequirementsDetailsDTOs.${index}.visaRequirementStatus`}
                                         form={form}
-                                        options={[
-                                            { id: 1, name: "Completed" },
-                                            { id: 2, name: "Pending" },
-                                            { id: 3, name: "Rejected" },
-                                            { id: 4, name: "ActionRequired" },
-                                        ]}
+                                        options={visaRequirementStatusOptions}
                                         dropDownWidth="w-full"
                                         selected={
-                                            [
-                                                { id: 1, name: "Completed" },
-                                                { id: 2, name: "Pending" },
-                                                { id: 3, name: "Rejected" },
-                                                { id: 4, name: "ActionRequired" },
-                                            ].find(
-                                                (x) => x.id === visaRequirementStatus
+                                            visaRequirementStatusOptions.find(
+                                                (option) =>
+                                                    option.id === Number(visaRequirementStatusValue)
                                             ) ?? null
                                         }
                                         onSelect={(option) => {
@@ -317,7 +356,17 @@ const AddVisaRequirementForm = ({ form, onClose }: Props) => {
                 </div>
 
                 <div className="flex justify-center mt-6">
-                    <ButtonElement type="submit" text="Submit" />
+                    <ButtonElement
+                        type="submit"
+                        text={
+                            addVisaRequirement.isPending || updateVisaRequirement.isPending
+                                ? 'Saving...'
+                                : isEditing
+                                    ? 'Update Visa Requirement'
+                                    : 'Submit'
+                        }
+                        disabled={addVisaRequirement.isPending || updateVisaRequirement.isPending}
+                    />
                 </div>
             </form>
         </div>

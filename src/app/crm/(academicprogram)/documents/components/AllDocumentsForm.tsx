@@ -12,6 +12,7 @@ import {
     Filter,
     MoreVertical,
     ReceiptIndianRupeeIcon,
+    RotateCcw,
     Trash,
     XCircle,
 } from 'lucide-react'
@@ -22,12 +23,14 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, {
     DateRangeFilterRef,
 } from '@/components/DateFilter/FilterComponent'
-import { useDeleteDocuments, useGetAllDocuments } from '../hooks'
+import { useDeleteDocuments, useFilterAllApplicants, useGetAllDocuments } from '../hooks'
 import { DocumentsResponse } from '../types/IDocuments'
 import DeleteOverlapComponents from '@/components/DeleteComponent/DeleteOverlapComponents'
 import EditDocuments from '../pages/Edit'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    applicantId: string
     startDate: string
     endDate: string
 }
@@ -507,6 +510,9 @@ export const AllDocumentsForm = ({
     const [params, setParams] =
         useState<string>('')
 
+    const [selectedApplicantId, setSelectedApplicantId] =
+        useState<string | null>(ApplicantId)
+
     const [currentPage, setCurrentPage] =
         useState(1)
 
@@ -522,6 +528,7 @@ export const AllDocumentsForm = ({
     const filterForm =
         useForm<FilterFormData>({
             defaultValues: {
+                applicantId: ApplicantId ?? '',
                 startDate: '',
                 endDate: '',
             },
@@ -548,10 +555,13 @@ export const AllDocumentsForm = ({
         const base =
             new URLSearchParams(params)
 
-        if (ApplicantId) {
+        const applicantId =
+            base.get('applicantId') || ApplicantId
+
+        if (applicantId) {
             base.set(
-                'ApplicantId',
-                ApplicantId
+                'applicantId',
+                applicantId
             )
         }
 
@@ -587,8 +597,12 @@ export const AllDocumentsForm = ({
         error,
     } = useGetAllDocuments(
         queryParams,
-        isOpen && !!ApplicantId
+        isOpen && !!(new URLSearchParams(params).get('applicantId') || ApplicantId)
     )
+    const { data: applicantOptions } = useFilterAllApplicants(
+        'pageSize=100&pageIndex=1&isPagination=false'
+    )
+    const applicants = applicantOptions?.items ?? []
 
     const DocumentsDetails =
         data?.items ?? []
@@ -616,6 +630,13 @@ export const AllDocumentsForm = ({
         const newParams =
             new URLSearchParams()
 
+        if (formData.applicantId) {
+            newParams.set(
+                'applicantId',
+                formData.applicantId
+            )
+        }
+
         if (formData.startDate) {
             newParams.set(
                 'startDate',
@@ -640,9 +661,15 @@ export const AllDocumentsForm = ({
        ===================================================== */
 
     const clearFilters = () => {
-        filterForm.reset()
+        formRef.current?.handleClear()
+        filterForm.reset({
+            applicantId: ApplicantId ?? '',
+            startDate: '',
+            endDate: '',
+        })
 
         setParams('')
+        setSelectedApplicantId(ApplicantId)
 
         setCurrentPage(1)
     }
@@ -1004,47 +1031,57 @@ export const AllDocumentsForm = ({
                                     "
                                 >
 
-                                    <DateRangeFilter
-                                        ref={formRef}
-                                        form={filterForm}
-                                        onSubmit={
-                                            onFilterSubmit
-                                        }
-                                        setParams={
-                                            setParams
-                                        }
-                                        startDateKey="startDate"
-                                        endDateKey="endDate"
-                                    />
-
-                                    {/* Optional clear button */}
-
-                                    {(params ||
-                                        filterForm.watch(
-                                            'startDate'
-                                        ) ||
-                                        filterForm.watch(
-                                            'endDate'
-                                        )) && (
-                                            <div className="mt-3">
-
-                                                <button
-                                                    type="button"
-                                                    onClick={
-                                                        clearFilters
-                                                    }
-                                                    className="
-                                                    text-sm
-                                                    text-red-600
-                                                    hover:text-red-700
-                                                    font-medium
-                                                "
-                                                >
-                                                    Clear Filters
-                                                </button>
-
-                                            </div>
-                                        )}
+                                    <form
+                                        onSubmit={filterForm.handleSubmit(onFilterSubmit)}
+                                        className="flex flex-wrap items-end gap-4 md:gap-6"
+                                    >
+                                        <DateRangeFilter
+                                            ref={formRef}
+                                            form={filterForm}
+                                            onSubmit={onFilterSubmit}
+                                            setParams={setParams}
+                                            startDateKey="startDate"
+                                            endDateKey="endDate"
+                                            showSubmitButton={false}
+                                        />
+                                        <div className="flex-1 min-w-[240px]">
+                                            <AppCombobox
+                                                value={selectedApplicantId}
+                                                dropDownWidth="w-full"
+                                                dropdownPositionClass="absolute"
+                                                label="Applicant"
+                                                name="applicantId"
+                                                form={filterForm}
+                                                options={applicants}
+                                                selected={
+                                                    applicants?.find(
+                                                        (applicant) => applicant.id === selectedApplicantId
+                                                    ) || null
+                                                }
+                                                onSelect={(applicant) => {
+                                                    setSelectedApplicantId(applicant?.id ?? null)
+                                                }}
+                                                getLabel={(applicant) => applicant?.fullName ?? ''}
+                                                getValue={(applicant) => applicant?.id ?? ''}
+                                                placeholder="Search applicant"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <ButtonElement
+                                                type="submit"
+                                                text="Filter"
+                                                icon={<Filter size={14} />}
+                                                className="!bg-emerald-600 hover:!bg-emerald-700"
+                                            />
+                                            <ButtonElement
+                                                type="button"
+                                                text="Clear"
+                                                icon={<RotateCcw size={14} />}
+                                                onClick={clearFilters}
+                                                className="!bg-red-600 hover:!bg-red-700"
+                                            />
+                                        </div>
+                                    </form>
 
                                 </div>
                             )}

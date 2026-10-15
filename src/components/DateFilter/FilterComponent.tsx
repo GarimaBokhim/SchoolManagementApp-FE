@@ -15,6 +15,7 @@ type DateRangeFilterProps<T extends FieldValues> = {
   setParams: (param: string) => void;
   startDateKey?: Path<T>;
   endDateKey?: Path<T>;
+  showSubmitButton?: boolean;
 };
 
 function DateRangeFilterInner<T extends FieldValues>(
@@ -24,6 +25,7 @@ function DateRangeFilterInner<T extends FieldValues>(
     setParams,
     startDateKey = "startDate" as Path<T>,
     endDateKey = "endDate" as Path<T>,
+    showSubmitButton = true,
   }: DateRangeFilterProps<T>,
   ref: React.Ref<DateRangeFilterRef>
 ) {
@@ -100,11 +102,13 @@ function DateRangeFilterInner<T extends FieldValues>(
             text="This Year"
           />
 
-          <ButtonElement
-            className="sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border border-transparent bg-gray-600 text-white hover:bg-gray-700"
-            type="submit"
-            text="Submit"
-          />
+          {showSubmitButton && (
+            <ButtonElement
+              className="sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border border-transparent bg-gray-600 text-white hover:bg-gray-700"
+              type="submit"
+              text="Submit"
+            />
+          )}
         </div>
       ) : (
         <div className="flex flex-col md:flex-row md:items-end gap-2 w-full">

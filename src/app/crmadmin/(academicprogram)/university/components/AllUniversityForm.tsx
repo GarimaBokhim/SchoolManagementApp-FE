@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -17,8 +17,10 @@ import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import EditUniversity from '../pages/Edit'
 import AddUniversity from '../pages/Add'
 import AddCourse from '../../course/pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    name: string
     startDate: string
     endDate: string
 }
@@ -150,11 +152,12 @@ const AllUniversityForm = () => {
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedUniversityName, setSelectedUniversityName] = useState<string | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { name: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -167,13 +170,15 @@ const AllUniversityForm = () => {
     })
 
     const { data, isLoading, error } = useGetAllUniversity(params)
+    const { data: universityOptionsData } = useGetAllUniversity('isPagination=false')
+    const universityOptions = universityOptionsData?.items ?? []
     const deleteUniversity = useDeleteUniversity()
     const universityDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+            formData.name?.trim() ? `name=${encodeURIComponent(formData.name.trim())}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -184,6 +189,10 @@ const AllUniversityForm = () => {
         setParams(fullQuery)
     }
 
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        setSelectedUniversityName(null)
+    }
 
     const handleEditUniversity = (FollowUp: UniversityResponse) => {
         setEditUniversityId(FollowUp.id)
@@ -287,7 +296,45 @@ const AllUniversityForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedUniversityName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="University Name"
+                                        name="name"
+                                        form={form}
+                                        options={universityOptions}
+                                        selected={
+                                            universityOptions.find(
+                                                (university) => university.name === selectedUniversityName
+                                            ) || undefined
+                                        }
+                                        onSelect={(university) => {
+                                            setSelectedUniversityName(university?.name ?? null)
+                                        }}
+                                        getLabel={(university) => university.name}
+                                        getValue={(university) => university.name}
+                                        placeholder="Search university"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}

@@ -13,6 +13,7 @@ import { useDeleteVisaRequirement, useGetAllCountry, useGetAllVisaRequirement } 
 import { AddVisaRequirementResponse, UpdateVisaRequirementResponse } from '../types/IVisaRequirements'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import AddVisaRequirements from '../pages/Add'
+import EditVisaRequirements from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
@@ -537,16 +538,14 @@ const AllVisaRequirementsForm = () => {
 
 
 
-            {/* {showEditModal && editVisaRequirementsId && (
+            {showEditModal && editVisaRequirementsId && (
 
                 <EditVisaRequirements
                     VisaRequirementsId={editVisaRequirementsId}
                     visible={showEditModal}
                     onClose={() => setShowEditModal(false)}
-
-
                 />
-            )} */}
+            )}
 
             <AddVisaRequirements
                 visible={addModal}
