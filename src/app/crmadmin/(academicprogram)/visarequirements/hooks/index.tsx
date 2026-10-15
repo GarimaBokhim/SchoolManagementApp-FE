@@ -9,9 +9,9 @@ import { AddVisaRequirementPayload } from '../types/IVisaRequirements'
 export const VisaRequirementEndpoints = {
     filter: '/api/AcademicPrograms/FilterVisaRequirements',
     add: '/api/AcademicPrograms/AddVisaRequirements',
-    update: '/api/AcademicPrograms/UploadApplicantVisaRequirement',
-    delete: '/api/AcademicPrograms/DeleteVisaRequirement',
-    getById: '/api/AcademicPrograms/VisaRequirement',
+    update: '/api/AcademicPrograms/UpdateVisaRequirements',
+    delete: '/api/AcademicPrograms/DeleteVisaRequirements',
+    getById: '/api/AcademicPrograms/VisaRequirementsById',
     filterVisaStatus: '/api/VisaApplication/FilterVisaStatus',
     country: '/api/AcademicPrograms/GetAllCountry',
     CourseByUniversity: '/api/AcademicPrograms/CourseByUniversity',
@@ -34,10 +34,11 @@ const normalizeUpdateVisaRequirementPayload = (data: UpdateVisaRequirementPayloa
     countryId: String(data.countryId ?? '').trim(),
     universityId: String(data.universityId ?? '').trim(),
     courseId: String(data.courseId ?? '').trim(),
-    updatevisaRequirementsDetailsDTOs: (data.updatevisaRequirementsDetailsDTOs ?? []).map(item => ({
+    visaRequirementsDetailsDTOs: (data.visaRequirementsDetailsDTOs ?? []).map(item => ({
         id: String(item.id ?? '').trim(),
         step: Number(item.step ?? 0),
         visaStatusId: String(item.visaStatusId ?? '').trim(),
+        visaRequirementsId: String(item.visaRequirementsId ?? '').trim(),
         visaRequirementStatus: Number(item.visaRequirementStatus ?? 0),
     })),
 });
@@ -303,6 +304,3 @@ export const useGetUniversityByCountry = (CountryId?: string | null) => {
         staleTime: 1000 * 60 * 5,
     });
 };
-
-
-

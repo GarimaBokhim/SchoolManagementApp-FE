@@ -11,6 +11,7 @@ export interface VisaRequirementResponse {
 }
 
 export interface VisaRequirementsDTOs {
+    id?: string
     step: number
     visaStatusId: string
     visaStatusName: string
@@ -21,13 +22,18 @@ export interface VisaRequirementsDTOs {
 export interface VisaRequirementIdResponse {
     id: string
     countryId: string
-    countryName: string
     universityId: string
-    universityName: string
-    universityAddress: string
     courseId: string
-    courseTitle: string
-    visaRequirementsDTOs: VisaRequirementsDTOs[]
+    visaRequirementsDetailsDTOs: VisaRequirementDetailResponse[]
+}
+
+export interface VisaRequirementDetailResponse {
+    id: string
+    step: number
+    visaStatusId: string
+    visaRequirementsId: string
+    visaRequirementStatus: number
+    isActive: boolean
 }
 
 export interface AddVisaRequirementResponse {
@@ -50,7 +56,7 @@ export interface UpdateVisaRequirementPayload {
     countryId: string
     universityId: string
     courseId: string
-    updatevisaRequirementsDetailsDTOs: UpdateVisaRequirementDetaisDTOs[]
+    visaRequirementsDetailsDTOs: UpdateVisaRequirementDetaisDTOs[]
 
 }
 
@@ -58,6 +64,7 @@ export interface UpdateVisaRequirementDetaisDTOs {
     id: string
     step: number
     visaStatusId: string
+    visaRequirementsId: string
     visaRequirementStatus: number
 
 }
@@ -70,6 +77,7 @@ export interface AddVisaRequirementPayload {
 }
 
 export interface VisaRequirementDetailsDTOs {
+    id?: string
     step: number
     visaStatusId: string
     visaRequirementStatus: number

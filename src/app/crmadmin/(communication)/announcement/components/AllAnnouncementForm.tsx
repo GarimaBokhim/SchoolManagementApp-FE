@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -170,7 +170,7 @@ const AllAnnouncementForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { title: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -183,6 +183,8 @@ const AllAnnouncementForm = () => {
     })
 
     const { data, isLoading, error, refetch } = useGetAllAnnouncement(params)
+    const { data: announcementOptionsData } = useGetAllAnnouncement('isPagination=false')
+    const announcementOptions = announcementOptionsData?.items ?? []
     const deleteAnnouncement = useDeleteAnnouncement()
     const AnnouncementDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
@@ -190,7 +192,7 @@ const AllAnnouncementForm = () => {
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            formData.title ? `name=${encodeURIComponent(formData.title)}` : null,
+            formData.title?.trim() ? `title=${encodeURIComponent(formData.title.trim())}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -199,6 +201,11 @@ const AllAnnouncementForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
         setParams(fullQuery)
+    }
+
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        setSelectedAnnouncementTitle(null)
     }
 
 
@@ -360,8 +367,8 @@ const AllAnnouncementForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
-
 
                                 <div className="flex-1 min-w-[240px]">
                                     <AppCombobox
@@ -371,21 +378,33 @@ const AllAnnouncementForm = () => {
                                         label="Title"
                                         name="title"
                                         form={form}
-                                        options={AnnouncementDetails}
+                                        options={announcementOptions}
                                         selected={
-                                            AnnouncementDetails?.find(
+                                            announcementOptions.find(
                                                 (g: AnnouncementResponse) => g.title === selectedAnnouncementTitle
                                             ) || null
                                         }
                                         onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedAnnouncementTitle(group.title || null);
-                                            } else {
-                                                setSelectedAnnouncementTitle(null);
-                                            }
+                                            setSelectedAnnouncementTitle(group?.title ?? null)
                                         }}
                                         getLabel={(g) => g?.title ?? ""}
-                                        getValue={(g) => g?.id ?? ""}
+                                        getValue={(g) => g?.title ?? ""}
+                                        placeholder="Search announcement"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
                                     />
                                 </div>
                             </form>

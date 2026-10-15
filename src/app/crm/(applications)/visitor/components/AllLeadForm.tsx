@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
-import toast from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
@@ -16,9 +15,8 @@ import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import AddInquiry from '../pages/Add'
 import EditInquiry from '../pages/Edit'
-import useErrorHandler from '@/components/helpers/ErrorHandling'
-import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
+import { Toast } from '@/components/Toast/toast'
 
 interface FilterFormData {
     startDate: string
@@ -136,7 +134,6 @@ const ActionMenu = ({ Inquiry, onEdit, onDelete, canEdit = true, canDelete = tru
 
 const AllInquiryForm = () => {
     const { menuStatus } = usePermissions()
-    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
@@ -178,17 +175,14 @@ const AllInquiryForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { userId: '', startDate: '', endDate: '' },
     })
 
-    const [selectedUserName, setSelectedUserName] = useState<string | null>(
-        ""
-    );
+    const [selectedUserName, setSelectedUserName] = useState<string | null>(null)
 
     const onClearClick = () => {
-        setParams("");
-        formRef.current?.handleClear();
-        form.reset();
+        formRef.current?.handleClear()
+        setSelectedUserName(null)
     };
 
 
@@ -201,37 +195,23 @@ const AllInquiryForm = () => {
 
     const inquiryDetails = data?.Items ?? [];
 
-    const onFilterSubmit = async (formData: FilterFormData) => {
-        clearError()
-        try {
-            const queryParams = [
-                formData.userId
-                    ? `userId=${encodeURIComponent(formData.userId)}`
-                    : null,
-                formData.startDate
-                    ? `startDate=${encodeURIComponent(formData.startDate)}`
-                    : null,
-                formData.endDate
-                    ? `endDate=${encodeURIComponent(formData.endDate)}`
-                    : null,
-            ]
-                .filter(Boolean)
-                .join('&')
-            const fullQuery = queryParams ? `?${queryParams}` : ''
-            await toast.promise(
-                (async () => {
-                    setParams(fullQuery)
-                })(),
-                {
-                    loading: 'Fetching data...',
-                    success: 'Data fetched successfully!',
-                }
-            )
-        } catch (error) {
-            const errorMsg = handleError(error)
-            Toast.error(errorMsg)
-            console.error('Error during form submission:', error)
-        }
+    const onFilterSubmit = (formData: FilterFormData) => {
+        const queryParams = [
+            formData.userId
+                ? `userId=${encodeURIComponent(formData.userId)}`
+                : null,
+            formData.startDate
+                ? `startDate=${encodeURIComponent(formData.startDate)}`
+                : null,
+            formData.endDate
+                ? `endDate=${encodeURIComponent(formData.endDate)}`
+                : null,
+        ]
+            .filter(Boolean)
+            .join('&')
+        const fullQuery = queryParams ? `?${queryParams}` : ''
+        setParams(fullQuery)
+        Toast.info('Data Fetched Successfully')
     }
 
     const EnrollmentTypes = [
@@ -348,6 +328,7 @@ const AllInquiryForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
@@ -358,25 +339,22 @@ const AllInquiryForm = () => {
                                         label="User"
                                         name="userId"
                                         form={form}
-                                        options={data?.Items}
+                                        options={getAllUserProfile}
                                         selected={
                                             getAllUserProfile?.find(
                                                 (g) => g.fullName === selectedUserName
                                             ) || null
                                         }
                                         onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedUserName(group.fullName || null);
-                                            } else {
-                                                setSelectedUserName(null);
-                                            }
+                                            setSelectedUserName(group?.fullName ?? null)
                                         }}
                                         getLabel={(g) => g?.fullName ?? ""}
                                         getValue={(g) => g?.id ?? ""}
+                                        placeholder="Search user"
                                     />
                                 </div>
 
-                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                <div className="flex items-center gap-2">
                                     <ButtonElement
                                         type="submit"
                                         text="Filter"
@@ -388,7 +366,7 @@ const AllInquiryForm = () => {
                                         text="Clear"
                                         icon={<RotateCcw size={14} />}
                                         onClick={onClearClick}
-                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                        className="!bg-red-600 hover:!bg-red-700"
                                     />
                                 </div>
                             </form>

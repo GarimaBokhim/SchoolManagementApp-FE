@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -17,8 +17,10 @@ import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import AddCountry from '../pages/Add'
 import EditCountry from '../pages/Edit'
 import AddUniversity from '../../university/pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    name: string
     startDate: string
     endDate: string
 }
@@ -155,11 +157,12 @@ const AllCountryForm = () => {
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedCountryName, setSelectedCountryName] = useState<string | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { name: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -172,13 +175,15 @@ const AllCountryForm = () => {
     })
 
     const { data, isLoading, error } = useGetAllCountry(params)
+    const { data: countryOptionsData } = useGetAllCountry('isPagination=false')
+    const countryOptions = countryOptionsData?.items ?? []
     const deleteCountry = useDeleteCountry()
     const CountryDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+            formData.name?.trim() ? `name=${encodeURIComponent(formData.name.trim())}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -187,6 +192,11 @@ const AllCountryForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
         setParams(fullQuery)
+    }
+
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        setSelectedCountryName(null)
     }
 
 
@@ -292,7 +302,45 @@ const AllCountryForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedCountryName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Country Name"
+                                        name="name"
+                                        form={form}
+                                        options={countryOptions}
+                                        selected={
+                                            countryOptions.find(
+                                                (country) => country.name === selectedCountryName
+                                            ) || undefined
+                                        }
+                                        onSelect={(country) => {
+                                            setSelectedCountryName(country?.name ?? null)
+                                        }}
+                                        getLabel={(country) => country.name}
+                                        getValue={(country) => country.name}
+                                        placeholder="Search country"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}

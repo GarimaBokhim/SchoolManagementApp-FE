@@ -21,6 +21,7 @@ import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
 import {
   useDeleteVisaApplication,
+  useGetAllApplicants,
   useGetAllVisaApplication,
   useGetAllVisaStatus,
 } from '../hooks'
@@ -34,6 +35,7 @@ import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
   name: string
+  applicantId: string
   startDate: string
   endDate: string
 }
@@ -211,6 +213,7 @@ const AllVisaApplicationForm = () => {
   const fullQuery = query + (params || '')
   const { data, isLoading, error } = useGetAllVisaApplication(fullQuery)
   const { data: visaStatusOptions = [] } = useGetAllVisaStatus()
+  const { data: applicantOptions = [] } = useGetAllApplicants()
 
   //const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
@@ -225,11 +228,12 @@ const AllVisaApplicationForm = () => {
   const [selectedVisaStatusName, setSelectedVisaStatusName] = useState<
     string | null
   >('')
+  const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null)
 
   const formRef = useRef<DateRangeFilterRef>(null)
 
   const form = useForm<FilterFormData>({
-    defaultValues: { name: '', startDate: '', endDate: '' },
+    defaultValues: { name: '', applicantId: '', startDate: '', endDate: '' },
   })
 
   const deleteVisaApplication = useDeleteVisaApplication()
@@ -239,7 +243,11 @@ const AllVisaApplicationForm = () => {
   const onFilterSubmit: SubmitHandler<FilterFormData> = async (formData) => {
     clearError()
     try {
+      setPaginationParams((current) => ({ ...current, pageIndex: 1 }))
       const queryParams = [
+        selectedApplicantId
+          ? `applicantId=${encodeURIComponent(selectedApplicantId)}`
+          : null,
         formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
@@ -269,9 +277,11 @@ const AllVisaApplicationForm = () => {
 
   const onClearClick = () => {
     setParams('')
+    setPaginationParams((current) => ({ ...current, pageIndex: 1 }))
     setSelectedVisaStatusName(null)
+    setSelectedApplicantId(null)
     formRef.current?.handleClear()
-    form.reset({ name: '', startDate: '', endDate: '' })
+    form.reset({ name: '', applicantId: '', startDate: '', endDate: '' })
   }
 
   const monthType = [
@@ -391,8 +401,31 @@ const AllVisaApplicationForm = () => {
                   setParams={setParams}
                   startDateKey="startDate"
                   endDateKey="endDate"
+                  showSubmitButton={false}
                 />
 
+                <div className="flex-1 min-w-[240px]">
+                  <AppCombobox
+                    value={selectedApplicantId}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Applicant"
+                    name="applicantId"
+                    form={form}
+                    options={applicantOptions}
+                    selected={
+                      applicantOptions.find(
+                        (applicant) => applicant.id === selectedApplicantId
+                      ) ?? null
+                    }
+                    onSelect={(applicant) => {
+                      setSelectedApplicantId(applicant?.id ?? null)
+                    }}
+                    getLabel={(applicant) => applicant?.fullName ?? ''}
+                    getValue={(applicant) => applicant?.id ?? ''}
+                    placeholder="Search applicant"
+                  />
+                </div>
                 <div className="flex-1 min-w-[240px]">
                   <AppCombobox
                     value={selectedVisaStatusName}
@@ -415,7 +448,7 @@ const AllVisaApplicationForm = () => {
                   />
                 </div>
 
-                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                <div className="flex items-center gap-2">
                   <ButtonElement
                     type="submit"
                     text="Filter"
@@ -427,7 +460,7 @@ const AllVisaApplicationForm = () => {
                     text="Clear"
                     icon={<RotateCcw size={14} />}
                     onClick={onClearClick}
-                    className="!bg-gray-500 hover:!bg-gray-600"
+                    className="!bg-red-600 hover:!bg-red-700"
                   />
                 </div>
               </form>

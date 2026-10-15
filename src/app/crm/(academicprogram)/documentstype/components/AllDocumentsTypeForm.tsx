@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -18,8 +18,10 @@ import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import EditAppointment from '../pages/Edit'
 import EditDocumentsType from '../pages/Edit'
 import AddDocumentsType from '../pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    name: string
     startDate: string
     endDate: string
 }
@@ -148,11 +150,12 @@ const AllDocumentsTypeForm = () => {
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedDocumentsTypeName, setSelectedDocumentsTypeName] = useState<string | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { name: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -165,13 +168,15 @@ const AllDocumentsTypeForm = () => {
     })
 
     const { data, isLoading, error } = useGetAllDocumentsType(params)
+    const { data: documentsTypeOptionsData } = useGetAllDocumentsType('isPagination=false')
+    const documentsTypeOptions = documentsTypeOptionsData?.items ?? []
     const deleteDocumentsType = useDeleteDocumentsType()
     const DocumentsTypeDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+            formData.name?.trim() ? `name=${encodeURIComponent(formData.name.trim())}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -180,6 +185,11 @@ const AllDocumentsTypeForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
         setParams(fullQuery)
+    }
+
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        setSelectedDocumentsTypeName(null)
     }
 
 
@@ -284,7 +294,45 @@ const AllDocumentsTypeForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedDocumentsTypeName}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Document Type Name"
+                                        name="name"
+                                        form={form}
+                                        options={documentsTypeOptions}
+                                        selected={
+                                            documentsTypeOptions.find(
+                                                (documentsType) => documentsType.name === selectedDocumentsTypeName
+                                            ) || undefined
+                                        }
+                                        onSelect={(documentsType) => {
+                                            setSelectedDocumentsTypeName(documentsType?.name ?? null)
+                                        }}
+                                        getLabel={(documentsType) => documentsType.name}
+                                        getValue={(documentsType) => documentsType.name}
+                                        placeholder="Search document type"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}

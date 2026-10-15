@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, PlusCircle, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Edit, Eye, Filter, MoreVertical, Plus, PlusCircle, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -15,8 +15,10 @@ import { ApplicantResponse } from '../types/IDocuments'
 import { Tooltip } from '@/components/ToolTip/Tooltip'
 import { AllDocumentsForm } from './AllDocumentsForm'
 import AddDocuments from '../pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    applicantId: string
     startDate: string
     endDate: string
 }
@@ -141,16 +143,18 @@ const ApplicantDetailsForm = () => {
 
     const [showDocumentForm, setShowDocumentForm] = useState(false);
     const [showAddDocumentForm, setShowAddDocumentForm] = useState(false);
-    const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null)
+    const [selectedFilterApplicantId, setSelectedFilterApplicantId] = useState<string | null>(null)
 
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null)
+    const [appliedApplicantId, setAppliedApplicantId] = useState<string | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { applicantId: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -163,12 +167,20 @@ const ApplicantDetailsForm = () => {
     })
 
     const { data, isLoading, error } = useFilterAllApplicants(params)
+    const { data: applicantOptionsData } = useFilterAllApplicants(
+        'pageSize=100&pageIndex=1&isPagination=false'
+    )
+    const applicantOptions = applicantOptionsData?.items ?? []
     const ApplicantsDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
+    const filteredApplicants = appliedApplicantId
+        ? applicantOptions.filter((applicant) => applicant.id === appliedApplicantId)
+        : ApplicantsDetails
 
     const onFilterSubmit = async (formData: FilterFormData) => {
+        setCurrentPage(1)
+        setAppliedApplicantId(formData.applicantId || null)
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -177,6 +189,14 @@ const ApplicantDetailsForm = () => {
 
         const fullQuery = queryParams ? `&${queryParams}` : ''
         setParams(fullQuery)
+    }
+
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        form.reset({ applicantId: '', startDate: '', endDate: '' })
+        setSelectedFilterApplicantId(null)
+        setAppliedApplicantId(null)
+        setCurrentPage(1)
     }
 
 
@@ -250,7 +270,45 @@ const ApplicantDetailsForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedFilterApplicantId}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Applicant"
+                                        name="applicantId"
+                                        form={form}
+                                        options={applicantOptions}
+                                        selected={
+                                            applicantOptions.find(
+                                                (applicant) => applicant.id === selectedFilterApplicantId
+                                            ) || null
+                                        }
+                                        onSelect={(applicant) => {
+                                            setSelectedFilterApplicantId(applicant?.id ?? null)
+                                        }}
+                                        getLabel={(applicant) => applicant?.fullName ?? ''}
+                                        getValue={(applicant) => applicant?.id ?? ''}
+                                        placeholder="Search applicant"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}
@@ -272,7 +330,7 @@ const ApplicantDetailsForm = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {ApplicantsDetails.length === 0 ? (
+                                    {filteredApplicants.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={8}
@@ -282,7 +340,7 @@ const ApplicantDetailsForm = () => {
                                             </td>
                                         </tr>
                                     ) : (
-                                        ApplicantsDetails.map((Applicants, index) => (
+                                        filteredApplicants.map((Applicants, index) => (
                                             <tr
                                                 key={Applicants.id}
                                                 className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#2a2b2e] transition-colors"
@@ -367,7 +425,7 @@ const ApplicantDetailsForm = () => {
                 </div>
 
                 {/* Pagination */}
-                {ApplicantsDetails.length > 0 && totalPages > 1 && (
+                {!appliedApplicantId && ApplicantsDetails.length > 0 && totalPages > 1 && (
                     <div className="mt-4">
                         <Pagination
                             form={paginationForm}

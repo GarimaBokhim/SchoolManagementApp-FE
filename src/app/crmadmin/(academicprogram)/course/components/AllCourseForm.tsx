@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, Trash } from 'lucide-react'
+import { BookOpen, Building2, Edit, Eye, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
@@ -16,8 +16,10 @@ import { Tooltip } from '@/components/ToolTip/Tooltip'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import EditCourse from '../pages/Edit'
 import AddCourse from '../pages/Add'
+import { AppCombobox } from '@/components/Input/ComboBox'
 
 interface FilterFormData {
+    title: string
     startDate: string
     endDate: string
 }
@@ -153,11 +155,12 @@ const AllCourseForm = () => {
 
     const [params, setParams] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null)
     const formRef = useRef<DateRangeFilterRef>(null)
     const pageSize = 10
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { title: '', startDate: '', endDate: '' },
     })
 
     const paginationForm = useForm({
@@ -170,13 +173,15 @@ const AllCourseForm = () => {
     })
 
     const { data, isLoading, error } = useGetAllCourse(params)
+    const { data: courseOptionsData } = useGetAllCourse('isPagination=false')
+    const courseOptions = courseOptionsData?.items ?? []
     const deleteCourse = useDeleteCourse()
     const CourseDetails = data?.items ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
 
     const onFilterSubmit = async (formData: FilterFormData) => {
         const queryParams = [
-            // formData.name ? `name=${encodeURIComponent(formData.name)}` : null,
+            formData.title?.trim() ? `title=${encodeURIComponent(formData.title.trim())}` : null,
             formData.startDate ? `startDate=${encodeURIComponent(formData.startDate)}` : null,
             formData.endDate ? `endDate=${encodeURIComponent(formData.endDate)}` : null,
         ]
@@ -187,6 +192,10 @@ const AllCourseForm = () => {
         setParams(fullQuery)
     }
 
+    const onClearFilter = () => {
+        formRef.current?.handleClear()
+        setSelectedCourseTitle(null)
+    }
 
     const handleEditCourse = (FollowUp: CourseResponse) => {
         setEditCourseId(FollowUp.id)
@@ -289,7 +298,45 @@ const AllCourseForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
+                                <div className="flex-1 min-w-[240px]">
+                                    <AppCombobox
+                                        value={selectedCourseTitle}
+                                        dropDownWidth="w-full"
+                                        dropdownPositionClass="absolute"
+                                        label="Course Title"
+                                        name="title"
+                                        form={form}
+                                        options={courseOptions}
+                                        selected={
+                                            courseOptions.find(
+                                                (course) => course.title === selectedCourseTitle
+                                            ) || undefined
+                                        }
+                                        onSelect={(course) => {
+                                            setSelectedCourseTitle(course?.title ?? null)
+                                        }}
+                                        getLabel={(course) => course.title}
+                                        getValue={(course) => course.title}
+                                        placeholder="Search course"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ButtonElement
+                                        type="submit"
+                                        text="Filter"
+                                        icon={<Filter size={14} />}
+                                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                                    />
+                                    <ButtonElement
+                                        type="button"
+                                        text="Clear"
+                                        icon={<RotateCcw size={14} />}
+                                        onClick={onClearFilter}
+                                        className="!bg-red-600 hover:!bg-red-700"
+                                    />
+                                </div>
                             </form>
                         </div>
                     )}

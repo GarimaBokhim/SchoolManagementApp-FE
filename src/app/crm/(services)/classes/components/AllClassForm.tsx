@@ -189,19 +189,22 @@ const AllClassForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { name: '', startDate: '', endDate: '' },
     })
 
     const [selectedClassName, setSelectedClassName] = useState<string | null>(
-        ""
+        null
     );
 
     const onClearClick = () => {
         setParams("");
         formRef.current?.handleClear();
-        form.reset();
+        form.reset({ name: '', startDate: '', endDate: '' });
+        setSelectedClassName(null)
     };
     const { data, isLoading, error } = useGetAllClass(params)
+    const { data: classOptionsData } = useGetAllClass()
+    const classOptions = classOptionsData?.Items ?? []
     const deleteClass = useDeleteClass()
     // const { handleAdd, handleDelete, handleEdit } = useInstallmentPlanMutations(refetch)
 
@@ -366,6 +369,7 @@ const AllClassForm = () => {
                                     setParams={setParams}
                                     startDateKey="startDate"
                                     endDateKey="endDate"
+                                    showSubmitButton={false}
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
@@ -376,25 +380,22 @@ const AllClassForm = () => {
                                         label="Class"
                                         name="name"
                                         form={form}
-                                        options={data?.Items}
+                                        options={classOptions}
                                         selected={
-                                            data?.Items?.find(
+                                            classOptions.find(
                                                 (g) => g.name === selectedClassName
                                             ) || null
                                         }
                                         onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedClassName(group.name || null);
-                                            } else {
-                                                setSelectedClassName(null);
-                                            }
+                                            setSelectedClassName(group?.name ?? null)
                                         }}
                                         getLabel={(g) => g?.name ?? ""}
-                                        getValue={(g) => g?.id ?? ""}
+                                        getValue={(g) => g?.name ?? ""}
+                                        placeholder="Search class"
                                     />
                                 </div>
 
-                                <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
+                                <div className="flex items-center gap-2">
                                     <ButtonElement
                                         type="submit"
                                         text="Filter"
@@ -406,7 +407,7 @@ const AllClassForm = () => {
                                         text="Clear"
                                         icon={<RotateCcw size={14} />}
                                         onClick={onClearClick}
-                                        className="!bg-gray-500 hover:!bg-gray-600"
+                                        className="!bg-red-600 hover:!bg-red-700"
                                     />
                                 </div>
                             </form>
