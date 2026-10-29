@@ -149,6 +149,9 @@ importers:
       bikram-sambat-js:
         specifier: ^1.0.3
         version: 1.0.3
+      bikram-sambat-ts:
+        specifier: ^0.3.0
+        version: 0.3.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2554,6 +2557,10 @@ packages:
 
   bikram-sambat-js@1.0.3:
     resolution: {integrity: sha512-UwpyT8SucWzsKSHUHsJsyqbAYEsc+93qJBBWNZ6MPJfAEhUZYpw8eeX/Htd2z6QjJcalz52Qn5qSZznqACRShg==}
+
+  bikram-sambat-ts@0.3.0:
+    resolution: {integrity: sha512-8yYYjipv9z53QY99a3G5QgzPUF63jAxkxQ7T7tswHPaH9gc8NQ0gqEe2V5Tame7mN0Whga4ETi4Tq60bgAr+TQ==}
+    engines: {node: '>=20'}
 
   brace-expansion@1.1.15:
     resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
@@ -6808,6 +6815,8 @@ snapshots:
   baseline-browser-mapping@2.10.34: {}
 
   bikram-sambat-js@1.0.3: {}
+
+  bikram-sambat-ts@0.3.0: {}
 
   brace-expansion@1.1.15:
     dependencies:

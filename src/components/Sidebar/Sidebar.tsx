@@ -40,6 +40,7 @@ import {
   Package,
   UserRound,
   MessageSquare,
+  Globe,
 } from 'lucide-react'
 import { ISidebar } from '@/types/ISidebar'
 import { usePermissions } from '@/context/auth/PermissionContext'
@@ -49,6 +50,7 @@ import DialogButton from '../Buttons/DialogButton'
 import { useSidebar } from '@/context/SidebarContext'
 import Image from 'next/image'
 import { useGetMenuStatus } from '@/app/SuperAdmin/navigation/menu/hooks'
+import { Portal } from 'radix-ui'
 
 type Props = {
   sideBarItems: ISidebar
@@ -236,7 +238,8 @@ const Sidebar: React.FC<Props> = ({
     Consumer: UserRound,
     Employee: UserCog,
     Communication: MessageSquare,
-    SetUp: Settings
+    SetUp: Settings,
+    Portal: Globe,
 
   }
 

@@ -81,9 +81,7 @@ export default function SchoolInfoCard({
     schoolData?.imageUrl
   );
 
-  console.log("Original Image URL:", schoolData?.imageUrl);
-  console.log("API Base URL:", getApiBaseUrl());
-  console.log("Final Image URL:", logoUrl);
+
 
   if (isLoading) {
     return (

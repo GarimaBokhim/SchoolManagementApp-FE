@@ -988,6 +988,7 @@ const AddInquiryForm = ({
                                 getValue={(o) =>
                                     o?.id ?? ''
                                 }
+                                required
                             />
 
                             <InputElement
@@ -1007,7 +1008,7 @@ const AddInquiryForm = ({
                             />
 
                             <InputElement
-                                label="Previous Qualification"
+                                label="Major Course"
                                 form={form}
                                 name="previousAcademicQualification"
                                 placeholder="Enter qualification"
@@ -1064,7 +1065,7 @@ const AddInquiryForm = ({
                                 name="bandScore"
                                 type="number"
                                 placeholder="Enter band score"
-                                required
+
                             />
 
                             <InputElement
