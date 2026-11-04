@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/utils/instance'
 import { IPaginationResponse } from '@/types/IPaginationResponse'
-import { IAcademicTeam, IAssignClass } from '../types/IAcademicTeam'
+import {
+  IAcademicTeam,
+  IAssignClass,
+  IAssignClassTeacherRequest,
+  IAssignClassTeacherResponse,
+  IAssignedClassDetails,
+  IClassTeacherDetails,
+  IClassWithSubjectDetailsResponse,
+} from '../types/IAcademicTeam'
 const AcademicTeamEndPoints = {
   getAllAcademicTeams: '/api/StaffControllers/all-AcademicTeam',
   createAcademicTeams: '/api/StaffControllers/AddAcademicTeam',
@@ -14,16 +22,16 @@ const AcademicTeamEndPoints = {
   unAssignAllClass: '/api/StaffControllers/UnAssignAllClass',
   allschoolclass: '/api/Academics/all-SchoolClass',
   assignClassDetails: '/api/StaffControllers/AssignClassDetails',
+  classWithSubjectByAcademicTeam:
+    '/api/StaffControllers/ClassWithSubjectByAcademicTeam',
+  assignClassTeacher: '/api/StaffControllers/AssignClassTeacher',
+  classTeacher: '/api/StaffControllers/ClassTeacher',
 }
 
 const queryKey = 'AcademicTeams'
 const filterAcademicTeamQueryKey = 'filteredAcademicTeam'
 const AssignQueryKey = 'assignedClass'
-type AssignRequestClass = {
-  academicTeamId: string
-  subjectIds: string[]
-  classIds: string[]
-}
+const ClassTeacherQueryKey = 'classTeacher'
 type AcademicTeamRequest = {
   id?: string
   email: string
@@ -165,8 +173,8 @@ export const useFilterAcademicTeamByDate = (params?: string) => {
 
 export const useAssignClass = () => {
   const queryClient = useQueryClient()
-  return useMutation<IAssignClass, Error, AssignRequestClass>({
-    mutationFn: async (data: AssignRequestClass): Promise<IAssignClass> => {
+  return useMutation<IAssignClass, Error, IAssignClass>({
+    mutationFn: async (data: IAssignClass): Promise<IAssignClass> => {
       const response = await api.post(AcademicTeamEndPoints.assignClass, data)
       return response.data
     },
@@ -182,8 +190,8 @@ export const useAssignClass = () => {
 export const useUnassignClass = () => {
   const queryClient = useQueryClient()
 
-  return useMutation<IAssignClass, Error, AssignRequestClass>({
-    mutationFn: async (data: AssignRequestClass): Promise<IAssignClass> => {
+  return useMutation<IAssignClass, Error, IAssignClass>({
+    mutationFn: async (data: IAssignClass): Promise<IAssignClass> => {
       const response = await api.post(AcademicTeamEndPoints.unAssignClass, data)
       return response.data
     },
@@ -205,7 +213,8 @@ export const useGetAssignClassDetails = (params?: string) => {
         ? `${AcademicTeamEndPoints.assignClassDetails}${params}`
         : `${AcademicTeamEndPoints.assignClassDetails}`
 
-      const response = await api.get<IPaginationResponse<IAssignClass>>(url)
+      const response =
+        await api.get<IPaginationResponse<IAssignedClassDetails>>(url)
 
       return (
         response.data ?? {
@@ -216,6 +225,72 @@ export const useGetAssignClassDetails = (params?: string) => {
           totalPages: 0,
         }
       )
+    },
+  })
+}
+
+export const useGetClassWithSubjectByAcademicTeam = (
+  academicTeamId: string
+) => {
+  return useQuery({
+    queryKey: [AssignQueryKey, 'classWithSubjects', academicTeamId],
+    queryFn: async () => {
+      if (!academicTeamId) {
+        throw new Error('Academic team ID is required')
+      }
+
+      const response = await api.get<
+        IClassWithSubjectDetailsResponse[] | IClassWithSubjectDetailsResponse
+      >(
+        `${AcademicTeamEndPoints.classWithSubjectByAcademicTeam}/${encodeURIComponent(academicTeamId)}`
+      )
+      return Array.isArray(response.data) ? response.data : [response.data]
+    },
+    enabled: Boolean(academicTeamId),
+    staleTime: 0,
+    retry: false,
+  })
+}
+
+export const useGetClassTeacher = (academicTeamId: string) => {
+  return useQuery({
+    queryKey: [ClassTeacherQueryKey, academicTeamId],
+    queryFn: async (): Promise<IClassTeacherDetails> => {
+      if (!academicTeamId) {
+        throw new Error('Academic team ID is required')
+      }
+
+      const response = await api.get<IClassTeacherDetails>(
+        `${AcademicTeamEndPoints.classTeacher}/${encodeURIComponent(academicTeamId)}`
+      )
+      return response.data
+    },
+    enabled: Boolean(academicTeamId),
+    retry: false,
+  })
+}
+
+export const useAssignClassTeacher = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    IAssignClassTeacherResponse,
+    Error,
+    IAssignClassTeacherRequest
+  >({
+    mutationFn: async (
+      data: IAssignClassTeacherRequest
+    ): Promise<IAssignClassTeacherResponse> => {
+      const response = await api.post<IAssignClassTeacherResponse>(
+        AcademicTeamEndPoints.assignClassTeacher,
+        data
+      )
+      return response.data
+    },
+    onSuccess: (_response, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [ClassTeacherQueryKey, variables.AcademicTeamId],
+      })
     },
   })
 }

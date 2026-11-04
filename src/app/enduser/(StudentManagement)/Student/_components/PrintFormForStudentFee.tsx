@@ -62,7 +62,11 @@ const AllPrintFormForStudents = ({ startDate, endDate }: Props) => {
           {students?.Items?.map((s, i) => (
             <tr key={i}>
               <td style={thTd}>{i + 1}</td>
-              <td style={thTd}>{s.firstName}</td>
+              <td style={thTd}>
+                {[s.firstName, s.middleName, s.lastName]
+                  .filter(Boolean)
+                  .join(" ")}
+              </td>
               <td style={thTd}>{s.registrationNumber}</td>
               <td style={thTd}>{s.genderStatus === 0 ? "Male" : "Female"}</td>
               <td style={thTd}>

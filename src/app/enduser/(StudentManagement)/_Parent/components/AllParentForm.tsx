@@ -212,7 +212,7 @@ const AllParentForm = () => {
                 }}
               />
               <ExportButtonForm
-                file="/template/ledgerTemplate.xlsx"
+                file="/template/ParentsTemplate.xlsx"
                 data={
                   <AllPrintFormForParents
                     startDate={form.watch('startDate')}
@@ -288,24 +288,14 @@ const AllParentForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left align-middle w-[60px]">
-                    S.N
-                  </th>
-                  <th className="px-4 py-3 text-left align-middle">
-                    Parent Name
-                  </th>
-                  <th className="px-4 py-3 text-left align-middle">Email</th>
-                  <th className="px-4 py-3 text-left align-middle">
-                    Phone Number
-                  </th>
-                  <th className="px-4 py-3 text-left align-middle">
-                    Occupation
-                  </th>
-                  <th className="px-4 py-3 text-left align-middle">Address</th>
-                  <th className="px-4 py-3 text-center align-middle w-[180px]">
-                    Actions
-                  </th>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200 text-center">
+                  <th className="px-4 py-3 w-[60px]">S.N</th>
+                  <th className="px-4 py-3">Parent Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Phone Number</th>
+                  <th className="px-4 py-3">Occupation</th>
+                  <th className="px-4 py-3">Address</th>
+                  <th className="px-4 py-3 w-[180px]">Actions</th>
                 </tr>
               </thead>
               <tbody>

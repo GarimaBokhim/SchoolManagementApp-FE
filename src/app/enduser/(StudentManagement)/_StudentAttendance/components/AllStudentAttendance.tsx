@@ -28,18 +28,18 @@ const AllStudentAttendanceForm = () => {
     pageIndex: 1,
     isPagination: true,
   });
-  
+
   type SearchParam = {
     pageSize: number;
     pageIndex: number;
     isPagination: boolean;
   };
-  
+
   const handleSearch = (params: SearchParam) => {
     params.pageSize = paginationParams.pageSize;
     setPaginationParams(params);
   };
-  
+
   const { data: allStudent } = useGetAllStudents();
   const [selectedStudent, setSelectedStudent] = useState<string | null>("");
   const [addModal, setAddModal] = useState(false);
@@ -61,20 +61,20 @@ const AllStudentAttendanceForm = () => {
   const handleSubmit = useForm<SearchParam>({
     defaultValues: {},
   });
-  
+
   const {
     data: filteredClass,
     refetch,
     isLoading,
   } = useFilterClassByDate(fullQuery);
-  
+
   useEffect(() => {
     refetch();
   }, [paginationParams, refetch]);
-  
+
   const { handleError, clearError } = useErrorHandler();
   const [openFilter, setOpenFilter] = useState(false);
-  
+
   const onSubmit: SubmitHandler<IFilterStudentAttendanceByDate> = async (
     formData,
   ) => {
@@ -115,9 +115,9 @@ const AllStudentAttendanceForm = () => {
   useEffect(() => {
     refForInput.current?.focus();
   }, []);
-  
+
   const formRef = useRef<DateRangeFilterRef>(null);
-  
+
   const onClearClick = () => {
     refetch();
     setParams("");
@@ -125,12 +125,12 @@ const AllStudentAttendanceForm = () => {
     setSelectedStudent("");
     form.reset();
   };
-  
+
   // Calculate the starting serial number for the current page
   const getSerialNumber = (index: number) => {
     return (paginationParams.pageIndex - 1) * paginationParams.pageSize + index + 1;
   };
-  
+
   return (
     <>
       <Toaster position="top-right" />
@@ -158,7 +158,7 @@ const AllStudentAttendanceForm = () => {
               )}
             </div>
           </div>
-          
+
           {openFilter && (
             <div className="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
               <form
@@ -215,7 +215,7 @@ const AllStudentAttendanceForm = () => {
               </form>
             </div>
           )}
-          
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
@@ -268,7 +268,7 @@ const AllStudentAttendanceForm = () => {
               </tbody>
             </table>
           </div>
-          
+
           <AddStudentAttendance
             visible={addModal}
             onClose={() => setAddModal(false)}
@@ -300,7 +300,7 @@ const AllStudentAttendanceForm = () => {
             />
           </div>
         )}
-        
+
         {ViewModal && (
           <MonthlyAttendanceSheet
             visible={ViewModal}

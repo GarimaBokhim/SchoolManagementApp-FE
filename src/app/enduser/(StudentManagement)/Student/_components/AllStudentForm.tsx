@@ -15,9 +15,49 @@ const getInitials = (
   return (first + middle + last).toUpperCase().substring(0, 2) || 'S'
 }
 
+
+
+const getApiBaseUrl = () => {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!configuredUrl) return "";
+
+  try {
+    const url = new URL(configuredUrl);
+    url.pathname = "";
+    url.search = "";
+    url.hash = "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return configuredUrl
+      .replace(/\/swagger\/index\.html\/?$/i, "")
+      .replace(/\/+$/, "");
+  }
+};
+
+const resolveImageUrl = (imageUrl?: string | File | null): string | null => {
+  if (
+    typeof imageUrl !== "string" ||
+    imageUrl === "-" ||
+    imageUrl === "string"
+  ) {
+    return null;
+  }
+
+  const value = imageUrl.trim();
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const path = value.replace(/^\/+/, "");
+  const baseUrl = getApiBaseUrl();
+  return baseUrl ? `${baseUrl}/${path}` : `/${path}`;
+};
+
 const StudentAvatar = ({ student }: { student: any }) => {
   const [imgError, setImgError] = useState(false)
-  const imageUrl = student.imageUrl ? `${BASE_URL}/${student.imageUrl}` : null
+
+  const imageUrl =
+    resolveImageUrl(student?.imageUrl);
+
 
   return (
     <div className="flex flex-col items-center gap-1 sm:gap-2">
@@ -81,8 +121,8 @@ import {
   useFilterStudentByDate,
   useGetAllStudents,
   useRemoveStudent,
-  useUploadStudents,
 } from '../hooks'
+import { useExcelPreview } from '../hooks/excelPreview'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
@@ -101,51 +141,9 @@ import AddRegistration from '../../_Registration/pages/Add'
 import StudentProfilePopup from './StudentProfilePopUp'
 import ExcelPreviewModal from './ExcelPreviewModel'
 import DateConverter from '@/components/DatePicker/DateConverter'
-
-const useExcelPreview = () => {
-  const [previewData, setPreviewData] = useState<any[]>([])
-  const [showPreviewModal, setShowPreviewModal] = useState(false)
-  const [uploadLoading, setUploadLoading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-
-  const handleExcelPreview = async (file: File) => {
-    setSelectedFile(file)
-    setUploadLoading(true)
-
-    try {
-      setShowPreviewModal(true)
-    } catch (error) {
-      console.error('Error previewing Excel:', error)
-      toast.error('Failed to preview Excel file')
-    } finally {
-      setUploadLoading(false)
-    }
-  }
-
-  const handleSaveExcel = async () => {
-    setUploadLoading(true)
-    try {
-      toast.success('File uploaded successfully!')
-      setShowPreviewModal(false)
-    } catch (error) {
-      toast.error('Upload failed! Please check the format')
-    } finally {
-      setUploadLoading(false)
-    }
-  }
-
-  return {
-    previewData,
-    showPreviewModal,
-    setShowPreviewModal,
-    uploadLoading,
-    setUploadLoading,
-    handleExcelPreview,
-    selectedFile,
-    setSelectedFile,
-    handleSaveExcel,
-  }
-}
+import { InputElement } from '@/components/Input/InputElement'
+import AllPrintFormForStudents from './PrintFormForStudentFee'
+import ExcelStudentTable from './Excelprint'
 
 const StatCard = ({ label, value, icon, iconBg, iconColor }: any) => (
   <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-[#2c2c2c] rounded-lg px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-200 dark:border-gray-700 flex-1 min-w-[130px] sm:min-w-[150px]">
@@ -186,10 +184,7 @@ const AllStudentForm = () => {
     showPreviewModal,
     setShowPreviewModal,
     uploadLoading,
-    setUploadLoading,
     handleExcelPreview,
-    selectedFile,
-    setSelectedFile,
     handleSaveExcel,
   } = useExcelPreview()
 
@@ -210,6 +205,14 @@ const AllStudentForm = () => {
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(
     ''
   )
+
+
+  const { data: allClass } = useGetAllClass()
+  const [selectedClass, setSelectedClass] = useState<string | null>(
+    ''
+  )
+
+
   const fullQuery = query + (params || '')
 
   const {
@@ -230,7 +233,10 @@ const AllStudentForm = () => {
 
   const form = useForm<IFilterStudentByDate>({
     defaultValues: {
-      firstName: '',
+      name: '',
+      classId: '',
+      address: '',
+      sectionId: '',
       startDate: '',
       endDate: '',
     },
@@ -238,14 +244,21 @@ const AllStudentForm = () => {
   const { handleError, clearError } = useErrorHandler()
   const [openFilter, setOpenFilter] = useState(false)
   const { data: allClasses } = useGetAllClass()
-  const { mutateAsync: uploadstudent } = useUploadStudents()
-
   const onSubmit: SubmitHandler<IFilterStudentByDate> = async (formData) => {
     clearError()
     try {
       const queryParams = [
-        formData.firstName
-          ? `firstName=${encodeURIComponent(formData.firstName)}`
+        formData.name
+          ? `name=${encodeURIComponent(formData.name)}`
+          : null,
+        formData.classId
+          ? `classId=${encodeURIComponent(formData.classId)}`
+          : null,
+        formData.address
+          ? `address=${encodeURIComponent(formData.address)}`
+          : null,
+        formData.sectionId
+          ? `sectionId=${encodeURIComponent(formData.sectionId)}`
           : null,
         formData.startDate
           ? `startDate=${encodeURIComponent(formData.startDate)}`
@@ -369,25 +382,27 @@ const AllStudentForm = () => {
                   className="!font-semibold"
                 />
               )}
-              <ImportButtonForm
+
+              {/* <ImportButtonForm
                 handleExcelImport={async (file) => {
                   await toast.promise(uploadstudent(file), {
-                    loading: 'Uploading...',
-                    success: 'Students uploaded successfully!',
-                    error: 'Upload failed! Please Check the format',
-                  })
+                    loading: "Uploading...",
+                    success: "Students uploaded successfully!",
+                    error: "Upload failed! Please Check the format",
+                  });
                 }}
-              />
+              /> */}
+
               <ExportButtonForm
-                file="/template/ledgerTemplate.xlsx"
+                file="/template/StudentsTemplate.xlsx"
                 data={
-                  <AllPrintFormForParents
+                  <AllPrintFormForStudents
                     startDate={form.watch('startDate')}
                     endDate={form.watch('endDate')}
                   />
                 }
                 excelData={
-                  <ExcelParentTable
+                  <ExcelStudentTable
                     startDate={form.watch('startDate')}
                     endDate={form.watch('endDate')}
                   />
@@ -450,12 +465,70 @@ const AllStudentForm = () => {
                   onSubmit={onSubmit}
                   setParams={setParams}
                 />
-                <div className="flex-1 min-w-0 lg:min-w-[240px]">
+                <div className="flex-1 min-w-0 lg:min-w-[200px]">
                   <AppCombobox
                     value={selectedStudentName}
                     dropDownWidth="w-full"
                     dropdownPositionClass="absolute"
-                    label="Parent Name"
+                    label="Name"
+                    name="name"
+                    form={form}
+                    options={allStudent?.Items ?? []}
+                    selected={
+                      allStudent?.Items?.find(
+                        (g) => `${g.firstName} ${g.lastName}` === selectedStudentName
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      setSelectedStudentName(
+                        group ? `${group.firstName} ${group.lastName}`.trim() : ""
+                      );
+                    }}
+                    getLabel={(g) =>
+                      `${g?.firstName ?? ""} ${g?.lastName ?? ""}`.trim()
+                    }
+                    getValue={(g) =>
+                      `${g?.firstName ?? ""} ${g?.lastName ?? ""}`.trim()
+                    }
+                  />
+                </div>
+
+                <div className="flex-1 min-w-0 lg:min-w-[200px]">
+                  <AppCombobox
+                    value={selectedClass}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Class"
+                    name="classId"
+                    form={form}
+                    options={allClass?.Items}
+                    selected={
+                      allClass?.Items?.find(
+                        (g) => g.name === selectedClass
+                      ) || null
+                    }
+                    onSelect={(group) => {
+                      setSelectedStudentName(group ? group.name : null)
+                    }}
+                    getLabel={(g) => g?.name ?? ''}
+                    getValue={(g) => g?.id ?? ''}
+                  />
+                </div>
+
+                {/* <div className="flex-1 min-w-0 lg:min-w-[150px]">
+                  <InputElement
+                    label="Address"
+                    form={form}
+                    name="address"
+                  />
+                </div> */}
+
+                {/* <div className="flex-1 min-w-0 lg:min-w-[150px]">
+                  <AppCombobox
+                    value={selectedClass}
+                    dropDownWidth="w-full"
+                    dropdownPositionClass="absolute"
+                    label="Section"
                     name="firstName"
                     form={form}
                     options={allStudent?.Items}
@@ -470,7 +543,9 @@ const AllStudentForm = () => {
                     getLabel={(g) => g?.firstName ?? ''}
                     getValue={(g) => g?.firstName ?? ''}
                   />
-                </div>
+                </div> */}
+
+
                 <div className="flex gap-2 mt-2 sm:mt-0 lg:ml-auto">
                   <ButtonElement
                     type="submit"
@@ -493,16 +568,17 @@ const AllStudentForm = () => {
           <div className="hidden md:block bg-white dark:bg-[#353535] border border-gray-200 dark:border-gray-700 rounded-xl">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 dark:bg-[#80878c] uppercase">
-                  <th className="px-2 py-3 text-left">S.N</th>
-                  <th className="px-2 py-3 text-left">Student</th>
-                  <th className="px-2 py-3 text-left">Reg. No</th>
-                  <th className="px-2 py-3 text-left">Gender</th>
-                  <th className=" py-3 text-left">Email</th>
-                  <th className="px-2 py-3 text-left">Class</th>
-                  <th className="px-2 py-3 text-left">Address</th>
-                  <th className="px-2 py-3 text-left">DOB</th>
-                  <th className="px-2 py-3 text-center">Actions</th>
+                <tr className="bg-gray-50 dark:bg-[#80878c] uppercase text-center">
+                  <th className="px-2 py-3">S.N</th>
+                  <th className="px-2 py-3">Student</th>
+                  <th className="px-2 py-3">Reg. No</th>
+                  <th className="px-2 py-3">Gender</th>
+                  <th className="px-2 py-3">Email</th>
+                  <th className="px-2 py-3">Class</th>
+                  <th className="px-2 py-3">Address</th>
+                  <th className="px-2 py-3">Phone</th>
+                  <th className="px-2 py-3">DOB</th>
+                  <th className="px-2 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -561,15 +637,9 @@ const AllStudentForm = () => {
                         </td>
                         <td className="px-1 py-2 sm:px-4 sm:py-3 truncate hidden md:table-cell align-middle">
                           {student.dateOfBirth ? (
-                            <DateConverter
-                              date={
-                                typeof student.dateOfBirth === 'string'
-                                  ? student.dateOfBirth
-                                  : student.dateOfBirth
-                              }
-                            />
+                            <DateConverter date={student.dateOfBirth} />
                           ) : (
-                            'N/A'
+                            "N/A"
                           )}
                         </td>
                         <td className="px-1 py-2 sm:px-4 sm:py-3 text-center align-middle">

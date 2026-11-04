@@ -353,7 +353,7 @@ const EditStudentForm = ({ form, onClose, studentId }: Props) => {
       }
 
       await toast.promise(
-        editStudent.mutateAsync({ id: studentId, data: formData as any }),
+        editStudent.mutateAsync({ id: studentId, data: formData }),
         {
           loading: "Updating Student...",
           success: "Successfully Updated Student",

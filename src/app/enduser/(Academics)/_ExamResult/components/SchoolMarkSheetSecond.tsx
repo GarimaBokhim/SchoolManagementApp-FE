@@ -1,17 +1,19 @@
+
 'use client'
+
 import { X, Building } from 'lucide-react'
+import { useRef, useEffect, useState } from 'react'
+
 import { useGenerateMarkSheet } from '../hooks'
 import { useGetSubjectById } from '../../Subject/hooks'
 import { useGetStudentById } from '@/app/enduser/(StudentManagement)/Student/hooks'
 import { useGetSchoolById } from '@/app/admin/Setup/School/hooks'
-import { useRef, useEffect, useState } from 'react'
 import { useGetAllExams } from '../../Exam/hooks'
-import { useGetAllClass, useGetClassById } from '../../Class/hooks'
-import { IClass } from '../../Class/types/IClass'
-import { IExam } from '../../Exam/types/IExams'
+import { useGetClassById } from '../../Class/hooks'
 import { useGetAttendenceCount } from '@/app/enduser/(StudentManagement)/_StudentAttendance/hooks'
+
+import { IExam } from '../../Exam/types/IExams'
 import { ISubjectMark } from '../types/IExamResults'
-import { buildBackendAssetUrl } from '@/utils/backendUrl'
 
 interface Props {
   studentId: string
@@ -22,9 +24,13 @@ interface Props {
 const SubjectNameCell = ({ subjectId }: { subjectId: string }) => {
   const { data: subject, isLoading, error } = useGetSubjectById(subjectId)
 
-  if (isLoading) return <span className="text-gray-400">Loading...</span>
-  if (error) return <span className="text-red-500">-</span>
-  if (!subject) return <span>-</span>
+  if (isLoading) {
+    return <span className="text-gray-400">Loading...</span>
+  }
+
+  if (error || !subject) {
+    return <span className="text-red-500">-</span>
+  }
 
   return <span>{subject.name}</span>
 }
@@ -39,66 +45,119 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
   const { data: allExam } = useGetAllExams()
   const { data: allclass } = useGetClassById(StudentData?.classId || '')
   const { data: allattendencecount } = useGetAttendenceCount(studentId)
-  const [imageError, setImageError] = useState(false)
 
-  const storedUser = localStorage.getItem('userDetails')
-  let schoolId = ''
-  if (storedUser) {
+  const [schoolId, setSchoolId] = useState('')
+  const [schoolImageError, setSchoolImageError] = useState(false)
+  const [studentImageError, setStudentImageError] = useState(false)
+
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  // Get school ID safely (supports Next.js SSR)
+  useEffect(() => {
     try {
-      const parsedUser = JSON.parse(storedUser)
-      schoolId = parsedUser.schoolId
+      const storedUser = localStorage.getItem('userDetails')
+
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser)
+        setSchoolId(parsedUser?.schoolId || '')
+      }
     } catch (error) {
       console.error('Failed to parse user details:', error)
     }
-  }
+  }, [])
 
   const { data: SchoolData } = useGetSchoolById(schoolId)
-  const modalRef = useRef<HTMLDivElement>(null)
+
   const ExamName = allExam?.Items.find(
     (exam: IExam) => exam.id === examId
   )?.name
 
-  const getImageUrl = () => {
-    if (!SchoolData?.imageUrl) {
-      console.log('No imageUrl found in school data')
+  // Resolve backend asset base URL
+  const getApiBaseUrl = (): string => {
+    const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
+
+    if (!configuredUrl) return ''
+
+    try {
+      const url = new URL(configuredUrl)
+
+      url.pathname = ''
+      url.search = ''
+      url.hash = ''
+
+      return url.toString().replace(/\/$/, '')
+    } catch {
+      return configuredUrl
+        .replace(/\/swagger\/index\.html\/?$/i, '')
+        .replace(/\/+$/, '')
+    }
+  }
+
+  // Common image URL resolver for school logo and student image
+  const resolveImageUrl = (
+    imageUrl?: string | File | null
+  ): string | null => {
+    if (
+      typeof imageUrl !== 'string' ||
+      !imageUrl.trim() ||
+      imageUrl.trim() === '-' ||
+      imageUrl.trim().toLowerCase() === 'string'
+    ) {
       return null
     }
 
-    const imageUrl = SchoolData.imageUrl
-    console.log('Raw imageUrl from API:', imageUrl)
+    const value = imageUrl.trim()
 
-    if (imageUrl === '-' || imageUrl === 'string' || imageUrl === '') {
-      console.log('Image URL is a placeholder:', imageUrl)
-      return null
+    // Already a complete URL
+    if (/^https?:\/\//i.test(value)) {
+      return value
     }
 
-    const fullUrl = buildBackendAssetUrl(imageUrl)
-    console.log('Full image URL:', fullUrl)
-    return fullUrl
+    const baseUrl = getApiBaseUrl()
+
+    // Remove leading slash to prevent unexpected URL resolution
+    const path = value.replace(/^\/+/, '')
+
+    return baseUrl
+      ? `${baseUrl}/${path}`
+      : `/${path}`
   }
 
-  const schoolLogoUrl = getImageUrl()
+  // Both images use the SAME URL resolver
+  const schoolImageUrl = resolveImageUrl(SchoolData?.imageUrl)
+  const studentImageUrl = resolveImageUrl(StudentData?.studentImg)
 
-  const handleImageError = () => {
-    console.error('Failed to load image from URL:', schoolLogoUrl)
-    setImageError(true)
-  }
-
-  const handleClickOutside = (e: MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose()
-    }
-  }
+  // Reset image errors when image URLs change
+  useEffect(() => {
+    setSchoolImageError(false)
+  }, [schoolImageUrl])
 
   useEffect(() => {
+    setStudentImageError(false)
+  }, [studentImageUrl])
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(e.target as Node)
+      ) {
+        onClose()
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [])
+  }, [onClose])
 
+  // Print marksheet
   const handlePrint = () => {
     const content = document.getElementById('marksheet')?.outerHTML
+
     if (!content) {
       alert('Content not found')
       return
@@ -113,53 +172,54 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
 
     try {
       printWindow.document.write(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Marksheet</title>
-    <script src="https://cdn.tailwindcss.com"><\/script>
-    <style>
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        background: white;
-      }
-      @media print {
-        @page {
-          size: A4 portrait;
-          margin: 0 !important;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    ${content}
-    <script>
-      window.onload = function() {
-        setTimeout(function() {
-          window.print();
-        }, 500);
-      };
-    <\/script>
-  </body>
-</html>
-      `)
-      printWindow.document.close()
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Marksheet</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
 
-      setTimeout(() => {
-        if (printWindow) {
-          printWindow.focus()
-        }
-      }, 100)
+              body {
+                margin: 0;
+                padding: 0;
+                background: white;
+              }
+
+              @media print {
+                @page {
+                  size: A4 portrait;
+                  margin: 0 !important;
+                }
+
+                body {
+                  margin: 0;
+                  padding: 0;
+                }
+              }
+            </style>
+          </head>
+
+          <body>
+            ${content}
+
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `)
+
+      printWindow.document.close()
+      printWindow.focus()
     } catch (error) {
       console.error('Print error:', error)
       alert('Error preparing print dialog: ' + error)
@@ -168,62 +228,103 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-50 ml-13 md:ml-64 sm:ml-16 xs:ml-0 bg-black/40 backdrop-blur-sm items-center justify-center p-2 flex flex-col">
+
       <div
         ref={modalRef}
         className="bg-white w-full sm:w-[90%] max-w-[1000px] rounded-md p-4 shadow-xl overflow-y-auto max-h-[95vh]"
       >
+
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Print Marksheet</h2>
+
           <button onClick={onClose} className="text-red-500 text-xl">
             <X />
           </button>
         </div>
+
         <div
           id="marksheet"
           className="bg-white shadow-2xl mx-auto border-2 text-sky-600 p-4 sm:p-6"
-          style={{ backgroundRepeat: 'no-repeat', backgroundSize: '100% 100%' }}
+          style={{
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '100% 100%',
+          }}
         >
+
           <div className="border-4 border-sky-500 p-3 sm:p-5">
+
             <header className="pb-4 mb-2 relative">
+
               <div className="flex items-start justify-center w-full">
+
+                {/* School Logo */}
                 <div className="absolute left-0 top-0 w-24 h-24 border-2 border-gray-300 rounded-md flex items-center justify-center overflow-hidden bg-gray-50 shadow-sm">
-                  {schoolLogoUrl && !imageError ? (
+
+                  {schoolImageUrl && !schoolImageError ? (
                     <img
-                      src={schoolLogoUrl}
+                      src={schoolImageUrl}
                       alt="School Logo"
                       className="w-full h-full object-contain p-1"
-                      onError={handleImageError}
+                      onError={() => setSchoolImageError(true)}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center p-2 text-center">
                       <Building className="w-8 h-8 text-gray-400 mb-1" />
-                      <span className="text-xs text-gray-500">No Logo</span>
+                      <span className="text-xs text-gray-500">
+                        No Logo
+                      </span>
                     </div>
                   )}
+
                 </div>
 
-                {StudentData?.studentImg && (
-                  <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden">
+                {/* Student Image */}
+                <div className="absolute right-0 top-0 w-28 h-[130px] border-2 border-black flex items-center justify-center overflow-hidden bg-gray-50">
+
+                  {studentImageUrl && !studentImageError ? (
                     <img
-                      src={buildBackendAssetUrl(StudentData.studentImg) ?? undefined}
+                      src={studentImageUrl}
                       alt="Student Image"
                       className="w-full h-full object-cover"
+                      onError={() => setStudentImageError(true)}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-2">
+                      <span className="text-xs text-gray-500">
+                        No Student Photo
+                      </span>
+                    </div>
+                  )}
 
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold">{SchoolData?.name}</h1>
-                  <p className="text-sm">{SchoolData?.address}</p>
-                  <p className="font-semibold mt-2 underline">{ExamName}</p>
-                  <h2 className="text-xl font-bold mt-1">GRADE SHEET</h2>
                 </div>
+
+                {/* School Information */}
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold">
+                    {SchoolData?.name}
+                  </h1>
+
+                  <p className="text-sm">
+                    {SchoolData?.address}
+                  </p>
+
+                  <p className="font-semibold mt-2 underline">
+                    {ExamName}
+                  </p>
+
+                  <h2 className="text-xl font-bold mt-1">
+                    GRADE SHEET
+                  </h2>
+                </div>
+
               </div>
             </header>
 
+            {/* Student Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-2 border border-sky-500 p-2 gap-1">
+
               <p className="flex">
-                <strong>Name:</strong>
+                <strong>Name:</strong>{' '}
                 {[
                   StudentData?.firstName,
                   StudentData?.middleName,
@@ -232,18 +333,25 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                   .filter(Boolean)
                   .join(' ') || '-'}
               </p>
+
               <p>
-                <strong>Section:</strong> {StudentData?.classSectionId || '-'}
+                <strong>Section:</strong>{' '}
+                {StudentData?.classSectionId || '-'}
               </p>
+
               <p className="flex">
-                <strong>Class:</strong> {allclass?.name || '-'}
+                <strong>Class:</strong>{' '}
+                {allclass?.name || '-'}
               </p>
+
               <p>
                 <strong>Roll No:</strong>{' '}
                 {StudentData?.registrationNumber || '-'}
               </p>
+
             </div>
 
+            {/* Subject Marks */}
             <table className="w-full border text-sm table-auto">
               <thead>
                 <tr className="text-center font-semibold">
@@ -256,6 +364,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                   </th>
                 </tr>
               </thead>
+
               <tbody>
                 {data?.MarksWithGrades && data.MarksWithGrades.length > 0
                   ? data.MarksWithGrades.map(
@@ -264,15 +373,19 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                         <td className="border border-sky-500 p-1">
                           {index + 1}
                         </td>
+
                         <td className="border border-sky-500 p-1 text-left px-2">
                           <SubjectNameCell subjectId={m.subjectId} />
                         </td>
+
                         <td className="border border-sky-500 p-1">
                           {m.grade || '-'}
                         </td>
+
                         <td className="border border-sky-500 p-1">
                           {m.GPA || '-'}
                         </td>
+
                         <td className="border border-sky-500 p-1">
                           {m.marksObtained}
                         </td>
@@ -286,9 +399,11 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                         <td className="border border-sky-500 p-1">
                           {index + 1}
                         </td>
+
                         <td className="border border-sky-500 p-1 text-left px-2">
                           -
                         </td>
+
                         <td className="border border-sky-500 p-1">-</td>
                         <td className="border border-sky-500 p-1">-</td>
                         <td className="border border-sky-500 p-1">-</td>
@@ -297,7 +412,9 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
               </tbody>
             </table>
 
+            {/* Grade Point Table */}
             <div className="mt-2 text-sm w-full flex flex-col sm:flex-row border border-sky-500">
+
               <table className="w-full sm:w-[70%] table-auto">
                 <thead>
                   <tr className="text-center font-semibold">
@@ -314,76 +431,79 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
                     <th className="border-b border-x p-1 border-sky-500">NG</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <tr className="text-center">
                     <td className="font-semibold">GRADE POINT</td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      4.0
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      3.6
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      3.2
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.8
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.4
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      2.0
-                    </td>
-                    <td className="border-t border-x p-1 border-sky-500">
-                      1.6
-                    </td>
+                    <td className="border-t border-x p-1 border-sky-500">4.0</td>
+                    <td className="border-t border-x p-1 border-sky-500">3.6</td>
+                    <td className="border-t border-x p-1 border-sky-500">3.2</td>
+                    <td className="border-t border-x p-1 border-sky-500">2.8</td>
+                    <td className="border-t border-x p-1 border-sky-500">2.4</td>
+                    <td className="border-t border-x p-1 border-sky-500">2.0</td>
+                    <td className="border-t border-x p-1 border-sky-500">1.6</td>
                     <td className="border-t border-x p-1 border-sky-500">-</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="text-start sm:w-[30%] p-2 text-sky-600 mt-2 sm:mt-0">
-                <p className=" inline-block px-2">OBT.MARKS :</p>
+                <p className="inline-block px-2">OBT.MARKS :</p>
                 <strong>{data?.totalObtainedMarks || 0}</strong>
+
                 <div>
-                  <p className=" inline-block px-2">GPA :</p>
+                  <p className="inline-block px-2">GPA :</p>
                   <strong>{data?.GPA || '-'}</strong>
                   <strong>({data?.grade || '-'})</strong>
                 </div>
               </div>
+
             </div>
 
+            {/* Remarks and Attendance */}
             <div className="mt-5 text-sm">
+
               <p className="flex">
-                <strong>Remarks:</strong> {data?.remarks || '-'}
+                <strong>Remarks:</strong>{' '}
+                {data?.remarks || '-'}
               </p>
+
               <p className="flex">
-                <strong>DATE OF ISSUE:</strong>
+                <strong>DATE OF ISSUE:</strong>{' '}
                 {data?.createdAt &&
-                  new Date(data?.createdAt).toISOString().split('T')[0]}
+                  new Date(data.createdAt).toISOString().split('T')[0]}
               </p>
+
               <p className="flex justify-end gap-4">
                 <strong>
                   Total Running Days:{' '}
                   {allattendencecount?.totalRunningDays || 0}
                 </strong>
+
                 <strong>
-                  Total Absent Days {allattendencecount?.totalAbsentDays || 0}
+                  Total Absent Days{' '}
+                  {allattendencecount?.totalAbsentDays || 0}
                 </strong>
+
                 <strong>
-                  Total Present Days {allattendencecount?.totalPresentDays || 0}
+                  Total Present Days{' '}
+                  {allattendencecount?.totalPresentDays || 0}
                 </strong>
               </p>
+
             </div>
 
+            {/* Signatures */}
             <div className="flex flex-col sm:flex-row justify-between mt-20 text-center font-semibold gap-4 sm:gap-0">
               <p>Exam Controller</p>
               <p>Class Teacher</p>
               <p>Principal</p>
             </div>
+
           </div>
         </div>
+
+        {/* Print Button */}
         <div className="flex justify-end mt-4">
           <button
             onClick={handlePrint}
@@ -392,6 +512,7 @@ const SchoolMarkSheetSecond: React.FC<Props> = ({
             Print Marksheet
           </button>
         </div>
+
       </div>
     </div>
   )

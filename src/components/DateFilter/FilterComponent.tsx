@@ -73,7 +73,7 @@ function DateRangeFilterInner<T extends FieldValues>(
   return (
     <div className="flex flex-wrap items-end gap-4">
       {isRunning ? (
-        <div className="flex flex-wrap md:flex-row md:items-end gap-2 w-full">
+        <div className="flex flex-wrap w-full items-end gap-2 md:flex-row">
           <ButtonElement
             className={getButtonClass(1)}
             onClick={() => setDateRange(1)}
@@ -102,13 +102,13 @@ function DateRangeFilterInner<T extends FieldValues>(
             text="This Year"
           />
 
-          {showSubmitButton && (
+          {/* {showSubmitButton && (
             <ButtonElement
               className="sm:w-[7rem] md:w-[6.5rem] h-10 flex items-center justify-center text-sm border border-transparent bg-gray-600 text-white hover:bg-gray-700"
               type="submit"
               text="Submit"
             />
-          )}
+          )} */}
         </div>
       ) : (
         <div className="flex flex-col md:flex-row md:items-end gap-2 w-full">

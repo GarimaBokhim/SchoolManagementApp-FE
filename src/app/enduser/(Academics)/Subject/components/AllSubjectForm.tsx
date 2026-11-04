@@ -198,7 +198,7 @@ const AllSubjectForm = () => {
                 onClick={() => setOpenFilter(!openFilter)}
                 className="!bg-emerald-600 hover:!bg-emerald-700 text-sm md:text-base"
               />
-              {canAdd && (
+              {/* {canAdd && (
                 <ButtonElement
                   icon={<Plus size={20} />}
                   type="button"
@@ -206,7 +206,7 @@ const AllSubjectForm = () => {
                   onClick={() => setAddModal(true)}
                   className="!text-sm md:!text-md !font-bold"
                 />
-              )}
+              )} */}
             </div>
           </div>
 

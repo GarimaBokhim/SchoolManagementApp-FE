@@ -15,6 +15,9 @@ const StudentEndPoints = {
 
 const queryKey = 'Students'
 const filterQueryKey = 'filteredStudent'
+type StudentUploadResponse = {
+  Message?: string
+}
 
 const normalizeGenderStatus = (raw: unknown): number => {
   if (typeof raw === 'number') {
@@ -87,28 +90,6 @@ const normalizeStudentPaginationResponse = (
   }
 }
 
-type StudentRequest = {
-  id?: string
-  firstName: string
-  feeCategoryId?: string | null
-  middleName?: string | null
-  lastName: string
-  registrationNumber: string
-  genderStatus: number
-  studentStatus: number
-  dateOfBirth: string | Date
-  email: string
-  phoneNumber: string
-  imageUrl?: string | null
-  address: string
-  enrollmentDate: string | Date
-  parentId: string
-  classSectionId?: string | null
-  provinceId: number
-  districtId: number
-  wardNumber?: number | null
-}
-
 export const useAddStudent = () => {
   const queryClient = useQueryClient()
 
@@ -160,7 +141,7 @@ export const useEditStudent = () => {
   return useMutation<
     IStudent,
     Error,
-    { id: string | unknown; data: StudentRequest }
+    { id: string; data: FormData }
   >({
     mutationFn: async ({ id, data }): Promise<IStudent> => {
       if (!id) {
@@ -168,7 +149,10 @@ export const useEditStudent = () => {
       }
       const response = await api.patch(
         `${StudentEndPoints.updateStudents}/${id}`,
-        data
+        data,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
       )
       return response.data
     },
@@ -250,7 +234,7 @@ export const useGetStudentByClass = (ClassId: string) => {
 export const useUploadStudents = () => {
   const queryClient = useQueryClient()
 
-  return useMutation<void, Error, File>({
+  return useMutation<StudentUploadResponse, Error, File>({
     mutationFn: async (file: File) => {
       const formData = new FormData()
       formData.append('formFile', file)
@@ -260,7 +244,7 @@ export const useUploadStudents = () => {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': null,
           },
         }
       )

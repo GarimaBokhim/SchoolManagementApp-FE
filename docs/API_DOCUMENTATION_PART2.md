@@ -16,9 +16,12 @@
 | `useEditAcademicTeam` | `PATCH` | `/api/StaffControllers/UpdateAcademicTeams/{id}` | Edit staff form |
 | `useRemoveAcademicTeam` | `DELETE` | `/api/StaffControllers/DeleteAcademicTeams/{Id}` | Delete button |
 | `useFilterAcademicTeamByDate` | `GET` | `/api/StaffControllers/FilterAcademicTeam` | Date filter |
-| `useAssignClass` | `POST` | `/api/StaffControllers/AssignClass` | Assign class to teacher |
-| `useUnassignClass` | `POST` | `/api/StaffControllers/UnAssignClass` | Unassign class |
-| `useGetAssignClassDetails` | `GET` | `/api/StaffControllers/AssignClassDetails` | View assigned classes |
+| `useAssignClass` | `POST` | `/api/StaffControllers/AssignClass` | Assign classes and per-class subjects to teacher |
+| `useUnassignClass` | `POST` | `/api/StaffControllers/UnAssignClass` | Unassign classes and per-class subjects |
+| `useGetAssignClassDetails` | `GET` | `/api/StaffControllers/AssignClassDetails` | View assigned classes and subjects |
+| `useGetClassWithSubjectByAcademicTeam` | `GET` | `/api/StaffControllers/ClassWithSubjectByAcademicTeam/{AcademicTeamById}` | Pre-check a teacher's assigned classes and subjects |
+| `useGetClassTeacher` | `GET` | `/api/StaffControllers/ClassTeacher/{AcademicTeamId}` | Show the assigned class-teacher class |
+| `useAssignClassTeacher` | `POST` | `/api/StaffControllers/AssignClassTeacher` | Assign a class to an academic team member as class teacher |
 
 **Interface (`IAcademicTeam`):**
 ```ts
@@ -32,8 +35,17 @@
 
 **Interface (`IAssignClass`):**
 ```ts
-{ academicTeamId: string; subjectIds: string[]; ClassIds: string[]; }
+{
+  AcademicTeamId: string;
+  Classes: { ClassId: string; SubjectIds: string[] }[];
+}
 ```
+
+The Academic Team action checklist loads existing selections from
+`/api/StaffControllers/ClassWithSubjectByAcademicTeam/{AcademicTeamById}` and
+loads a class's available subjects from
+`/api/Academics/SubjectByClass?classId={classId}`. Changes are submitted with
+the assignment or unassignment endpoint when the user confirms with **OK**.
 
 ---
 

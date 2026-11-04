@@ -83,7 +83,10 @@ export const PrintIDCardButton = ({ StudentId }: { StudentId: string }) => {
       />
 
       {showModal && (
-        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-start md:items-center justify-center 
+             bg-black/40 backdrop-blur-sm ml-12 md:ml-64 sm:ml-16 xs:ml-0"
+        >
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-auto shadow-2xl">
             <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
               <h2 className="text-lg font-semibold">Print Student ID Card</h2>

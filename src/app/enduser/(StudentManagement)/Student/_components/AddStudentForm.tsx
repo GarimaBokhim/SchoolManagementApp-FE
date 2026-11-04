@@ -5,8 +5,9 @@ import { ButtonElement } from '@/components/Buttons/ButtonElement'
 import { Toast } from '@/components/Toast/toast'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { IStudent } from '../types/IStudents'
+import { IParent } from '../../_Parent/types/IParents'
 import { useAddStudent } from '../hooks'
 import toast from 'react-hot-toast'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
@@ -18,6 +19,7 @@ import {
   useGetVDCByDistrict,
 } from '@/components/common/hooks'
 import { useGetAllParents } from '../../_Parent/hooks'
+import AddParent from '../../_Parent/pages/Add'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import { useFilterFeeCategoryByDate } from '@/app/enduser/schoolFee/_FeeCategory/hooks'
 type Props = {
@@ -115,7 +117,15 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   }
 
   const [selectedParenId, setSelectedParenId] = useState<string | null>(null)
+  const [showAddParentModal, setShowAddParentModal] = useState(false)
+  const [newlyAddedParent, setNewlyAddedParent] = useState<IParent | null>(null)
   const { data: allParents } = useGetAllParents('?IsPagination=false')
+  const parentOptions = allParents?.Items ?? []
+  const displayedParentOptions =
+    newlyAddedParent?.id &&
+    !parentOptions.some((parent) => parent.id === newlyAddedParent.id)
+      ? [...parentOptions, newlyAddedParent]
+      : parentOptions
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
@@ -217,24 +227,37 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                     getLabel={(o) => o?.name || ''}
                     getValue={(o) => o?.id ?? ''}
                   />
-                  <AppCombobox
-                    value={selectedParenId}
-                    dropDownWidth="w-full"
-                    dropdownPositionClass="absolute"
-                    label="Parent Name"
-                    name="parentId"
-                    form={form}
-                    required
-                    options={allParents?.Items}
-                    selected={
-                      allParents?.Items?.find(
-                        (g) => g.id === selectedParenId
-                      ) || null
-                    }
-                    onSelect={(group) => setSelectedParenId(group?.id ?? null)}
-                    getLabel={(g) => g?.fullName ?? ''}
-                    getValue={(g) => g?.id ?? ''}
-                  />
+                  <div className="relative">
+                    <AppCombobox
+                      value={selectedParenId}
+                      dropDownWidth="w-full"
+                      dropdownPositionClass="absolute"
+                      label="Parent Name"
+                      name="parentId"
+                      form={form}
+                      required
+                      options={displayedParentOptions}
+                      selected={
+                        displayedParentOptions.find(
+                          (parent) => parent.id === selectedParenId
+                        ) || null
+                      }
+                      onSelect={(parent) =>
+                        setSelectedParenId(parent?.id ?? null)
+                      }
+                      getLabel={(parent) => parent?.fullName ?? ''}
+                      getValue={(parent) => parent?.id ?? ''}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Add parent"
+                      title="Add parent"
+                      onClick={() => setShowAddParentModal(true)}
+                      className="absolute right-0 -top-5 z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -428,6 +451,23 @@ const AddStudentForm = ({ form, onClose }: Props) => {
           </form>
         </fieldset>
       </div>
+      <AddParent
+        visible={showAddParentModal}
+        onClose={() => setShowAddParentModal(false)}
+        onSuccess={(parent) => {
+          setNewlyAddedParent(parent)
+          if (!parent.id) {
+            toast.error('Parent was added, but the server did not return its ID.')
+            return
+          }
+
+          setSelectedParenId(parent.id)
+          form.setValue('parentId', parent.id, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }}
+      />
       ]
     </div>
   )
