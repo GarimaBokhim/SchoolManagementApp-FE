@@ -31,8 +31,8 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-This project uses `vercel.json` to forward Vercel requests from `/api/*` to `https://elitespacenepal.premiumasp.net`. Next.js rewrites in `next.config.ts` provide the same proxy during local development.
+The Next.js API route at `src/app/api/[...path]/route.ts` forwards `/api/*` requests server-side to `https://elitespacenepal.premiumasp.net`. This works both on Vercel and in local development without browser-to-backend CORS requirements.
 
-If the backend changes, update the destination in both `vercel.json` and `next.config.ts`, then redeploy.
+If the backend changes, set `API_URL` in the Vercel project's environment variables to the backend origin (without a trailing slash or `/api` path), then redeploy. `NEXT_PUBLIC_API_URL` is also accepted as a fallback for the proxy destination.
 
-In Vercel, use the repository root as the project root and `pnpm build` as the build command. The Windows-specific environment assignments in `dev:remote` are for local development; Vercel uses `vercel.json` instead. Check the deployment's build logs and confirm it was created from the intended Git branch/commit if the site still appears outdated.
+In Vercel, use the repository root as the project root and `pnpm build` as the build command. The Windows-specific environment assignments in `dev:remote` are for local development; Vercel runs the same API proxy route. Confirm the production deployment was created from the commit containing this route.
