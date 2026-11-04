@@ -1,12 +1,6 @@
 
 import type { NextConfig } from 'next'
 
-const API_URL = (
-  process.env.API_URL?.trim() ||
-  process.env.NEXT_PUBLIC_API_URL?.trim() ||
-  'https://elitespacenepal.premiumasp.net'
-).replace(/\/+$/, '')
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -24,30 +18,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/api/:path*',
-          destination: `${API_URL}/api/:path*`,
-        },
-      ],
-    }
-  },
-
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-        ],
-      },
-    ]
-  },
 }
 
 export default nextConfig
