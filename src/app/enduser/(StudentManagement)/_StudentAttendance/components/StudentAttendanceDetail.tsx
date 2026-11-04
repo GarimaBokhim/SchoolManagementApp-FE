@@ -3,13 +3,10 @@ import React, { useState } from 'react'
 import { Filter, RotateCcw, X } from 'lucide-react'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
-import { useGetAllAcademicTeams } from '@/app/enduser/(Staff)/AcademicStaff/hooks'
 import { SubmitHandler, useForm } from 'react-hook-form'
+import { adToBs } from '@sbmdkl/nepali-date-converter'
 import { IFilterAttendance } from '../types/IStudentAttendance'
-import toast from 'react-hot-toast'
 import { useGetAttendanceReport } from '../hooks'
-import { Toast } from '@/components/Toast/toast'
-import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { useGetAllStudents } from '../../Student/hooks'
 
 interface Props {
@@ -31,65 +28,81 @@ const MonthList = [
   { name: 'Falgun', value: 11 },
   { name: 'Chaitra', value: 12 },
 ]
+
+const getCurrentBsDate = () => {
+  const today = new Date()
+  const adDate = `${today.getFullYear()}-${String(
+    today.getMonth() + 1
+  ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const [year, monthNumber] = adToBs(adDate).split('-')
+  const monthName = MonthList[Number(monthNumber) - 1]?.name
+
+  if (!year || !monthName) {
+    throw new Error('Could not determine the current Bikram Sambat date')
+  }
+
+  return { year, month: monthName }
+}
+
+const buildAttendanceReportParams = (
+  classId: string | null,
+  yearName: string,
+  nameOfMonths: string
+) => {
+  if (!classId || !yearName || !nameOfMonths) return ''
+
+  const queryParams = new URLSearchParams({
+    classId,
+    yearName,
+    nameOfMonths,
+  })
+
+  return `?${queryParams.toString()}`
+}
+
 const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
+  const [currentBsDate] = useState(getCurrentBsDate)
+  const [selectedMonth, setSelectedMonth] = useState(currentBsDate.month)
   const form = useForm<IFilterAttendance>({
     defaultValues: {
-      academicTeamId: '',
-      yearName: '',
-      nameOfMonths: '',
+      classId: classId ?? '',
+      yearName: currentBsDate.year,
+      nameOfMonths: currentBsDate.month,
     },
   })
-  const { data: allAcademicTeam } = useGetAllAcademicTeams()
-  const [selectedAcademicTeamId, setSelectedAcademicTeamId] = useState<
-    string | null
-  >(null)
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(0)
-  const [selectedYear, setSelectedYear] = useState('2082')
   const days = Array.from({ length: 31 }, (_, i) => i + 1)
-  const year = String(selectedYear)
-  const month = String(selectedMonth).padStart(2, '0')
-  const getDateKey = (day: number) =>
-    `${year}-${month}-${String(day).padStart(2, '0')}`
-  const [params, setParams] = useState('')
+  const [params, setParams] = useState(() =>
+    buildAttendanceReportParams(
+      classId,
+      currentBsDate.year,
+      currentBsDate.month
+    )
+  )
   const { data: attendanceReport } = useGetAttendanceReport(params)
+
   const { data: allStudents } = useGetAllStudents()
-  const { handleError, clearError } = useErrorHandler()
+
   const onClearClick = () => {
-    setSelectedAcademicTeamId('')
-    setSelectedMonth(0)
-    setSelectedYear('')
+    setSelectedMonth(currentBsDate.month)
+    form.reset({
+      classId: classId ?? '',
+      yearName: currentBsDate.year,
+      nameOfMonths: currentBsDate.month,
+    })
+    setParams(
+      buildAttendanceReportParams(
+        classId,
+        currentBsDate.year,
+        currentBsDate.month
+      )
+    )
   }
   if (!visible) return null
-  const onSubmit: SubmitHandler<IFilterAttendance> = async (formData) => {
-    clearError()
-    try {
-      const queryParams = [
-        classId ? `classId=${encodeURIComponent(classId)}` : null,
-        formData.academicTeamId
-          ? `academicTeamId=${encodeURIComponent(formData.academicTeamId)}`
-          : null,
-        selectedYear ? `yearName=${encodeURIComponent(selectedYear)}` : null,
-        formData.nameOfMonths
-          ? `nameOfMonths=${encodeURIComponent(formData.nameOfMonths)}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join('&')
-      const fullQuery = queryParams ? `?${queryParams}` : ''
-      await toast.promise(
-        (async () => {
-          setParams(fullQuery)
-        })(),
-        {
-          loading: 'Fetching data...',
-          success: 'Data fetched successfully!',
-        }
-      )
-    } catch (error) {
-      const errorMsg = handleError(error)
-      Toast.error(errorMsg)
-      console.error('Error during form submission:', error)
-    }
+  const onSubmit: SubmitHandler<IFilterAttendance> = (formData) => {
+    const monthName = formData.nameOfMonths || selectedMonth
+    setParams(
+      buildAttendanceReportParams(classId, currentBsDate.year, monthName)
+    )
   }
   return (
     <div className="fixed ml-12 md:ml-64 sm:ml-16 xs:ml-0  inset-0 z-50 bg-black/50 flex items-center justify-center">
@@ -110,29 +123,12 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
             className="flex flex-wrap items-end gap-4 md:gap-6"
           >
             <div className="flex-1 min-w-[240px]">
-              <AppCombobox
-                value={selectedAcademicTeamId}
-                dropDownWidth="w-full"
-                dropdownPositionClass="absolute"
-                label="Academic Team"
-                name="academicTeamId"
-                form={form}
-                options={allAcademicTeam?.Items}
-                selected={
-                  allAcademicTeam?.Items?.find(
-                    (g) => g.id === selectedAcademicTeamId
-                  ) || null
-                }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedAcademicTeamId(group.id || null)
-                  } else {
-                    setSelectedAcademicTeamId(null)
-                  }
-                }}
-                getLabel={(g) => g?.fullName ?? ''}
-                getValue={(g) => g?.id ?? ''}
-              />
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
+                Current Year (BS)
+              </label>
+              <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-[#353535]">
+                {currentBsDate.year}
+              </div>
             </div>
             <div className="flex-1 min-w-[240px]">
               <AppCombobox
@@ -144,17 +140,18 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
                 form={form}
                 options={MonthList}
                 selected={
-                  MonthList?.find((g) => g.value === selectedMonth) || null
+                  MonthList.find((month) => month.name === selectedMonth) ||
+                  undefined
                 }
-                onSelect={(group) => {
-                  if (group) {
-                    setSelectedMonth(group.value || null)
-                  } else {
-                    setSelectedMonth(null)
-                  }
+                onSelect={(month) => {
+                  const monthName = month?.name ?? ''
+                  setSelectedMonth(monthName)
+                  form.setValue('nameOfMonths', monthName, {
+                    shouldDirty: true,
+                  })
                 }}
-                getLabel={(g) => g?.name ?? ''}
-                getValue={(g) => g?.value ?? ''}
+                getLabel={(month) => month.name}
+                getValue={(month) => month.name}
               />
             </div>
 
@@ -193,67 +190,67 @@ const MonthlyAttendanceSheet = ({ visible, onClose, classId }: Props) => {
 
             <tbody>
               {attendanceReport?.Students &&
-              attendanceReport?.Students.length > 0
+                attendanceReport?.Students.length > 0
                 ? attendanceReport?.Students.map((student, index) => (
-                    <tr
-                      key={student.StudentId}
-                      className="odd:bg-gray-50 dark:odd:bg-[#3a3a3a]"
-                    >
-                      <td className="border px-2 py-2 text-center font-medium">
-                        {index + 1}
-                      </td>
-                      <td className="border px-2 py-2">
-                        {(() => {
-                          const s = allStudents?.Items.find(
-                            (i) => i.id === student.StudentId
-                          )
-                          return s
-                            ? [s.firstName, s.middleName, s.lastName]
-                                .filter(Boolean)
-                                .join(' ')
-                            : '—'
-                        })()}
-                      </td>
-                      {days.map((day) => {
-                        const dayStr = String(day).padStart(2, '0')
-                        let status: string | null | undefined = null
+                  <tr
+                    key={student.StudentId}
+                    className="odd:bg-gray-50 dark:odd:bg-[#3a3a3a]"
+                  >
+                    <td className="border px-2 py-2 text-center font-medium">
+                      {index + 1}
+                    </td>
+                    <td className="border px-2 py-2">
+                      {(() => {
+                        const s = allStudents?.Items.find(
+                          (i) => i.id === student.StudentId
+                        )
+                        return s
+                          ? [s.firstName, s.middleName, s.lastName]
+                            .filter(Boolean)
+                            .join(' ')
+                          : '—'
+                      })()}
+                    </td>
+                    {days.map((day) => {
+                      const dayStr = String(day).padStart(2, '0')
+                      let status: string | null | undefined = null
 
-                        if (student.Attendance) {
-                          for (const key in student.Attendance) {
-                            // The key is in format YYYY-MM-DD. We match the DD part.
-                            if (key.endsWith(`-${dayStr}`)) {
-                              status = student.Attendance[key].Status
-                              break
-                            }
+                      if (student.Attendance) {
+                        for (const key in student.Attendance) {
+                          // The key is in format YYYY-MM-DD. We match the DD part.
+                          if (key.endsWith(`-${dayStr}`)) {
+                            status = student.Attendance[key].Status
+                            break
                           }
                         }
+                      }
 
-                        // Determine cell styling based on status
-                        let statusClass = 'text-gray-400 hover:bg-gray-50 dark:hover:bg-[#3f3f3f]'
-                        if (status === 'P') statusClass = 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 font-bold'
-                        else if (status === 'A') statusClass = 'text-red-600 bg-red-50 dark:bg-red-900/20 font-bold'
-                        else if (status === 'T') statusClass = 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 font-bold'
-                        else if (status === 'E') statusClass = 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 font-bold'
-                        else if (status === 'U') statusClass = 'text-gray-600 bg-gray-100 dark:bg-gray-800 font-bold'
+                      // Determine cell styling based on status
+                      let statusClass = 'text-gray-400 hover:bg-gray-50 dark:hover:bg-[#3f3f3f]'
+                      if (status === 'P') statusClass = 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 font-bold'
+                      else if (status === 'A') statusClass = 'text-red-600 bg-red-50 dark:bg-red-900/20 font-bold'
+                      else if (status === 'T') statusClass = 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 font-bold'
+                      else if (status === 'E') statusClass = 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 font-bold'
+                      else if (status === 'U') statusClass = 'text-gray-600 bg-gray-100 dark:bg-gray-800 font-bold'
 
-                        return (
-                          <td
-                            key={day}
-                            className={`border px-2 py-2 text-center transition-colors ${statusClass}`}
-                          >
-                            {status ?? '-'}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))
+                      return (
+                        <td
+                          key={day}
+                          className={`border px-2 py-2 text-center transition-colors ${statusClass}`}
+                        >
+                          {status ?? '-'}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
                 : (
-                    <tr>
-                      <td colSpan={days.length + 2} className="px-4 py-8 text-center text-gray-500">
-                        No attendance report of this month
-                      </td>
-                    </tr>
-                  )}
+                  <tr>
+                    <td colSpan={days.length + 2} className="px-4 py-8 text-center text-gray-500">
+                      No attendance report of this month
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </div>

@@ -10,8 +10,9 @@ import useErrorHandler from '@/components/helpers/ErrorHandling'
 type Props = {
   form: UseFormReturn<IParent>
   onClose: () => void
+  onSuccess?: (parent: IParent) => void
 }
-const AddParentForm = ({ form, onClose }: Props) => {
+const AddParentForm = ({ form, onClose, onSuccess }: Props) => {
   const addParent = useAddParent()
   const { handleError, clearError } = useErrorHandler()
   const handleClose = () => {
@@ -20,11 +21,12 @@ const AddParentForm = ({ form, onClose }: Props) => {
   const onSubmit: SubmitHandler<IParent> = async (data) => {
     clearError()
     try {
-      await toast.promise(addParent.mutateAsync(data), {
+      const createdParent = await toast.promise(addParent.mutateAsync(data), {
         loading: 'Adding Parent...',
         success: 'Successfully added Parent',
       })
       handleClose()
+      onSuccess?.(createdParent)
     } catch (error) {
       const errorMsg = handleError(error)
       Toast.error(errorMsg)
@@ -33,9 +35,12 @@ const AddParentForm = ({ form, onClose }: Props) => {
   return (
     <div className=" inset-0 flex items-center justify-center  w-full h-full">
       <div className="w-full  h-[100%] bg-[#ffffff] dark:bg-[#27272a] p-4 overflow-auto relative dark:text-white ">
-        <fieldset className="">
+        <fieldset className="space-y-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-50">
+            <h1
+              id="add-parent-title"
+              className="text-xl font-semibold text-gray-800 dark:text-gray-50"
+            >
               Add Parent
             </h1>
             <button

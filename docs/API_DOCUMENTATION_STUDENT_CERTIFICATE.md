@@ -31,7 +31,7 @@
 | `useGetStudentById` | `GET` | `/api/Student/StudentsBy/{StudentId}` | Edit form prefill |
 | `useGetStudentByClass` | `GET` | `/api/Student/GetStudentByClass/{ClassId}?classId=` | Students dropdown by class |
 | `useAddStudent` | `POST` | `/api/Student/AddStudents` | Add student form (multipart/form-data) |
-| `useEditStudent` | `PATCH` | `/api/Student/UpdateStudents/{id}` | Edit student form |
+| `useEditStudent` | `PATCH` | `/api/Student/UpdateStudents/{id}` | Edit student form (multipart/form-data, including an optional `studentImg` file) |
 | `useRemoveStudent` | `DELETE` | `/api/Student/DeleteStudents/{Id}` | Delete student button |
 | `useUploadStudents` | `POST` | `/api/Student/upload-students` | Bulk excel upload |
 | `useFilterStudentByDate` | `GET` | `/api/Student/FilterStudents` | Date and text search filter |

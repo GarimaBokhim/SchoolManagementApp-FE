@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "pnpm dev:local",
+    "dev:local": "set \"API_URL=https://localhost:7276\"&& set \"NEXT_PUBLIC_API_URL=https://localhost:7276\"&& node --use-system-ca node_modules/next/dist/bin/next dev --turbopack",
+    "dev:remote": "set \"API_URL=https://elitespacenepal.premiumasp.net\"&& set \"NEXT_PUBLIC_API_URL=https://elitespacenepal.premiumasp.net\"&& node node_modules/next/dist/bin/next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "node --use-system-ca node_modules/next/dist/bin/next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },

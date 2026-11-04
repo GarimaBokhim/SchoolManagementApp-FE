@@ -208,11 +208,11 @@ const AllLedgerGroupForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200">
-                  <th className="px-4 py-3 text-left w-[60px]">S.N</th>
-                  <th className="px-4 py-3 text-left">Ledger Group Name</th>
-                  <th className="px-4 py-3 text-left">Master</th>
-                  <th className="px-4 py-3 text-center ">Actions</th>
+                <tr className="bg-gray-50 dark:text-white text-gray-700 dark:bg-[#80878c] uppercase text-sm font-semibold border-b border-gray-200 text-center">
+                  <th className="px-4 py-3 w-[60px]">S.N</th>
+                  <th className="px-4 py-3">Ledger Group Name</th>
+                  <th className="px-4 py-3">Master</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
 

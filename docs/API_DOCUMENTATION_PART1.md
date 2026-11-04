@@ -464,7 +464,7 @@ interface ISeatPlanning {
 | `useGetStudentById` | `GET` | `/api/Student/StudentsBy/{StudentId}` | Edit prefill |
 | `useGetStudentByClass` | `GET` | `/api/Student/GetStudentByClass/{ClassId}?classId=` | Students by class |
 | `useAddStudent` | `POST` | `/api/Student/AddStudents` | Add student form (multipart) |
-| `useEditStudent` | `PATCH` | `/api/Student/UpdateStudents/{id}` | Edit student |
+| `useEditStudent` | `PATCH` | `/api/Student/UpdateStudents/{id}` | Edit student (multipart/form-data, including an optional `studentImg` file) |
 | `useRemoveStudent` | `DELETE` | `/api/Student/DeleteStudents/{Id}` | Delete |
 | `useUploadStudents` | `POST` | `/api/Student/upload-students` | Excel upload |
 | `useFilterStudentByDate` | `GET` | `/api/Student/FilterStudents` | Date filter |

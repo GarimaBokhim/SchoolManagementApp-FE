@@ -26,6 +26,7 @@ export interface IStudent {
 
   classSectionId?: string | "";
   classId: string;
+  className: string;
 
   provinceId?: number;
   districtId?: number;
@@ -36,10 +37,16 @@ export interface IStudent {
   wardNumber?: number | null;
 
   feeCategoryId?: string;
+
+  name: string;
+  sectionId: string;
 }
 
 export interface IFilterStudentByDate {
   startDate: string;
   endDate: string;
-  firstName: string;
+  name: string;
+  classId: string;
+  address: string;
+  sectionId: string;
 }

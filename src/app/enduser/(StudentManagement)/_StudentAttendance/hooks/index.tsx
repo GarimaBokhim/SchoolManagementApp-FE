@@ -100,6 +100,7 @@ export const useGetAttendanceReport = (params?: string) => {
       const response = await api.get<IAttendanceReport>(url)
       return response.data
     },
+    enabled: Boolean(params),
     staleTime: 0,
     retry: false,
   })

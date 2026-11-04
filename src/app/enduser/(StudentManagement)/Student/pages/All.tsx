@@ -6,7 +6,7 @@ import AllStudentAttendance from '../../_StudentAttendance/pages/All'
 import AllRegistration from '../../_Registration/pages/All'
 const AllStudent = () => {
   const student = [
-    { id: 'parent', label: 'Parent', color: 'gray' },
+    // { id: 'parent', label: 'Parent', color: 'gray' },
     { id: 'student', label: 'Student', color: 'gray' },
     { id: 'attendance', label: 'Attendance', color: 'gray' },
     { id: 'registration', label: 'Registration', color: 'gray' },
@@ -15,12 +15,12 @@ const AllStudent = () => {
 
   const renderStudent = () => {
     switch (activeReport) {
-      case 'parent':
-        return (
-          <div className=" text-center">
-            <AllParent />
-          </div>
-        )
+      // case 'parent':
+      //   return (
+      //     <div className=" text-center">
+      //       <AllParent />
+      //     </div>
+      //   )
       case 'attendance':
         return (
           <div className=" text-center">

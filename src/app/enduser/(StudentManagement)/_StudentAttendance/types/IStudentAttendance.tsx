@@ -32,9 +32,8 @@ export interface IAttendencecount {
 }
 
 export interface IFilterAttendance {
-  academicTeamId: string
-  yearName: string
   classId: string
+  yearName: string
   nameOfMonths: string
 }
 type AttendanceStatus = 'P' | 'A' | 'L' | 'H'

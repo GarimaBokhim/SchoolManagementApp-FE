@@ -22,11 +22,62 @@ export interface IFilterAcademicTeamByDate {
 }
 
 export interface IAssignClass {
-  academicTeamId: string
-  subjectIds: string[]
-  ClassIds: string[]
+  AcademicTeamId: string
+  Classes: IClassSubjectAssignment[]
 }
-export interface unAssignClass {
-  academicTeamId: string
-  classIds: string[]
+
+export interface IAssignClassTeacherRequest {
+  AcademicTeamId: string
+  ClassId: string
 }
+
+export interface IClassTeacherDetails {
+  AcademicTeamId: string
+  AcademicTeamName: string
+  ClassId: string
+  ClassName: string
+  AssignedDate: string
+}
+
+export interface IAssignClassTeacherResponse {
+  Message: string
+}
+
+export interface IClassSubjectAssignment {
+  ClassId: string
+  SubjectIds: string[]
+}
+
+export interface IAssignedClassSubjectDetails {
+  ClassId?: string
+  classId?: string
+  ClassName?: string
+  className?: string
+  SubjectIds?: string[]
+  subjectIds?: string[]
+  Subjects?: IAssignedSubjectDetails[]
+  subjects?: IAssignedSubjectDetails[]
+}
+
+export interface IAssignedSubjectDetails {
+  SubjectId?: string
+  subjectId?: string
+  SubjectName?: string
+  subjectName?: string
+}
+
+export interface IAssignedClassDetails {
+  AcademicTeamId?: string
+  academicTeamId?: string
+  academicteamId?: string
+  Classes?: IAssignedClassSubjectDetails[]
+  classes?: IAssignedClassSubjectDetails[]
+  ClassId?: string
+  classId?: string
+  ClassIds?: string[]
+  classIds?: string[]
+  SubjectIds?: string[]
+  subjectIds?: string[]
+}
+
+export type IClassWithSubjectDetailsResponse = IAssignedClassDetails
