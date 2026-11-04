@@ -3,11 +3,7 @@ import type { NextRequest } from 'next/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const API_BASE_URL = (
-  process.env.API_URL?.trim() ||
-  process.env.NEXT_PUBLIC_API_URL?.trim() ||
-  'https://elitespacenepal.premiumasp.net'
-).replace(/\/+$/, '')
+const API_BASE_URL = 'https://elitespacenepal.premiumasp.net'
 
 const REQUEST_HEADERS = ['accept', 'authorization', 'content-type', 'cookie']
 const HOP_BY_HOP_HEADERS = new Set([
