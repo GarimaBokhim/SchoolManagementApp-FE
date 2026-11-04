@@ -1,5 +1,5 @@
 // Service worker for EliteKhaneyPani PWA (app shell caching + offline fallback).
-const CACHE_VERSION = "elitekhaneypani-v1";
+const CACHE_VERSION = "elitekhaneypani-v2";
 const CORE_ASSETS = [
   "/elitekhaneypani",
   "/manifest.json",
@@ -48,20 +48,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first, then update cache in the background.
+  // Prefer current deployment assets and use the cache only when offline.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const networkFetch = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-
-      return cached || networkFetch;
-    })
+    fetch(request)
+      .then((response) => {
+        if (response.ok && url.origin === self.location.origin) {
+          return caches
+            .open(CACHE_VERSION)
+            .then((cache) => cache.put(request, response.clone()))
+            .then(() => response);
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then((cached) => cached || Response.error()))
   );
 });

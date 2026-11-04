@@ -1,10 +1,11 @@
 
 import type { NextConfig } from 'next'
 
-const API_URL =
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'https://localhost:7276'
+const API_URL = (
+  process.env.API_URL?.trim() ||
+  process.env.NEXT_PUBLIC_API_URL?.trim() ||
+  'https://elitespacenepal.premiumasp.net'
+).replace(/\/+$/, '')
 
 const nextConfig: NextConfig = {
   images: {
