@@ -40,12 +40,19 @@ const getAssignedSubjects = (items: IAssignedClassDetails[]) => {
 
   items.forEach((item) => {
     const classes = item.Classes ?? item.classes ?? []
-    classes.forEach((assignment) =>
+    classes.forEach((assignment) => {
+      const subjectIds = [
+        ...(assignment.SubjectIds ?? assignment.subjectIds ?? []),
+        ...(assignment.Subjects ?? assignment.subjects ?? [])
+          .map((subject) => subject.SubjectId ?? subject.subjectId)
+          .filter((subjectId): subjectId is string => Boolean(subjectId)),
+      ]
+
       addAssignment(
         assignment.ClassId ?? assignment.classId,
-        assignment.SubjectIds ?? assignment.subjectIds ?? []
+        subjectIds
       )
-    )
+    })
 
     const classIds = item.ClassIds ?? item.classIds ?? []
     classIds.forEach((classId) =>
