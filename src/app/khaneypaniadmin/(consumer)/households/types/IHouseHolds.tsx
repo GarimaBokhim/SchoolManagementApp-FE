@@ -35,6 +35,8 @@ export interface HouseHoldsResponse {
     longitude: number
     houseNumber: string
     tole: string
+    schoolId?: string
+    wardnumber?: number
     registrationDate: string
     qrCode: string
 }

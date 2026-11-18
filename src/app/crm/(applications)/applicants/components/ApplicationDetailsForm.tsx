@@ -5,12 +5,14 @@ import toast from 'react-hot-toast';
 import useErrorHandler from '@/components/helpers/ErrorHandling';
 import { updateSingleVisaStatusPayload } from '../types/IApplicants';
 import { AppCombobox } from '@/components/Input/ComboBox';
+import { LeadDetailsForm } from './LeadDetailsForm';
 
 
 type Props = {
     ApplicantId: string;
+    LeadId: string | null;
 };
-const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
+const ApplicationDetailsForm = ({ ApplicantId, LeadId }: Props) => {
 
     const [selectedStep, setSelectedStep] = useState<any>(null);
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -387,8 +389,8 @@ const ApplicationDetailsForm = ({ ApplicantId }: Props) => {
                     )}
                     {activeTab === 'academics' && (
                         <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                            <BookOpen size={48} className="mx-auto mb-3 opacity-50" />
-                            <p>No Academic Records</p>
+                            <LeadDetailsForm inquiryId={LeadId} />
+
                         </div>
                     )}
                     {activeTab === 'testDates' && (

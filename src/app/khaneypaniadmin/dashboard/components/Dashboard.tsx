@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDashboardSummary, getReadings, getHouseById } from "../lib/khaneypaniStore";
 import { MeterReading } from "../types/khaneypani";
+import { api } from "@/utils/instance";
+import { getBackendBaseUrl } from "@/utils/backendUrl";
 
 import { useGetAllSchool } from "../../Setup/School/hooks";
 import { useGetAllRoles } from "@/app/SuperAdmin/accessControl/roles/hooks";
@@ -16,17 +18,12 @@ import SchoolInfoCard from "./SchoolCard";
 import BarChartSection from "./BarChart";
 import PieChartSection from "./PieChart";
 
-// NOTE ON DATA SOURCE:
-// Your other dashboards (Schools, Roles, Users, Institutions) pull live
-// counts through hooks like useGetAllSchool(). This page follows the exact
-// same shape, but reads from lib/khaneypaniStore.ts for now so the whole
-// flow works end-to-end without a backend yet.
-//
-// When your API is ready, swap this block for real hooks, e.g.:
-//   const { data: houses } = useGetAllHouses();
-//   const { data: readings } = useGetAllReadings();
-// and build `summary` / `recent` from their responses instead. Nothing
-// else in this file needs to change.
+type AmountDetails = {
+    totalAmountCollected: number;
+    totalDueAmount: number;
+    totalAmount: number;
+    totalHouseHolds: number;
+};
 
 function nf(n: number) {
     return new Intl.NumberFormat("en-IN").format(Math.round(n));
@@ -37,10 +34,17 @@ const Dashboard: React.FC = () => {
     const navigate = useRouter();
     const [summary, setSummary] = useState(getDashboardSummary());
     const [recent, setRecent] = useState<MeterReading[]>([]);
+    const [amountDetails, setAmountDetails] = useState<AmountDetails>({
+        totalAmountCollected: 0,
+        totalDueAmount: 0,
+        totalAmount: 0,
+        totalHouseHolds: 0,
+    });
 
     const [schoolId, setSchoolId] = useState("");
 
     useEffect(() => {
+        let isMounted = true;
         const userDetailsString = localStorage.getItem("userDetails");
 
         if (userDetailsString) {
@@ -55,7 +59,21 @@ const Dashboard: React.FC = () => {
         }
 
         const token = localStorage.getItem("token");
-        if (!token) navigate.push("/");
+        if (!token) {
+            navigate.push("/");
+        } else {
+            api.get<AmountDetails>(`${getBackendBaseUrl()}/api/KhaneyPaniFinance/AmountDetails`)
+                .then((response) => {
+                    if (isMounted) setAmountDetails(response.data);
+                })
+                .catch((error: unknown) => {
+                    console.error("Failed to fetch Khaney Pani amount details", error);
+                });
+        }
+
+        return () => {
+            isMounted = false;
+        };
     }, [navigate]);
 
 
@@ -67,32 +85,30 @@ const Dashboard: React.FC = () => {
 
 
 
-    // Build cards dynamically — same StatCard component your other
-    // dashboards use, just fed with water-project numbers.
     const cards = [
         {
             cardHead: "Total Houses",
-            cardStats: nf(summary.totalHouses),
+            cardStats: nf(amountDetails.totalHouseHolds),
             cardStyle: "!bg-cyan-500/30",
             cardIcon: <Home className="text-cyan-400 text-4xl" />,
         },
         {
-            cardHead: "Collected This Month",
-            cardStats: `Rs. ${nf(summary.thisMonthCollection)}`,
+            cardHead: "Total Amount Collected",
+            cardStats: `Rs. ${nf(amountDetails.totalAmountCollected)}`,
             cardStyle: "!bg-emerald-500/30",
             cardIcon: <Wallet className="text-emerald-400 text-4xl" />,
         },
         {
             cardHead: "Pending Dues",
-            cardStats: `Rs. ${nf(summary.totalPending)}`,
+            cardStats: `Rs. ${nf(amountDetails.totalDueAmount)}`,
             cardStyle: "!bg-amber-500/30",
             cardIcon: <AlertCircle className="text-amber-500 text-4xl" />,
         },
         {
-            cardHead: "Net Balance",
-            cardStats: `Rs. ${nf(summary.netBalance)}`,
-            cardStyle: summary.netBalance >= 0 ? "!bg-emerald-500/30" : "!bg-red-500/30",
-            cardIcon: <ReceiptText className={`text-4xl ${summary.netBalance >= 0 ? "text-emerald-400" : "text-red-400"}`} />,
+            cardHead: "Total Amount",
+            cardStats: `Rs. ${nf(amountDetails.totalAmount)}`,
+            cardStyle: "!bg-emerald-500/30",
+            cardIcon: <ReceiptText className="text-4xl text-emerald-400" />,
         },
     ];
 
