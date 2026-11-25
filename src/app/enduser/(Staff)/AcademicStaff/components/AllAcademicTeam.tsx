@@ -395,15 +395,7 @@ const AllAcademicTeamForm = () => {
                           <td className="py-3 px-4">{AcademicTeam.email}</td>
                           <td className="py-3 px-4">{AcademicTeam.address}</td>
                           <td className="py-3 px-4">
-                            {AcademicTeam.id ? (
-                              <ClassTeacherCell
-                                academicTeamId={AcademicTeam.id}
-                              />
-                            ) : (
-                              <span className="text-sm text-gray-400">
-                                Not assigned
-                              </span>
-                            )}
+                            {AcademicTeam.ClassTeacherClasses ? "" + AcademicTeam.ClassTeacherClasses : "Not Assigned"}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex justify-center gap-2">
@@ -495,7 +487,15 @@ const AllAcademicTeamForm = () => {
                   (team) => team.id === classTeacherAcademicTeamId
                 )?.fullName ?? 'the selected team member'
               }
+              currentClassName={
+                filteredAcademicTeam?.Items?.find(
+                  (team) => team.id === classTeacherAcademicTeamId
+                )?.ClassTeacherClasses
+              }
               onClose={() => setClassTeacherAcademicTeamId(null)}
+              onAssigned={async () => {
+                await refetch()
+              }}
             />
           )}
 

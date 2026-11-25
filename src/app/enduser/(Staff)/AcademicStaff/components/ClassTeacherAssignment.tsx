@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppCombobox } from '@/components/Input/ComboBox'
 import { useGetAllClass } from '@/app/enduser/(Academics)/Class/hooks'
 import { IClass } from '@/app/enduser/(Academics)/Class/types/IClass'
@@ -41,24 +41,52 @@ export const ClassTeacherCell = ({
 interface AssignClassTeacherModalProps {
   academicTeamId: string
   academicTeamName: string
+  currentClassName?: string
   onClose: () => void
+  onAssigned?: () => void | Promise<void>
 }
 
 export const AssignClassTeacherModal = ({
   academicTeamId,
   academicTeamName,
+  currentClassName,
   onClose,
+  onAssigned,
 }: AssignClassTeacherModalProps) => {
   const { data: classes, isLoading, isError } = useGetAllClass()
+  const { data: assignedClass } = useGetClassTeacher(academicTeamId)
   const assignClassTeacher = useAssignClassTeacher()
   const [selectedClassId, setSelectedClassId] = useState('')
 
-  const availableClasses = classes?.Items?.filter(
-    (classItem): classItem is IClass & { id: string } => Boolean(classItem.id)
+  const availableClasses = useMemo(
+    () =>
+      classes?.Items?.filter(
+        (classItem): classItem is IClass & { id: string } =>
+          Boolean(classItem.id)
+      ),
+    [classes?.Items]
   )
   const selectedClass = availableClasses?.find(
     (classItem) => classItem.id === selectedClassId
   )
+
+  useEffect(() => {
+    if (!availableClasses?.length) return
+
+    const assignedClassId = assignedClass?.ClassId
+    const assignedClassName =
+      assignedClass?.ClassName || currentClassName
+
+    const matchedClass = assignedClassId
+      ? availableClasses.find((classItem) => classItem.id === assignedClassId)
+      : availableClasses.find(
+          (classItem) =>
+            classItem.name?.trim().toLowerCase() ===
+            assignedClassName?.trim().toLowerCase()
+        )
+
+    setSelectedClassId(matchedClass?.id ?? '')
+  }, [assignedClass, availableClasses, currentClassName])
 
   const handleAssign = async () => {
     if (!selectedClassId) {
@@ -72,6 +100,7 @@ export const AssignClassTeacherModal = ({
         ClassId: selectedClassId,
       })
       toast.success(response.Message || 'Class teacher assigned successfully.')
+      await onAssigned?.()
       onClose()
     } catch (error) {
       console.error('Failed to assign class teacher:', error)
