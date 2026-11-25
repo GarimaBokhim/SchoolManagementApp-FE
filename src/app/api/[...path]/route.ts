@@ -4,6 +4,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const API_BASE_URL = 'https://elitespacenepal.premiumasp.net'
+const ASSET_PROXY_PREFIX = '/api/assets'
 
 const REQUEST_HEADERS = ['accept', 'authorization', 'content-type', 'cookie']
 const HOP_BY_HOP_HEADERS = new Set([
@@ -22,7 +23,10 @@ const HOP_BY_HOP_HEADERS = new Set([
 
 async function proxyRequest(request: NextRequest): Promise<Response> {
   const incomingUrl = new URL(request.url)
-  const upstreamUrl = `${API_BASE_URL}${incomingUrl.pathname}${incomingUrl.search}`
+  const upstreamPath = incomingUrl.pathname.startsWith(`${ASSET_PROXY_PREFIX}/`)
+    ? incomingUrl.pathname.slice(ASSET_PROXY_PREFIX.length)
+    : incomingUrl.pathname
+  const upstreamUrl = `${API_BASE_URL}${upstreamPath}${incomingUrl.search}`
   const headers = new Headers()
 
   for (const header of REQUEST_HEADERS) {
