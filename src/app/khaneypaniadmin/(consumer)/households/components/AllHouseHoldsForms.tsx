@@ -163,10 +163,9 @@ const resolveAssetUrl = (path?: string | null): string | null => {
         if (/^https?:\/\//i.test(raw)) {
             const parsed = new URL(raw)
             const pathname = parsed.pathname.replace(/^\/+/, '')
-            const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
 
-            if (!normalizedPath) return null
-            return `${assetProxyPrefix}${normalizedPath}${parsed.search}`
+            if (!pathname) return null
+            return `${assetProxyPrefix}${pathname}${parsed.search}`
         }
     } catch {
         // fall through to relative-path handling below
