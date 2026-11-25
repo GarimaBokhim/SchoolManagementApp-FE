@@ -28,6 +28,7 @@ interface AppComboboxProps<T> {
   getLabel: (option: T) => string;
   getValue: (option: T) => string | number;
   renderOptionExtra?: (option: T) => JSX.Element;
+  isOptionDisabled?: (option: T) => boolean;
   readOnly?: boolean;
   disabled?: boolean;
   className?: string;
@@ -44,7 +45,6 @@ function InnerCombobox<T>(
     selected,
     onFocus,
     dropDownWidth,
-    isFiler,
     onSelect,
     placeholder = "Search...",
     getLabel,
@@ -52,6 +52,7 @@ function InnerCombobox<T>(
     getValue,
     disabled,
     renderOptionExtra,
+    isOptionDisabled,
     readOnly = false,
   }: AppComboboxProps<T>,
   ref: React.Ref<HTMLInputElement>
@@ -73,7 +74,7 @@ function InnerCombobox<T>(
     } else {
       setQuery("");
     }
-  }, [selected]);
+  }, [getLabel, selected]);
 
   return (
     <div className="w-full">
@@ -156,11 +157,12 @@ function InnerCombobox<T>(
                         <ComboboxOption
                           key={`${getValue(option)}-${index}`}
                           value={option}
-                          className="hover:bg-gray-50 dark:hover:bg-[#3D3E43] transition-colors z-50"
+                          disabled={isOptionDisabled?.(option) ?? false}
+                          className="transition-colors z-50 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[disabled]:hover:bg-transparent hover:bg-gray-50 dark:hover:bg-[#3D3E43]"
                         >
-                          {({ active }) => (
+                          {({ active, disabled: optionDisabled }) => (
                             <div
-                              className={`mx-2 px-2 py-1 cursor-pointer rounded-sm flex justify-between ${active ? "bg-gray-100 dark:bg-[#585858]" : ""
+                              className={`mx-2 flex justify-between rounded-sm px-2 py-1 ${optionDisabled ? "cursor-not-allowed" : "cursor-pointer"} ${active && !optionDisabled ? "bg-gray-100 dark:bg-[#585858]" : ""
                                 }`}
                             >
                               <span>{getLabel(option)}</span>

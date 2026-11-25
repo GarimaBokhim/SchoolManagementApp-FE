@@ -6,6 +6,7 @@ export interface IAcademicTeam {
   fullName: string
   teacherImg: File
   address: string
+  ClassTeacherClasses: string
   provinceId: number
   districtId: number
   vdcid: number

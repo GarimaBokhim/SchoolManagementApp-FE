@@ -266,6 +266,7 @@ export const useGetClassTeacher = (academicTeamId: string) => {
       return response.data
     },
     enabled: Boolean(academicTeamId),
+    staleTime: 0,
     retry: false,
   })
 }
@@ -287,10 +288,21 @@ export const useAssignClassTeacher = () => {
       )
       return response.data
     },
-    onSuccess: (_response, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [ClassTeacherQueryKey, variables.AcademicTeamId],
-      })
+    onSuccess: async (_response, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [ClassTeacherQueryKey, variables.AcademicTeamId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [filterAcademicTeamQueryKey],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [queryKey],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [AssignQueryKey],
+        }),
+      ])
     },
   })
 }

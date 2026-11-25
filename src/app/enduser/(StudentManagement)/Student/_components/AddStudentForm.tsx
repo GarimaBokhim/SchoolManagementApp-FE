@@ -123,7 +123,7 @@ const AddStudentForm = ({ form, onClose }: Props) => {
   const parentOptions = allParents?.Items ?? []
   const displayedParentOptions =
     newlyAddedParent?.id &&
-    !parentOptions.some((parent) => parent.id === newlyAddedParent.id)
+      !parentOptions.some((parent) => parent.id === newlyAddedParent.id)
       ? [...parentOptions, newlyAddedParent]
       : parentOptions
   return (
@@ -406,12 +406,12 @@ const AddStudentForm = ({ form, onClose }: Props) => {
                   getLabel={(g) => g?.name ?? ''}
                   getValue={(g) => g?.id ?? ''}
                 />
-                <InputElement
+                {/* <InputElement
                   label="Class Section ID"
                   form={form}
                   name="classSectionId"
                   placeholder="Enter Class Section ID"
-                />
+                /> */}
                 <AppCombobox
                   value={selectedFeeCategoryId}
                   dropDownWidth="w-full"
