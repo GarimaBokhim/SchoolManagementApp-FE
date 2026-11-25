@@ -156,7 +156,7 @@ const ActionMenu = ({
 const resolveAssetUrl = (path?: string | null): string | null => {
     if (!path || path === '-' || path === 'string' || path.trim() === '') return null
 
-    const base = 'https://elitespacenepal.premiumasp.net'.replace(/^\/+|\/+$/g, '');
+    const assetProxyPrefix = '/api/assets/'
     const raw = path.trim()
 
     try {
@@ -166,17 +166,15 @@ const resolveAssetUrl = (path?: string | null): string | null => {
             const normalizedPath = pathname.replace(/^khaneypani\/?/i, '')
 
             if (!normalizedPath) return null
-            return base ? `${base}/${normalizedPath}` : `/${normalizedPath}`
+            return `${assetProxyPrefix}${normalizedPath}${parsed.search}`
         }
     } catch {
         // fall through to relative-path handling below
     }
 
-    //const cleanPath = raw.replace(/^\/+/, '').replace(/^khaneypani\/?/i, '')
-
     const cleanPath = raw.replace(/^\/+/, '')
     if (!cleanPath) return null
-    return base ? `${base}/${cleanPath}` : `/${cleanPath}`
+    return `${assetProxyPrefix}${cleanPath}`
 }
 
 const getHouseholdAddress = (household: HouseHoldsResponse) =>
