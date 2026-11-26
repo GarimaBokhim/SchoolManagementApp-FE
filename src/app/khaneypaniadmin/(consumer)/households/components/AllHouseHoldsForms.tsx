@@ -398,29 +398,12 @@ const createHouseholdQrLabel = async (
         context.stroke()
 
         const qrSize = 466
-        const qrX = (canvas.width - qrSize) / 2
-        const qrY = qrFrameY + 19
-        context.drawImage(qrImage, qrX, qrY, qrSize, qrSize)
-
-        if (logoImage) {
-            const centerSize = 116
-            context.beginPath()
-            context.arc(canvas.width / 2, qrFrameY + qrFrameSize / 2, centerSize / 2 + 8, 0, Math.PI * 2)
-            context.fillStyle = '#ffffff'
-            context.fill()
-            context.strokeStyle = blue
-            context.lineWidth = 4
-            context.stroke()
-            context.save()
-            context.beginPath()
-            context.arc(canvas.width / 2, qrFrameY + qrFrameSize / 2, centerSize / 2, 0, Math.PI * 2)
-            context.clip()
-            const scale = Math.max(centerSize / logoImage.width, centerSize / logoImage.height)
-            const width = logoImage.width * scale
-            const height = logoImage.height * scale
-            context.drawImage(logoImage, canvas.width / 2 - width / 2, qrFrameY + qrFrameSize / 2 - height / 2, width, height)
-            context.restore()
-        }
+        const qrScale = Math.min(qrSize / qrImage.width, qrSize / qrImage.height)
+        const qrWidth = qrImage.width * qrScale
+        const qrHeight = qrImage.height * qrScale
+        const qrX = (canvas.width - qrWidth) / 2
+        const qrY = qrFrameY + (qrFrameSize - qrHeight) / 2
+        context.drawImage(qrImage, qrX, qrY, qrWidth, qrHeight)
 
         roundedRect(170, 793, 620, 124, 64)
         context.fillStyle = navy

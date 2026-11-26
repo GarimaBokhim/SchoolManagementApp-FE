@@ -176,14 +176,19 @@ const AssignClass = ({ teacherId, visible, onClose }: Props) => {
   const isSaving = assignClass.isPending || unassignClass.isPending
 
   useEffect(() => {
-    if (assignedLoading || !assignedClasses) return
+    if (classLoading || assignedLoading || !assignedClasses) return
 
     const assignments = getAssignedSubjects(assignedClasses)
     setInitialAssignments(assignments)
     setSelectedSubjects(assignments)
     setSelectedClasses(Object.keys(assignments))
+    setExpandedClassId(
+      Object.keys(assignments)[0] ??
+        allClass?.Items?.find((classItem) => classItem.id)?.id ??
+        null
+    )
     setHasLoadedAssignments(true)
-  }, [assignedClasses, assignedLoading])
+  }, [allClass?.Items, assignedClasses, assignedLoading, classLoading])
 
   const toggleClass = (classId: string, checked: boolean) => {
     setSelectedClasses((current) =>
