@@ -7,7 +7,12 @@ import { Controller, SubmitHandler, UseFormReturn, useFieldArray } from "react-h
 import { InputElement } from "@/components/Input/InputElement";
 import { ButtonElement } from "@/components/Buttons/ButtonElement";
 import { Toast } from "@/components/Toast/toast";
-import { useAddHouseHolds, useGetAllWaterTariffPlan, useUpdateHouseHolds } from "../hooks";
+import {
+    useAddHouseHolds,
+    useGetAllWaterRateSlabs,
+    useGetAllWaterTariffPlan,
+    useUpdateHouseHolds,
+} from "../hooks";
 import toast from "react-hot-toast";
 import useErrorHandler from "@/components/helpers/ErrorHandling";
 import { AppCombobox } from "@/components/Input/ComboBox";
@@ -34,17 +39,43 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
 
     const [HouseHoldsType, setHouseHoldsType] = useState<number | null>(null);
 
-    const { data: allwaterTariffPlan } = useGetAllWaterTariffPlan();
-    const [sellectedWaterTariffPlanId, setSelectedWaterTariffPlanId] = useState<string | null>('')
+    const {
+        data: allwaterTariffPlan,
+        isLoading: tariffPlansLoading,
+        error: tariffPlansError,
+    } = useGetAllWaterTariffPlan();
+    const {
+        data: waterRateSlabs,
+        isLoading: waterRateSlabsLoading,
+        error: waterRateSlabsError,
+    } = useGetAllWaterRateSlabs();
+    const selectedWaterTariffPlanId = form.watch('waterTariffPlanId') ?? ''
+    const selectedWaterRateSlabId = form.watch('waterRateSlabId') ?? ''
 
-    const { data: allProvince } = useGetAllProvince()
-    const [selectedProvinceId, setSelectedProvinceId] = useState<number | undefined>(0)
-    const [selectedDistrictId, setSelectedDistrictId] = useState<number | undefined>(0)
-    const [selectedVdcId, setSelectedVdcId] = useState<number | undefined>(0)
-    const [selectedMunicipalityId, setSelectedMunicipalityId] = useState<number | undefined>(0)
-    const { data: filteredDistrict } = useGetDistrictByProvince(selectedProvinceId)
-    const { data: filteredVdc } = useGetVDCByDistrict(selectedDistrictId)
-    const { data: filteredMunicipality } = useGetMunicipalityByDistrict(selectedDistrictId)
+    const {
+        data: allProvince,
+        isLoading: provincesLoading,
+        error: provincesError,
+    } = useGetAllProvince()
+    const selectedProvinceId = form.watch('provinceId')
+    const selectedDistrictId = form.watch('districtId')
+    const selectedVdcId = form.watch('vdcId')
+    const selectedMunicipalityId = form.watch('municipalityId')
+    const {
+        data: filteredDistrict,
+        isLoading: districtsLoading,
+        error: districtsError,
+    } = useGetDistrictByProvince(selectedProvinceId)
+    const {
+        data: filteredVdc,
+        isLoading: vdcsLoading,
+        error: vdcsError,
+    } = useGetVDCByDistrict(selectedDistrictId)
+    const {
+        data: filteredMunicipality,
+        isLoading: municipalitiesLoading,
+        error: municipalitiesError,
+    } = useGetMunicipalityByDistrict(selectedDistrictId)
 
 
 
@@ -61,7 +92,8 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
             municipalityId: 0,
             vdcId: 0,
             wardNumber: 0,
-            waterTrrifPlanId: "",
+            waterTariffPlanId: "",
+            waterRateSlabId: "",
             latitude: 0,
             longitude: 0,
             tole: "",
@@ -77,6 +109,22 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
         clearError();
 
         try {
+            if (!data.waterTariffPlanId) {
+                form.setError('waterTariffPlanId', {
+                    type: 'required',
+                    message: 'Select a water tariff plan.',
+                })
+                return
+            }
+
+            if (!data.waterRateSlabId) {
+                form.setError('waterRateSlabId', {
+                    type: 'required',
+                    message: 'Select a water rate slab.',
+                })
+                return
+            }
+
             const payload = {
                 consumerName: data.consumerName,
                 familyMember: data.familyMember,
@@ -87,7 +135,8 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                 municipalityId: data.municipalityId,
                 vdcId: data.vdcId,
                 wardNumber: data.wardNumber,
-                waterTrrifPlanId: data.waterTrrifPlanId,
+                waterTariffPlanId: data.waterTariffPlanId,
+                waterRateSlabId: data.waterRateSlabId,
                 latitude: data.latitude,
                 longitude: data.longitude,
                 tole: data.tole,
@@ -172,16 +221,27 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                 name="provinceId"
                                 form={form}
                                 required
-                                options={allProvince?.Items}
+                                options={allProvince?.Items ?? []}
+                                disabled={provincesLoading || Boolean(provincesError)}
+                                placeholder={provincesLoading ? 'Loading provinces...' : 'Select a province...'}
                                 selected={
                                     allProvince?.Items?.find(
-                                        (g) => g.Id === selectedProvinceId
+                                        (g) => Number(g.Id) === Number(selectedProvinceId)
                                     ) || null
                                 }
-                                onSelect={(group) => setSelectedProvinceId(group?.Id ?? 0)}
+                                onSelect={() => {
+                                    form.setValue('districtId', 0, { shouldDirty: true })
+                                    form.setValue('municipalityId', 0, { shouldDirty: true })
+                                    form.setValue('vdcId', 0, { shouldDirty: true })
+                                }}
                                 getLabel={(g) => g?.provinceNameInEnglish ?? ''}
                                 getValue={(g) => g?.Id ?? ''}
                             />
+                            {provincesError && (
+                                <p role="alert" className="text-sm text-red-500">
+                                    Could not load provinces.
+                                </p>
+                            )}
                             <AppCombobox
                                 value={selectedDistrictId}
                                 dropDownWidth="w-full"
@@ -190,57 +250,84 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
                                 name="districtId"
                                 form={form}
                                 required
-                                options={filteredDistrict}
+                                options={filteredDistrict ?? []}
+                                disabled={!selectedProvinceId || districtsLoading || Boolean(districtsError)}
+                                placeholder={districtsLoading ? 'Loading districts...' : 'Select a district...'}
                                 selected={
                                     filteredDistrict?.find(
-                                        (g) => g.Id === selectedDistrictId
+                                        (g) => Number(g.Id) === Number(selectedDistrictId)
                                     ) || null
                                 }
-                                onSelect={(group) => setSelectedDistrictId(group?.Id ?? 0)}
+                                onSelect={() => {
+                                    form.setValue('municipalityId', 0, { shouldDirty: true })
+                                    form.setValue('vdcId', 0, { shouldDirty: true })
+                                }}
                                 getLabel={(g) => g?.districtNameInEnglish ?? ''}
                                 getValue={(g) => g?.Id ?? ''}
                             />
+                            {districtsError && (
+                                <p role="alert" className="text-sm text-red-500">
+                                    Could not load districts for the selected province.
+                                </p>
+                            )}
                             <AppCombobox
                                 value={selectedMunicipalityId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute"
-                                disabled={selectedVdcId !== 0 && selectedVdcId !== undefined}
+                                disabled={!selectedDistrictId || municipalitiesLoading || Boolean(municipalitiesError) || (selectedVdcId !== 0 && selectedVdcId !== undefined)}
                                 label="Municipality"
                                 name="municipalityId"
                                 form={form}
-                                options={filteredMunicipality}
+                                options={filteredMunicipality ?? []}
+                                placeholder={municipalitiesLoading ? 'Loading municipalities...' : 'Select a municipality...'}
                                 selected={
                                     filteredMunicipality?.find(
-                                        (g) => g.Id === selectedMunicipalityId
+                                        (g) => Number(g.Id) === Number(selectedMunicipalityId)
                                     ) || null
                                 }
-                                onSelect={(group) =>
-                                    setSelectedMunicipalityId(group?.Id ?? 0)
-                                }
+                                onSelect={() => form.setValue('vdcId', 0, { shouldDirty: true })}
                                 getLabel={(g) => g?.MunicipalityNameinEnglish ?? ''}
                                 getValue={(g) => g?.Id ?? ''}
                             />
+                            {municipalitiesError && (
+                                <p role="alert" className="text-sm text-red-500">
+                                    Could not load municipalities for the selected district.
+                                </p>
+                            )}
 
                             <AppCombobox
                                 value={selectedVdcId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute"
+                                disabled={!selectedDistrictId || vdcsLoading || Boolean(vdcsError) || (selectedMunicipalityId !== 0 && selectedMunicipalityId !== undefined)}
                                 label="VDC"
-                                disabled={
-                                    selectedMunicipalityId !== 0 &&
-                                    selectedMunicipalityId !== undefined
-                                }
-                                name="vdcid"
+                                name="vdcId"
                                 form={form}
-                                options={filteredVdc}
+                                options={filteredVdc ?? []}
+                                placeholder={vdcsLoading ? 'Loading VDCs...' : 'Select a VDC...'}
                                 selected={
-                                    filteredVdc?.find((g) => g.Id === selectedVdcId) || null
+                                    filteredVdc?.find((g) => Number(g.Id) === Number(selectedVdcId)) || null
                                 }
-                                onSelect={(group) => setSelectedVdcId(group?.Id ?? 0)}
+                                onSelect={() => form.setValue('municipalityId', 0, { shouldDirty: true })}
                                 getLabel={(g) => g?.VdcNameInNepali ?? ''}
                                 getValue={(g) => g?.Id ?? ''}
                             />
+                            {vdcsError && (
+                                <p role="alert" className="text-sm text-red-500">
+                                    Could not load VDCs for the selected district.
+                                </p>
+                            )}
 
+                            {householdId &&
+                                (!selectedProvinceId ||
+                                    !selectedDistrictId ||
+                                    (!selectedMunicipalityId && !selectedVdcId) ||
+                                    !selectedWaterTariffPlanId ||
+                                    !selectedWaterRateSlabId) && (
+                                    <p role="alert" className="text-sm text-amber-700">
+                                        Some saved location or tariff IDs are missing. The household API must return provinceId, districtId, municipalityId or vdcId, waterTariffPlanId, and waterRateSlabId for edit selections to load.
+                                    </p>
+                                )}
 
 
 
@@ -254,38 +341,70 @@ const AddHouseHoldsForm = ({ form, onClose, householdId }: Props) => {
 
 
                             <AppCombobox
-                                value={sellectedWaterTariffPlanId}
+                                value={selectedWaterTariffPlanId}
                                 dropDownWidth="w-full"
                                 dropdownPositionClass="absolute z-20"
                                 label="WaterTariff Plan"
-                                name="waterTrrifPlanId"
+                                name="waterTariffPlanId"
                                 form={form}
                                 required
+                                disabled={tariffPlansLoading || Boolean(tariffPlansError)}
+                                placeholder={tariffPlansLoading ? 'Loading water tariff plans...' : 'Select a water tariff plan...'}
                                 options={allwaterTariffPlan || []}
                                 selected={
-                                    allwaterTariffPlan?.find((g) => g.id === sellectedWaterTariffPlanId) ||
+                                    allwaterTariffPlan?.find((g) => String(g.id) === String(selectedWaterTariffPlanId)) ||
                                     null
                                 }
                                 onSelect={(group) => {
-                                    if (group) {
-                                        const id = group.id ?? ''
-
-                                        setSelectedWaterTariffPlanId(id || null)
-
-                                        form.setValue('waterTrrifPlanId', id, {
-                                            shouldValidate: true,
-                                        })
-                                    } else {
-                                        setSelectedWaterTariffPlanId(null)
-
-                                        form.setValue('waterTrrifPlanId', '', {
-                                            shouldValidate: true,
-                                        })
-                                    }
+                                    const id = group?.id ?? ''
+                                    form.setValue('waterTariffPlanId', id, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    })
+                                    if (id) form.clearErrors('waterTariffPlanId')
                                 }}
                                 getLabel={(g) => g?.name ?? ''}
                                 getValue={(g) => g?.id ?? ''}
                             />
+                            {tariffPlansError && (
+                                <p role="alert" className="text-sm text-red-500">
+                                    Could not load water tariff plans.
+                                </p>
+                            )}
+                            <AppCombobox
+                                value={selectedWaterRateSlabId}
+                                dropDownWidth="w-full"
+                                dropdownPositionClass="absolute z-20"
+                                label="Water Rate Slab"
+                                name="waterRateSlabId"
+                                form={form}
+                                required
+                                options={waterRateSlabs ?? []}
+                                selected={
+                                    waterRateSlabs?.find(
+                                        (slab) => String(slab.id) === String(selectedWaterRateSlabId),
+                                    )
+                                }
+                                onSelect={(slab) =>
+                                    form.setValue('waterRateSlabId', slab?.id ?? '', {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                    })
+                                }
+                                getLabel={(slab) => slab.name}
+                                getValue={(slab) => slab.id}
+                                placeholder={
+                                    waterRateSlabsLoading
+                                        ? 'Loading water rate slabs...'
+                                        : 'Select a water rate slab...'
+                                }
+                                disabled={waterRateSlabsLoading || Boolean(waterRateSlabsError)}
+                            />
+                            {waterRateSlabsError && (
+                                <p className="text-sm text-red-500">
+                                    Could not load water rate slabs. Please try again.
+                                </p>
+                            )}
                             <InputElement
                                 label="Tole"
                                 form={form}

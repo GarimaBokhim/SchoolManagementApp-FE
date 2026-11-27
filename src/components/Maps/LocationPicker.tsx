@@ -1,14 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import {
-    MapContainer,
-    Marker,
-    TileLayer,
-    useMapEvents,
-} from "react-leaflet";
-import L from "leaflet";
-// import "leaflet/dist/leaflet.css";
+import { useState } from "react";
 
 interface LocationPickerProps {
     latitude?: number;
@@ -16,60 +8,25 @@ interface LocationPickerProps {
     onLocationChange: (latitude: number, longitude: number) => void;
 }
 
-const markerIcon = new L.Icon({
-    iconUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-    iconRetinaUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-    shadowUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-});
+function parseCoordinates(value: string) {
+    const parts = value.split(",");
+    if (parts.length !== 2 || parts.some((part) => !part.trim())) return null;
 
-function MapClickHandler({
-    latitude,
-    longitude,
-    onLocationChange,
-}: LocationPickerProps) {
-    const [position, setPosition] = useState<[number, number] | null>(
-        latitude !== undefined && longitude !== undefined
-            ? [latitude, longitude]
-            : null
-    );
+    const latitude = Number(parts[0].trim());
+    const longitude = Number(parts[1].trim());
 
-    useMapEvents({
-        click(event) {
-            const lat = event.latlng.lat;
-            const lng = event.latlng.lng;
+    if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+    ) {
+        return null;
+    }
 
-            setPosition([lat, lng]);
-            onLocationChange(lat, lng);
-        },
-    });
-
-    if (!position) return null;
-
-    return (
-        <Marker
-            position={position}
-            icon={markerIcon}
-            draggable
-            eventHandlers={{
-                dragend: (event) => {
-                    const marker = event.target;
-                    const location = marker.getLatLng();
-
-                    setPosition([location.lat, location.lng]);
-
-                    onLocationChange(
-                        location.lat,
-                        location.lng
-                    );
-                },
-            }}
-        />
-    );
+    return { latitude, longitude };
 }
 
 export default function LocationPicker({
@@ -77,48 +34,61 @@ export default function LocationPicker({
     longitude,
     onLocationChange,
 }: LocationPickerProps) {
-    const defaultPosition: [number, number] = [
-        latitude ?? 27.7172,
-        longitude ?? 85.324,
-    ];
+    const [coordinateText, setCoordinateText] = useState("");
+    const [hasInvalidCoordinates, setHasInvalidCoordinates] = useState(false);
 
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const mapLatitude = latitude && latitude !== 0 ? latitude : 27.7172;
+    const mapLongitude = longitude && longitude !== 0 ? longitude : 85.324;
+    const googleMapsUrl = `https://www.google.com/maps/@${mapLatitude},${mapLongitude},16z`;
+
+    const handleCoordinateChange = (value: string) => {
+        setCoordinateText(value);
+        const coordinates = parseCoordinates(value);
+        setHasInvalidCoordinates(value.trim().length > 0 && !coordinates);
+
+        if (coordinates) {
+            onLocationChange(coordinates.latitude, coordinates.longitude);
+        }
+    };
 
     return (
         <div className="space-y-4">
-            <div
-                ref={(node) => {
-                    if (node && (node as any)._leaflet_id) {
-                        (node as any)._leaflet_id = null;
-                    }
-                    containerRef.current = node;
-                }}
-                className="h-[400px] w-full overflow-hidden rounded-lg border"
+            <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
-                <MapContainer
-                    center={defaultPosition}
-                    zoom={13}
-                    scrollWheelZoom
-                    className="h-full w-full"
-                >
-                    <TileLayer
-                        attribution="&copy; OpenStreetMap contributors"
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <MapClickHandler
-                        latitude={latitude}
-                        longitude={longitude}
-                        onLocationChange={onLocationChange}
-                    />
-                </MapContainer>
+                Choose location on Google Maps
+            </a>
+
+            <p className="text-sm text-gray-600">
+                In Google Maps, click the location and copy the coordinates shown in its location card.
+                Paste them below as latitude, longitude.
+            </p>
+
+            <div>
+                <label htmlFor="google-maps-coordinates" className="text-sm font-medium">
+                    Paste coordinates from Google Maps
+                </label>
+                <input
+                    id="google-maps-coordinates"
+                    value={coordinateText}
+                    onChange={(event) => handleCoordinateChange(event.target.value)}
+                    placeholder="27.7407087, 85.361561"
+                    aria-invalid={hasInvalidCoordinates}
+                    className="mt-1 w-full rounded-md border px-3 py-2"
+                />
+                {hasInvalidCoordinates && (
+                    <p role="alert" className="mt-1 text-sm text-red-600">
+                        Enter valid coordinates in latitude, longitude order.
+                    </p>
+                )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <label className="text-sm font-medium">
-                        Latitude
-                    </label>
-
+                    <label className="text-sm font-medium">Latitude</label>
                     <input
                         value={latitude ?? ""}
                         readOnly
@@ -127,10 +97,7 @@ export default function LocationPicker({
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium">
-                        Longitude
-                    </label>
-
+                    <label className="text-sm font-medium">Longitude</label>
                     <input
                         value={longitude ?? ""}
                         readOnly

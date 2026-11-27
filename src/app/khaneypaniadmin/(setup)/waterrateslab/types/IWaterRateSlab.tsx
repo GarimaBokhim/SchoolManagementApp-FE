@@ -25,8 +25,16 @@ export interface NewWaterRateSlab {
 export interface AddWaterRateSlabPayload {
     waterTariffId: string
     name: string
-    currentLastSlabEndsAt: number | null
     newRateSlabs: NewWaterRateSlab[]
+}
+
+export interface AddWaterRateSlabRequest {
+    WaterTariffId: string
+    Name: string
+    NewRateSlabs: {
+        ToUnit: number | null
+        RatePerUnit: number
+    }[]
 }
 
 export interface UpdateWaterRateSlabPayload {

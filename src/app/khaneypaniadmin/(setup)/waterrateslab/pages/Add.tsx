@@ -16,7 +16,6 @@ const AddWaterRateSlab = ({ visible, onClose }: Props) => {
         defaultValues: {
             waterTariffId: '',
             name: '',
-            currentLastSlabEndsAt: null,
             newRateSlabs: [{ toUnit: 0, ratePerUnit: 0 }],
         },
     })
