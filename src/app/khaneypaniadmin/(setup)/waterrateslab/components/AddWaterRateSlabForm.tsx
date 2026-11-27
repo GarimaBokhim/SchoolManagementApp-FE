@@ -37,9 +37,6 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
         control: form.control,
         name: 'newRateSlabs',
     })
-    const currentLastSlabEndsAtField = form.register('currentLastSlabEndsAt', {
-        setValueAs: (value: string) => value === '' ? null : Number(value),
-    })
     const selectedTariff = useMemo(
         () => tariffs?.find((tariff) => tariff.id === selectedTariffId),
         [selectedTariffId, tariffs],
@@ -48,13 +45,11 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
         () => new Set(assignedTariffIds ?? []),
         [assignedTariffIds],
     )
-    const lastExistingSlabEnd = form.watch('currentLastSlabEndsAt') ?? 0
 
     const handleClose = () => {
         form.reset({
             waterTariffId: '',
             name: '',
-            currentLastSlabEndsAt: null,
             newRateSlabs: [{ toUnit: 0, ratePerUnit: 0 }],
         })
         setSelectedTariffId('')
@@ -102,10 +97,7 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
                 })
                 return
             }
-            const startingUnit = Math.max(
-                selectedTariff.minUnits,
-                data.currentLastSlabEndsAt || 0,
-            ) + 1
+            const startingUnit = selectedTariff.minUnits + 1
             const invalidUnitRange = data.newRateSlabs.some((slab, index) => {
                 if (index === data.newRateSlabs.length - 1) return false
                 const fromUnit = index === 0
@@ -124,12 +116,6 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
             handleClose()
         } catch (error) {
             const errorMessage = handleError(error)
-            if (errorMessage.includes('CurrentLastSlabEndsAt')) {
-                form.setError('currentLastSlabEndsAt', {
-                    type: 'server',
-                    message: errorMessage,
-                })
-            }
             Toast.error(errorMessage)
         }
     }
@@ -252,7 +238,7 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
 
                                     {fields.map((field, index) => {
                                         const fromUnit = index === 0
-                                            ? Math.max(selectedTariff.minUnits, lastExistingSlabEnd || 0) + 1
+                                            ? selectedTariff.minUnits + 1
                                             : (form.watch(`newRateSlabs.${index - 1}.toUnit`) || 0) + 1
                                         return (
                                             <div
@@ -315,29 +301,6 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
                                         )
                                     })}
 
-                                    <label className="block max-w-sm text-sm text-gray-700 dark:text-gray-300">
-                                        Current last slab ends at
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            {...currentLastSlabEndsAtField}
-                                            onChange={(event) => {
-                                                currentLastSlabEndsAtField.onChange(event)
-                                                form.clearErrors('currentLastSlabEndsAt')
-                                            }}
-                                            aria-describedby="current-last-slab-help current-last-slab-error"
-                                            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-800 outline-none focus:border-[#4788CD] dark:border-gray-600 dark:bg-[#353535] dark:text-white"
-                                        />
-                                        <span id="current-last-slab-help" className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                                            Enter the ending unit of the existing open-ended slab. Enter 0 only if this tariff has no existing slabs.
-                                        </span>
-                                        {form.formState.errors.currentLastSlabEndsAt?.message && (
-                                            <span id="current-last-slab-error" className="mt-1 block text-sm text-red-500">
-                                                {form.formState.errors.currentLastSlabEndsAt.message}
-                                            </span>
-                                        )}
-                                    </label>
-
                                     {form.formState.errors.newRateSlabs?.message && (
                                         <p className="text-sm text-red-500">
                                             {form.formState.errors.newRateSlabs.message}
@@ -374,7 +337,6 @@ const AddWaterRateSlabForm = ({ form, onClose }: Props) => {
                                     form.reset({
                                         waterTariffId: '',
                                         name: '',
-                                        currentLastSlabEndsAt: null,
                                         newRateSlabs: [{ toUnit: 0, ratePerUnit: 0 }],
                                     })
                                     setSelectedTariffId('')

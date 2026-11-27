@@ -936,6 +936,8 @@ const AllHouseHoldsForm = () => {
                                         <th className="px-4 py-3 text-left">FamilyMember</th>
                                         <th className="px-4 py-3 text-left">Email</th>
                                         <th className="px-4 py-3 text-left">Tole</th>
+                                        <th className="px-4 py-3 text-left">Water Tariff Plan</th>
+                                        <th className="px-4 py-3 text-left">Water Rate Slab</th>
                                         <th className="px-4 py-3 text-left">QrCode</th>
 
                                         <th className="px-4 py-3 text-center">Actions</th>
@@ -944,7 +946,7 @@ const AllHouseHoldsForm = () => {
                                 <tbody>
                                     {HouseHoldsDetails.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
+                                            <td colSpan={10} className="p-4 text-center italic text-gray-500 dark:text-gray-400">
                                                 No visa HouseHolds found.
                                             </td>
                                         </tr>
@@ -970,6 +972,13 @@ const AllHouseHoldsForm = () => {
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                                                     {HouseHolds.tole}
+                                                </td>
+
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                                    {HouseHolds.waterTariffPlanName || '-'}
+                                                </td>
+                                                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                                    {HouseHolds.waterRateSlabName || '-'}
                                                 </td>
 
                                                 <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">

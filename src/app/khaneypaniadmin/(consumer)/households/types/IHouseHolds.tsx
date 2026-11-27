@@ -10,7 +10,8 @@ export interface AddHouseHoldsResponse {
     municipalityId: number
     vdcId: number
     wardNumber: number
-    waterTrrifPlanId: string
+    waterTariffPlanId: string
+    waterRateSlabId?: string
     latitude: number
     longitude: number
     tole: string
@@ -30,7 +31,11 @@ export interface HouseHoldsResponse {
     municipalityId: number
     vdcId: number
     wardNumber: number
-    waterTrrifPlanId: string
+    waterTariffPlanId?: string
+    waterTrrifPlanId?: string
+    waterRateSlabId: string
+    waterTariffPlanName?: string
+    waterRateSlabName?: string
     latitude: number
     longitude: number
     houseNumber: string
@@ -53,7 +58,8 @@ export interface AddHouseHoldsPayload {
     wardNumber: number
     tole: string
     registrationDate: string
-    waterTrrifPlanId: string
+    waterTariffPlanId: string
+    waterRateSlabId: string
     latitude: number
     longitude: number
 
@@ -71,7 +77,8 @@ export interface UpdateHouseHoldsPayload {
     municipalityId: number
     vdcId: number
     wardNumber: number
-    waterTrrifPlanId: string
+    waterTariffPlanId: string
+    waterRateSlabId: string
     latitude: number
     longitude: number
     tole: string
@@ -90,7 +97,7 @@ export interface UpdateHouseHoldsResponse {
     municipalityId: number
     vdcId: number
     wardNumber: number
-    waterTrrifPlanId: string
+    waterTariffPlanId: string
     latitude: number
     longitude: number
     tole: string

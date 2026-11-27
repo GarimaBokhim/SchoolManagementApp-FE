@@ -12,10 +12,12 @@ export const HouseHoldsEndpoints = {
     delete: '/api/KhaneyPaniHouseHolds/DeleteHousehold',
 
     filterWaterTariffPlan: '/api/KhaneyPaniSetUp/FilterWaterTariffPlan',
+    filterWaterRateSlab: '/api/KhaneyPaniSetUp/FilterWaterRateSlab',
 }
 
 export const HouseHoldsQueryKeys = {
     all: ['HouseHolds'],
+    waterRateSlabs: ['WaterRateSlabs'],
 }
 
 
@@ -31,7 +33,8 @@ const normalizeHouseHoldsPayload = (
     municipalityId: Number(data.municipalityId ?? 0),
     vdcId: Number(data.vdcId ?? 0),
     wardNumber: Number(data.wardNumber ?? 0),
-    waterTrrifPlanId: String(data.waterTrrifPlanId ?? '').trim(),
+    waterTariffPlanId: String(data.waterTariffPlanId ?? '').trim(),
+    waterRateSlabId: String(data.waterRateSlabId ?? '').trim(),
     latitude: Number(data.latitude ?? 0),
     longitude: Number(data.longitude ?? 0),
     tole: String(data.tole ?? '').trim(),
@@ -40,9 +43,13 @@ const normalizeHouseHoldsPayload = (
 
 
 
+type UpdateHouseHoldsRequest = Omit<UpdateHouseHoldsPayload, 'waterTariffPlanId'> & {
+    waterTrrifPlanId: string
+}
+
 const normalizeUpdateHouseHoldsPayload = (
     data: UpdateHouseHoldsPayload
-): UpdateHouseHoldsPayload => ({
+): UpdateHouseHoldsRequest => ({
     id: String(data.id ?? '').trim(),
     consumerName: String(data.consumerName ?? '').trim(),
     contactNumber: String(data.contactNumber ?? '').trim(),
@@ -53,7 +60,8 @@ const normalizeUpdateHouseHoldsPayload = (
     municipalityId: Number(data.municipalityId ?? 0),
     vdcId: Number(data.vdcId ?? 0),
     wardNumber: Number(data.wardNumber ?? 0),
-    waterTrrifPlanId: String(data.waterTrrifPlanId ?? '').trim(),
+    waterTrrifPlanId: String(data.waterTariffPlanId ?? '').trim(),
+    waterRateSlabId: String(data.waterRateSlabId ?? '').trim(),
     latitude: Number(data.latitude ?? 0),
     longitude: Number(data.longitude ?? 0),
     tole: String(data.tole ?? '').trim(),
@@ -74,9 +82,9 @@ export const useGetAllWaterTariffPlan = () => {
                 }>
             >(HouseHoldsEndpoints.filterWaterTariffPlan, {
                 params: {
-                    pageSize: 10,
+                    pageSize: 1000,
                     pageIndex: 1,
-                    isPagination: true,
+                    isPagination: false,
                 },
             })
 
@@ -86,6 +94,27 @@ export const useGetAllWaterTariffPlan = () => {
         select: (response) => response?.Data.Items ?? [],
 
         staleTime: 1000 * 60 * 5,
+    })
+}
+
+export const useGetAllWaterRateSlabs = () => {
+    return useQuery({
+        queryKey: HouseHoldsQueryKeys.waterRateSlabs,
+        queryFn: async () => {
+            const response = await api.get<
+                IPaginationCrmResponse<{ id: string; name: string }>
+            >(HouseHoldsEndpoints.filterWaterRateSlab, {
+                params: {
+                    pageSize: 1000,
+                    pageIndex: 1,
+                    isPagination: false,
+                },
+            })
+
+            return response.data.Data.Items
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: false,
     })
 }
 

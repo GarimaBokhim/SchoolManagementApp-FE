@@ -6,6 +6,7 @@ import { IPaginationCrmResponse } from '@/types/IPaginationResponse'
 import { getBackendBaseUrl } from '@/utils/backendUrl'
 import {
     AddWaterRateSlabPayload,
+    AddWaterRateSlabRequest,
     UpdateWaterRateSlabPayload,
     WaterRateSlabDetailsResponse,
     WaterRateSlabResponse,
@@ -122,18 +123,15 @@ export const useAddWaterRateSlab = () => {
 
     return useMutation({
         mutationFn: async (payload: AddWaterRateSlabPayload) => {
-            const response = await api.post(
-                WaterRateSlabEndpoints.add,
-                {
-                    WaterTariffId: payload.waterTariffId,
-                    Name: payload.name.trim(),
-                    CurrentLastSlabEndsAt: payload.currentLastSlabEndsAt,
-                    NewRateSlabs: payload.newRateSlabs.map((slab) => ({
-                        ToUnit: slab.toUnit,
-                        RatePerUnit: slab.ratePerUnit,
-                    })),
-                },
-            )
+            const request: AddWaterRateSlabRequest = {
+                WaterTariffId: payload.waterTariffId,
+                Name: payload.name.trim(),
+                NewRateSlabs: payload.newRateSlabs.map((slab, index) => ({
+                    ToUnit: index === payload.newRateSlabs.length - 1 ? null : slab.toUnit,
+                    RatePerUnit: slab.ratePerUnit,
+                })),
+            }
+            const response = await api.post(WaterRateSlabEndpoints.add, request)
             return response.data
         },
         onSuccess: (response) => {
