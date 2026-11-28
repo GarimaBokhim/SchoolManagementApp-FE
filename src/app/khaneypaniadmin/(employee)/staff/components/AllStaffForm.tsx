@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookOpen, Edit, Filter, MoreVertical, Plus, ReceiptIndianRupeeIcon, RotateCcw, Trash } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Toaster } from 'react-hot-toast'
-import toast from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { InputElement } from '@/components/Input/InputElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
@@ -13,13 +13,10 @@ import { useDeleteStaff, useGetAllStaff } from '../hooks'
 import { StaffResponse } from '../types/IStaff'
 import AddStaff from '../pages/Add'
 import EditStaff from '../pages/Edit'
-import useErrorHandler from '@/components/helpers/ErrorHandling'
-import { Toast } from '@/components/Toast/toast'
-import { AppCombobox } from '@/components/Input/ComboBox'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 
 interface FilterFormData {
-    name: string
+    fullName: string
     startDate: string
     endDate: string
 }
@@ -151,7 +148,6 @@ const ActionMenu = ({
 
 const AllStaffForm = () => {
     const { menuStatus } = usePermissions()
-    const { handleError, clearError } = useErrorHandler()
     const { canAdd, canEdit, canDelete } = useMenuPermissionData(menuStatus)
 
     const [openFilter, setOpenFilter] = useState(false)
@@ -184,19 +180,8 @@ const AllStaffForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { fullName: '', startDate: '', endDate: '' },
     })
-
-    const [selectedStaffName, setSelectedStaffName] = useState<string | null>(
-        ""
-    );
-
-
-
-
-
-
-
 
     const { data, isLoading, error } = useGetAllStaff(fullQuery)
     const deleteStaff = useDeleteStaff()
@@ -204,37 +189,24 @@ const AllStaffForm = () => {
 
     const StaffDetails = data?.Items ?? [];
 
-    const onFilterSubmit = async (formData: FilterFormData) => {
-        clearError()
-        try {
-            const queryParams = [
-                formData.name
-                    ? `name=${encodeURIComponent(formData.name)}`
-                    : null,
-                formData.startDate
-                    ? `startDate=${encodeURIComponent(formData.startDate)}`
-                    : null,
-                formData.endDate
-                    ? `endDate=${encodeURIComponent(formData.endDate)}`
-                    : null,
-            ]
-                .filter(Boolean)
-                .join('&')
-            const fullQuery = queryParams ? `&${queryParams}` : ''
-            await toast.promise(
-                (async () => {
-                    setParams(fullQuery)
-                })(),
-                {
-                    loading: 'Fetching data...',
-                    success: 'Data fetched successfully!',
-                }
-            )
-        } catch (error) {
-            const errorMsg = handleError(error)
-            Toast.error(errorMsg)
-            console.error('Error during form submission:', error)
-        }
+    const onFilterSubmit = (formData: FilterFormData) => {
+        const fullName = formData.fullName.trim()
+        const queryParams = [
+            fullName
+                ? `fullName=${encodeURIComponent(fullName)}`
+                : null,
+            formData.startDate
+                ? `startDate=${encodeURIComponent(formData.startDate)}`
+                : null,
+            formData.endDate
+                ? `endDate=${encodeURIComponent(formData.endDate)}`
+                : null,
+        ]
+            .filter(Boolean)
+            .join('&')
+        const fullQuery = queryParams ? `&${queryParams}` : ''
+        setPaginationParams((current) => ({ ...current, pageIndex: 1 }))
+        setParams(fullQuery)
     }
 
 
@@ -277,7 +249,7 @@ const AllStaffForm = () => {
                     <div className="text-center py-16">
                         <BookOpen size={64} className="mx-auto text-red-400 mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                            Error loading Staff Status
+                            Error loading staff
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400">Please try again later.</p>
                     </div>
@@ -360,28 +332,11 @@ const AllStaffForm = () => {
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
-                                    <AppCombobox
-                                        value={selectedStaffName}
-                                        dropDownWidth="w-full"
-                                        dropdownPositionClass="absolute"
+                                    <InputElement
                                         label="Staff Name"
-                                        name="fullName"
                                         form={form}
-                                        options={data?.Items}
-                                        selected={
-                                            data?.Items?.find(
-                                                (g) => g.fullName === selectedStaffName
-                                            ) || null
-                                        }
-                                        onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedStaffName(group.fullName || null);
-                                            } else {
-                                                setSelectedStaffName(null);
-                                            }
-                                        }}
-                                        getLabel={(g) => g?.fullName ?? ""}
-                                        getValue={(g) => g?.fullName ?? ""}
+                                        name="fullName"
+                                        placeholder="Full Name"
                                     />
                                 </div>
 
