@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
 import Pagination from '@/components/Pagination'
 import { ButtonElement } from '@/components/Buttons/ButtonElement'
+import { InputElement } from '@/components/Input/InputElement'
 import DateRangeFilter, { DateRangeFilterRef } from '@/components/DateFilter/FilterComponent'
 import { usePermissions } from '@/context/auth/PermissionContext'
 import useMenuPermissionData from '@/app/SuperAdmin/navigation/hooks/useMenuPermissionData'
@@ -16,12 +17,11 @@ import AddHouseHolds from '../pages/Add'
 import EditHouseHolds from '../pages/Edit'
 import useErrorHandler from '@/components/helpers/ErrorHandling'
 import { Toast } from '@/components/Toast/toast'
-import { AppCombobox } from '@/components/Input/ComboBox'
 import DeleteComponents from '@/components/DeleteComponent/DeleteComponents'
 import { api } from '@/utils/instance'
 
 interface FilterFormData {
-    name: string
+    consumerName: string
     startDate: string
     endDate: string
 }
@@ -705,19 +705,8 @@ const AllHouseHoldsForm = () => {
 
 
     const form = useForm<FilterFormData>({
-        defaultValues: { startDate: '', endDate: '' },
+        defaultValues: { consumerName: '', startDate: '', endDate: '' },
     })
-
-    const [selectedHouseHoldsName, setSelectedHouseHoldsName] = useState<string | null>(
-        ""
-    );
-
-
-
-
-
-
-
 
     const { data, isLoading, error } = useGetAllHouseHolds(fullQuery)
     const deleteHouseHolds = useDeleteHouseHolds()
@@ -725,37 +714,25 @@ const AllHouseHoldsForm = () => {
 
     const HouseHoldsDetails = data?.Items ?? [];
 
-    const onFilterSubmit = async (formData: FilterFormData) => {
+    const onFilterSubmit = (formData: FilterFormData) => {
         clearError()
-        try {
-            const queryParams = [
-                formData.name
-                    ? `name=${encodeURIComponent(formData.name)}`
-                    : null,
-                formData.startDate
-                    ? `startDate=${encodeURIComponent(formData.startDate)}`
-                    : null,
-                formData.endDate
-                    ? `endDate=${encodeURIComponent(formData.endDate)}`
-                    : null,
-            ]
-                .filter(Boolean)
-                .join('&')
-            const fullQuery = queryParams ? `&${queryParams}` : ''
-            await toast.promise(
-                (async () => {
-                    setParams(fullQuery)
-                })(),
-                {
-                    loading: 'Fetching data...',
-                    success: 'Data fetched successfully!',
-                }
-            )
-        } catch (error) {
-            const errorMsg = handleError(error)
-            Toast.error(errorMsg)
-            console.error('Error during form submission:', error)
-        }
+        const consumerName = formData.consumerName.trim()
+        const queryParams = [
+            consumerName
+                ? `consumerName=${encodeURIComponent(consumerName)}`
+                : null,
+            formData.startDate
+                ? `startDate=${encodeURIComponent(formData.startDate)}`
+                : null,
+            formData.endDate
+                ? `endDate=${encodeURIComponent(formData.endDate)}`
+                : null,
+        ]
+            .filter(Boolean)
+            .join('&')
+        const fullQuery = queryParams ? `&${queryParams}` : ''
+        setPaginationParams((current) => ({ ...current, pageIndex: 1 }))
+        setParams(fullQuery)
     }
 
 
@@ -798,7 +775,7 @@ const AllHouseHoldsForm = () => {
                     <div className="text-center py-16">
                         <BookOpen size={64} className="mx-auto text-red-400 mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                            Error loading Visa Status
+                            Error loading House Holds
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400">Please try again later.</p>
                     </div>
@@ -881,28 +858,11 @@ const AllHouseHoldsForm = () => {
                                 />
 
                                 <div className="flex-1 min-w-[240px]">
-                                    <AppCombobox
-                                        value={selectedHouseHoldsName}
-                                        dropDownWidth="w-full"
-                                        dropdownPositionClass="absolute"
-                                        label="Visa Status"
-                                        name="name"
+                                    <InputElement
+                                        label="Consumer Name"
                                         form={form}
-                                        options={data?.Items}
-                                        selected={
-                                            data?.Items?.find(
-                                                (g) => g.consumerName === selectedHouseHoldsName
-                                            ) || null
-                                        }
-                                        onSelect={(group) => {
-                                            if (group) {
-                                                setSelectedHouseHoldsName(group.consumerName || null);
-                                            } else {
-                                                setSelectedHouseHoldsName(null);
-                                            }
-                                        }}
-                                        getLabel={(g) => g?.consumerName ?? ""}
-                                        getValue={(g) => g?.consumerName ?? ""}
+                                        name="consumerName"
+                                        placeholder="Enter Consumer Name"
                                     />
                                 </div>
 
